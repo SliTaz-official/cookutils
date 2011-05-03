@@ -1,0 +1,309 @@
+#!/bin/sh
+#
+# SliTaz Build Bot. The Cooker is a tool to automate and test SliTaz package 
+# building. Please read the Cookbook documentation for more information 
+# and put talk to AUTHORS before adding anything here. PS: no translation
+# here since it's not a end user tool and it's not usfull, all devs should
+# at least understand basic English.
+#
+
+[ -f "/etc/slitaz/cook.conf" ] && . /etc/slitaz/cook.conf
+[ -f "cook.conf" ] && . ./cook.conf
+
+# The same wok as cook.
+wok="$WOK"
+
+# Cooker DB files.
+activity="$CACHE/activity"
+commits="$CACHE/commits"
+cooklist="$CACHE/cooklist"
+cookorder="$CACHE/cookorder"
+status="$CACHE/status"
+blocked="$CACHE/blocked"
+broken="$CACHE/broken"
+
+#
+# Functions
+#
+
+usage() {
+	cat << EOT
+
+Usage: cooker [--option]
+
+Options:
+  --usage      Display this short usage.
+  --setup      Setup the Cooker environment.
+  --all        Cook all unbuilt packages.
+  --cat=       Cook all package of a category.
+
+EOT
+	exit 0
+}
+
+separator() {
+	echo "================================================================================"
+}
+
+# Lograte activity.
+[ -s "$activity" ] && tail -n 20 $activity > /tmp/tail && \
+	mv -f /tmp/tail $activity
+
+# Log activities.
+log() {
+	grep ^[a-zA-Z0-9] | \
+		sed s"#^[A-Z]\([^']*\)#$(date '+%Y-%m-%d %H:%M') : \0#" >> $activity
+}
+
+# Log broken packages
+broken() {
+	echo "$pkg" >> $broken
+}
+
+# Scan packages deps an fill up cookorder list.
+cook_order_scan() {
+	touch $cooklist $cookorder
+	for pkg in $(cat $cooklist)
+	do
+		unset DEPENDS BUILD_DEPENDS
+		. $WOK/$pkg/receipt
+		for dep in $DEPENDS $BUILD_DEPENDS
+		do
+			if grep -q "^$dep$" $cooklist; then
+				echo -e "$pkg: $dep"
+				if ! grep -q "^$dep$" $cookorder; then
+					echo "$dep" >> $cookorder
+				fi
+			fi
+		done
+	done
+	
+	# Append unordered packages to cookored.
+	for pkg in $(cat $cooklist)
+	do
+		if ! grep -q "^$pkg$" $cookorder; then
+			echo "$pkg" >> $cookorder
+		fi
+	done
+}
+
+# Scan and rescan untill the cooklist is ordered then handle WANTED.
+cook_order() {
+	time=$(date +%s)
+	scan=0
+
+	# Keep an original cooklist so we do a diff when ordering is finished.
+	cp -f $cooklist $cooklist.0
+	echo -e "\nInitial Cooker order scan"
+	separator
+	cook_order_scan
+	
+	# Diff between the cooklist and new ordered list ? So copy the last
+	# cookorder to cooklist and rescan it.
+	while /bin/true
+	do
+		diff $cooklist $cookorder > $cookorder.diff
+		if [ -s "$cookorder.diff" ]; then
+			scan=$(($scan + 1))
+			echo -e "\nDiff scan: $scan"
+			separator
+			mv -f $cookorder $cooklist
+			cook_order_scan
+		else
+			break
+		fi
+	done
+
+	# Keep a diff between submited cooklist and the ordered.
+	diff $cooklist.0 $cooklist > $cooklist.diff
+	rm -f $cookorder $cookorder.diff $cooklist.0
+
+	# Scan is finish: append pkg to WANTED
+	echo -e "\nHandle WANTED package"
+	separator
+	for pkg in $(cat $cooklist)
+	do
+		unset WANTED
+		. $WOK/$pkg/receipt
+		if [ "$WANTED" ]; then
+			echo "$pkg: $WANTED"
+			sed -i -e "/^$pkg$/"d  \
+				-e "/^$WANTED$/ a $pkg"  $cooklist
+		fi
+	done
+
+	# Show ordered cooklist
+	echo -e "\nCooklist order"
+	separator
+	cat $cooklist
+	separator
+	time=$(($(date +%s) - $time))
+	pkgs=$(cat $cooklist | wc -l)
+	echo -e "\nSummary"
+	separator
+	cat << EOT
+Ordered packages : $pkgs
+Scans executed   : $scan
+Scan duration    : ${time}s
+EOT
+	separator && echo ""
+}
+
+# Uses in default mode and with all cmd.
+cook_commits() {
+	if [ -s "$commits" ]; then
+		for pkg in $(cat $commits)
+		do
+			echo "Cook packages <a href='cooker.cgi?log=$pkg'>$pkg</a>" | log
+			echo "cook:$pkg" > $status
+			cook $pkg || broken
+			sed -i /^${pkg}$/d $commits
+		done
+	fi
+}
+
+#
+# Commands
+#
+case "$1" in
+	--usage|--help)
+		usage ;;
+	--setup)
+		# Setup the Cooker environment.
+		echo -e "\nSetting up the Cooker"
+		separator
+		for pkg in mercurial rsync slitaz-toolchain
+		do
+			[ ! -d "$INSTALLED/$pkg" ] && tazpkg get-install $pkg
+		done
+		mkdir -p $SLITAZ && cd $SLITAZ
+		[ -d "${wok}-hg" ] && echo -e "Hg wok already exist.\n" && exit 1
+		[ -d "$wok" ] && echo -e "Build wok already exist.\n" && exit 1
+		[ -d "flavors" ] && echo -e "Flavors repo already exist.\n" && exit 1
+
+		# Directories and files
+		echo "mkdir's and touch files in: $SLITAZ"
+		mkdir -p $PKGS $LOGS $CACHE $SRC
+		for f in $activity $blocked $broken $commits $cooklist $status
+		do
+			touch $f
+		done
+		hg clone $WOK_URL ${wok}-hg
+		hg clone $FLAVORS_URL flavors
+		cp -a ${wok}-hg $wok
+		separator && echo "" ;;
+	--reverse=*)
+		# Cook all reverse dependencies for a packages. This command let us
+		# control the Cooker manually if needed.
+		#
+		# Should be in cook ?
+		#
+		pkg=$2
+		[ ! -d "$wok/$pkg" ] && echo "No package $2 found." && exit 0
+		cd $wok
+		for rev in *
+		do
+			if fgrep DEPENDS $rev/receipt | fgrep $pkg; then
+				echo "TODO: $rev"
+			fi
+		done ;;
+	--cat=*)
+		# Cook all packages of a category.
+		rm -f $cooklist && touch $cooklist
+		cat=${1#--cat=} && cd $WOK
+		for pkg in *
+		do
+			unset CATEGORY && . $pkg/receipt
+			[ "$CATEGORY" == "$cat" ] && echo $pkg >> $cooklist
+		done
+		cook_order | tee $LOGS/cooker-order.log
+		#for pkg in $(cat $cooklist)
+		#do
+			#cook $pkg || broken
+		#done
+		;;
+	--all)
+		# Try to build all unbuilt packages except blocked's.
+		rm -f $cooklist && touch $cooklist
+		
+		echo "" && cd $wok
+		echo "Cooker cooklist"
+		separator
+		
+		# Find all unbuilt packages.
+		echo "Searching for all unbuilt packages" | log
+		for pkg in *
+		do
+			. $pkg/receipt
+			[ ! -f "$PKGS/$PACKAGE-${VERSION}${EXTRAVERSION}.tazpkg" ] && \
+				echo $pkg >> $cooklist
+		done
+
+		# Remove blocked (faster this way than grepping before).
+		for pkg in $(cat $blocked)
+		do
+			sed -i /^${pkg}$/d $cooklist
+		done && sed -i /^$/d $cooklist
+
+		echo "Packages to cook: $(cat $cooklist | wc -l)"
+		cook_order | tee $LOGS/cooker-order.log
+
+		# Clean DB files
+		echo "Cleaning cached DB files" | log
+		#sed /^$/ $cooklist > $cooklist.tmp
+		#uniq $cooklist.tmp > $cooklist && rm -f $cooklist.tmp
+		#echo "Cooklist: $(cat $cooklist | wc -l)"
+		echo "" ;;
+	*)
+		# Default is to cook all commits.
+		[ "$1" ] && usage
+		cooklist=$CACHE/commits
+		echo -e "\nChecking for commits"
+		separator
+		
+		# Get revisions.
+		cd $wok || ( echo "" && exit 1 )
+		cur=$(hg head --template '{rev}\n')
+		echo "Updating Hg wok" | log
+		echo "hg:pull" > $status
+		cd ${wok}-hg && hg pull -u
+		new=$(hg head --template '{rev}\n')
+		echo "Hg wok revision : $cur"
+		echo "Pulled revision : $new"
+	
+		# Sync build wok with rsync so we dont take care about removing old
+		# files as before.
+		if [ "$new" -gt "$cur" ]; then
+			echo "Changes found from: $cur to $new" | log
+			echo "Syncing build work with Hg wok..."
+			cp -a ${wok}-hg/* $wok
+			cp -a ${wok}-hg/.hg $wok
+		else
+			echo "No changes: $cur vs $new" | log
+			separator && echo "" && exit 0
+		fi
+		
+		# Get modifications
+		cd ${wok}-hg
+		cur=$(($cur+1))
+		msg="from revision $cur to $new"
+		[ "$new" == "$cur" ] && msg="revision: $new"
+		echo -e "Will cook $msg\n"
+		rm -f $commits.tmp && touch $commits.tmp
+		for rev in $(seq $cur $new); do
+			log=$(hg log --rev=$rev --template "{files}\n" | cut -d "/" -f 1)
+			for file in $log; do
+				echo $file >> $commits.tmp
+			done
+		done
+		
+		# Keep previews commit and discard duplicate lines
+		cat $commits $commits.tmp | sed /"^$"/d > $commits.new
+		uniq $commits.new > $commits && rm $commits.*
+		echo "Packages to cook: $(cat $commits | wc -l)"
+		cook_order | tee $LOGS/cooker-order.log
+		cook_commits
+		echo "" > $status ;;
+esac
+
+exit 0
