@@ -1,0 +1,62 @@
+SliTaz Cookutils
+================================================================================
+
+
+The SliTaz Cookutils provide tools and utils to build SliTaz packages.
+
+
+cook
+----
+The cook tool should be used in a chroot environment, simply use the command
+'tazdev gen-chroot' to build one. You can also build package directly but
+build deps will not be handled correctly since cook will install missing
+packages to perform a build and then remove them only if there wasn't
+installed before, this way we can keep a clean build environment.
+
+We use standard SliTaz path to work such as /home/slitaz/wok, if you work on
+cooking from stable or want to keep a clean system: create a chroot.
+
+Cook features:
+
+    * Setup a build env
+    * Check and install missing build deps
+    * Compile and generate the package
+    * Remove installed build deps
+    * Provide a log for each cook
+    * Clean a package in the wok
+
+Cook does not:
+
+    * Depends on Hg but can use it to manage a wok
+    * Do complex work about compiling the all system from source
+    * Check build deps for you, use: BUILD_DEPENDS
+      If all deps are also build deps do: BUILD_DEPENDS="$DEPENDS"
+    * The work of a Build Bot, unix philosophy: one tool for one task
+    * Cook a package if you receipt is crappy :-)
+
+Cook also manage packages list so they can be used for a personnal packages
+repository or sent to the official mirror. We create and use:
+
+    * packages.list    Simple list of package-version
+    * packages.md5     MD5sum list of all packages
+    * packages.desc    Packages with name, version, category, desc
+    * packages.equiv   Equivalent paclages list
+    * files.list.lzma  A files provides by all packages
+
+
+cooker
+------
+The Cooker is a Build Bot who automate the build process but dont do the diner
+for you! We need quality receipt to cook succefully and the goal is not to have
+a bloated script so please Keep It Short and Simple.
+
+Cmdline tool  : /usr/bin/cooker
+Web interface : /var/www/cooker
+Cache folder  : /home/slitaz/cache
+
+The web interface consist in one CGI script, 2 xHTML files and a CSS style.
+Cook log can are produced by cook and the cooker just act as a fronted to
+check them in a nice way.
+
+
+================================================================================
