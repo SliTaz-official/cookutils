@@ -1,0 +1,498 @@
+#!/bin/sh
+#
+# Cook - A tool to cook and generate SliTaz packages. Read the README
+# before adding or modifing any code in cook!
+#
+# Copyright (C) SliTaz GNU/Linux - GNU gpl v3
+# Author: Christophe Lincoln <pankso@slitaz.org>
+#
+
+[ -f "/etc/slitaz/cook.conf" ] && . /etc/slitaz/cook.conf
+[ -f "cook.conf" ] && . ./cook.conf
+
+#
+# Functions
+#
+
+usage() {
+	cat << EOT
+
+$(echo -e "\033[1m$(gettext "Usage:")\033[0m") cook [package|command|list] [--option]
+
+$(echo -e "\033[1m$(gettext "Commands:")\033[0m")
+  usage|help      $(gettext "Display this short usage.")
+  list-wok        $(gettext "List packages in the wok.")
+  setup           $(gettext "Setup your build environment.")
+  new             $(gettext "Create a new package with receipt".)
+  list            $(gettext "Cook a list of packages.") 
+  clean-wok       $(gettext "Clean-up all packages files.")
+  clean-src       $(gettext "Clean-up all packages source.")
+  pkglist         $(gettext "Create all packages.* lists.")
+
+$(echo -e "\033[1m$(gettext "Options:")\033[0m")
+  --clean|-c      $(gettext "Clean the package in the wok.")
+  --install|-i    $(gettext "Cook and install the package.")
+  --wok|-w        $(gettext "Setup also a wok from Hg repo.")
+
+EOT
+	exit 0
+}
+
+# Be sure we root.
+check_root() {
+	[ $(id -u) != 0 ] && gettext -e "\nYou must be root to cook.\n\n" && exit 0
+}
+
+separator() {
+	echo "================================================================================"
+}
+
+status() {
+	echo -en "\\033[70G[ "
+	if [ $? = 0 ]; then
+		echo -en "\\033[1;32mOK"
+	else
+		echo -en "\\033[1;31mFailed"
+	fi
+	echo -e "\\033[0;39m ]"
+}
+
+clean_log() {
+	sed -i -e s'|\[70G\[ \[1;32m| |' \
+		-e s'|\[0;39m \]||' $LOGS/$pkg.log
+}
+
+unset_receipt() {
+	unset DEPENDS BUILD_DEPENDS WANTED EXTRAVERSION WGET_URL PROVIDE
+}
+
+# Be sure package exist in wok.
+check_pkg_in_wok() {
+	if [ ! -d "$WOK/$pkg" ]; then
+		gettext -e "\nUnable to find package in the wok:"
+		echo -e " $pkg\n" && exit 1
+	fi
+}
+
+# Path's used in receipt and by cook itself.
+set_paths() {
+	pkgdir=$WOK/$PACKAGE
+	src=$pkgdir/source/$PACKAGE-$VERSION
+	pack=$pkgdir/taz/$PACKAGE-${VERSION}${EXTRAVERSION}
+	fs=$pack/fs
+	stuff=$pkgdir/stuff
+	install=$pkgdir/install
+	if [ "$WANTED" ]; then
+		src=$WOK/$WANTED/source/$WANTED-$VERSION
+		install=$WOK/$WANTED/install
+	fi
+	# Old way compatibility
+	_pkg=$install
+}
+
+# Get package source
+get_source() {
+	wget -P $SRC $WGET_URL
+}
+
+# Extract source package
+extract_source() {
+	gettext "Extracting:"; echo " $TARBALL"
+	case "$TARBALL" in
+		*.tar.gz|*.tgz) tar xzf $SRC/$TARBALL ;;
+		*.tar.bz2) tar xjf $SRC/$TARBALL ;;
+		*.tar.lzma) tar xaf $SRC/$TARBALL ;;
+		*.zip) unzip $SRC/$TARBALL ;;
+	esac
+}
+
+# Display cooked package summary
+summary() {
+	cd $WOK/$pkg
+	[ -d install ] && prod=$(du -sh install | awk '{print $1}' 2>/dev/null)
+	fs=$(du -sh taz/* | awk '{print $1}')
+	size=$(du -sh $PKGS/$PACKAGE-${VERSION}${EXTRAVERSION}.* | awk '{print $1}')
+	files=$(cat taz/$PACKAGE-*/files.list | wc -l)
+	gettext "Summary for:"; echo " $PACKAGE $VERSION"
+	separator
+	[ "$prod" ] && echo "Produce    : $prod"
+	cat << EOT
+Packed     : $fs
+Compressed : $size
+Files      : $files
+Cook time  : ${time}s
+$(separator)
+
+EOT
+}
+
+# Copy all generic files (locale, pixmaps, .desktop). We use standard paths,
+# so some packages need to copy these files with the receipt and genpkg_rules.
+copy_generic_files()
+{
+	# $LOCALE is set in cook.conf
+	if [ "$LOCALE"  ]; then
+		if [ -d "$_pkg/usr/share/locale" ]; then
+			mkdir -p $fs/usr/share/locale
+			for i in $LOCALE
+			do
+				if [ -d "$_pkg/usr/share/locale/$i" ]; then
+					cp -a $_pkg/usr/share/locale/$i $fs/usr/share/locale
+				fi
+			done
+		fi
+	fi
+
+	# Generic pixmaps copy can be disabled with GENERIC_PIXMAPS="no"
+	if [ "$GENERIC_PIXMAPS" != "no" ]; then
+		if [ -d "$_pkg/usr/share/pixmaps" ]; then
+			mkdir -p $fs/usr/share/pixmaps
+			cp -a $_pkg/usr/share/pixmaps/$PACKAGE.png \
+				$fs/usr/share/pixmaps 2>/dev/null
+			cp -a $_pkg/usr/share/pixmaps/$PACKAGE.xpm \
+				$fs/usr/share/pixmaps 2>/dev/null
+		fi
+
+		# Custom or homemade PNG pixmap can be in stuff.
+		if [ -f "$stuff/$PACKAGE.png" ]; then
+			mkdir -p $fs/usr/share/pixmaps
+			cp -a $stuff/$PACKAGE.png $fs/usr/share/pixmaps
+		fi
+	fi
+
+	# Desktop entry (.desktop).
+	if [ -d "$_pkg/usr/share/applications" ]; then
+		cp -a $_pkg/usr/share/applications $fs/usr/share
+	fi
+
+	# Homemade desktop file(s) can be in stuff.
+	if [ -d "$stuff/applications" ]; then
+		mkdir -p $fs/usr/share
+		cp -a $stuff/applications $fs/usr/share
+	fi
+	if [ -f "$stuff/$PACKAGE.desktop" ]; then
+		mkdir -p $fs/usr/share/applications
+		cp -a $stuff/$PACKAGE.desktop $fs/usr/share/applications
+	fi
+}
+
+# Find and strip : --strip-all (-s) or --strip-debug on static libs.
+strip_package()
+{
+	gettext "Executing strip on all files"
+	for dir in $fs/bin $fs/sbin $fs/usr/bin $fs/usr/sbin $fs/usr/games
+	do
+		if [ -d "$dir" ]; then
+			find $dir -type f -exec strip -s '{}' 2>/dev/null \;
+		fi
+	done
+	find $fs -name "*.so*" -exec strip -s '{}' 2>/dev/null \;
+	find $fs -name "*.a" -exec strip --strip-debug '{}' 2>/dev/null \;
+	status
+}
+
+# Verify package quality and consitensy.
+packit_quality() {
+	if grep -q ^ERROR $LOGS/$pkg.log; then
+		exit 1
+	fi
+	if ! grep -q ^/ $WOK/$pkg/taz/$pkg-*/files.list; then
+		echo -e "ERROR: empty package\n" | tee -a $LOGS/$pkg.log && exit 1
+	else
+		mv -f $WOK/$pkg/taz/$pkg-*.tazpkg $PKGS
+	fi
+}
+
+# The main cook function.
+cookit() {
+	set_paths
+	unset error
+	echo "Cooking: $PACKAGE $VERSION"
+	separator
+	rm -rf install taz source $CACHE/error
+
+	# Disable -pipe if less than 512Mb free RAM.
+	free=$(free | fgrep '/+ buffers' | tr -s ' ' | cut -f 4 -d ' ')
+	if [ "$free" -lt 524288 ] && [ "$CFLAGS" != "${CFLAGS/-pipe}" ]; then
+			gettext -e "Disabling -pipe compile flag: $free RAM\n"
+			CFLAGS="${CFLAGS/-pipe}" && CFLAGS=$(echo "$CFLAGS" | tr -s ' ')
+			CXXFLAGS="${CXXFLAGS/-pipe}" && CXXFLAGS=$(echo "$CXXFLAGS" | tr -s ' ')
+	fi
+	unset free
+
+	# Export flags and path to be used by make
+	DESTDIR=$WOK/$PACKAGE/install
+	export DESTDIR MAKEFLAGS CFLAGS CXXFLAGS BUILD_HOST CONFIG_SITE
+	local LC_ALL=POSIX LANG=POSIX
+
+	# Check for build dep.
+	cd $INSTALLED && ls -1 > $CACHE/installed.list
+	[ "$DEPENDS" ] && gettext -e "Checking build dependencies...\n"
+	for dep in $BUILD_DEPENDS
+	do
+		if [ ! -d "$INSTALLED/$dep" ]; then
+			# Try local package first
+			if [ -f "$PKGS/$dep-*.tazpkg" ]; then
+				gettext "Installing dep (local):"; echo " $dep"
+				cd $PKGS && tazpkg install $dep-*.tazpkg >/dev/null
+			else
+				gettext "Installing dep (web/cache):"; echo " $dep"
+				tazpkg get-install $dep >/dev/null
+			fi
+		fi
+	done
+	ls -1 > $CACHE/installed.cook && cd $CACHE
+	diff installed.list installed.cook | \
+		grep ^+[a-zA-Z0-9] | sed s/^+// > installed.deps
+	deps=$(cat installed.deps | wc -l)
+
+	# Get source tarball and make sure we have source dir named:
+	# $PACKAGE-$VERSION to be standard in receipts. Her we use tar.lzma
+	# tarball if it exist.
+	if [ "$WGET_URL" ] && [ ! -f "$SRC/$TARBALL" ]; then
+		if [ -f "$SRC/${SOURCE:-$PACKAGE}-$VERSION.tar.lzma" ]; then
+			TARBALL=$SRC/${SOURCE:-$PACKAGE}-$VERSION.tar.lzma
+		else
+			get_source || exit 1
+		fi
+	fi
+	if [ ! "$WANTED" ] && [ ! -d "$src" ]; then
+		mkdir -p $pkgdir/source/tmp && cd $pkgdir/source/tmp
+		extract_source || exit 1
+		mv * ../$PACKAGE-$VERSION
+		cd .. && rm -rf tmp
+	fi
+
+	# Execute receipt rules and stay compatible with _pkg.
+	if grep -q ^compile_rules $pkgdir/receipt; then
+		gettext -e "Executing: compile_rules\n"
+		cd $src && compile_rules || exit 1
+		[ -d $src/_pkg ] && mv $src/_pkg $install
+	fi
+	if grep -q ^genpkg_rules $pkgdir/receipt; then
+		gettext -e "Executing: genpkg_rules\n"
+		mkdir -p $fs && genpkg_rules || ( echo -e \
+			"\nERROR: genpkg_rules failed\n" | \
+			tee -a $LOGS/$pkg.log && exit 1 )
+	fi
+
+	# Now remove installed build deps.
+	if [ "$deps" -gt 0 ]; then
+		gettext "Removing build dependencies:"; echo " $deps"
+		for dep in $(cat $CACHE/installed.deps)
+		do
+			yes | tazpkg remove $dep >/dev/null
+		done
+	fi
+	separator && echo ""
+}
+
+# Cook quality assurance.
+cookit_quality() {
+	if grep -q ^ERROR $LOGS/$pkg.log; then
+		exit 1
+	fi
+	if [ ! -d "$WOK/$pkg/install" ] && [ ! "$WANTED" ]; then
+		echo -e "ERROR: cook failed\n" | \
+			tee -a $LOGS/$pkg.log && exit 1
+	fi
+}
+
+# Create the package.
+packit() {
+	set_paths
+	echo "Packing: $PACKAGE ${VERSION}${EXTRAVERSION}"
+	separator
+	cd $pkgdir/taz
+	strip_package
+	for file in receipt description.txt
+	do
+		[ ! -f "../$file" ] && continue
+		gettext "Copying"; echo -n " $file..."
+		cp -f ../$file $pack && chown 0.0 $pack/$file && status
+	done
+	copy_generic_files
+	# Use Tazpkg to create a tazpkg package...
+	tazpkg pack $PACKAGE-${VERSION}${EXTRAVERSION} | grep "\[*\]"
+	separator && echo ""
+}
+
+#
+# Commands
+#
+
+case "$1" in
+	usage|help)
+		 usage ;;
+	list-wok)
+		gettext "List of packages in:"; echo " $WOK"
+		separator
+		cd $WOK && ls -1
+		separator
+		echo -n "Packages: " && ls | wc -l
+		echo "" ;;
+	setup)
+		# Setup a build environment
+		check_root
+		gettext -e "\nSetting up your environment\n"
+		separator && cd $SLITAZ
+		gettext "Creating directories structure in:"; echo " $SLITAZ"
+		mkdir -p $WOK $PKGS $SRC $CACHE $LOGS
+		gettext -e "Checking for packages to install...\n"
+		for pkg in slitaz-toolchain tazdev intltool gettext
+		do
+			[ ! -d "$INSTALLED/$pkg" ] && tazpkg get-install $pkg
+		done
+
+		# Handle --options
+		case "$2" in
+			--wok)
+				[ ! -d "$INSTALLED/mercurial" ] && tazpkg get-install mercurial
+				[ -d "$WOK" ] && echo -e "A wok already exist.\n" && exit 1
+				hg clone $HG_URL ;;
+			--chroot)
+				echo "TODO: create a chroot with tazdev" ;;
+		esac
+
+		# SliTaz group and permissions
+		if ! grep -q ^slitaz /etc/group; then
+			gettext -e "Adding group: slitaz\n"
+			addgroup slitaz
+		fi
+		gettext -e "Setting permissions for slitaz group...\n"
+		chown -R root.slitaz $SLITAZ
+		chmod -R g+w $SLITAZ
+		separator
+		gettext -e "All done, ready to cook packages :-)\n\n" ;;
+	new)
+		# Create the package folder and an empty receipt.
+		pkg="$2"
+		[ "$pkg" ] || usage
+		echo ""
+		if [ -d "$WOK/$pkg" ]; then
+			echo -n  "$pkg " && gettext "package already exist."
+			echo -e "\n" && exit 1
+		fi
+		gettext "Creating"; echo -n " $WOK/$pkg"
+		mkdir $WOK/$pkg && cd $WOK/$pkg && status
+		gettext "Preparing the package receipt..."
+		cp $DATA/receipt .
+		sed -i s"/^PACKAGE=.*/PACKAGE=\"$pkg\"/" receipt
+		status && echo "" ;;
+	list)
+		# Cook a list of packages (better use the Cooker since it will order
+		# packages before executing cook).
+		check_root
+		[ -z "$2" ] && gettext -e "\nNo list in argument.\n\n" && exit 1
+		[ ! -f "$2" ] && gettext -e "\nNo list found:" && \
+			echo -e " $2\n" && exit 1
+		for pkg in $(cat $2)
+		do
+			cook $pkg || broken
+		done ;;
+	clean-wok)
+		check_root
+		gettext -e "\nCleaning all packages files..."
+		rm -rf $WOK/*/taz $WOK/*/install $WOK/*/source
+		status && echo "" ;;
+	clean-src)
+		check_root
+		gettext -e "\nCleaning all packages source..."
+		rm -rf $WOK/*/source
+		status && echo "" ;;
+	pkglist)
+		# Create suitable packages list for TazPKG and only for builded packages.
+		[ "$2" ] && PKGS="$2"
+		[ ! -d "$PKGS" ] && \
+			gettext -e "\nPackages directory dont exist\n\n" && exit 1
+		cd $PKGS
+		gettext -e "\nCreating lists for:"; echo " $PKGS"
+		separator
+		rm -f packages.* files.list*
+		gettext -e "Creating: packages.list\n"
+		ls -1 | sed s'/.tazpkg//' > $PKGS/packages.list
+		gettext -e "Creating: packages.md5\n"
+		md5sum *.tazpkg > $PKGS/packages.md5
+		gettext -e "Creating: packages.desc\n"
+		gettext -e "Creating: packages.equiv\n"
+		cd $WOK
+		for pkg in *
+		do
+			unset_receipt
+			. $pkg/receipt
+			# packages.desc let us search easily in DB
+			if [ -f "$PKGS/$PACKAGE-${VERSION}${EXTRAVERSION}.tazpkg" ]; then
+				cat >> $PKGS/packages.desc << EOT
+$PACKAGE | $VERSION$EXTRAVERSION | $SHORT_DESC | $CATEGORY | $WEB_SITE
+EOT
+				# Packages.equiv is used by tazpkg install to check depends.
+				for i in $PROVIDE; do
+					DEST=""
+					echo $i | fgrep -q : && DEST="${i#*:}:"
+					if grep -qs ^${i%:*}= $PKGS/packages.equiv; then
+						sed -i "s/^${i%:*}=/${i%:*}=$DEST$PACKAGE /" \
+							$PKGS/packages.equiv
+					else
+						echo "${i%:*}=$DEST$PACKAGE" >> $PKGS/packages.equiv
+					fi
+				done
+			fi
+		done
+		# files.list.lzma
+		#lzma e files.list files.list.lzma
+		separator
+		nb=$(ls $PKGS/*.tazpkg | wc -l)
+		echo -e "Packages: $nb\n" ;;
+	*)
+		# Just cook and generate a package.
+		check_root
+		time=$(date +%s)
+		pkg="$1"
+		[ -z "$pkg" ] && usage
+		check_pkg_in_wok && echo ""
+		unset inst
+		unset_receipt
+		cd $WOK/$pkg && . ./receipt
+		
+		# Handle --options
+		case "$2" in
+			--clean|-c)
+				gettext -e "Cleaning package:"; echo -n " $pkg"
+				cd $WOK/$pkg && rm -rf install taz source
+				status && echo "" && exit 0 ;;
+			--install|-i)
+				inst='yes' ;;
+		esac
+
+		# Check if wanted is build now so we have separate log files.
+		if [ "$WANTED" ] && [ ! -d "$WOK/$WANTED/install" ]; then
+			cook "$WANTED"
+		fi
+
+		# Cook and pack or exit on error and log everything.
+		cookit | tee $LOGS/$pkg.log
+		cookit_quality
+		packit | tee -a $LOGS/$pkg.log
+		clean_log
+		packit_quality
+
+		# Time and summary
+		time=$(($(date +%s) - $time))
+		summary | tee -a $LOGS/$pkg.log
+
+		# Install package if requested
+		if [ "$inst" ]; then
+			if [ -f "$PKGS/$PACKAGE-${VERSION}${EXTRAVERSION}.tazpkg" ]; then
+				cd $PKGS && tazpkg install \
+					$PACKAGE-${VERSION}${EXTRAVERSION}.tazpkg --forced
+			else
+				gettext -e "Unable to install package, build have failed.\n\n"
+				exit 1
+			fi
+		fi
+		# Finally we may want to build the *-dev package
+		#[ -d "$WOK/$pkg-dev" ] && cook $pkg-dev
+		;;
+esac
+
+exit 0
