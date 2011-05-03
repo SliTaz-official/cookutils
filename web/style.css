@@ -1,0 +1,37 @@
+/* CSS style for SliTaz Cooker */
+
+body { font: 96% sans-serif, vernada, arial; margin: 0; }
+h1 { margin: 0; padding: 8px; color: #fff; font-size: 20px; }
+h1 a { color: #fff; text-decoration: none; }
+h2 { color: #444; } h3 { color: #666; font-size: 140%; }
+a:hover { text-decoration: none; }
+pre {
+	background-color: #f8f8f8;
+	border: 1px solid #ddd;
+	padding: 10px;
+	border-radius: 4px;
+}
+
+#header {
+	background: #351a0a;
+	height: 40px;
+	border-bottom: 8px solid #d66018;
+}
+
+#content {
+	margin: 40px 80px;
+	text-align: justify;
+}
+
+#footer {
+	text-align: center;
+	padding: 20px;
+	border-top: 1px solid #ddd;
+}
+
+.span-ok { color: green; }
+.span-error { color: red; }
+.span-sky { color: blue; }
+.span-no { color: orange; }
+.span-line { color: #888; }
+.span-date { color: #666; font-size: 95%; }
