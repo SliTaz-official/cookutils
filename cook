@@ -191,15 +191,21 @@ strip_package()
 	status
 }
 
-# Verify package quality and consitensy.
-packit_quality() {
-	if grep -q ^ERROR $LOGS/$pkg.log; then
-		exit 1
-	fi
-	if ! grep -q ^/ $WOK/$pkg/taz/$pkg-*/files.list; then
-		echo -e "ERROR: empty package\n" | tee -a $LOGS/$pkg.log && exit 1
-	else
-		mv -f $WOK/$pkg/taz/$pkg-*.tazpkg $PKGS
+# Remove installed deps.
+remove_deps() {
+	# Now remove installed build deps.
+	deps=$(cat $CACHE/installed.diff | grep ^+[a-zA-Z0-9] | sed s/^+//)
+	nb=$(echo $deps | wc -l)
+	if [ -s "$CACHE/installed.diff" ]; then
+		gettext "Build dependencies to remove:"; echo " $nb"
+		gettext "Removing:"
+		for dep in $deps
+		do
+			echo -n " $dep"
+			yes | tazpkg remove $dep >/dev/null
+		done
+		echo ""
+		mv -f $CACHE/installed.diff $CACHE/installed.last.diff
 	fi
 }
 
@@ -242,9 +248,11 @@ cookit() {
 		fi
 	done
 	ls -1 > $CACHE/installed.cook && cd $CACHE
-	diff installed.list installed.cook | \
-		grep ^+[a-zA-Z0-9] | sed s/^+// > installed.deps
-	deps=$(cat installed.deps | wc -l)
+	
+	# If a cook failed deps are not remove since we exit 1.
+	[ ! -s "installed.diff" ] && \
+		diff installed.list installed.cook > installed.diff
+	deps=$(cat installed.diff | grep ^+[a-zA-Z0-9] | wc -l)
 
 	# Get source tarball and make sure we have source dir named:
 	# $PACKAGE-$VERSION to be standard in receipts. Her we use tar.lzma
@@ -275,15 +283,6 @@ cookit() {
 			"\nERROR: genpkg_rules failed\n" | \
 			tee -a $LOGS/$pkg.log && exit 1 )
 	fi
-
-	# Now remove installed build deps.
-	if [ "$deps" -gt 0 ]; then
-		gettext "Removing build dependencies:"; echo " $deps"
-		for dep in $(cat $CACHE/installed.deps)
-		do
-			yes | tazpkg remove $dep >/dev/null
-		done
-	fi
 	separator && echo ""
 }
 
@@ -293,7 +292,7 @@ cookit_quality() {
 		exit 1
 	fi
 	if [ ! -d "$WOK/$pkg/install" ] && [ ! "$WANTED" ]; then
-		echo -e "ERROR: cook failed\n" | \
+		echo -e "\nERROR: cook failed\n" | \
 			tee -a $LOGS/$pkg.log && exit 1
 	fi
 }
@@ -315,6 +314,18 @@ packit() {
 	# Use Tazpkg to create a tazpkg package...
 	tazpkg pack $PACKAGE-${VERSION}${EXTRAVERSION} | grep "\[*\]"
 	separator && echo ""
+}
+
+# Verify package quality and consitensy.
+packit_quality() {
+	if grep -q ^ERROR $LOGS/$pkg.log; then
+		exit 1
+	fi
+	if ! grep -q ^/ $WOK/$pkg/taz/$pkg-*/files.list; then
+		echo -e "ERROR: empty package\n" | tee -a $LOGS/$pkg.log && exit 1
+	else
+		mv -f $WOK/$pkg/taz/$pkg-*.tazpkg $PKGS
+	fi
 }
 
 #
@@ -471,6 +482,7 @@ EOT
 
 		# Cook and pack or exit on error and log everything.
 		cookit | tee $LOGS/$pkg.log
+		remove_deps
 		cookit_quality
 		packit | tee -a $LOGS/$pkg.log
 		clean_log
