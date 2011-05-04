@@ -14,7 +14,7 @@ install:
 	install -m 0777 -d $(DESTDIR)/var/www/cooker
 	install -m 0777 -d $(DESTDIR)$(PREFIX)/share/cook
 	install -m 0644 web/* $(DESTDIR)/var/www/cooker
-	install -m 0644 data/* $(DESTDIR)$(PREFIX)/share/cook
+	cp -r data/* $(DESTDIR)$(PREFIX)/share/cook
 
 uninstall:
 	rm -f \

@@ -10,6 +10,9 @@
 [ -f "/etc/slitaz/cook.conf" ] && . /etc/slitaz/cook.conf
 [ -f "cook.conf" ] && . ./cook.conf
 
+# Share activity with the Cooker.
+activity="$CACHE/activity"
+
 #
 # Functions
 #
@@ -23,6 +26,7 @@ $(echo -e "\033[1m$(gettext "Commands:")\033[0m")
   usage|help      $(gettext "Display this short usage.")
   list-wok        $(gettext "List packages in the wok.")
   setup           $(gettext "Setup your build environment.")
+  test            $(gettext "Test environment and cook a package.")
   new             $(gettext "Create a new package with receipt".)
   list            $(gettext "Cook a list of packages.") 
   clean-wok       $(gettext "Clean-up all packages files.")
@@ -57,13 +61,16 @@ status() {
 	echo -e "\\033[0;39m ]"
 }
 
+# Log activities.
+log() {
+	grep ^[a-zA-Z0-9] | \
+		sed s"#^[A-Z]\([^']*\)#$(date '+%Y-%m-%d %H:%M') : \0#" >> $activity
+}
+
+# We dont want those escape in web interface.
 clean_log() {
 	sed -i -e s'|\[70G\[ \[1;32m| |' \
 		-e s'|\[0;39m \]||' $LOGS/$pkg.log
-}
-
-unset_receipt() {
-	unset DEPENDS BUILD_DEPENDS WANTED EXTRAVERSION WGET_URL PROVIDE
 }
 
 # Be sure package exist in wok.
@@ -72,6 +79,53 @@ check_pkg_in_wok() {
 		gettext -e "\nUnable to find package in the wok:"
 		echo -e " $pkg\n" && exit 1
 	fi
+}
+
+if_empty_value() {
+	if [ -z "$value" ]; then
+		gettext "QA: empty variable:"; echo -e " ${var}=\"\"\n"
+		exit 1
+	fi
+}
+
+# QA: check a receip consistency befor building.
+receipt_quality() {
+	gettext -e "QA: checking package receipt...\n"
+	unset online
+	if ifconfig | grep -q -A 1 "^[a-z]*[0-9]" | fgrep 'addr:'; then
+		online="online"
+	fi
+	for var in PACKAGE VERSION CATEGORY SHORT_DESC MAINTAINER WEB_SITE
+	do
+		unset value
+		value=$(grep ^$var= receipt | cut -d \" -f 2)
+		case "$var" in
+			PACKAGE|VERSION|SHORT_DESC)
+				if_empty_value ;;
+			CATEGORY)
+				[ -z "$value" ] && value="empty"
+				valid="base-system x-window utilities network graphics \
+					multimedia office development system-tools security games \
+					misc meta non-free"
+				if ! echo "$valid" | grep -q -w "$value"; then
+					gettext "QA: unknow category:"; echo -e " $value\n"
+					exit 1
+				fi ;;
+			WEB_SITE)
+				# We dont check WGET_URL since if dl is needed it will fail.
+				# Break also if we not online. Here error is not fatal.
+				if_empty_value
+				[ -z "$online" ] || break
+				if ! busybox wget -s $value 2>/dev/null; then
+					gettext "QA: Unable to reach:"; echo -e " $value\n"
+				fi ;;
+		esac
+	done
+}
+
+# Executed before sourcing a receipt.
+unset_receipt() {
+	unset DEPENDS BUILD_DEPENDS WANTED EXTRAVERSION WGET_URL PROVIDE TARBALL
 }
 
 # Path's used in receipt and by cook itself.
@@ -86,16 +140,45 @@ set_paths() {
 		src=$WOK/$WANTED/source/$WANTED-$VERSION
 		install=$WOK/$WANTED/install
 	fi
-	# Old way compatibility
+	# Old way compatibility.
 	_pkg=$install
 }
 
-# Get package source
+# Get package source.
 get_source() {
-	wget -P $SRC $WGET_URL
+	case "$WGET_URL" in
+		http://*|ftp://*)
+			# Busybox Wget is better!
+			busybox wget -c -P $SRC $WGET_URL ;;
+		hg*|mercurial*)
+			# We are in cache so clone here and create a tarball
+			pwd=$(pwd)
+			if $(echo "$WGET_URL" | fgrep -q hg); then
+				url=${WGET_URL#hg|}
+			else
+				url=${WGET_URL#mercurial|}
+			fi
+			pkgsrc=$PACKAGE-$VERSION
+			[ "$SOURCE" ] && pkgsrc=$SOURCE-$VERSION
+			tarball=$pkgsrc.tar.bz2
+			gettext "Getting source from Hg: "; echo $url
+			gettext "Cloning to: "; echo "$pwd/$pkgsrc"
+			hg clone $url $pkgsrc || exit 1
+			gettext "Creating tarball: "; echo "$tarball"
+			tar cjf $tarball $pkgsrc || exit 1
+			mv $tarball $SRC && rm -rf $pkgsrc ;;
+		git*)
+			echo "TODO: git implementation in cook" && exit 1 ;;
+		svn*)
+			echo "TODO: svn implementation in cook" && exit 1 ;;
+		*)
+			gettext -e "\nERROR: Unable to handle:"; echo -e " $WGET_URL \n" | \
+				tee -a $LOGS/$PACKAGE.log
+			exit 1 ;;
+	esac
 }
 
-# Extract source package
+# Extract source package.
 extract_source() {
 	gettext "Extracting:"; echo " $TARBALL"
 	case "$TARBALL" in
@@ -106,7 +189,7 @@ extract_source() {
 	esac
 }
 
-# Display cooked package summary
+# Display cooked package summary.
 summary() {
 	cd $WOK/$pkg
 	[ -d install ] && prod=$(du -sh install | awk '{print $1}' 2>/dev/null)
@@ -119,8 +202,8 @@ summary() {
 	cat << EOT
 Packed     : $fs
 Compressed : $size
-Files      : $files
 Cook time  : ${time}s
+Files      : $files
 $(separator)
 
 EOT
@@ -194,8 +277,9 @@ strip_package()
 # Remove installed deps.
 remove_deps() {
 	# Now remove installed build deps.
-	deps=$(cat $CACHE/installed.diff | grep ^+[a-zA-Z0-9] | sed s/^+//)
-	nb=$(echo $deps | wc -l)
+	diff="$CACHE/installed.diff"
+	deps=$(cat $diff | grep ^+[a-zA-Z0-9] | sed s/^+//)
+	nb=$(cat $diff | grep ^+[a-zA-Z0-9] | wc -l)
 	if [ -s "$CACHE/installed.diff" ]; then
 		gettext "Build dependencies to remove:"; echo " $nb"
 		gettext "Removing:"
@@ -211,10 +295,11 @@ remove_deps() {
 
 # The main cook function.
 cookit() {
-	set_paths
-	unset error
 	echo "Cooking: $PACKAGE $VERSION"
+	echo "Cooking: $PACKAGE $VERSION" | log
 	separator
+	set_paths
+	[ "$QA" ] && receipt_quality
 	rm -rf install taz source $CACHE/error
 
 	# Disable -pipe if less than 512Mb free RAM.
@@ -264,18 +349,25 @@ cookit() {
 			get_source || exit 1
 		fi
 	fi
-	if [ ! "$WANTED" ] && [ ! -d "$src" ]; then
+	if [ ! "$WANTED" ] && [ "$TARBALL" ] && [ ! -d "$src" ]; then
 		mkdir -p $pkgdir/source/tmp && cd $pkgdir/source/tmp
 		extract_source || exit 1
 		mv * ../$PACKAGE-$VERSION
 		cd .. && rm -rf tmp
 	fi
 
-	# Execute receipt rules and stay compatible with _pkg.
+	# Execute receipt rules.
 	if grep -q ^compile_rules $pkgdir/receipt; then
 		gettext -e "Executing: compile_rules\n"
-		cd $src && compile_rules || exit 1
+		[ -d "$src" ] && cd $src 
+		compile_rules || exit 1
+		# QA: compile_rules success so valid.
+		mkdir -p $install
+		# Stay compatible with _pkg
 		[ -d $src/_pkg ] && mv $src/_pkg $install
+	else
+		# QA: No compile_rules so no error, valid.
+		mkdir -p $install
 	fi
 	if grep -q ^genpkg_rules $pkgdir/receipt; then
 		gettext -e "Executing: genpkg_rules\n"
@@ -288,12 +380,12 @@ cookit() {
 
 # Cook quality assurance.
 cookit_quality() {
+	if [ ! -d "$WOK/$pkg/install" ] && [ ! "$WANTED" ]; then
+		echo -e "\nERROR: cook failed\n" | tee -a $LOGS/$pkg.log
+	fi
+	# ERROR can be echoed any time in cookit()
 	if grep -q ^ERROR $LOGS/$pkg.log; then
 		exit 1
-	fi
-	if [ ! -d "$WOK/$pkg/install" ] && [ ! "$WANTED" ]; then
-		echo -e "\nERROR: cook failed\n" | \
-			tee -a $LOGS/$pkg.log && exit 1
 	fi
 }
 
@@ -375,6 +467,12 @@ case "$1" in
 		chmod -R g+w $SLITAZ
 		separator
 		gettext -e "All done, ready to cook packages :-)\n\n" ;;
+	test)
+		# Test a cook environment.
+		echo "TODO: Use $DATA/cooktest \$(cp cooktest \$WOK and cook)"
+		[ ! -d "$WOK" ] && exit 1
+		[ ! -d "$WOK/cooktest" ] && cp -r $DATA/cooktest $WOK
+		cook cooktest ;;
 	new)
 		# Create the package folder and an empty receipt.
 		pkg="$2"
@@ -502,7 +600,8 @@ EOT
 				exit 1
 			fi
 		fi
-		# Finally we may want to build the *-dev package
+		# Finally we DONT WANT to build the *-dev or packages with WANTED="$pkg"
+		# You automation: use the Cooker Build Bot.
 		#[ -d "$WOK/$pkg-dev" ] && cook $pkg-dev
 		;;
 esac
