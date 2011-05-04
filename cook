@@ -62,7 +62,7 @@ status() {
 	echo -e "\\033[0;39m ]"
 }
 
-# Log activities.
+# Log activities, we want first letter capitalized.
 log() {
 	grep ^[a-zA-Z0-9] | \
 		sed s"#^[A-Z]\([^']*\)#$(date '+%Y-%m-%d %H:%M') : \0#" >> $activity
@@ -472,7 +472,7 @@ case "$1" in
 		gettext -e "All done, ready to cook packages :-)\n\n" ;;
 	test)
 		# Test a cook environment.
-		echo "cook test: testing the cook environment" | log
+		echo "Cook test: testing the cook environment" | log
 		[ ! -d "$WOK" ] && exit 1
 		[ ! -d "$WOK/cooktest" ] && cp -r $DATA/cooktest $WOK
 		cook cooktest ;;
@@ -498,7 +498,7 @@ case "$1" in
 		[ -z "$2" ] && gettext -e "\nNo list in argument.\n\n" && exit 1
 		[ ! -f "$2" ] && gettext -e "\nNo list found:" && \
 			echo -e " $2\n" && exit 1
-		echo "cook list: Starting to cook: $2" | log
+		echo "Cook list starting: $2" | log
 		for pkg in $(cat $2)
 		do
 			cook $pkg || broken
@@ -519,7 +519,7 @@ case "$1" in
 		[ ! -d "$PKGS" ] && \
 			gettext -e "\nPackages directory dont exist\n\n" && exit 1
 		cd $PKGS
-		echo "cook pkglist: Creating packages list" | log
+		echo "Cook pkglist: Creating all packages list" | log
 		gettext -e "\nCreating lists for:"; echo " $PKGS"
 		separator
 		rm -f packages.* files.list*

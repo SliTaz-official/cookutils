@@ -50,7 +50,7 @@ separator() {
 [ -s "$activity" ] && tail -n 20 $activity > /tmp/tail && \
 	mv -f /tmp/tail $activity
 
-# Log activities.
+# Log activities, we want first letter capitalized.
 log() {
 	grep ^[a-zA-Z0-9] | \
 		sed s"#^[A-Z]\([^']*\)#$(date '+%Y-%m-%d %H:%M') : \0#" >> $activity
@@ -155,7 +155,7 @@ cook_commits() {
 	if [ -s "$commits" ]; then
 		for pkg in $(cat $commits)
 		do
-			echo "cook started for: <a href='cooker.cgi?log=$pkg'>$pkg</a>" | log
+			echo "Cook started for: <a href='cooker.cgi?log=$pkg'>$pkg</a>" | log
 			echo "cook:$pkg" > $status
 			cook $pkg || broken
 			sed -i /^${pkg}$/d $commits
@@ -172,7 +172,7 @@ case "$1" in
 	--setup)
 		# Setup the Cooker environment.
 		echo -e "\nSetting up the Cooker"
-		echo "cooker --setup: $SLITAZ" | log
+		echo "Cooker --setup using: $SLITAZ" | log
 		separator
 		for pkg in mercurial rsync slitaz-toolchain
 		do
@@ -209,7 +209,7 @@ case "$1" in
 	--pkg=*)
 		# Same as 'cook pkg' but with log for web interface.
 		pkg=${1#--pkg=}
-		echo "cook started for: <a href='cooker.cgi?log=$pkg'>$pkg</a>" | log
+		echo "Cook started for: <a href='cooker.cgi?log=$pkg'>$pkg</a>" | log
 		cook $pkg || broken ;;
 	--cat=*)
 		# Cook all packages of a category.
@@ -223,7 +223,7 @@ case "$1" in
 		cook_order | tee $LOGS/cooker-order.log
 		for pkg in $(cat $cooklist)
 		do
-			echo "cook started for: <a href='cooker.cgi?log=$pkg'>$pkg</a>" | log
+			echo "Cook started for: <a href='cooker.cgi?log=$pkg'>$pkg</a>" | log
 			cook $pkg || broken
 		done
 		;;
@@ -251,6 +251,7 @@ case "$1" in
 		done && sed -i /^$/d $cooklist
 
 		echo "Packages to cook: $(cat $cooklist | wc -l)"
+		echo "Packages to cook: $(cat $cooklist | wc -l)" | log
 		cook_order | tee $LOGS/cooker-order.log
 
 		# Clean DB files
@@ -269,7 +270,7 @@ case "$1" in
 		# Get revisions.
 		cd $wok || ( echo "" && exit 1 )
 		cur=$(hg head --template '{rev}\n')
-		echo "Updating Hg wok" | log
+		echo "Updating Hg wok: ${wok}-hg" | log
 		echo "hg:pull" > $status
 		cd ${wok}-hg && hg pull -u
 		new=$(hg head --template '{rev}\n')
@@ -284,7 +285,7 @@ case "$1" in
 			cp -a ${wok}-hg/* $wok
 			cp -a ${wok}-hg/.hg $wok
 		else
-			echo "No changes: $cur vs $new" | log
+			echo "No revision changes: $cur vs $new" | log
 			separator && echo "" && exit 0
 		fi
 		
