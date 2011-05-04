@@ -34,9 +34,9 @@ $(echo -e "\033[1m$(gettext "Commands:")\033[0m")
   pkglist         $(gettext "Create all packages.* lists.")
 
 $(echo -e "\033[1m$(gettext "Options:")\033[0m")
-  --clean|-c      $(gettext "Clean the package in the wok.")
-  --install|-i    $(gettext "Cook and install the package.")
-  --wok|-w        $(gettext "Setup also a wok from Hg repo.")
+  --clean|-c      Cook : $(gettext "clean the package in the wok.")
+  --install|-i    Cook : $(gettext "and install the package.")
+  --wok|-w        Setup: $(gettext "create also a wok from Hg repo.")
 
 EOT
 	exit 0
@@ -158,8 +158,7 @@ get_source() {
 			else
 				url=${WGET_URL#mercurial|}
 			fi
-			pkgsrc=$PACKAGE-$VERSION
-			[ "$SOURCE" ] && pkgsrc=$SOURCE-$VERSION
+			pkgsrc=${SOURCE:-$PACKAGE}-$VERSION
 			tarball=$pkgsrc.tar.bz2
 			gettext "Getting source from Hg: "; echo $url
 			gettext "Cloning to: "; echo "$pwd/$pkgsrc"
@@ -296,7 +295,6 @@ remove_deps() {
 # The main cook function.
 cookit() {
 	echo "Cooking: $PACKAGE $VERSION"
-	echo "Cooking: $PACKAGE $VERSION" | log
 	separator
 	set_paths
 	[ "$QA" ] && receipt_quality
@@ -344,7 +342,7 @@ cookit() {
 	# tarball if it exist.
 	if [ "$WGET_URL" ] && [ ! -f "$SRC/$TARBALL" ]; then
 		if [ -f "$SRC/${SOURCE:-$PACKAGE}-$VERSION.tar.lzma" ]; then
-			TARBALL=$SRC/${SOURCE:-$PACKAGE}-$VERSION.tar.lzma
+			TARBALL=${SOURCE:-$PACKAGE}-$VERSION.tar.lzma
 		else
 			get_source || exit 1
 		fi
@@ -361,10 +359,10 @@ cookit() {
 		gettext -e "Executing: compile_rules\n"
 		[ -d "$src" ] && cd $src 
 		compile_rules || exit 1
-		# QA: compile_rules success so valid.
-		mkdir -p $install
 		# Stay compatible with _pkg
 		[ -d $src/_pkg ] && mv $src/_pkg $install
+		# QA: compile_rules success so valid.
+		mkdir -p $install
 	else
 		# QA: No compile_rules so no error, valid.
 		mkdir -p $install
