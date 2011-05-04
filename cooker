@@ -154,7 +154,7 @@ cook_commits() {
 	if [ -s "$commits" ]; then
 		for pkg in $(cat $commits)
 		do
-			echo "Cook packages <a href='cooker.cgi?log=$pkg'>$pkg</a>" | log
+			echo "cook started for: <a href='cooker.cgi?log=$pkg'>$pkg</a>" | log
 			echo "cook:$pkg" > $status
 			cook $pkg || broken
 			sed -i /^${pkg}$/d $commits
@@ -171,6 +171,7 @@ case "$1" in
 	--setup)
 		# Setup the Cooker environment.
 		echo -e "\nSetting up the Cooker"
+		echo "cooker --setup: $SLITAZ" | log
 		separator
 		for pkg in mercurial rsync slitaz-toolchain
 		do
@@ -194,11 +195,8 @@ case "$1" in
 		separator && echo "" ;;
 	--reverse=*)
 		# Cook all reverse dependencies for a packages. This command let us
-		# control the Cooker manually if needed.
-		#
-		# Should be in cook ?
-		#
-		pkg=$2
+		# control the Cooker manually for commit that will cook a lot of packages.
+		pkg=${1#--reverse=}
 		[ ! -d "$wok/$pkg" ] && echo "No package $2 found." && exit 0
 		cd $wok
 		for rev in *
@@ -217,10 +215,11 @@ case "$1" in
 			[ "$CATEGORY" == "$cat" ] && echo $pkg >> $cooklist
 		done
 		cook_order | tee $LOGS/cooker-order.log
-		#for pkg in $(cat $cooklist)
-		#do
-			#cook $pkg || broken
-		#done
+		for pkg in $(cat $cooklist)
+		do
+			echo "cook started for: <a href='cooker.cgi?log=$pkg'>$pkg</a>" | log
+			cook $pkg || broken
+		done
 		;;
 	--all)
 		# Try to build all unbuilt packages except blocked's.

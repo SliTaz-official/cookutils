@@ -10,8 +10,9 @@
 [ -f "/etc/slitaz/cook.conf" ] && . /etc/slitaz/cook.conf
 [ -f "cook.conf" ] && . ./cook.conf
 
-# Share activity with the Cooker.
+# Share activity and broken packages with the Cooker.
 activity="$CACHE/activity"
+broken="$CACHE/broken"
 
 #
 # Functions
@@ -294,7 +295,7 @@ remove_deps() {
 
 # The main cook function.
 cookit() {
-	echo "Cooking: $PACKAGE $VERSION"
+	echo "Cook: $PACKAGE $VERSION"
 	separator
 	set_paths
 	[ "$QA" ] && receipt_quality
@@ -369,9 +370,11 @@ cookit() {
 	fi
 	if grep -q ^genpkg_rules $pkgdir/receipt; then
 		gettext -e "Executing: genpkg_rules\n"
+		cd $pkgdir
 		mkdir -p $fs && genpkg_rules || ( echo -e \
 			"\nERROR: genpkg_rules failed\n" | \
 			tee -a $LOGS/$pkg.log && exit 1 )
+		gettext -e "Now will pack the package.\n"
 	fi
 	separator && echo ""
 }
@@ -415,6 +418,7 @@ packit_quality() {
 		echo -e "ERROR: empty package\n" | tee -a $LOGS/$pkg.log && exit 1
 	else
 		mv -f $WOK/$pkg/taz/$pkg-*.tazpkg $PKGS
+		sed -i /^${pkg}$/d $broken
 	fi
 }
 
@@ -435,6 +439,7 @@ case "$1" in
 	setup)
 		# Setup a build environment
 		check_root
+		echo "Cook: setting up the environment" | log
 		gettext -e "\nSetting up your environment\n"
 		separator && cd $SLITAZ
 		gettext "Creating directories structure in:"; echo " $SLITAZ"
@@ -467,7 +472,7 @@ case "$1" in
 		gettext -e "All done, ready to cook packages :-)\n\n" ;;
 	test)
 		# Test a cook environment.
-		echo "TODO: Use $DATA/cooktest \$(cp cooktest \$WOK and cook)"
+		echo "cook test: testing the cook environment" | log
 		[ ! -d "$WOK" ] && exit 1
 		[ ! -d "$WOK/cooktest" ] && cp -r $DATA/cooktest $WOK
 		cook cooktest ;;
@@ -493,6 +498,7 @@ case "$1" in
 		[ -z "$2" ] && gettext -e "\nNo list in argument.\n\n" && exit 1
 		[ ! -f "$2" ] && gettext -e "\nNo list found:" && \
 			echo -e " $2\n" && exit 1
+		echo "cook list: Starting to cook: $2" | log
 		for pkg in $(cat $2)
 		do
 			cook $pkg || broken
@@ -513,6 +519,7 @@ case "$1" in
 		[ ! -d "$PKGS" ] && \
 			gettext -e "\nPackages directory dont exist\n\n" && exit 1
 		cd $PKGS
+		echo "cook pkglist: Creating packages list" | log
 		gettext -e "\nCreating lists for:"; echo " $PKGS"
 		separator
 		rm -f packages.* files.list*
