@@ -32,10 +32,11 @@ usage() {
 Usage: cooker [--option]
 
 Options:
-  --usage      Display this short usage.
-  --setup      Setup the Cooker environment.
-  --all        Cook all unbuilt packages.
-  --cat=       Cook all package of a category.
+  --usage        Display this short usage.
+  --setup        Setup the Cooker environment.
+  --pkg=         Same as 'cook pkg' but with cooker log.
+  --cat=         Cook all package of a category.
+  --all          Find and cook all unbuilt packages.
 
 EOT
 	exit 0
@@ -205,6 +206,11 @@ case "$1" in
 				echo "TODO: $rev"
 			fi
 		done ;;
+	--pkg=*)
+		# Same as 'cook pkg' but with log for web interface.
+		pkg=${1#--pkg=}
+		echo "cook started for: <a href='cooker.cgi?log=$pkg'>$pkg</a>" | log
+		cook $pkg || broken ;;
 	--cat=*)
 		# Cook all packages of a category.
 		rm -f $cooklist && touch $cooklist
