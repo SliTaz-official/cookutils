@@ -35,7 +35,8 @@ Options:
   --usage        Display this short usage.
   --setup        Setup the Cooker environment.
   --pkg=         Same as 'cook pkg' but with cooker log.
-  --cat=         Cook all package of a category.
+  --cat=         Cook all packages of a category.
+  --flavor=      Cook all packages of a flavor.
   --all          Find and cook all unbuilt packages.
 
 EOT
@@ -188,7 +189,6 @@ cook_list() {
 	do
 		if [ ! -d "$wok/$pkg/install" ]; then
 			echo "Cook started for: <a href='cooker.cgi?pkg=$pkg'>$pkg</a>" | log
-			
 			cook $pkg || broken
 			sed -i /^${pkg}$/d $cooklist
 		fi
@@ -230,7 +230,7 @@ case "$1" in
 		# Cook all reverse dependencies for a packages. This command let us
 		# control the Cooker manually for commit that will cook a lot of packages.
 		#
-		# Use hg commit ? Ex: hg commit -m "Message bla bla | cooker:--reverse"
+		# Use hg commit ? Ex: hg commit -m "Message bla bla | cooker:reverse"
 		#
 		pkg=${1#--reverse=}
 		[ ! -d "$wok/$pkg" ] && echo "No package $2 found." && exit 0
@@ -256,6 +256,15 @@ case "$1" in
 			unset CATEGORY && . $pkg/receipt
 			[ "$CATEGORY" == "$cat" ] && echo $pkg >> $cooklist
 		done
+		strip_blocked
+		cook_order | tee $LOGS/cookorder.log
+		cook_list
+		emty_command ;;
+	--flavor=*)
+		# Cook all packages of a flavor.
+		flavor=${1#--flavor=}
+		list=$SLITAZ/flavors/$flavor/packages.list
+		cp -a $list $cooklist
 		strip_blocked
 		cook_order | tee $LOGS/cookorder.log
 		cook_list
