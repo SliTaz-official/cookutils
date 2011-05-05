@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<title>Cookutils Documentation</title>
+	<meta charset="utf-8" />
+	<link rel="stylesheet" type="text/css" href="style.css" />
+</head>
+<body>
+	
+<div id="header">
+	<h1>Cookutils Documentation</h1>
+</div>
+
+<!-- Start content -->
+<div id="content">
+
+<h2>SliTaz Cook &amp; Cooker</h2>
+
+<p>
+	The SliTaz Cookutils provide tools and utils to build SliTaz packages. They
+	are easy to use and learn, fast and light. You will be able to create SliTaz
+	in a few commands. The cookutils provide the 'cook' utility and the
+	<a href="#cooker">Cooker</a>.
+</p>
+<p>
+	Cook let you compile and create a package, provide a log file and check
+	receipt/package quality. The Cooker is a build bot with more automation
+	and can be used as a frontend to cook, since it provide a CGI/web interface
+	who let you view cook logs in a nice and colored way.
+</p>
+
+<h3>Howto work</h3>
+<p>
+	The first thing you will have to do before building packages is to setup
+	your environment. These 2 recommended way to work: cook directly on host
+	or cook in chroot to protect your host. In the case you want to work in a
+	chroot you can use Tazdev to create one and chroot in it: 
+</p>
+<pre>
+# tazdev gen-chroot &amp;&amp; tazdev chroot
+</pre>
+
+<h3>Getting started</h3>
+<p>
+	So you decided the way you want to work, so let prepare the cook environement.
+	Cook use cook.conf configuration file, if you want to use custom path for
+	SliTaz directories and files, you have to modify it. The setup will create
+	some directories and files to keep trace on activity and error, all files
+	are pure plain text files that you can open in a text editor. To prepare
+	you environment:
+</p>
+<pre>
+# cook setup
+</pre>
+
+<h3>Test your environment</h3>
+<p>
+	Cook provide a test command who will create a package and cook it. This let
+	you see if your enviroment and by the it provide and example package with
+	a receipt. The create package is named 'cooktest' and can be removed after
+	testing. To cook the cooktest:
+</p>
+<pre>
+# cook test
+</pre>
+
+<h3>Create and cook</h3>
+<p>
+	If you environment is setup corectly you can start creating and compiling
+	SliTaz packages from your wok. To create a new package with an empty receipt:
+</p>
+<pre>
+# cook new pkgname
+</pre>
+<p>
+	If you just created a new package, you have to edit the receipt with your
+	favorite text editor. When the receipt is ready or if you have existing
+	packages, you can cook it:
+</p>
+<pre>
+# cook pkgname
+</pre>
+<p>
+	If all went well you will find your packages in $SLITAZ/packages
+	directory and produced files in $SLITAZ/wok/pkgname. If you want to cook
+	and install the package in one command:
+</p>
+<pre>
+# cook pkgname --install
+</pre>
+
+<h3>Clean packages</h3>
+<p>
+	After compilation and packaging ther is several files in the wok that take
+	disk space. To clean a single package:
+</p>
+<pre>
+# cook pkgname --clean
+</pre>
+<p>
+	You can also clean the full wok at once or you can choose to keep SliTaz
+	related files and just remove the source:
+</p>
+<pre>
+# cook clean-wok
+# cook clean-src
+</pre>
+
+<h3>Packages lists</h3>
+<p>
+	Cook can list packages in the wok but also create suitable packages list
+	for Tazpkg. That let you create a locale packages repository quiet easily
+	and is used to create official SliTaz packages list found on mirrors. To
+	list the current wok used by cook (you dont need to be root):
+</p>
+<pre>
+$ cook list-wok
+</pre>
+<p>
+	To create packages lists:
+</p>
+<pre>
+# cook pkglist
+</pre>
+
+<a name="cooker"></a>
+<h3>The Cooker</h3>
+<p>
+	The Cooker is a Build Bot, it first usage is to check for commits in a wok,
+	create an ordered cooklist and cook all modified packages. It can also be
+	used as a frontend to cook since they use the same files. The Cooker can
+	also be used to cook a big list of packages at once such has all package
+	of a flavor. The Cooker provide a nice CGI/Web interface that works by
+	default on any SliTaz system since we provide CGI support via Busybox httpd
+	web server.
+</p>
+
+<h3>Cooker setup</h3>
+<p>
+	Like cook, the Cooker needs a working environment before starting using it.
+	The main difference with the cook environment is that the Cooker needs 2 wok.
+	One Hg and clean wok as reference and one build wok, in this way is is easy
+	to compare both wok and get modifications. If you already have a cook
+	environement, you must move your wok before setting up the Cooker or it
+	will complain:
+</p>
+<pre>
+# cooker --setup
+</pre>
+<p>
+	If all went well you have now 2 wok, base developement packages installed
+	and all needed files created. The default behavor is to check for commits,
+	you can run a test:
+</p>
+<pre>
+# cooker
+</pre>
+
+<h3>Cooker cook</h3>
+<p>
+	Again, 2 way to work now: make change in the clean Hg wok and launch the
+	cooker without any argument or cook packages manually. The cooker let you
+	cook a single package, all packages of a category or a flavor. You can also
+	try to build all unbuilt packages, but be aware the Cooker was not designed
+	to handle thousand of packages.
+</p>
+<p>
+	To cook a single package wich is the same than 'cook pkgname' but with more
+	logs:
+</p>
+<pre>
+# cooker --pkg=pkgname
+</pre>
+<p>
+	To cook more than one package at once you have different kind of choices.
+	The currently implemeted way (more will come such as --list= --flavor=)
+</p>
+<pre>
+# cooker --cat=pkg-category
+</pre>
+
+<h3>Cooker CGI/Web</h3>
+<p>
+	To let you view log files in a nice way, keep activity trace and help find
+	errors, you can use the Cooker Web interface located by default in
+	/var/www/cooker. If you dont use a chroot and the Busybox httpd web server
+	is running, the web interface will work without modifiaction and should be
+	reachable at: <a href="http://localhost/cgi-bin/cooker/cooker.cgi">
+		http://localhost/cgi-bin/cooker/cooker.cgi</a> 
+</p>
+<p>
+	If you used a chroot environment, you should also install cookutils on your
+	host and modify the SLITAZ path variable. A standard working way is to have
+	a chroot in:
+</p>
+<pre>
+/home/slitaz/cooking/chroot
+</pre>
+<p>
+With /etc/slitaz/cook.conf modified as bellow:
+</p>
+<pre>
+SLITAZ="/home/slitaz/cooking/chroot/home/slitaz"
+</pre>
+<p>
+	Note: It's not obligatory to install the cookutils on your host to use the
+	web interface, you can also copy the cooker.cgi and style.css files for
+	example in your ~/Public directory and use a custom cook.conf with it. Say
+	you have cloned or downloaded the cookutils:
+</p>
+<pre>
+$ cp cookutils/web ~/Public/cgi-bin/cooker
+$ cp cookutils/cook.conf ~/Public/cgi-bin/cooker
+</pre>
+<p>
+Edit ~/Public/cgi-bin/cooker/cook.conf and you all done!
+</p>
+
+
+<!-- End content -->
+</div>
+
+<div id="footer">
+	Copyright &copy; 2011 SliTaz contributors
+</div>
+
+</body>
+</html>
+
