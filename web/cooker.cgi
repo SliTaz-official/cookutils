@@ -19,6 +19,7 @@ cookorder="$CACHE/cookorder"
 command="$CACHE/command"
 blocked="$CACHE/blocked"
 broken="$CACHE/broken"
+cooknotes="$CACHE/cooknotes"
 
 #
 # Functions
