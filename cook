@@ -213,7 +213,7 @@ EOT
 
 # Display debugging erroe info.
 debug_info() {
-	echo "Debug information"
+	echo -e "\nDebug information"
 	separator
 	fgrep ERROR $LOGS/$pkg.log
 	separator && echo ""
@@ -388,11 +388,7 @@ cookit_quality() {
 	fi
 	# ERROR can be echoed any time in cookit()
 	if grep -q ^ERROR $LOGS/$pkg.log; then
-		echo ""
-		debug_info | tee $CACHE/debug
-		# Debug info on top, easier to check errors.
-		cat $CACHE/debug $LOGS/$pkg.log > $CACHE/$pkg.debug
-		mv -f $CACHE/$pkg.debug $LOGS/$pkg.log
+		debug_info | tee -a $LOGS/$pkg.log
 		exit 1
 	fi
 }
@@ -674,7 +670,7 @@ EOT
 			fi
 		fi
 		# Finally we DONT WANT to build the *-dev or packages with WANTED="$pkg"
-		# You automation: use the Cooker Build Bot.
+		# You want automation: use the Cooker Build Bot.
 		#[ -d "$WOK/$pkg-dev" ] && cook $pkg-dev
 		;;
 esac

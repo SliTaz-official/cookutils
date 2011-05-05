@@ -36,4 +36,6 @@ pre {
 .span-sky { color: blue; }
 .span-no { color: orange; }
 .span-line { color: #888; }
-.span-date { color: #666; font-size: 95%; }
+.log-date { color: #666; font-size: 95%; }
+.sh-comment { color: #b20000; }
+.sh-val { color: #f35a00; }

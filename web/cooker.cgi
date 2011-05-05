@@ -26,17 +26,21 @@ broken="$CACHE/broken"
 
 # Put some colors in log and DB files.
 syntax_highlighter() {
-	sed -e 's#OK$#<span class="span-ok">OK</span>#g' \
-		-e 's#yes$#<span class="span-ok">yes</span>#g' \
-		-e 's#no$#<span class="span-no">no</span>#g' \
-		-e 's#error$#<span class="span-error">error</span>#g' \
-		-e 's#ERROR:#<span class="span-error">ERROR:</span>#g' \
-		-e s"#^Executing:\([^']*\).#<span class='span-sky'>\0</span>#"g \
-		-e s"#^====\([^']*\).#<span class='span-line'>\0</span>#"g \
-		-e s"#ftp://\([^']*\).*#<a href='\0'>\0</a>#"g	\
-		-e s"#http://\([^']*\).*#<a href='\0'>\0</a>#"g \
-		-e s"#^\#\([^']*\)#<span class='sh-comment'>\0</span>#"g 
-		#-e s"#\"\([^']*\)\"#<span class='sh-val'>\0</span>#"g
+	case $1 in
+		log)
+			sed -e 's#OK$#<span class="span-ok">OK</span>#g' \
+				-e 's#yes$#<span class="span-ok">yes</span>#g' \
+				-e 's#no$#<span class="span-no">no</span>#g' \
+				-e 's#error$#<span class="span-error">error</span>#g' \
+				-e 's#ERROR:#<span class="span-error">ERROR:</span>#g' \
+				-e s"#^Executing:\([^']*\).#<span class='span-sky'>\0</span>#"g \
+				-e s"#^====\([^']*\).#<span class='span-line'>\0</span>#"g \
+				-e s"#ftp://\([^']*\).*#<a href='\0'>\0</a>#"g	\
+				-e s"#http://\([^']*\).*#<a href='\0'>\0</a>#"g ;;
+		receipt)
+			sed -e s"#^\#\([^']*\)#<span class='sh-comment'>\0</span>#"g \
+				-e s"#\"\([^']*\)\"#<span class='sh-val'>\0</span>#"g ;;
+	esac
 }
 
 # Latest build pkgs.
@@ -102,16 +106,20 @@ case "${QUERY_STRING}" in
 					echo "<h3>Cook summary</h3>"
 					echo '<pre>'
 					grep -A 8 "^Summary " $LOGS/$pkg.log | sed /^$/d | \
-						syntax_highlighter
+						syntax_highlighter log
 					echo '</pre>'
 				fi
 			fi
-			if fgrep -q "ERROR:" $LOGS/$pkg.log; then
-				fgrep "ERROR:" $LOGS/$pkg.log
+			if fgrep -q "Debug " $LOGS/$pkg.log; then
+				echo "<h3>Cook failed</h3>"
+				echo '<pre>'
+				grep -A 8 "^Debug " $LOGS/$pkg.log | sed /^$/d | \
+						syntax_highlighter log
+				echo '</pre>'
 			fi
 			echo "<h3>Cook log</h3>"
 			echo '<pre>'
-			cat $log | syntax_highlighter
+			cat $log | syntax_highlighter log
 			echo '</pre>'
 		else
 			echo "<pre>No log: $pkg</pre>"
@@ -122,17 +130,17 @@ case "${QUERY_STRING}" in
 		echo "<h2>Log for: $log</h2>"
 		if [ -f "$LOGS/$log.log" ]; then
 			echo '<pre>'
-			cat $file | syntax_highlighter
+			cat $file | syntax_highlighter log
 			echo '</pre>'
 		else
 			echo "<pre>No log for: $log</pre>"
 		fi ;;
 	receipt=*)
 		pkg=${QUERY_STRING#receipt=}
-		echo "<h2>Receipt: $pkg</h2>"
+		echo "<h2>Receipt for: $pkg</h2>"
 		if [ -f "$wok/$pkg/receipt" ]; then
 			echo '<pre>'
-			cat $wok/$pkg/receipt | syntax_highlighter
+			cat $wok/$pkg/receipt | syntax_highlighter receipt
 			echo '</pre>'
 		else
 			echo "<pre>No receipt for: $log</pre>"
