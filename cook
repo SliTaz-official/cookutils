@@ -10,8 +10,9 @@
 [ -f "/etc/slitaz/cook.conf" ] && . /etc/slitaz/cook.conf
 [ -f "cook.conf" ] && . ./cook.conf
 
-# Share activity and broken packages with the Cooker.
+# Share DB and status with the Cooker.
 activity="$CACHE/activity"
+command="$CACHE/command"
 broken="$CACHE/broken"
 
 #
@@ -195,7 +196,7 @@ summary() {
 	cd $WOK/$pkg
 	[ -d install ] && prod=$(du -sh install | awk '{print $1}' 2>/dev/null)
 	fs=$(du -sh taz/* | awk '{print $1}')
-	size=$(du -sh $PKGS/$PACKAGE-${VERSION}${EXTRAVERSION}.* | awk '{print $1}')
+	size=$(du -sh $PKGS/$PACKAGE-${VERSION}*.tazpkg | awk '{print $1}')
 	files=$(cat taz/$PACKAGE-*/files.list | wc -l)
 	gettext "Summary for:"; echo " $PACKAGE $VERSION"
 	separator
@@ -297,7 +298,7 @@ remove_deps() {
 			echo -n " $dep"
 			yes | tazpkg remove $dep >/dev/null
 		done
-		echo ""
+		echo -e "\n"
 		mv -f $CACHE/installed.diff $CACHE/installed.last.diff
 	fi
 }
@@ -377,14 +378,6 @@ cookit() {
 		# QA: No compile_rules so no error, valid.
 		mkdir -p $install
 	fi
-	if grep -q ^genpkg_rules $pkgdir/receipt; then
-		gettext -e "Executing: genpkg_rules\n"
-		cd $pkgdir
-		mkdir -p $fs && genpkg_rules || ( echo -e \
-			"\nERROR: genpkg_rules failed\n" | \
-			tee -a $LOGS/$pkg.log && exit 1 )
-		gettext -e "Now will pack the package.\n"
-	fi
 	separator && echo ""
 }
 
@@ -404,11 +397,18 @@ cookit_quality() {
 	fi
 }
 
-# Create the package.
+# Create the package. Wanted to use Tazpkg to create a tazpkg package at first,
+# but it dont handle EXTRAVERSION.
 packit() {
 	set_paths
-	echo "Packing: $PACKAGE ${VERSION}${EXTRAVERSION}"
+	echo "Packing: $PACKAGE $VERSION"
 	separator
+	if grep -q ^genpkg_rules $pkgdir/receipt; then
+		gettext -e "Executing: genpkg_rules\n"
+		cd $pkgdir
+		mkdir -p $fs && genpkg_rules || ( echo -e \
+			"\nERROR: genpkg_rules failed\n" | tee -a $LOGS/$pkg.log && exit 1 )
+	fi
 	cd $pkgdir/taz
 	strip_package
 	for file in receipt description.txt
@@ -418,9 +418,61 @@ packit() {
 		cp -f ../$file $pack && chown 0.0 $pack/$file && status
 	done
 	copy_generic_files
-	# Use Tazpkg to create a tazpkg package...
-	tazpkg pack $PACKAGE-${VERSION}${EXTRAVERSION} | grep "\[*\]"
-	separator && echo ""
+	
+	# Create files.list with redirecting find outpout.
+	gettext "Creating the list of files..." && cd $fs
+	find . -type f -print > ../files.list
+	find . -type l -print >> ../files.list
+	cd .. && sed -i s/'^.'/''/ files.list
+	status
+	gettext "Creating md5sum of files..."
+	while read file; do
+		[ -L "fs$file" ] && continue
+		[ -f "fs$file" ] || continue
+		case "$file" in
+		/lib/modules/*/modules.*|*.pyc) continue;;
+		esac
+		md5sum "fs$file" | sed 's/  fs/  /'
+	done < files.list > md5sum
+	status
+	UNPACKED_SIZE=$(du -chs fs receipt files.list md5sum \
+		description.txt 2> /dev/null | awk \
+		'{ sz=$1 } END { print sz }')
+	
+	# Build cpio archives.
+	gettext "Compressing the fs... "
+	find fs | cpio -o -H newc --quiet | lzma e fs.cpio.lzma -si
+	rm -rf fs
+	status
+	PACKED_SIZE=$(du -chs fs.cpio.lzma receipt files.list \
+		md5sum description.txt 2> /dev/null | awk \
+		'{ sz=$1 } END { print sz }')
+	gettext "Updating receipt sizes..."
+	sed -i s/^PACKED_SIZE.*$// receipt
+	sed -i s/^UNPACKED_SIZE.*$// receipt
+	sed -i "s/^PACKAGE=/PACKED_SIZE=\"$PACKED_SIZE\"\nUNPACKED_SIZE=\"$UNPACKED_SIZE\"\nPACKAGE=/" receipt
+	status
+
+	# Set extra version.
+	if [ "$EXTRAVERSION" ]; then
+		gettext "Updating receipt EXTRAVERSION: "; echo -n "$EXTRAVERSION"
+		sed -i s/^EXTRAVERSION.*$// receipt
+		sed -i "s/^VERSION=/EXTRAVERSION=\"$EXTRAVERSION\"\nVERSION=/" receipt
+		status
+	fi
+
+	# Compress.
+	gettext "Creating full cpio archive... "
+	find . -print | cpio -o -H newc --quiet > \
+		../$PACKAGE-${VERSION}${EXTRAVERSION}.tazpkg
+	status
+	gettext "Restoring original package tree... "
+	unlzma -c fs.cpio.lzma | cpio -idm --quiet
+	status
+	rm fs.cpio.lzma && cd ..
+	separator && gettext "Package: "
+	du -sh $PACKAGE-${VERSION}${EXTRAVERSION}.tazpkg
+	echo ""
 }
 
 # Verify package quality and consitensy.
@@ -578,6 +630,7 @@ EOT
 		pkg="$1"
 		[ -z "$pkg" ] && usage
 		check_pkg_in_wok && echo ""
+		echo "cook:$pkg" > $command
 		unset inst
 		unset_receipt
 		cd $WOK/$pkg && . ./receipt
@@ -601,10 +654,11 @@ EOT
 		cookit | tee $LOGS/$pkg.log
 		remove_deps | tee -a $LOGS/$pkg.log
 		cookit_quality
+		
 		packit | tee -a $LOGS/$pkg.log
 		clean_log
 		packit_quality
-
+		
 		# Time and summary
 		time=$(($(date +%s) - $time))
 		summary | tee -a $LOGS/$pkg.log

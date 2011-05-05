@@ -17,8 +17,8 @@ install:
 	cp -r data/* $(DESTDIR)$(PREFIX)/share/cook
 
 uninstall:
-	rm -f \
+	rm -rf \
 		$(DESTDIR)$(PREFIX)/bin/cook \
 		$(DESTDIR)$(PREFIX)/bin/cooker \
-		$(DESTDIR)/etc/slitaz/cook*.* \
+		$(DESTDIR)/etc/slitaz/cook.* \
 		$(DESTDIR)/var/www/cooker
