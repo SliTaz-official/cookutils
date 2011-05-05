@@ -34,6 +34,14 @@ Cook does not:
     * The work of a Build Bot, unix philosophy: one tool for one task
     * Cook a package if you receipt is crappy :-)
 
+Cook variables used in receipt:
+
+    * $src     : Path to package source: wok/pkg/source
+    * $stuff   : Path to package stuff: wok/pkg/stuff
+    * $fs      : Path to package file system: wok/pkg/taz/*/fs
+    * $install : Path to all installed files by the package
+                 Old style is _pkg and cook is compatible
+
 Cook also manage packages list so they can be used for a personnal packages
 repository or sent to the official mirror. We create and use:
 
@@ -51,7 +59,7 @@ for you! We need quality receipt to cook succefully and the goal is not to have
 a bloated script so please Keep It Short and Simple.
 
 Cmdline tool  : /usr/bin/cooker
-Web interface : /var/www/cooker
+Web interface : /var/www/cgi-bin/cooker
 Cache folder  : /home/slitaz/cache
 
 The web interface consist in one CGI script, 2 xHTML files and a CSS style.

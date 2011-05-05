@@ -197,7 +197,7 @@ $(cat $blocked | sed s"#^[^']*#<a href='cooker.cgi?log=\0'>\0</a>#"g)
 
 <h2>Latest cook</h2>
 <pre>
-$(list_packages | sed s"#^\([^']* \)#<span class='span-date'>\0</span>#"g)
+$(list_packages | sed s"#^\([^']*\).* : #<span class='log-date'>\0</span>#"g)
 </pre>
 EOT
 	;;
