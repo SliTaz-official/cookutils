@@ -16,7 +16,7 @@ activity="$CACHE/activity"
 commits="$CACHE/commits"
 cooklist="$CACHE/cooklist"
 cookorder="$CACHE/cookorder"
-status="$CACHE/status"
+command="$CACHE/command"
 blocked="$CACHE/blocked"
 broken="$CACHE/broken"
 
@@ -73,8 +73,13 @@ case "${QUERY_STRING}" in
 	log=*)
 		pkg=${QUERY_STRING#log=}
 		if [ -f "$LOGS/$pkg.log" ]; then
+			echo "<h2>Log for: $pkg</h2>"
+			if [ "$pkg" == "commits" ]; then
+				echo '<pre>' && cat $LOGS/$pkg.log | syntax_highlighter
+				echo '</pre>' && exit 0
+			fi
 			echo '<pre>'
-			if grep -q "cook:$pkg$" $status; then
+			if grep -q "cook:$pkg$" $command; then
 				echo "$pkg currently cooking"
 			fi
 			grep -A 8 "Summary" $LOGS/$pkg.log | sed /^$/d | syntax_highlighter
@@ -103,6 +108,11 @@ Commits to cook  : $(cat $commits | wc -l)
 Broken packages  : $(cat $broken | wc -l)
 </pre>
 
+<div>
+Latest logs: <a href="cooker.cgi?log=cookorder">cookorder</a>
+<a href="cooker.cgi?log=commits">commits</a>
+</div>
+
 <h2>Activity</h2>
 <pre>
 $(tac $CACHE/activity | sed s"#^\([^']* : \)#<span class='span-date'>\0</span>#"g)
@@ -116,6 +126,11 @@ $(cat $commits)
 <h2>Broken</h2>
 <pre>
 $(cat $broken | sed s"#^[^']*#<a href='cooker.cgi?log=\0'>\0</a>#"g)
+</pre>
+
+<h2>Bloked</h2>
+<pre>
+$(cat $blocked | sed s"#^[^']*#<a href='cooker.cgi?log=\0'>\0</a>#"g)
 </pre>
 
 <h2>Latest cook</h2>

@@ -18,7 +18,7 @@ activity="$CACHE/activity"
 commits="$CACHE/commits"
 cooklist="$CACHE/cooklist"
 cookorder="$CACHE/cookorder"
-status="$CACHE/status"
+command="$CACHE/command"
 blocked="$CACHE/blocked"
 broken="$CACHE/broken"
 
@@ -56,9 +56,20 @@ log() {
 		sed s"#^[A-Z]\([^']*\)#$(date '+%Y-%m-%d %H:%M') : \0#" >> $activity
 }
 
+# Some message goes in activity but log verbose output when checking for commits
+# into a log file.
+log_commits() {
+	tee -a $LOGS/commits.log
+}
+
 # Log broken packages
 broken() {
 	echo "$pkg" >> $broken
+}
+
+# Clean up after cook sucess.
+clean_status() {
+	rm -f $command && touch $command
 }
 
 # Scan packages deps an fill up cookorder list.
@@ -67,7 +78,7 @@ cook_order_scan() {
 	for pkg in $(cat $cooklist)
 	do
 		unset DEPENDS BUILD_DEPENDS
-		. $WOK/$pkg/receipt
+		. $wok/$pkg/receipt
 		for dep in $DEPENDS $BUILD_DEPENDS
 		do
 			if grep -q "^$dep$" $cooklist; then
@@ -125,7 +136,7 @@ cook_order() {
 	for pkg in $(cat $cooklist)
 	do
 		unset WANTED
-		. $WOK/$pkg/receipt
+		. $wok/$pkg/receipt
 		if [ "$WANTED" ]; then
 			echo "$pkg: $WANTED"
 			sed -i -e "/^$pkg$/"d  \
@@ -150,17 +161,37 @@ EOT
 	separator && echo ""
 }
 
+# Remove blocked (faster this way than grepping before).
+strip_blocked() {
+	for pkg in $(cat $blocked)
+	do
+		sed -i /^${pkg}$/d $cooklist
+	done && sed -i /^$/d $cooklist
+}
+
 # Uses in default mode and with all cmd.
 cook_commits() {
 	if [ -s "$commits" ]; then
 		for pkg in $(cat $commits)
 		do
 			echo "Cook started for: <a href='cooker.cgi?log=$pkg'>$pkg</a>" | log
-			echo "cook:$pkg" > $status
+			echo "cook:$pkg" > $command
 			cook $pkg || broken
 			sed -i /^${pkg}$/d $commits
 		done
 	fi
+}
+
+# Cook all package in a cooklist.
+cook_list() {
+	for pkg in $(cat $cooklist)
+	do
+		if [ ! -d "$wok/$pkg/install" ]; then
+			echo "Cook started for: <a href='cooker.cgi?log=$pkg'>$pkg</a>" | log
+			cook $pkg || broken
+			sed -i /^${pkg}$/d $cooklist
+		fi
+	done
 }
 
 #
@@ -186,17 +217,20 @@ case "$1" in
 		# Directories and files
 		echo "mkdir's and touch files in: $SLITAZ"
 		mkdir -p $PKGS $LOGS $CACHE $SRC
-		for f in $activity $blocked $broken $commits $cooklist $status
+		for f in $activity $blocked $broken $commits $cooklist $command
 		do
 			touch $f
 		done
-		hg clone $WOK_URL ${wok}-hg
+		hg clone $WOK_URL ${wok}-hg || exit 1
 		hg clone $FLAVORS_URL flavors
 		cp -a ${wok}-hg $wok
 		separator && echo "" ;;
 	--reverse=*)
 		# Cook all reverse dependencies for a packages. This command let us
 		# control the Cooker manually for commit that will cook a lot of packages.
+		#
+		# Use hg commit ? Ex: hg commit -m "Message bla bla | cooker:--reverse"
+		#
 		pkg=${1#--reverse=}
 		[ ! -d "$wok/$pkg" ] && echo "No package $2 found." && exit 0
 		cd $wok
@@ -209,28 +243,27 @@ case "$1" in
 	--pkg=*)
 		# Same as 'cook pkg' but with log for web interface.
 		pkg=${1#--pkg=}
+		echo "cooker:$1" > $command
 		echo "Cook started for: <a href='cooker.cgi?log=$pkg'>$pkg</a>" | log
 		cook $pkg || broken ;;
 	--cat=*)
 		# Cook all packages of a category.
-		rm -f $cooklist && touch $cooklist
-		cat=${1#--cat=} && cd $WOK
+		cat=${1#--cat=}
+		echo "cooker:$1" > $command
+		rm -f $cooklist && touch $cooklist && cd $wok
 		for pkg in *
 		do
 			unset CATEGORY && . $pkg/receipt
 			[ "$CATEGORY" == "$cat" ] && echo $pkg >> $cooklist
 		done
-		cook_order | tee $LOGS/cooker-order.log
-		for pkg in $(cat $cooklist)
-		do
-			echo "Cook started for: <a href='cooker.cgi?log=$pkg'>$pkg</a>" | log
-			cook $pkg || broken
-		done
-		;;
+		strip_blocked
+		cook_order | tee $LOGS/cookorder.log
+		cook_list
+		clean_status ;;
 	--all)
 		# Try to build all unbuilt packages except blocked's.
+		echo "cooker:--all" > $command
 		rm -f $cooklist && touch $cooklist
-		
 		echo "" && cd $wok
 		echo "Cooker cooklist"
 		separator
@@ -244,54 +277,47 @@ case "$1" in
 				echo $pkg >> $cooklist
 		done
 
-		# Remove blocked (faster this way than grepping before).
-		for pkg in $(cat $blocked)
-		do
-			sed -i /^${pkg}$/d $cooklist
-		done && sed -i /^$/d $cooklist
-
-		echo "Packages to cook: $(cat $cooklist | wc -l)"
+		strip_blocked
 		echo "Packages to cook: $(cat $cooklist | wc -l)" | log
-		cook_order | tee $LOGS/cooker-order.log
-
-		# Clean DB files
-		echo "Cleaning cached DB files" | log
-		#sed /^$/ $cooklist > $cooklist.tmp
-		#uniq $cooklist.tmp > $cooklist && rm -f $cooklist.tmp
-		#echo "Cooklist: $(cat $cooklist | wc -l)"
-		echo "" ;;
+		cook_order | tee $LOGS/cookorder.log
+		cook_list
+		clean_status ;;
 	*)
 		# Default is to cook all commits.
 		[ "$1" ] && usage
 		cooklist=$CACHE/commits
-		echo -e "\nChecking for commits"
-		separator
+		rm -f $LOGS/commits.log
+		echo ""
+		echo "Checking for commits" | log_commits
+		separator | tee -a $LOGS/commits.log
 		
 		# Get revisions.
-		cd $wok || ( echo "" && exit 1 )
+		cd $wok || ( echo "No wok found: $wok" && exit 1 )
 		cur=$(hg head --template '{rev}\n')
 		echo "Updating Hg wok: ${wok}-hg" | log
-		echo "hg:pull" > $status
-		cd ${wok}-hg && hg pull -u
+		echo "hg:pull" > $command
+		cd ${wok}-hg && hg pull -u | log_commits
 		new=$(hg head --template '{rev}\n')
-		echo "Hg wok revision : $cur"
-		echo "Pulled revision : $new"
-	
+		echo "Hg wok revision : $cur" | log_commits
+		echo "Pulled revision : $new" | log_commits
+		
 		# Sync build wok with rsync so we dont take care about removing old
 		# files as before.
 		if [ "$new" -gt "$cur" ]; then
 			echo "Changes found from: $cur to $new" | log
-			echo "Syncing build work with Hg wok..."
-			cp -a ${wok}-hg/* $wok
-			cp -a ${wok}-hg/.hg $wok
+			echo "Syncing build wok with Hg wok..."
+			#cp -a ${wok}-hg/* $wok
+			#cp -a ${wok}-hg/.hg $wok
+			rsync -r -t -c -l -u -D -E --delete ${wok}-hg/ $wok/ | log_commits
 		else
 			echo "No revision changes: $cur vs $new" | log
-			separator && echo "" && exit 0
+			separator | log_commits
+			clean_status && echo "" && exit 0
 		fi
 		
 		# Get modifications
 		cd ${wok}-hg
-		cur=$(($cur+1))
+		cur=$(($cur + 1))
 		msg="from revision $cur to $new"
 		[ "$new" == "$cur" ] && msg="revision: $new"
 		echo -e "Will cook $msg\n"
@@ -299,6 +325,7 @@ case "$1" in
 		for rev in $(seq $cur $new); do
 			log=$(hg log --rev=$rev --template "{files}\n" | cut -d "/" -f 1)
 			for file in $log; do
+				echo "Commited file: $file" log_commits
 				echo $file >> $commits.tmp
 			done
 		done
@@ -306,10 +333,12 @@ case "$1" in
 		# Keep previews commit and discard duplicate lines
 		cat $commits $commits.tmp | sed /"^$"/d > $commits.new
 		uniq $commits.new > $commits && rm $commits.*
-		echo "Packages to cook: $(cat $commits | wc -l)"
-		cook_order | tee $LOGS/cooker-order.log
+		echo "Packages to cook: $(cat $commits | wc -l)" | log
+		separator && echo "" | log_commits
+		strip_blocked
+		cook_order | tee $LOGS/cookorder.log
 		cook_commits
-		echo "" > $status ;;
+		clean_status ;;
 esac
 
 exit 0
