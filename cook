@@ -150,7 +150,8 @@ get_source() {
 	case "$WGET_URL" in
 		http://*|ftp://*)
 			# Busybox Wget is better!
-			busybox wget -c -P $SRC $WGET_URL ;;
+			busybox wget -c -P $SRC $WGET_URL || \
+				(echo -e "ERROR: wget $WGET_URL" && exit 1) ;;
 		hg*|mercurial*)
 			# We are in cache so clone here and create a tarball
 			pwd=$(pwd)
@@ -163,7 +164,7 @@ get_source() {
 			tarball=$pkgsrc.tar.bz2
 			gettext "Getting source from Hg: "; echo $url
 			gettext "Cloning to: "; echo "$pwd/$pkgsrc"
-			hg clone $url $pkgsrc || exit 1
+			hg clone $url $pkgsrc || (echo "ERROR: hg clone $url" && exit 1)
 			gettext "Creating tarball: "; echo "$tarball"
 			tar cjf $tarball $pkgsrc || exit 1
 			mv $tarball $SRC && rm -rf $pkgsrc ;;
@@ -207,6 +208,14 @@ Files      : $files
 $(separator)
 
 EOT
+}
+
+# Display debugging erroe info.
+debug_info() {
+	echo "Debug information"
+	separator
+	fgrep ERROR $LOGS/$pkg.log
+	separator && echo ""
 }
 
 # Copy all generic files (locale, pixmaps, .desktop). We use standard paths,
@@ -382,10 +391,15 @@ cookit() {
 # Cook quality assurance.
 cookit_quality() {
 	if [ ! -d "$WOK/$pkg/install" ] && [ ! "$WANTED" ]; then
-		echo -e "\nERROR: cook failed\n" | tee -a $LOGS/$pkg.log
+		echo -e "ERROR: cook failed" | tee -a $LOGS/$pkg.log
 	fi
 	# ERROR can be echoed any time in cookit()
 	if grep -q ^ERROR $LOGS/$pkg.log; then
+		echo ""
+		debug_info | tee $CACHE/debug
+		# Debug info on top, easier to check errors.
+		cat $CACHE/debug $LOGS/$pkg.log > $CACHE/$pkg.debug
+		mv -f $CACHE/$pkg.debug $LOGS/$pkg.log
 		exit 1
 	fi
 }
@@ -585,7 +599,7 @@ EOT
 
 		# Cook and pack or exit on error and log everything.
 		cookit | tee $LOGS/$pkg.log
-		remove_deps
+		remove_deps | tee -a $LOGS/$pkg.log
 		cookit_quality
 		packit | tee -a $LOGS/$pkg.log
 		clean_log

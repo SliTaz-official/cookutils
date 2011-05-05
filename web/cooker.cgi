@@ -30,9 +30,10 @@ syntax_highlighter() {
 		-e 's#yes$#<span class="span-ok">yes</span>#g' \
 		-e 's#no$#<span class="span-no">no</span>#g' \
 		-e 's#error$#<span class="span-error">error</span>#g' \
-		-e 's#ERROR:#<span class="span-error">ERROR</span>#g' \
+		-e 's#ERROR:#<span class="span-error">ERROR:</span>#g' \
 		-e s"#^Executing:\([^']*\).#<span class='span-sky'>\0</span>#"g \
-		-e s"#^====\([^']*\).#<span class='span-line'>\0</span>#"g
+		-e s"#^====\([^']*\).#<span class='span-line'>\0</span>#"g \
+		-e s"#http://\([^']*\).*#<a href='\0'>\1</a>#"g	
 }
 
 # Latest build pkgs.
@@ -74,19 +75,21 @@ case "${QUERY_STRING}" in
 		pkg=${QUERY_STRING#log=}
 		if [ -f "$LOGS/$pkg.log" ]; then
 			echo "<h2>Log for: $pkg</h2>"
-			if [ "$pkg" == "commits" ]; then
+			if fgrep -q "Summary " $LOGS/$pkg.log; then
+				echo '<pre>'
+				grep -A 8 "^Summary " $LOGS/$pkg.log | sed /^$/d | \
+					syntax_highlighter
+				echo '</pre>'
+				echo '<pre>'
+				cat $LOGS/$pkg.log | syntax_highlighter
+				echo '</pre>'
+			else
+				if fgrep -q "cook:$pkg$" $command; then
+					echo "<pre>The Cooker is currently cooking: $pkg</pre>"
+				fi
 				echo '<pre>' && cat $LOGS/$pkg.log | syntax_highlighter
-				echo '</pre>' && exit 0
+				echo '</pre>'
 			fi
-			echo '<pre>'
-			if grep -q "cook:$pkg$" $command; then
-				echo "$pkg currently cooking"
-			fi
-			grep -A 8 "Summary" $LOGS/$pkg.log | sed /^$/d | syntax_highlighter
-			echo '</pre>'
-			echo '<pre>'
-			cat $LOGS/$pkg.log | syntax_highlighter
-			echo '</pre>'
 		else
 			echo "<pre>No log file found for: $pkg</pre>"
 		fi ;;
@@ -146,7 +149,7 @@ cat << EOT
 </div>
 
 <div id="footer">
-	<a href="http://www.slitaz.org/">SliTaz Cooker</a>
+	<a href="cooker.cgi">SliTaz Cooker</a>
 </div>
 
 </body>

@@ -10,6 +10,7 @@ pre {
 	border: 1px solid #ddd;
 	padding: 10px;
 	border-radius: 4px;
+	overflow: auto;
 }
 
 #header {
@@ -27,6 +28,7 @@ pre {
 	text-align: center;
 	padding: 20px;
 	border-top: 1px solid #ddd;
+	font-size: 90%;
 }
 
 .span-ok { color: green; }
