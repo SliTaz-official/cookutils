@@ -75,6 +75,11 @@ clean_log() {
 		-e s'|\[0;39m \]||' $LOGS/$pkg.log
 }
 
+# Log broken packages.
+broken() {
+	echo "$pkg" >> $broken
+}
+
 # Be sure package exist in wok.
 check_pkg_in_wok() {
 	if [ ! -d "$WOK/$pkg" ]; then

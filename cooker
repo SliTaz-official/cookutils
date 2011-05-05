@@ -35,6 +35,8 @@ Usage: cooker [--option]
 Options:
   --usage        Display this short usage.
   --setup        Setup the Cooker environment.
+  --notes        Display all the cooknotes.
+  --note=        Add a note to the cooknotes.
   --pkg=         Same as 'cook pkg' but with cooker log.
   --cat=         Cook all packages of a category.
   --flavor=      Cook all packages of a flavor.
@@ -227,6 +229,16 @@ case "$1" in
 		hg clone $FLAVORS_URL flavors
 		cp -a ${wok}-hg $wok
 		separator && echo "" ;;
+	--notes)
+			# View cooknotes.
+			echo -e "\nCooknotes"
+			separator
+			cat $cooknotes
+			separator && echo "" ;;
+	--note=*)
+			# Blocked a pkg and want other to know why ? Post a note!
+			note=${1#--note=}
+			[ "$note" ] && echo "$note" >> $cooknotes ;;
 	--reverse=*)
 		# Cook all reverse dependencies for a packages. This command let us
 		# control the Cooker manually for commit that will cook a lot of packages.

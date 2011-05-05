@@ -176,6 +176,11 @@ Broken packages  : $(cat $broken | wc -l)
 $(tac $CACHE/activity | sed s"#^\([^']* : \)#<span class='log-date'>\0</span>#"g)
 </pre>
 
+<h2>Cooknotes</h2>
+<pre>
+$(cat $cooknotes)
+</pre>
+
 <h2>Commits</h2>
 <pre>
 $(cat $commits)
@@ -188,12 +193,12 @@ $(cat $cooklist)
 
 <h2>Broken</h2>
 <pre>
-$(cat $broken | sed s"#^[^']*#<a href='cooker.cgi?log=\0'>\0</a>#"g)
+$(cat $broken | sed s"#^[^']*#<a href='cooker.cgi?pkg=\0'>\0</a>#"g)
 </pre>
 
-<h2>Bloked</h2>
+<h2>Blocked</h2>
 <pre>
-$(cat $blocked | sed s"#^[^']*#<a href='cooker.cgi?log=\0'>\0</a>#"g)
+$(cat $blocked | sed s"#^[^']*#<a href='cooker.cgi?pkg=\0'>\0</a>#"g)
 </pre>
 
 <h2>Latest cook</h2>
