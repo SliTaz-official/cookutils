@@ -300,6 +300,7 @@ case "$1" in
 		new=$(hg head --template '{rev}\n')
 		echo "Hg wok revision : $cur" | log_commits
 		echo "Pulled revision : $new" | log_commits
+		echo "Check date      : $(date '+%Y-%m-%d %H:%M')" | log_commits
 		
 		# Sync build wok with rsync so we dont take care about removing old
 		# files as before.

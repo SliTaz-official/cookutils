@@ -198,14 +198,16 @@ summary() {
 	fs=$(du -sh taz/* | awk '{print $1}')
 	size=$(du -sh $PKGS/$PACKAGE-${VERSION}*.tazpkg | awk '{print $1}')
 	files=$(cat taz/$PACKAGE-*/files.list | wc -l)
+	cookdate=$(date "+%Y-%m-%d %H:%M")
 	gettext "Summary for:"; echo " $PACKAGE $VERSION"
 	separator
 	[ "$prod" ] && echo "Produce    : $prod"
 	cat << EOT
 Packed     : $fs
 Compressed : $size
-Cook time  : ${time}s
 Files      : $files
+Cook time  : ${time}s
+Cook date  : $cookdate
 $(separator)
 
 EOT
@@ -672,7 +674,7 @@ EOT
 		# Finally we DONT WANT to build the *-dev or packages with WANTED="$pkg"
 		# You want automation: use the Cooker Build Bot.
 		#[ -d "$WOK/$pkg-dev" ] && cook $pkg-dev
-		;;
+		rm -f $command ;;
 esac
 
 exit 0

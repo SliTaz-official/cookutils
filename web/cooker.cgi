@@ -83,19 +83,14 @@ case "${QUERY_STRING}" in
 		log=$LOGS/$pkg.log
 		echo "<h2>Package: $pkg</h2>"
 
-		# Package info
+		# Package info.
+		echo '<div id="info">'
 		if [ -f "$wok/$pkg/receipt" ]; then
-			. $wok/$pkg/receipt
-			tazpkg=$PKGS/$pkg-${VERSION}.tazpkg
-			if [ -f "$tazpkg" ]; then
-				
-				cooked=$(stat -c '%y' $tazpkg | cut -d . -f 1 | sed s/:[0-9]*$//)
-				echo $cooked
-			fi
 			echo "<a href='cooker.cgi?receipt=$pkg'>receipt</a>"
 		else
-			echo "<p>No package named: $pkg<p>"
+			echo "No package named: $pkg"
 		fi
+		echo '</div>'
 
 		# Check for a log file and display summary if exist.
 		if [ -f "$log" ]; then
@@ -129,6 +124,12 @@ case "${QUERY_STRING}" in
 		file=$LOGS/$log.log
 		echo "<h2>Log for: $log</h2>"
 		if [ -f "$LOGS/$log.log" ]; then
+			if fgrep -q "Summary" $file; then
+				echo '<pre>'
+				grep -A 8 "^Summary" $file | sed /^$/d | \
+					syntax_highlighter log
+				echo '</pre>'
+			fi
 			echo '<pre>'
 			cat $file | syntax_highlighter log
 			echo '</pre>'
@@ -164,9 +165,9 @@ Commits to cook  : $(cat $commits | wc -l)
 Broken packages  : $(cat $broken | wc -l)
 </pre>
 
-<div>
-Latest logs: <a href="cooker.cgi?log=cookorder">cookorder</a>
-<a href="cooker.cgi?log=commits">commits</a>
+<div id="info">
+	Latest logs: <a href="cooker.cgi?log=cookorder">cookorder</a>
+	<a href="cooker.cgi?log=commits">commits</a>
 </div>
 
 <h2>Activity</h2>
@@ -177,6 +178,11 @@ $(tac $CACHE/activity | sed s"#^\([^']* : \)#<span class='log-date'>\0</span>#"g
 <h2>Commits</h2>
 <pre>
 $(cat $commits)
+</pre>
+
+<h2>Cooklist</h2>
+<pre>
+$(cat $cooklist)
 </pre>
 
 <h2>Broken</h2>
