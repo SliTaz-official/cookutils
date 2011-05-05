@@ -217,7 +217,20 @@ $ cp cookutils/cook.conf ~/Public/cgi-bin/cooker
 Edit ~/Public/cgi-bin/cooker/cook.conf and you all done!
 </p>
 
-<h3>Cooker CGI/Web</h3>
+<h3>Cooknotes</h3>
+<p>
+	The cooknotes feature let you write small personnal notes about packaging
+	and is usefull for collaboration. The cooknotes was coded to let SliTaz
+	Cooker bot maintainer share notes between them self and other contributors.
+	The Cooker can block packages build or recook packages manually, for example
+	it's nice to make a note if a package is blocked so the maintainer know why
+	admin did that. Cooknotes are displayed on the web interface and can be
+	checked from cmdline:
+</p>
+<pre>
+# cooker --note="Blocked pkgname due to heavy CPU load"
+# cooker --notes
+</pre>
 
 <!-- End content -->
 </div>
