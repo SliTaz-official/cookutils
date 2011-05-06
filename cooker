@@ -209,7 +209,7 @@ case "$1" in
 		echo -e "\nSetting up the Cooker"
 		echo "Cooker --setup using: $SLITAZ" | log
 		separator
-		for pkg in mercurial rsync slitaz-toolchain
+		for pkg in mercurial rsync slitaz-toolchain gettext
 		do
 			[ ! -d "$INSTALLED/$pkg" ] && tazpkg get-install $pkg
 		done

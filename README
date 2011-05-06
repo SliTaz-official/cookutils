@@ -23,7 +23,8 @@ Cook features:
     * Compile and generate the package
     * Remove installed build deps
     * Provide a log for each cook
-    * Clean a package in the wok
+    * Clean one or all packages in the wok
+    * Check for receipt and package quality
 
 Cook does not:
 
@@ -40,7 +41,7 @@ Cook variables used in receipt:
     * $stuff   : Path to package stuff: wok/pkg/stuff
     * $fs      : Path to package file system: wok/pkg/taz/*/fs
     * $install : Path to all installed files by the package
-                 Old style is _pkg and cook is compatible
+                 Old style is $_pkg and cook is compatible
 
 Cook also manage packages list so they can be used for a personnal packages
 repository or sent to the official mirror. We create and use:
@@ -62,9 +63,33 @@ Cmdline tool  : /usr/bin/cooker
 Web interface : /var/www/cgi-bin/cooker
 Cache folder  : /home/slitaz/cache
 
-The web interface consist in one CGI script, 2 xHTML files and a CSS style.
-Cook log can are produced by cook and the cooker just act as a fronted to
-check them in a nice way.
+The web interface consist in one CGI script and one CSS style. Cook log can
+are produced by cook and the cooker just act as a fronted to check them in
+a nice way. Web interface also hightligh success and error, can show receipt
+and the cooker logs such as the last ordered list or commits check.
+
+
+Coding style
+------------
+
+    * Use tab and not space to ident
+    * Use name rater than $1 $2 $2
+    * Variables from config file are $UPERCASE
+    * Variables initialized by cook are $lowercase
+    * Function can be a single word or use_underline()
+      my_function() {
+          echo "Hello World"
+      }
+    * Use $(command) and not: `command`
+    * Cook use gettext for messages, not the cooker
+    * If you add a feature, add also the doc to explain it
+    * Use clean case with space before case end ;;
+      case "$pkg" in
+	      a) echo "Hello World" ;;
+	      *) continue ;;
+	  esac
+	* Make commands and options as short as possible
+	* Think to log everything to help debug
 
 
 ================================================================================
