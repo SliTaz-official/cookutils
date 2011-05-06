@@ -250,19 +250,27 @@ case "$1" in
 		# Use hg commit ? Ex: hg commit -m "Message bla bla | cooker:reverse"
 		#
 		pkg="$2"
-		[ ! -d "$wok/$pkg" ] && echo "No package $2 found." && exit 0
-		cd $wok
+		[ ! -d "$wok/$pkg" ] && echo -e "\nNo package $2 found.\n" && exit 0
+		rm -f $cooklist && touch $cooklist && cd $wok
+		echo -e "\nReverse cooklist for: $pkg"
+		separator && cd $wok
 		for rev in *
 		do
-			if fgrep DEPENDS $rev/receipt | fgrep $pkg; then
-				echo "TODO: $rev"
+			unset DEPENDS BUILD_DEPENDS && . $wok/$rev/receipt
+			if echo "$DEPENDS $BUILD_DEPENDS" | fgrep -q $pkg; then
+				echo "$rev" | tee -a $cooklist
 			fi
-		done ;;
+		done && separator
+		echo -e "Reverse dependencies found: $(cat $cooklist | wc -l)\n"
+		strip_blocked
+		cook_order | tee $LOGS/cookorder.log
+		cook_list ;;
 	pkg|-p)
 		# Same as 'cook pkg' but with log for web interface.
 		pkg="$2"
 		echo "Cook started for: <a href='cooker.cgi?pkg=$pkg'>$pkg</a>" | log
-		cook $pkg || broken ;;
+		cook $pkg || broken
+		empty_command ;;
 	cat|-c)
 		# Cook all packages of a category.
 		cat="$2"
@@ -284,8 +292,7 @@ case "$1" in
 		cp -a $list $cooklist
 		strip_blocked
 		cook_order | tee $LOGS/cookorder.log
-		#cook_list
-		;;
+		cook_list ;;
 	list|-l)
 		# Cook a list og package given in argument.
 		list="$2"

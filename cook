@@ -396,6 +396,7 @@ cookit_quality() {
 	# ERROR can be echoed any time in cookit()
 	if grep -q ^ERROR $LOGS/$pkg.log; then
 		debug_info | tee -a $LOGS/$pkg.log
+		rm -f $command
 		exit 1
 	fi
 }
@@ -481,10 +482,11 @@ packit() {
 # Verify package quality and consitensy.
 packit_quality() {
 	if grep -q ^ERROR $LOGS/$pkg.log; then
-		exit 1
+		rm -f $command && exit 1
 	fi
 	if ! grep -q ^/ $WOK/$pkg/taz/$pkg-*/files.list; then
-		echo -e "ERROR: empty package\n" | tee -a $LOGS/$pkg.log && exit 1
+		echo -e "ERROR: empty package\n" | tee -a $LOGS/$pkg.log
+		rm -f $command && exit 1
 	else
 		mv -f $WOK/$pkg/taz/$pkg-*.tazpkg $PKGS
 		sed -i /^${pkg}$/d $broken
@@ -496,7 +498,7 @@ packit_quality() {
 #
 
 case "$1" in
-	usage|help)
+	usage|help|-u|-h)
 		 usage ;;
 	list-wok)
 		gettext "List of packages in:"; echo " $WOK"
