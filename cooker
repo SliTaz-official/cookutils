@@ -65,7 +65,7 @@ log() {
 # Some message goes in activity but log verbose output when checking for commits
 # into a log file.
 log_commits() {
-	tee -a $LOGS/commits.log
+	sed '/^.\//'d | sed '/^.hg/'d | tee -a $LOGS/commits.log
 }
 
 # Log broken packages
@@ -76,6 +76,19 @@ broken() {
 # Clean up after cook sucess.
 empty_command() {
 	rm -f $command && touch $command
+}
+
+# Summary for commits.
+commits_summary() {
+	msg="from revision $cur to $new"
+	[ "$new" == "$cur" ] && msg="revision $new"
+	echo "Will cook $msg"
+	separator
+	echo -e "\nSummary for commits"
+	separator
+	echo "Hg wok revision  : $cur"
+	echo "Pulled revision  : $new"
+	echo "Check date       : $(date '+%Y-%m-%d %H:%M')"
 }
 
 # Scan packages build deps an fill up cookorder list.
@@ -159,14 +172,14 @@ cook_order() {
 	separator
 	time=$(($(date +%s) - $time))
 	pkgs=$(cat $cooklist | wc -l)
-	echo -e "\nSummary"
+	echo -e "\nSummary for cookorder"
 	separator
 	cat << EOT
 Ordered packages : $pkgs
 Scans executed   : $scan
 Scan duration    : ${time}s
 EOT
-	separator && echo ""
+	separator
 }
 
 # Remove blocked (faster this way than grepping before).
@@ -339,35 +352,31 @@ case "$1" in
 		echo "hg:pull" > $command
 		cd ${wok}-hg && hg pull -u | log_commits
 		new=$(hg head --template '{rev}\n')
-		echo "Hg wok revision : $cur" | log_commits
-		echo "Pulled revision : $new" | log_commits
-		echo "Check date      : $(date '+%Y-%m-%d %H:%M')" | log_commits
 		
 		# Sync build wok with rsync so we dont take care about removing old
 		# files as before.
 		if [ "$new" -gt "$cur" ]; then
 			echo "Changes found from: $cur to $new" | log
-			echo "Syncing build wok with Hg wok..."
-			#cp -a ${wok}-hg/* $wok
-			#cp -a ${wok}-hg/.hg $wok
-			rsync -r -t -c -l -u -D -E --delete ${wok}-hg/ $wok/ | log_commits
+			echo "Syncing build wok with Hg wok..." | log_commits
+			rsync -r -t -c -l -u -v -D -E --delete ${wok}-hg/ $wok/ | \
+				sed '/^$/'d | log_commits
 		else
 			echo "No revision changes: $cur vs $new" | log
 			separator | log_commits
 			empty_command && echo "" && exit 0
 		fi
 		
-		# Get modifications
+		# Get and display modifications.
 		cd ${wok}-hg
 		cur=$(($cur + 1))
-		msg="from revision $cur to $new"
-		[ "$new" == "$cur" ] && msg="revision: $new"
-		echo -e "Will cook $msg\n"
+		commits_summary | log_commits
+		
 		rm -f $commits.tmp && touch $commits.tmp
 		for rev in $(seq $cur $new); do
-			pkg=$(hg log --rev=$rev --template "{files}\n" | cut -d "/" -f 1)
+			#log=$(hg log --rev=$rev --template "{files}\t{desc}\n")
+			log=$(hg log --rev=$rev --template "{files}\n" | cut -d "/" -f 1)
 			for file in $log; do
-				echo "Commited file: $file" log_commits
+				echo "Commited pkg     : $file" | log_commits
 				echo $file >> $commits.tmp
 			done
 		done
@@ -375,8 +384,9 @@ case "$1" in
 		# Keep previews commit and discard duplicate lines
 		cat $commits $commits.tmp | sed /"^$"/d > $commits.new
 		uniq $commits.new > $commits && rm $commits.*
-		echo "Packages to cook: $(cat $commits | wc -l)" | log
-		separator && echo "" | log_commits
+		echo "Packages to cook : $(cat $commits | wc -l)" | log_commits
+		separator | log_commits
+		echo ""
 		strip_blocked
 		cook_order | tee $LOGS/cookorder.log
 		cook_commits && empty_command ;;
