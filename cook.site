@@ -1,13 +1,13 @@
 # /etc/slitaz/cook.site: Default options passed to ./configure in SliTaz
 #
 # This file is used since we can't export these variables, but configure
-# handle CONFIG_SITE and will source this file automaticaly if set.
+# handles CONFIG_SITE and will source this file automatically if set.
 #
 # If you want to use your own cook.site, you can use:
 # export CONFIG_SITE=config.site in compile_rules of a receipt.
 #
 
-# Some old configure use "${prefix}" instead of "${datarootdir}".
+# Some old configure(s) use "${prefix}" instead of "${datarootdir}".
 if echo "$localedir" | grep -q \${prefix}; then
 	localedir=$( echo "$localedir" | sed 's/${prefix}/${datarootdir}/')
 fi
