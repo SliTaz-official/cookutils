@@ -37,7 +37,8 @@ $(echo -e "\033[1m$(gettext "Commands:")\033[0m")
 
 $(echo -e "\033[1m$(gettext "Options:")\033[0m")
   --clean|-c      Cook : $(gettext "clean the package in the wok.")
-  --install|-i    Cook : $(gettext "and install the package.")
+  --install|-i    Cook : $(gettext "cook and install the package.")
+  --getsrc|-gs    Cook : $(gettext "get the package source tarball.")
   --wok|-w        Setup: $(gettext "create also a wok from Hg repo.")
 
 EOT
@@ -651,6 +652,11 @@ EOT
 				status && echo "" && exit 0 ;;
 			--install|-i)
 				inst='yes' ;;
+			--getsrc)
+				echo "Getting source for: $pkg"
+				separator
+				. $WOK/$pkg/receipt && get_source
+				echo -e "Tarball: $SRC/$TARBALL\n" && exit 0 ;;
 		esac
 
 		# Check if wanted is build now so we have separate log files.

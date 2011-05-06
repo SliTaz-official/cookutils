@@ -31,8 +31,9 @@
 
 <h3>Cook usage</h3>
 <p>
-	Cook provide a small built-in help usage that you can display with
-	the command:
+	Cook provide a small built-in help usage that you can display with the
+	command 'usage'. It also have some options to perform special task on
+	a package, rater before cooking it or after. To get help and usage:
 </p>
 <pre>
 # cook usage
@@ -49,11 +50,11 @@
 # tazdev gen-chroot &amp;&amp; tazdev chroot
 </pre>
 <p>
-	By default Tazdev create a chrrot in /home/slitaz/cooking/chroot but you
+	By default Tazdev create a chroot in /home/slitaz/cooking/chroot but you
 	can specify a custome path in argument. The chroot place is not important,
 	when you will be in the chroot you will use standard SliTaz path such as
 	/home/slitaz/wok for the wok directory or /home/slitaz/log for all the cook
-	logs. As usual you can diplay tazdev help usage with: tazdev usage
+	logs. As usual you can diplay tazdev help usage with: tazdev usage.
 </p>
 
 <h3>Getting started</h3>
@@ -107,11 +108,24 @@
 </pre>
 <p>
 	If all went well you will find your packages in $SLITAZ/packages
-	directory and produced files in $SLITAZ/wok/pkgname. If you want to cook
-	and install the package in one command:
+	directory and produced files in $SLITAZ/wok/pkgname.
+</p>
+
+<h3>Cook and install</h3>
+<p>
+	If you want to cook and install the package in one command:
 </p>
 <pre>
 # cook pkgname --install
+</pre>
+
+<h3>Get sources</h3>
+<p>
+	If you want or need to download only the sources of a package but without
+	building it, you can use the option --getsrc as bellow:
+</p>
+<pre>
+# cook pkgname --getsrc
 </pre>
 
 <h3>Clean packages</h3>
