@@ -222,9 +222,10 @@ EOT
 debug_info() {
 	echo -e "\nDebug information"
 	separator
-	fgrep ERROR $LOGS/$pkg.log
-	fgrep "No package" $LOGS/$pkg.log
-	fgrep "cp: can't stat" $LOGS/$pkg.log
+	for error in ERROR "No package" "cp: can't stat" "can't open"
+	do
+		fgrep "$error" $LOGS/$pkg.log
+	done
 	separator && echo ""
 }
 
