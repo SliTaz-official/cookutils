@@ -5,8 +5,8 @@ SliTaz Cookutils
 The SliTaz Cookutils provide tools and utils to build SliTaz packages.
 
 
-cook
-----
+Cook
+--------------------------------------------------------------------------------
 The cook tool should be used in a chroot environment, simply use the command
 'tazdev gen-chroot' to build one. You can also build package directly but
 build deps will not be handled correctly since cook will install missing
@@ -53,8 +53,8 @@ repository or sent to the official mirror. We create and use:
     * files.list.lzma  A files provides by all packages
 
 
-cooker
-------
+Cooker
+--------------------------------------------------------------------------------
 The Cooker is a Build Bot who automate the build process but dont do the diner
 for you! We need quality receipt to cook succefully and the goal is not to have
 a bloated script so please Keep It Short and Simple.
@@ -69,9 +69,20 @@ a nice way. Web interface also hightligh success and error, can show receipt
 and the cooker logs such as the last ordered list or commits check.
 
 
-Coding style
-------------
+Toolchain
+--------------------------------------------------------------------------------
+The rebuild the full SliTaz toolchain at once cook and the Cooker will use the
+slitaz-toolchain package. No built-in code to manage that since it is not a
+common task. The toolchain package will built all needed package in the correct
+order, wich is very important.
 
+
+Coding style
+--------------------------------------------------------------------------------
+Here are the cookutils coding style notes, follow them if you want your code
+include in the package.
+
+    * In all cases: KISS
     * Use tab and not space to ident
     * Use name rater than $1 $2 $2
     * Variables from config file are $UPERCASE
