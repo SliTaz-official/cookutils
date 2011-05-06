@@ -161,7 +161,7 @@ get_source() {
 		hg*|mercurial*)
 			# We are in cache so clone here and create a tarball
 			pwd=$(pwd)
-			if $(echo "$WGET_URL" | fgrep -q hg); then
+			if $(echo "$WGET_URL" | fgrep -q "hg|"); then
 				url=${WGET_URL#hg|}
 			else
 				url=${WGET_URL#mercurial|}
@@ -514,7 +514,7 @@ case "$1" in
 		gettext "Creating directories structure in:"; echo " $SLITAZ"
 		mkdir -p $WOK $PKGS $SRC $CACHE $LOGS
 		gettext -e "Checking for packages to install...\n"
-		for pkg in slitaz-toolchain tazdev intltool gettext
+		for pkg in $SETUP_PKGS
 		do
 			[ ! -d "$INSTALLED/$pkg" ] && tazpkg get-install $pkg
 		done

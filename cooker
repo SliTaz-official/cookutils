@@ -77,18 +77,20 @@ empty_command() {
 	rm -f $command && touch $command
 }
 
-# Scan packages deps an fill up cookorder list.
+# Scan packages build deps an fill up cookorder list.
 cook_order_scan() {
 	touch $cooklist $cookorder
 	for pkg in $(cat $cooklist)
 	do
-		unset DEPENDS BUILD_DEPENDS
+		unset BUILD_DEPENDS
 		. $wok/$pkg/receipt
-		for dep in $DEPENDS $BUILD_DEPENDS
+		# The :: is for web interface color.
+		[ "$BUILD_DEPENDS" ] && echo "$pkg :: $BUILD_DEPENDS"
+		for dep in $BUILD_DEPENDS
 		do
 			if grep -q "^$dep$" $cooklist; then
-				echo -e "$pkg: $dep"
 				if ! grep -q "^$dep$" $cookorder; then
+					
 					echo "$dep" >> $cookorder
 				fi
 			fi
@@ -143,7 +145,7 @@ cook_order() {
 		unset WANTED
 		. $wok/$pkg/receipt
 		if [ "$WANTED" ]; then
-			echo "$pkg: $WANTED"
+			echo "$pkg :: $WANTED"
 			sed -i -e "/^$pkg$/"d  \
 				-e "/^$WANTED$/ a $pkg"  $cooklist
 		fi
@@ -210,7 +212,7 @@ case "$1" in
 		echo -e "\nSetting up the Cooker"
 		echo "Cooker --setup using: $SLITAZ" | log
 		separator
-		for pkg in mercurial rsync slitaz-toolchain gettext
+		for pkg in $SETUP_PKGS mercurial rsync
 		do
 			[ ! -d "$INSTALLED/$pkg" ] && tazpkg get-install $pkg
 		done
@@ -231,15 +233,15 @@ case "$1" in
 		cp -a ${wok}-hg $wok
 		separator && echo "" ;;
 	--notes)
-			# View cooknotes.
-			echo -e "\nCooknotes"
-			separator
-			cat $cooknotes
-			separator && echo "" ;;
+		# View cooknotes.
+		echo -e "\nCooknotes"
+		separator
+		cat $cooknotes
+		separator && echo "" ;;
 	--note=*)
-			# Blocked a pkg and want other to know why ? Post a note!
-			note=${1#--note=}
-			[ "$note" ] && echo "$note" >> $cooknotes ;;
+		# Blocked a pkg and want other to know why ? Post a note!
+		note=${1#--note=}
+		[ "$note" ] && echo "$note" >> $cooknotes ;;
 	--reverse=*)
 		# Cook all reverse dependencies for a packages. This command let us
 		# control the Cooker manually for commit that will cook a lot of packages.
@@ -281,7 +283,8 @@ case "$1" in
 		cp -a $list $cooklist
 		strip_blocked
 		cook_order | tee $LOGS/cookorder.log
-		cook_list ;;
+		#cook_list
+		;;
 	--list=*)
 		# Cook a list og package given in argument.
 		list=${1#--list=}
