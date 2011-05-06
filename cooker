@@ -375,8 +375,10 @@ case "$1" in
 		for rev in $(seq $cur $new); do
 			#log=$(hg log --rev=$rev --template "{files}\t{desc}\n")
 			log=$(hg log --rev=$rev --template "{files}\n" | cut -d "/" -f 1)
+			
 			for file in $log; do
-				echo "Commited pkg     : $file" | log_commits
+				desc=$(hg log --rev=$rev --template "{desc}" $file)
+				echo "Commited         : $file - $desc" | log_commits
 				echo $file >> $commits.tmp
 			done
 		done
