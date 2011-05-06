@@ -38,8 +38,9 @@ Options:
   --notes        Display all the cooknotes.
   --note=        Add a note to the cooknotes.
   --pkg=         Same as 'cook pkg' but with cooker log.
-  --cat=         Cook all packages of a category.
   --flavor=      Cook all packages of a flavor.
+  --list=        Cook all package in the given list.
+  --cat=         Cook all packages of a category.
   --all          Find and cook all unbuilt packages.
 
 EOT
@@ -258,8 +259,7 @@ case "$1" in
 		# Same as 'cook pkg' but with log for web interface.
 		pkg=${1#--pkg=}
 		echo "Cook started for: <a href='cooker.cgi?pkg=$pkg'>$pkg</a>" | log
-		cook $pkg || broken
-		emty_command ;;
+		cook $pkg || broken ;;
 	--cat=*)
 		# Cook all packages of a category.
 		cat=${1#--cat=}
@@ -271,17 +271,26 @@ case "$1" in
 		done
 		strip_blocked
 		cook_order | tee $LOGS/cookorder.log
-		cook_list
-		emty_command ;;
+		cook_list ;;
 	--flavor=*)
 		# Cook all packages of a flavor.
 		flavor=${1#--flavor=}
+		[ ! -d "$SLITAZ/flavors/$flavor" ] && \
+			echo -e "\nSpecified flavor does not exist: $flavor\n" && exit 1
 		list=$SLITAZ/flavors/$flavor/packages.list
 		cp -a $list $cooklist
 		strip_blocked
 		cook_order | tee $LOGS/cookorder.log
-		cook_list
-		emty_command ;;
+		cook_list ;;
+	--list=*)
+		# Cook a list og package given in argument.
+		list=${1#--list=}
+		[ ! -f "$list" ] && \
+			echo -e "\nSpecified list does not exist: $list\n" && exit 1
+		cp -a $list $cooklist
+		strip_blocked
+		cook_order | tee $LOGS/cookorder.log
+		cook_list ;;
 	--all)
 		# Try to build all unbuilt packages except blocked's.
 		echo "cooker:--all" > $command

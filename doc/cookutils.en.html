@@ -173,11 +173,14 @@ $ cook list-wok
 </pre>
 <p>
 	To cook more than one package at once you have different kind of choices.
-	The currently implemeted ways (more will come such as --list=):
+	You use an existing package such as used for Live flavors, you can also
+	use a custom list with packages name line by line. Finaly you can build
+	all packages of a category.
 </p>
 <pre>
+# cooker --flavor=flavor
+# cooker --list=/path/to/list
 # cooker --cat=category
-# cooker --flavor=flavo
 </pre>
 
 <h3>Cooker CGI/Web</h3>
