@@ -160,11 +160,12 @@ $ cook list-wok
 	web server.
 </p>
 <p>
-	The Cooker provide a small built-in help usage that you can display with
-	the command:
+	The Cooker provide a small built-in help usage and short command switch.
+	For example to display usage you can use:
 </p>
 <pre>
-# cooker --usage
+# cooker usage
+# cooker -u
 </pre>
 
 <h3>Cooker setup</h3>
@@ -174,10 +175,12 @@ $ cook list-wok
 	One Hg and clean wok as reference and one build wok, in this way is is easy
 	to compare both wok and get modifications. If you already have a cook
 	environement, you must move your wok before setting up the Cooker or it
-	will complain:
+	will complain. Setup will also install a set of development packages that
+	can be configured in the cook.conf configuration file and the variable
+	SETUP_PKGS. To setup your cooker environment:
 </p>
 <pre>
-# cooker --setup
+# cooker setup
 </pre>
 <p>
 	If all went well you have now 2 wok, base developement packages installed
@@ -201,7 +204,7 @@ $ cook list-wok
 	logs:
 </p>
 <pre>
-# cooker --pkg=pkgname
+# cooker pkg pkgname
 </pre>
 <p>
 	To cook more than one package at once you have different kind of choices.
@@ -210,9 +213,9 @@ $ cook list-wok
 	all packages of a category.
 </p>
 <pre>
-# cooker --flavor=flavor
-# cooker --list=/path/to/list
-# cooker --cat=category
+# cooker flavor [name]
+# cooker list [/path/to/cooklist]
+# cooker cat [category]
 </pre>
 
 <h3>Cooker CGI/Web</h3>
@@ -265,8 +268,8 @@ $ cp -f cookutils/cook.conf ~/Public/cgi-bin/cooker
 	checked from cmdline:
 </p>
 <pre>
-# cooker --note="Blocked pkgname due to heavy CPU load"
-# cooker --notes
+# cooker note "Blocked pkgname due to heavy CPU load"
+# cooker notes
 </pre>
 
 <!-- End content -->

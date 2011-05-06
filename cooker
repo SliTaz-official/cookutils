@@ -12,6 +12,7 @@
 
 # The same wok as cook.
 wok="$WOK"
+flavors="$SLITAZ/flavors"
 
 # Cooker DB files.
 activity="$CACHE/activity"
@@ -30,18 +31,18 @@ cooknotes="$CACHE/cooknotes"
 usage() {
 	cat << EOT
 
-Usage: cooker [--option]
+Usage: cooker [command] [pkg|list|note]
 
 Options:
-  --usage        Display this short usage.
-  --setup        Setup the Cooker environment.
-  --notes        Display all the cooknotes.
-  --note=        Add a note to the cooknotes.
-  --pkg=         Same as 'cook pkg' but with cooker log.
-  --flavor=      Cook all packages of a flavor.
-  --list=        Cook all package in the given list.
-  --cat=         Cook all packages of a category.
-  --all          Find and cook all unbuilt packages.
+  usage|-u      Display this short usage.
+  setup|-s      Setup the Cooker environment.
+  note|-n       Add a note to the cooknotes.
+  notes|-ns     Display all the cooknotes.
+  pkg|-p        Same as 'cook pkg' but with cooker log.
+  flavor|-f     Cook all packages of a flavor.
+  list|-l       Cook all package in the given list.
+  cat|-c        Cook all packages of a category.
+  all|-a        Find and cook all unbuilt packages.
 
 EOT
 	exit 0
@@ -205,12 +206,12 @@ cook_list() {
 # Commands
 #
 case "$1" in
-	--usage|--help)
+	usage|help|-u|-h)
 		usage ;;
-	--setup)
+	setup|-s)
 		# Setup the Cooker environment.
 		echo -e "\nSetting up the Cooker"
-		echo "Cooker --setup using: $SLITAZ" | log
+		echo "Cooker setup using: $SLITAZ" | log
 		separator
 		for pkg in $SETUP_PKGS mercurial rsync
 		do
@@ -219,7 +220,7 @@ case "$1" in
 		mkdir -p $SLITAZ && cd $SLITAZ
 		[ -d "${wok}-hg" ] && echo -e "Hg wok already exist.\n" && exit 1
 		[ -d "$wok" ] && echo -e "Build wok already exist.\n" && exit 1
-		[ -d "flavors" ] && echo -e "Flavors repo already exist.\n" && exit 1
+		[ -d "$flavors" ] && echo -e "Flavors repo already exist.\n" && exit 1
 
 		# Directories and files
 		echo "mkdir's and touch files in: $SLITAZ"
@@ -232,23 +233,23 @@ case "$1" in
 		hg clone $FLAVORS_URL flavors
 		cp -a ${wok}-hg $wok
 		separator && echo "" ;;
-	--notes)
+	note|-n)
+		# Blocked a pkg and want other to know why ? Post a note!
+		note="$2"
+		[ "$note" ] && echo "$note" >> $cooknotes ;;
+	notes|-ns)
 		# View cooknotes.
 		echo -e "\nCooknotes"
 		separator
 		cat $cooknotes
 		separator && echo "" ;;
-	--note=*)
-		# Blocked a pkg and want other to know why ? Post a note!
-		note=${1#--note=}
-		[ "$note" ] && echo "$note" >> $cooknotes ;;
-	--reverse=*)
+	reverse|-r)
 		# Cook all reverse dependencies for a packages. This command let us
 		# control the Cooker manually for commit that will cook a lot of packages.
 		#
 		# Use hg commit ? Ex: hg commit -m "Message bla bla | cooker:reverse"
 		#
-		pkg=${1#--reverse=}
+		pkg="$2"
 		[ ! -d "$wok/$pkg" ] && echo "No package $2 found." && exit 0
 		cd $wok
 		for rev in *
@@ -257,14 +258,14 @@ case "$1" in
 				echo "TODO: $rev"
 			fi
 		done ;;
-	--pkg=*)
+	pkg|-p)
 		# Same as 'cook pkg' but with log for web interface.
-		pkg=${1#--pkg=}
+		pkg="$2"
 		echo "Cook started for: <a href='cooker.cgi?pkg=$pkg'>$pkg</a>" | log
 		cook $pkg || broken ;;
-	--cat=*)
+	cat|-c)
 		# Cook all packages of a category.
-		cat=${1#--cat=}
+		cat="$2"
 		rm -f $cooklist && touch $cooklist && cd $wok
 		for pkg in *
 		do
@@ -274,29 +275,29 @@ case "$1" in
 		strip_blocked
 		cook_order | tee $LOGS/cookorder.log
 		cook_list ;;
-	--flavor=*)
+	flavor|-f)
 		# Cook all packages of a flavor.
-		flavor=${1#--flavor=}
-		[ ! -d "$SLITAZ/flavors/$flavor" ] && \
-			echo -e "\nSpecified flavor does not exist: $flavor\n" && exit 1
-		list=$SLITAZ/flavors/$flavor/packages.list
+		name="$2"
+		[ ! -d "$flavors/$name" ] && \
+			echo -e "\nSpecified flavor does not exist: $name\n" && exit 1
+		list=$flavors/$name/packages.list
 		cp -a $list $cooklist
 		strip_blocked
 		cook_order | tee $LOGS/cookorder.log
 		#cook_list
 		;;
-	--list=*)
+	list|-l)
 		# Cook a list og package given in argument.
-		list=${1#--list=}
+		list="$2"
 		[ ! -f "$list" ] && \
 			echo -e "\nSpecified list does not exist: $list\n" && exit 1
 		cp -a $list $cooklist
 		strip_blocked
 		cook_order | tee $LOGS/cookorder.log
 		cook_list ;;
-	--all)
+	all|-a)
 		# Try to build all unbuilt packages except blocked's.
-		echo "cooker:--all" > $command
+		echo "cooker:all" > $command
 		rm -f $cooklist && touch $cooklist
 		echo "" && cd $wok
 		echo "Cooker cooklist"
