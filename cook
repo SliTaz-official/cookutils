@@ -223,6 +223,8 @@ debug_info() {
 	echo -e "\nDebug information"
 	separator
 	fgrep ERROR $LOGS/$pkg.log
+	fgrep "No package" $LOGS/$pkg.log
+	fgrep "cp: can't stat" $LOGS/$pkg.log
 	separator && echo ""
 }
 
@@ -316,7 +318,7 @@ cookit() {
 	separator
 	set_paths
 	[ "$QA" ] && receipt_quality
-	rm -rf install taz source $CACHE/error
+	rm -rf install taz source
 
 	# Disable -pipe if less than 512Mb free RAM.
 	free=$(free | fgrep '/+ buffers' | tr -s ' ' | cut -f 4 -d ' ')
@@ -376,7 +378,7 @@ cookit() {
 	if grep -q ^compile_rules $pkgdir/receipt; then
 		gettext -e "Executing: compile_rules\n"
 		[ -d "$src" ] && cd $src 
-		compile_rules || exit 1
+		compile_rules || echo "" && exit 1
 		# Stay compatible with _pkg
 		[ -d $src/_pkg ] && mv $src/_pkg $install
 		# QA: compile_rules success so valid.
@@ -394,10 +396,9 @@ cookit_quality() {
 		echo -e "ERROR: cook failed" | tee -a $LOGS/$pkg.log
 	fi
 	# ERROR can be echoed any time in cookit()
-	if grep -q ^ERROR $LOGS/$pkg.log; then
+	if fgrep -q ERROR: $LOGS/$pkg.log; then
 		debug_info | tee -a $LOGS/$pkg.log
-		rm -f $command
-		exit 1
+		rm -f $command && exit 1
 	fi
 }
 
@@ -410,9 +411,10 @@ packit() {
 	if grep -q ^genpkg_rules $pkgdir/receipt; then
 		gettext -e "Executing: genpkg_rules\n"
 		cd $pkgdir
-		mkdir -p $fs && genpkg_rules || ( echo -e \
-			"\nERROR: genpkg_rules failed\n" | tee -a $LOGS/$pkg.log && exit 1 )
+		mkdir -p $fs && genpkg_rules || (echo -e \
+			"\nERROR: genpkg_rules failed\n" >> $LOGS/$pkg.log && exit 1)
 	fi
+	packit_quality
 	cd $pkgdir/taz
 	strip_package
 	for file in receipt description.txt
@@ -481,7 +483,7 @@ packit() {
 
 # Verify package quality and consitensy.
 packit_quality() {
-	if grep -q ^ERROR $LOGS/$pkg.log; then
+	if fgrep -q ERROR: $LOGS/$pkg.log; then
 		rm -f $command && exit 1
 	fi
 	if ! grep -q ^/ $WOK/$pkg/taz/$pkg-*/files.list; then
@@ -659,10 +661,14 @@ EOT
 		cookit 2>&1 | tee $LOGS/$pkg.log
 		remove_deps | tee -a $LOGS/$pkg.log
 		cookit_quality
-		
 		packit 2>&1 | tee -a $LOGS/$pkg.log
 		clean_log
-		packit_quality
+
+		# Exit if any error in packing.
+		if grep -q ^ERROR $LOGS/$pkg.log; then
+			debug_info | tee -a $LOGS/$pkg.log
+			rm -f $command && exit 1
+		fi
 		
 		# Time and summary
 		time=$(($(date +%s) - $time))
