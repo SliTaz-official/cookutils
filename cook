@@ -65,7 +65,7 @@ status() {
 
 # Log activities, we want first letter capitalized.
 log() {
-	grep ^[a-zA-Z0-9] | \
+	grep ^[A-Z] | \
 		sed s"#^[A-Z]\([^']*\)#$(date '+%Y-%m-%d %H:%M') : \0#" >> $activity
 }
 

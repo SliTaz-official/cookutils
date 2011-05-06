@@ -57,7 +57,7 @@ separator() {
 
 # Log activities, we want first letter capitalized.
 log() {
-	grep ^[a-zA-Z0-9] | \
+	grep ^[A-Z] | \
 		sed s"#^[A-Z]\([^']*\)#$(date '+%Y-%m-%d %H:%M') : \0#" >> $activity
 }
 
@@ -73,7 +73,7 @@ broken() {
 }
 
 # Clean up after cook sucess.
-emty_command() {
+empty_command() {
 	rm -f $command && touch $command
 }
 
@@ -311,8 +311,7 @@ case "$1" in
 		strip_blocked
 		echo "Packages to cook: $(cat $cooklist | wc -l)" | log
 		cook_order | tee $LOGS/cookorder.log
-		cook_list
-		emty_command ;;
+		cook_list && empty_command;;
 	*)
 		# Default is to cook all commits.
 		[ "$1" ] && usage
@@ -344,7 +343,7 @@ case "$1" in
 		else
 			echo "No revision changes: $cur vs $new" | log
 			separator | log_commits
-			emty_command && echo "" && exit 0
+			empty_command && echo "" && exit 0
 		fi
 		
 		# Get modifications
@@ -369,8 +368,7 @@ case "$1" in
 		separator && echo "" | log_commits
 		strip_blocked
 		cook_order | tee $LOGS/cookorder.log
-		cook_commits
-		emty_command ;;
+		cook_commits && empty_command ;;
 esac
 
 exit 0
