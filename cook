@@ -228,6 +228,7 @@ EOT
 debug_info() {
 	echo -e "\nDebug information"
 	separator
+	echo "Cook date: $(date '+%Y-%M-%d %H:%M')"
 	for error in ERROR "No package" "cp: can't stat" "can't open"
 	do
 		fgrep "$error" $LOGS/$pkg.log
@@ -501,8 +502,8 @@ packit_quality() {
 		rm -f $command && exit 1
 	fi
 	gettext "QA: Checking for empty package..."
-	files=$(grep -q ^/ $pkgdir/taz/$pkg-*/files.list)
-	if [ ! "$files" ] && [ "$CATEGORY" != "meta" ]; then
+	files=$(cat $WOK/$pkg/taz/$pkg-*/files.list | wc -l)
+	if [ "$files" -lt 0 ] && [ "$CATEGORY" != "meta" ]; then
 		echo -e "\nERROR: empty package"
 		rm -f $command && exit 1
 	else
@@ -669,8 +670,7 @@ EOT
 				inst='yes' ;;
 			--getsrc)
 				echo "Getting source for: $pkg"
-				separator
-				. $WOK/$pkg/receipt && get_source
+				separator && get_source
 				echo -e "Tarball: $SRC/$TARBALL\n" && exit 0 ;;
 		esac
 
