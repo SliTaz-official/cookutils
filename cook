@@ -412,7 +412,7 @@ cookit_quality() {
 # but it dont handle EXTRAVERSION.
 packit() {
 	set_paths
-	echo "Packing: $PACKAGE $VERSION"
+	echo "Pack: $PACKAGE $VERSION"
 	separator
 	if grep -q ^genpkg_rules $pkgdir/receipt; then
 		gettext -e "Executing: genpkg_rules\n"
@@ -420,16 +420,13 @@ packit() {
 		mkdir -p $fs && genpkg_rules || (echo -e \
 			"\nERROR: genpkg_rules failed\n" >> $LOGS/$pkg.log && exit 1)
 	fi
-	packit_quality
 	cd $pkgdir/taz
-	strip_package
 	for file in receipt description.txt
 	do
 		[ ! -f "../$file" ] && continue
 		gettext "Copying"; echo -n " $file..."
 		cp -f ../$file $pack && chown 0.0 $pack/$file && status
 	done
-	copy_generic_files
 	
 	# Create files.list with redirecting find outpout.
 	gettext "Creating the list of files..." && cd $fs
@@ -437,6 +434,13 @@ packit() {
 	find . -type l -print >> ../files.list
 	cd .. && sed -i s/'^.'/''/ files.list
 	status
+
+	# QA, strip and stuff files.
+	
+	strip_package
+	copy_generic_files
+
+	# Md5sum of files.
 	gettext "Creating md5sum of files..."
 	while read file; do
 		[ -L "fs$file" ] && continue
@@ -482,9 +486,11 @@ packit() {
 	unlzma -c fs.cpio.lzma | cpio -idm --quiet
 	status
 	rm fs.cpio.lzma && cd ..
-	separator && gettext "Package: "
-	du -sh $PACKAGE-${VERSION}${EXTRAVERSION}.tazpkg
-	echo ""
+
+	# QA and give info.
+	tazpkg=$(ls *.tazpkg)
+	packit_quality
+	separator && gettext "Package:"; echo -e " $tazpkg\n"
 }
 
 # Verify package quality and consitensy.
@@ -492,8 +498,9 @@ packit_quality() {
 	if fgrep -q ERROR: $LOGS/$pkg.log; then
 		rm -f $command && exit 1
 	fi
-	if ! grep -q ^/ $WOK/$pkg/taz/$pkg-*/files.list; then
-		echo -e "ERROR: empty package\n" | tee -a $LOGS/$pkg.log
+	files=$(grep -q ^/ $pkgdir/taz/$pkg-*/files.list)
+	if [ ! "$files" ] && [ "$CATEGORY" != "meta" ]; then
+		echo -e "ERROR: empty package"
 		rm -f $command && exit 1
 	else
 		mv -f $WOK/$pkg/taz/$pkg-*.tazpkg $PKGS
