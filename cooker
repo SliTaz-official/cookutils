@@ -45,6 +45,7 @@ Options:
   flavor|-f       Cook all packages of a flavor.
   list|-l         Cook all packages in the given list.
   cat|-c          Cook all packages of a category.
+  rev|-r          Cook packages of a specific revision.
   all|-a          Find and cook all unbuilt packages.
 
 EOT
@@ -211,10 +212,8 @@ cook_commits() {
 cook_list() {
 	for pkg in $(cat $cooklist)
 	do
-		if [ ! -d "$wok/$pkg/install" ]; then
-			cook $pkg || broken
-			sed -i /^${pkg}$/d $cooklist
-		fi
+		cook $pkg || broken
+		sed -i /^${pkg}$/d $cooklist
 	done
 }
 
@@ -320,6 +319,19 @@ case "$1" in
 			echo -e "\nSpecified list does not exist: $list\n" && exit 1
 		cp -a $list $cooklist
 		strip_blocked
+		cook_order | tee $LOGS/cookorder.log ;;
+	rev|-r)
+		# Cook or recook a specific Hg revision.
+		rev="$2"
+		[ "$rev" ] || exit 0
+		cd $wok
+		log=$(hg log --rev=$rev --template "{files}\n" | cut -d "/" -f 1)
+		rm -f $cooklist && touch $cooklist
+		for pkg in $log
+		do
+			echo "$pkg" >> $cooklist
+		done
+		strip_blocked
 		cook_order | tee $LOGS/cookorder.log
 		cook_list ;;
 	all|-a)
@@ -342,7 +354,7 @@ case "$1" in
 		strip_blocked
 		echo "Packages to cook: $(cat $cooklist | wc -l)" | log
 		cook_order | tee $LOGS/cookorder.log
-		cook_list && empty_command;;
+		cook_list ;;
 	*)
 		# Default is to cook all commits.
 		[ "$1" ] && usage

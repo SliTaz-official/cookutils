@@ -252,6 +252,14 @@ $ cook list-wok
 # cooker list [/path/to/cooklist]
 # cooker cat [category]
 </pre>
+<p>
+	The Cooker let you also recook a specific Hg revision. It usefull in
+	production so if the Build Bot was interupted while cooking commits, you
+	can then cook packages manually:
+</p>
+<pre>
+# cooker rev 9496
+</pre>
 
 <a name="blocked"></a>
 <h3>Blocked packages</h3>
