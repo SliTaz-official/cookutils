@@ -71,9 +71,11 @@ log_commits() {
 	sed '/^.\//'d | sed '/^.hg/'d | tee -a $LOGS/commits.log
 }
 
-# Log broken packages
+# Log broken packages.
 broken() {
-	echo "$pkg" >> $broken
+	if ! grep -q "^$pkg$" $broken; then
+		echo "$pkg" >> $broken
+	fi
 }
 
 # Clean up after cook success.

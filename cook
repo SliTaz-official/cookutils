@@ -82,7 +82,9 @@ clean_log() {
 
 # Log broken packages.
 broken() {
-	echo "$pkg" >> $broken
+	if ! grep -q "^$pkg$" $broken; then
+		echo "$pkg" >> $broken
+	fi
 }
 
 # Be sure package exists in wok.
