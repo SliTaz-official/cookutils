@@ -191,9 +191,13 @@ extract_source() {
 	gettext "Extracting:"; echo " $TARBALL"
 	case "$TARBALL" in
 		*.tar.gz|*.tgz) tar xzf $SRC/$TARBALL ;;
-		*.tar.bz2) tar xjf $SRC/$TARBALL ;;
+		*.tar.bz2|*.tbz) tar xjf $SRC/$TARBALL ;;
 		*.tar.lzma) tar xaf $SRC/$TARBALL ;;
-		*.zip) unzip $SRC/$TARBALL ;;
+		*.tar) tar xf $SRC/$TARBALL ;;
+		*.zip|*.xpi) unzip -o $SRC/$TARBALL ;;
+		*.xz) unxz -c $SRC/$TARBALL | tar xf - ;;
+		*.Z) uncompress -c $SRC/$TARBALL | tar xf - ;;
+		*.rpm) rpm2cpio $SRC/$TARBALL | cpio -idm --quiet ;;
 	esac
 }
 
