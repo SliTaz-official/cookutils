@@ -249,7 +249,8 @@ case "$1" in
 	note|-n)
 		# Blocked a pkg and want other to know why ? Post a note!
 		note="$2"
-		[ "$note" ] && echo "$note" >> $cooknotes ;;
+		date=$(date "+%Y-%m-%d %H:%M")
+		[ "$note" ] && echo "$date : $note" >> $cooknotes ;;
 	notes|-ns)
 		# View cooknotes.
 		echo -e "\nCooknotes"

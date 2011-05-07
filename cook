@@ -229,7 +229,7 @@ EOT
 debug_info() {
 	echo -e "\nDebug information"
 	separator
-	echo "Cook date: $(date '+%Y-%M-%d %H:%M')"
+	echo "Cook date: $(date '+%Y-%m-%d %H:%M')"
 	for error in ERROR "No package" "cp: can't stat" "can't open"
 	do
 		fgrep "$error" $LOGS/$pkg.log
