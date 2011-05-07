@@ -139,21 +139,21 @@ case "${QUERY_STRING}" in
 					sed s"#^[^']*#<a href='cooker.cgi?pkg=\0'>\0</a>#"g
 				echo '</pre>' ;;
 			*.log)
-				file=$LOGS/$file
-				name=$(basename $file)
+				log=$LOGS/$file
+				name=$(basename $log)
 				echo "<h2>Log for: ${name%.log}</h2>"
-				if [ -f "$LOGS/$log.log" ]; then
-					if fgrep -q "Summary" $file; then
+				if [ -f "$log" ]; then
+					if fgrep -q "Summary" $log; then
 						echo '<pre>'
-						grep -A 8 "^Summary" $file | sed /^$/d | \
+						grep -A 8 "^Summary" $log | sed /^$/d | \
 							syntax_highlighter log
 						echo '</pre>'
 					fi
 					echo '<pre>'
-					cat $file | syntax_highlighter log
+					cat $log | syntax_highlighter log
 					echo '</pre>'
 				else
-					echo "<pre>No log file: $file</pre>"
+					echo "<pre>No log file: $log</pre>"
 				fi ;;
 		esac ;;
 	receipt=*)
