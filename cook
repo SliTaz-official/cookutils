@@ -400,10 +400,10 @@ cookit() {
 	# Execute receipt rules.
 	if grep -q ^compile_rules $receipt; then
 		gettext -e "Executing: compile_rules\n"
-		[ -d "$src" ] && cd $src 
-		compile_rules || echo "" && exit 1
+		[ -d "$src" ] && cd $src
+		compile_rules || (echo "" && exit 1)
 		# Stay compatible with _pkg
-		[ -d $src/_pkg ] && mv $src/_pkg $install
+		[ -d "$src/_pkg" ] && mv $src/_pkg $install
 		# QA: compile_rules success so valid.
 		mkdir -p $install
 	else
@@ -429,7 +429,7 @@ cookit_quality() {
 # but it dont handle EXTRAVERSION.
 packit() {
 	set_paths
-	echo -e "\nPack: $PACKAGE $VERSION"
+	echo "Pack: $PACKAGE $VERSION"
 	separator
 	if grep -q ^genpkg_rules $receipt; then
 		gettext -e "Executing: genpkg_rules\n"
