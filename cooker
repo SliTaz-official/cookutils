@@ -350,7 +350,7 @@ case "$1" in
 		cur=$(hg head --template '{rev}\n')
 		echo "Updating Hg wok: ${wok}-hg" | log
 		echo "hg:pull" > $command
-		cd ${wok}-hg && hg pull -u | log_commits
+		[ -f "${wok}-hg/.hg/hgrc" ] && cd ${wok}-hg && hg pull -u | log_commits
 		new=$(hg head --template '{rev}\n')
 		
 		# Sync build wok with rsync so we dont take care about removing old
