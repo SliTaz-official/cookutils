@@ -223,7 +223,6 @@ Files      : $files
 Cook time  : ${time}s
 Cook date  : $cookdate
 $(separator)
-
 EOT
 }
 
@@ -419,7 +418,7 @@ cookit_quality() {
 # but it dont handle EXTRAVERSION.
 packit() {
 	set_paths
-	echo "Pack: $PACKAGE $VERSION"
+	echo -e "\nPack: $PACKAGE $VERSION"
 	separator
 	if grep -q ^genpkg_rules $receipt; then
 		gettext -e "Executing: genpkg_rules\n"
@@ -712,6 +711,7 @@ EOT
 		# Time and summary
 		time=$(($(date +%s) - $time))
 		summary | tee -a $LOGS/$pkg.log
+		echo ""
 
 		# Install package if requested
 		if [ "$inst" ]; then
