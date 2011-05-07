@@ -131,6 +131,13 @@ case "${QUERY_STRING}" in
 				tac $CACHE/$file | \
 					sed s"#^\([^']* : \)#<span class='log-date'>\0</span>#"g
 				echo '</pre>' ;;
+			broken)
+				nb=$(cat $broken | wc -l)
+				echo "<h2>Broken packages: $nb</h2>"
+				echo '<pre>'
+				tac $CACHE/$file | \
+					sed s"#^[^']*#<a href='cooker.cgi?pkg=\0'>\0</a>#"g
+				echo '</pre>' ;;
 			*.log)
 				file=$LOGS/$file
 				name=$(basename $file)
@@ -211,8 +218,9 @@ $(cat $cooklist)
 
 <h2>Broken</h2>
 <pre>
-$(cat $broken | sed s"#^[^']*#<a href='cooker.cgi?pkg=\0'>\0</a>#"g)
+$(cat $broken | head -n 20 | sed s"#^[^']*#<a href='cooker.cgi?pkg=\0'>\0</a>#"g)
 </pre>
+<a class="button" href="cooker.cgi?file=broken">All broken packages</a>
 
 <h2>Blocked</h2>
 <pre>
