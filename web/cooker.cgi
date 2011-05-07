@@ -153,7 +153,7 @@ case "${QUERY_STRING}" in
 					cat $file | syntax_highlighter log
 					echo '</pre>'
 				else
-					echo "<pre>No log for: $log</pre>"
+					echo "<pre>No log file: $file</pre>"
 				fi ;;
 		esac ;;
 	receipt=*)
