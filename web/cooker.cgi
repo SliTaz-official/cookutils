@@ -167,6 +167,11 @@ case "${QUERY_STRING}" in
 			echo "<pre>No receipt for: $log</pre>"
 		fi ;;
 	*)
+		# Main page with summary.
+		cooked=$(ls $PKGS/*.tazpkg | wc -l)
+		inwok=$(ls $WOK | wc -l)
+		div=$(($inwok / 100))
+		pct=$(($cooked / $div))
 		cat << EOT
 <div style="float: right;">
 	<form method="get" action="$SCRIPT_NAME">
@@ -176,21 +181,28 @@ case "${QUERY_STRING}" in
 </div>
 
 <h2>Summary</h2>
+
+
 <pre>
 Running command  : $([ -s "$command" ] && cat $command || echo "Not running")
-Cooked packages  : $(ls $PKGS/*.tazpkg | wc -l)
-Packages in wok  : $(ls $WOK | wc -l)
 Wok revision     : <a href="http://hg.slitaz.org/wok">$(cd $WOK && hg head --template '{rev}\n')</a>
 Commits to cook  : $(cat $commits | wc -l)
 Current cooklist : $(cat $cooklist | wc -l)
 Broken packages  : $(cat $broken | wc -l)
 </pre>
 
-<div id="info">
-	Logs:
-	<a class="button" href="cooker.cgi?file=cookorder.log">cookorder</a>
-	<a class="button" href="cooker.cgi?file=commits.log">commits</a>
+<p>
+	Packages: $cooked cooked on $inwok in the wok.
+</p>
+<div class="pctbar">
+	<div class="pct" style="width: ${pct}%;">${pct}%</div>
 </div>
+
+<p>
+	Latest logs:
+	<a href="cooker.cgi?file=cookorder.log">cookorder</a>
+	<a href="cooker.cgi?file=commits.log">commits</a>
+</p>
 
 <h2>Activity</h2>
 <pre>

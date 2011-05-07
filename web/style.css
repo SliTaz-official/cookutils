@@ -44,14 +44,11 @@ pre {
 
 .button {
 	padding: 2px 4px;
-	margin: 0;
-	background-color: #f1f1f1;
-	border: 1px solid #ddd;
 	cursor: pointer;
 	color: #000;
 }
 
-a.button  {
+a.button, .pctbar  {
 	text-decoration: none;
 	color: #666;
 }
@@ -61,9 +58,17 @@ a.button  {
 	border: 1px solid #999;
 }
 
+.pct { background: #9dff4a; padding: 2px 4px; }
+
+.button, .pctbar {
+	margin: 0;
+	background: #f1f1f1;
+	border: 1px solid #ddd;
+}
+
 /* Round corner */
 
-pre, .button {
+pre, .button, .pctbar {
 	/*-moz-border-radius: 4px;
 	-webkit-border-radius: 4px; */
 	border-radius: 4px;
