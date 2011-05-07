@@ -257,7 +257,7 @@ debug_info() {
 	separator
 	echo "Cook date: $(date '+%Y-%m-%d %H:%M')"
 	for error in \
-		ERROR "No package" "cp: can't" "can't open" "can't cd"
+		ERROR "No package" "cp: can't" "can't open" "can't cd" \
 		"error:" "fatal error:"
 	do
 		fgrep "$error" $LOGS/$pkg.log
