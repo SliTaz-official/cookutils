@@ -27,9 +27,10 @@ $(echo -e "\033[1m$(gettext "Usage:")\033[0m") cook [package|command|list] [--op
 
 $(echo -e "\033[1m$(gettext "Commands:")\033[0m")
   usage|help      $(gettext "Display this short usage.")
-  list-wok        $(gettext "List packages in the wok.")
   setup           $(gettext "Setup your build environment.")
   test            $(gettext "Test environment and cook a package.")
+  list-wok        $(gettext "List packages in the wok.")
+  search          $(gettext "Simple packages search function.")
   new             $(gettext "Create a new package with a receipt".)
   list            $(gettext "Cook a list of packages.") 
   clean-wok       $(gettext "Clean-up all packages files.")
@@ -203,7 +204,7 @@ get_source() {
 			gettext "Creating tarball: "; echo "$tarball"
 			tar cjf $tarball $pkgsrc || exit 1
 			mv $tarball $SRC && rm -rf $pkgsrc ;;
-		svn*)
+		svn*|subversion*)
 			echo "TODO: svn implementation in cook" && exit 1 ;;
 		*)
 			gettext -e "\nERROR: Unable to handle:"; echo -e " $WGET_URL \n" | \
@@ -566,6 +567,13 @@ case "$1" in
 		separator
 		echo -n "Packages: " && ls | wc -l
 		echo "" ;;
+	search)
+		# Just a simple search function, we dont need more actually.
+		query="$2"
+		gettext -e "\nSearch results for:"; echo " $query"
+		separator
+		cd $WOK && ls -1 | grep "$query"
+		separator && echo "" ;;
 	setup)
 		# Setup a build environment
 		check_root
