@@ -99,6 +99,17 @@ if_empty_value() {
 	fi
 }
 
+# Initialise files used in $CACHE
+init_db_files() {
+	gettext "Creating directories structure in:"; echo " $SLITAZ"
+	mkdir -p $WOK $PKGS $SRC $CACHE $LOGS
+	gettext "Creating DB files in:"; echo " $CACHE"
+	for f in $activity $command $broken $blocked
+	do
+		touch $f
+	done
+}
+
 # QA: check a receip consistency befor building.
 receipt_quality() {
 	gettext -e "QA: checking package receipt...\n"
@@ -351,7 +362,7 @@ cookit() {
 	[ "$DEPENDS" ] && gettext -e "Checking build dependencies...\n"
 	for dep in $BUILD_DEPENDS
 	do
-		if [ ! -d "$INSTALLED/$dep" ]; then
+		if [ ! -f "$INSTALLED/$dep/receipt" ]; then
 			# Try local package first
 			if [ -f "$PKGS/$dep-*.tazpkg" ]; then
 				gettext "Installing dep (local):"; echo " $dep"
@@ -523,7 +534,7 @@ case "$1" in
 	usage|help|-u|-h)
 		 usage ;;
 	list-wok)
-		gettext "List of packages in:"; echo " $WOK"
+		gettext -e "\nList of packages in:"; echo " $WOK"
 		separator
 		cd $WOK && ls -1
 		separator
@@ -535,18 +546,18 @@ case "$1" in
 		echo "Cook: setting up the environment" | log
 		gettext -e "\nSetting up your environment\n"
 		separator && cd $SLITAZ
-		gettext "Creating directories structure in:"; echo " $SLITAZ"
-		mkdir -p $WOK $PKGS $SRC $CACHE $LOGS
+		init_db_files
 		gettext -e "Checking for packages to install...\n"
 		for pkg in $SETUP_PKGS
 		do
-			[ ! -d "$INSTALLED/$pkg" ] && tazpkg get-install $pkg
+			[ ! -f "$INSTALLED/$pkg/receipt" ] && tazpkg get-install $pkg
 		done
 
 		# Handle --options
 		case "$2" in
 			--wok|-w)
-				[ ! -d "$INSTALLED/mercurial" ] && tazpkg get-install mercurial
+				[ ! -f "$INSTALLED/mercurial/receipt" ] && \
+					tazpkg get-install mercurial
 				[ -d "$WOK" ] && echo -e "A wok already exist.\n" && exit 1
 				hg clone $HG_URL ;;
 		esac
