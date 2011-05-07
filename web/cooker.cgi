@@ -102,7 +102,7 @@ case "${QUERY_STRING}" in
 				else
 					echo "<h3>Cook summary</h3>"
 					echo '<pre>'
-					grep -A 20 "^Summary " $LOGS/$pkg.log | sed /^$/d | \
+					grep -A 8 "^Summary " $LOGS/$pkg.log | sed /^$/d | \
 						syntax_highlighter log
 					echo '</pre>'
 				fi
@@ -145,7 +145,7 @@ case "${QUERY_STRING}" in
 				if [ -f "$log" ]; then
 					if fgrep -q "Summary" $log; then
 						echo '<pre>'
-						grep -A 8 "^Summary" $log | sed /^$/d | \
+						grep -A 20 "^Summary" $log | sed /^$/d | \
 							syntax_highlighter log
 						echo '</pre>'
 					fi
