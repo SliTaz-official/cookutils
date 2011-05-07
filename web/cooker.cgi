@@ -34,7 +34,7 @@ syntax_highlighter() {
 				-e 's#no$#<span class="span-no">no</span>#g' \
 				-e 's#error$#<span class="span-error">error</span>#g' \
 				-e 's#ERROR:#<span class="span-error">ERROR:</span>#g' \
-				-e s"#^Executing:\([^']*\).#<span class='span-sky'>\0</span>#"g \
+				-e s"#^Executing:\([^']*\).#<span class='sh-val'>\0</span>#"g \
 				-e s"#^====\([^']*\).#<span class='span-line'>\0</span>#"g \
 				-e s"#^[a-zA-Z0-9]\([^']*\) :: #<span class='span-sky'>\0</span>#"g \
 				-e s"#ftp://\([^']*\).*#<a href='\0'>\0</a>#"g	\
@@ -121,23 +121,34 @@ case "${QUERY_STRING}" in
 		else
 			echo "<pre>No log: $pkg</pre>"
 		fi ;;
-	log=*)
-		log=${QUERY_STRING#log=}
-		file=$LOGS/$log.log
-		echo "<h2>Log for: $log</h2>"
-		if [ -f "$LOGS/$log.log" ]; then
-			if fgrep -q "Summary" $file; then
+	file=*)
+		# Dont allown all files on the system for security reason.
+		file=${QUERY_STRING#file=}
+		case "$file" in
+			activity|cooknotes)
+				echo "<h2>DB: $file</h2>"
 				echo '<pre>'
-				grep -A 8 "^Summary" $file | sed /^$/d | \
-					syntax_highlighter log
-				echo '</pre>'
-			fi
-			echo '<pre>'
-			cat $file | syntax_highlighter log
-			echo '</pre>'
-		else
-			echo "<pre>No log for: $log</pre>"
-		fi ;;
+				tac $CACHE/$file | \
+					sed s"#^\([^']* : \)#<span class='log-date'>\0</span>#"g
+				echo '</pre>' ;;
+			*.log)
+				file=$LOGS/$file
+				name=$(basename $file)
+				echo "<h2>Log for: ${name%.log}</h2>"
+				if [ -f "$LOGS/$log.log" ]; then
+					if fgrep -q "Summary" $file; then
+						echo '<pre>'
+						grep -A 8 "^Summary" $file | sed /^$/d | \
+							syntax_highlighter log
+						echo '</pre>'
+					fi
+					echo '<pre>'
+					cat $file | syntax_highlighter log
+					echo '</pre>'
+				else
+					echo "<pre>No log for: $log</pre>"
+				fi ;;
+		esac ;;
 	receipt=*)
 		pkg=${QUERY_STRING#receipt=}
 		echo "<h2>Receipt for: $pkg</h2>"
@@ -164,23 +175,29 @@ Cooked packages  : $(ls $PKGS/*.tazpkg | wc -l)
 Packages in wok  : $(ls $WOK | wc -l)
 Wok revision     : <a href="http://hg.slitaz.org/wok">$(cd $WOK && hg head --template '{rev}\n')</a>
 Commits to cook  : $(cat $commits | wc -l)
+Current cooklist : $(cat $cooklist | wc -l)
 Broken packages  : $(cat $broken | wc -l)
 </pre>
 
 <div id="info">
-	Latest logs: <a href="cooker.cgi?log=cookorder">cookorder</a>
-	<a href="cooker.cgi?log=commits">commits</a>
+	Logs:
+	<a class="button" href="cooker.cgi?file=cookorder.log">cookorder</a>
+	<a class="button" href="cooker.cgi?file=commits.log">commits</a>
 </div>
 
 <h2>Activity</h2>
 <pre>
-$(tac $CACHE/activity | sed s"#^\([^']* : \)#<span class='log-date'>\0</span>#"g)
+$(tac $CACHE/activity | head -n 12 | \
+	sed s"#^\([^']* : \)#<span class='log-date'>\0</span>#"g)
 </pre>
+<a class="button" href="cooker.cgi?file=activity">More activity</a>
 
 <h2>Cooknotes</h2>
 <pre>
-$(cat $cooknotes)
+$(tac $cooknotes | head -n 12 | \
+	sed s"#^\([^']* : \)#<span class='log-date'>\0</span>#"g)
 </pre>
+<a class="button" href="cooker.cgi?file=cooknotes">More notes</a>
 
 <h2>Commits</h2>
 <pre>

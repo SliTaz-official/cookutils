@@ -56,7 +56,7 @@ separator() {
 }
 
 # Lograte activity.
-[ -s "$activity" ] && tail -n 20 $activity > /tmp/tail && \
+[ -s "$activity" ] && tail -n 60 $activity > /tmp/tail && \
 	mv -f /tmp/tail $activity
 
 # Log activities, we want first letter capitalized.
