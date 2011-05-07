@@ -311,7 +311,7 @@ copy_generic_files()
 }
 
 # Find and strip : --strip-all (-s) or --strip-debug on static libs as well
-# as removing unusuff files lik in Python packages.
+# as removing uneeded files like in Python packages.
 strip_package()
 {
 	gettext "Executing strip on all files..."
@@ -327,7 +327,7 @@ strip_package()
 
 	# Remove .pyc, .pyo, perllocal.pod and .packlist files from packages.
 	if echo "$DEPENDS" | fgrep "python"; then
-		gettext "Removing Python compiled  files..."
+		gettext "Removing Python compiled files..."
 		find $fs -type f -name "*.pyc" -delete 2>/dev/null
 		find $fs -type f -name "*.pyo" -delete 2>/dev/null
 		find $fs -type f -name "perllocal.pod" -delete 2>/dev/null
