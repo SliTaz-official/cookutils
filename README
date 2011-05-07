@@ -75,6 +75,17 @@ be produced by cook and the cooker just acts as a fronted to check them in
 a nice way. A web interface also highlights success and error and can show
 receipts and the cooker logs such as the last ordered list or commits check.
 
+Database files in the cache folder
+
+    * activity   : Activity information for the web interface
+    * blocked    : List of manually blocked packages
+    * broken     : Broken packages list when cook fail it is add here
+    * commits    : List of packages of the last commit check
+    * cooklist   : Cooklist for unbuild packages or custom command
+    * cooknotes  : All the notes added with 'cooker -n "My note"
+    * installed* : Lists used to compare installed package before a package
+                   is cooked and after so we can remove them.
+
 
 Toolchain
 --------------------------------------------------------------------------------

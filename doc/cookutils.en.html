@@ -321,6 +321,18 @@ $ cp -f cookutils/cook.conf ~/Public/cgi-bin/cooker
 # cooker notes
 </pre>
 
+<h3>Cooker as a Build Bot</h3>
+<p>
+	The Cooker is desingned to be a Built Bot for SliTaz, it means it monitor
+	2 woks, update the Hg wok, get the differencies and cook all packages that
+	got a commit. To run The Cooker automatically you must use cron and add a
+	single to root crontabs in /var/spool/cron/crontabs. Say you would like
+	to run the Cooker each 2 hours:
+</p>
+<pre>
+*/2 * * * * /usr/bin/cooker
+</pre>
+
 <!-- End content -->
 </div>
 
