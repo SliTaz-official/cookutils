@@ -658,7 +658,7 @@ EOT
 		check_pkg_in_wok && echo ""
 
 		# Skip blocked, 3 lines also for the Cooker.
-		if grep -q "^$pkg$" $blocked && [ "$2" == "--*" ]; then
+		if grep -q "^$pkg$" $blocked && [ "$2" != "--*" ]; then
 			gettext -e "Blocked package:"; echo -e " $pkg\n" && exit 0
 		fi
 
