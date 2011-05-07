@@ -198,7 +198,6 @@ cook_commits() {
 	if [ -s "$commits" ]; then
 		for pkg in $(cat $commits)
 		do
-			echo "Cook started for: <a href='cooker.cgi?pkg=$pkg'>$pkg</a>" | log
 			echo "cook:$pkg" > $command
 			cook $pkg || broken
 			sed -i /^${pkg}$/d $commits
@@ -211,7 +210,6 @@ cook_list() {
 	for pkg in $(cat $cooklist)
 	do
 		if [ ! -d "$wok/$pkg/install" ]; then
-			echo "Cook started for: <a href='cooker.cgi?pkg=$pkg'>$pkg</a>" | log
 			cook $pkg || broken
 			sed -i /^${pkg}$/d $cooklist
 		fi
@@ -289,7 +287,6 @@ case "$1" in
 		cook_list ;;
 	pkg|-p)
 		# Same as 'cook pkg' but with log for web interface.
-		echo "Cook started for: <a href='cooker.cgi?pkg=$pkg'>$pkg</a>" | log
 		cook $pkg || broken
 		empty_command ;;
 	cat|-c)

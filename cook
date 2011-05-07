@@ -242,7 +242,7 @@ debug_info() {
 	echo -e "\nDebug information"
 	separator
 	echo "Cook date: $(date '+%Y-%m-%d %H:%M')"
-	for error in ERROR "No package" "cp: can't stat" "can't open"
+	for error in ERROR "No package" "cp: can't" "can't open" "can't cd"
 	do
 		fgrep "$error" $LOGS/$pkg.log
 	done
@@ -401,7 +401,7 @@ cookit() {
 	if grep -q ^compile_rules $receipt; then
 		gettext -e "Executing: compile_rules\n"
 		[ -d "$src" ] && cd $src
-		compile_rules || (echo "" && exit 1)
+		compile_rules || exit 1
 		# Stay compatible with _pkg
 		[ -d "$src/_pkg" ] && mv $src/_pkg $install
 		# QA: compile_rules success so valid.
@@ -674,6 +674,7 @@ EOT
 		fi
 
 		# Log and source receipt.
+		echo "Cook started for: <a href='cooker.cgi?pkg=$pkg'>$pkg</a>" | log
 		echo "cook:$pkg" > $command
 		unset inst
 		unset_receipt
