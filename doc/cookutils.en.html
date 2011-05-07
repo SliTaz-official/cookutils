@@ -51,10 +51,20 @@
 </pre>
 <p>
 	By default Tazdev create a chroot in /home/slitaz/cooking/chroot but you
-	can specify a custome path in argument. The chroot place is not important,
-	when you will be in the chroot you will use standard SliTaz path such as
-	/home/slitaz/wok for the wok directory or /home/slitaz/log for all the cook
-	logs. As usual you can diplay tazdev help usage with: tazdev usage.
+	can specify a custome path in argument. The chroot location is not
+	important, when you will be in the chroot you will use standard SliTaz
+	path such as /home/slitaz/wok for the wok directory or /home/slitaz/log
+	for all the cook logs. As usual you can diplay tazdev help usage with:
+	tazdev usage.
+</p>
+<p>
+	When you use a chroot they is 2 special directories mounted with the bind
+	option: src and packages. The sources for all packages are stored by default
+	in /home/slitaz/src, this directory is mounted into the chroot so the utils
+	can use them. This method let you share sources between many chroots such
+	as one for cooking and one for stable. The packages directory default
+	location is: /home/slitaz/[version]/packages so they are not in the chroot
+	and safe in case the chroot is removed by error.
 </p>
 
 <h3>Getting started</h3>
