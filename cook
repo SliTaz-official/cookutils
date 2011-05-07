@@ -237,7 +237,7 @@ summary() {
 	cookdate=$(date "+%Y-%m-%d %H:%M")
 	gettext "Summary for:"; echo " $PACKAGE $VERSION"
 	separator
-	[ "$prod" ] && echo "Produced    : $prod"
+	[ "$prod" ] && echo "Produced   : $prod"
 	cat << EOT
 Packed     : $fs
 Compressed : $size
@@ -310,10 +310,11 @@ copy_generic_files()
 	fi
 }
 
-# Find and strip : --strip-all (-s) or --strip-debug on static libs.
+# Find and strip : --strip-all (-s) or --strip-debug on static libs as well
+# as removing unusuff files lik in Python packages.
 strip_package()
 {
-	gettext "Executing strip on all files"
+	gettext "Executing strip on all files..."
 	for dir in $fs/bin $fs/sbin $fs/usr/bin $fs/usr/sbin $fs/usr/games
 	do
 		if [ -d "$dir" ]; then
@@ -323,6 +324,16 @@ strip_package()
 	find $fs -name "*.so*" -exec strip -s '{}' 2>/dev/null \;
 	find $fs -name "*.a" -exec strip --strip-debug '{}' 2>/dev/null \;
 	status
+
+	# Remove .pyc, .pyo, perllocal.pod and .packlist files from packages.
+	if echo "$DEPENDS" | fgrep "python"; then
+		gettext "Removing Python compiled  files..."
+		find $fs -type f -name "*.pyc" -delete 2>/dev/null
+		find $fs -type f -name "*.pyo" -delete 2>/dev/null
+		find $fs -type f -name "perllocal.pod" -delete 2>/dev/null
+		find $fs -type f -name ".packlist" -delete 2>/dev/null
+		status
+	fi
 }
 
 # Remove installed deps.
