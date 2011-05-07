@@ -358,7 +358,7 @@ case "$1" in
 		if [ "$new" -gt "$cur" ]; then
 			echo "Changes found from: $cur to $new" | log
 			echo "Syncing build wok with Hg wok..." | log_commits
-			rsync -r -t -c -l -u -p -v -D -E --delete ${wok}-hg/ $wok/ | \
+			rsync -r -t -c -l -u -p -v -D -E ${wok}-hg/ $wok/ | \
 				sed '/^$/'d | log_commits
 		else
 			echo "No revision changes: $cur vs $new" | log
