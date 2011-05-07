@@ -14,6 +14,7 @@
 activity="$CACHE/activity"
 command="$CACHE/command"
 broken="$CACHE/broken"
+blocked="$CACHE/blocked"
 
 #
 # Functions
@@ -334,7 +335,8 @@ cookit() {
 	if [ "$free" -lt 524288 ] && [ "$CFLAGS" != "${CFLAGS/-pipe}" ]; then
 			gettext -e "Disabling -pipe compile flag: $free RAM\n"
 			CFLAGS="${CFLAGS/-pipe}" && CFLAGS=$(echo "$CFLAGS" | tr -s ' ')
-			CXXFLAGS="${CXXFLAGS/-pipe}" && CXXFLAGS=$(echo "$CXXFLAGS" | tr -s ' ')
+			CXXFLAGS="${CXXFLAGS/-pipe}" && \
+				CXXFLAGS=$(echo "$CXXFLAGS" | tr -s ' ')
 	fi
 	unset free
 
@@ -655,6 +657,13 @@ EOT
 		[ -z "$pkg" ] && usage
 		receipt="$WOK/$pkg/receipt"
 		check_pkg_in_wok && echo ""
+
+		# Skip blocked, 3 lines also for the Cooker.
+		if grep -q ^$pkg$ $blocked; then
+			gettext -e "Blocked package:"; echo -e " $pkg\n" && exit 0
+		fi
+
+		# Log and source receipt.
 		echo "cook:$pkg" > $command
 		unset inst
 		unset_receipt
