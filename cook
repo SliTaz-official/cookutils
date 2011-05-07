@@ -393,7 +393,12 @@ cookit() {
 	if [ ! "$WANTED" ] && [ "$TARBALL" ] && [ ! -d "$src" ]; then
 		mkdir -p $pkgdir/source/tmp && cd $pkgdir/source/tmp
 		extract_source || exit 1
-		mv * ../$PACKAGE-$VERSION
+		# Some archives are not well done and dont extract to one dir (ex lzma).
+		files=$(ls | wc -l)
+		echo "FILES: $files"
+		[ "$files" == 1 ] && mv * ../$PACKAGE-$VERSION
+		[ "$files" -gt 1 ]  && mkdir -p ../$PACKAGE-$VERSION && \
+			mv * ../$PACKAGE-$VERSION
 		cd .. && rm -rf tmp
 	fi
 
