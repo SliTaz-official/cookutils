@@ -94,7 +94,7 @@ case "${QUERY_STRING}" in
 		fi
 		echo '</div>'
 
-		# Check for a log file and display summary if exist.
+		# Check for a log file and display summary if it exists.
 		if [ -f "$log" ]; then
 			if fgrep -q "Summary " $LOGS/$pkg.log; then
 				if fgrep -q "cook:$pkg$" $command; then

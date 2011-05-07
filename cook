@@ -30,10 +30,10 @@ $(echo -e "\033[1m$(gettext "Commands:")\033[0m")
   list-wok        $(gettext "List packages in the wok.")
   setup           $(gettext "Setup your build environment.")
   test            $(gettext "Test environment and cook a package.")
-  new             $(gettext "Create a new package with receipt".)
+  new             $(gettext "Create a new package with a receipt".)
   list            $(gettext "Cook a list of packages.") 
   clean-wok       $(gettext "Clean-up all packages files.")
-  clean-src       $(gettext "Clean-up all packages source.")
+  clean-src       $(gettext "Clean-up all packages sources.")
   pkglist         $(gettext "Create all packages.* lists.")
 
 $(echo -e "\033[1m$(gettext "Options:")\033[0m")
@@ -48,7 +48,7 @@ EOT
 	exit 0
 }
 
-# Be sure we root.
+# Be sure we're root.
 check_root() {
 	[ $(id -u) != 0 ] && gettext -e "\nYou must be root to cook.\n\n" && exit 0
 }
@@ -73,7 +73,7 @@ log() {
 		sed s"#^[A-Z]\([^']*\)#$(date '+%Y-%m-%d %H:%M') : \0#" >> $activity
 }
 
-# We dont want those escape in web interface.
+# We don't want these escapes in web interface.
 clean_log() {
 	sed -i -e s'|\[70G\[ \[1;32m| |' \
 		-e s'|\[0;39m \]||' $LOGS/$pkg.log
@@ -84,7 +84,7 @@ broken() {
 	echo "$pkg" >> $broken
 }
 
-# Be sure package exist in wok.
+# Be sure package exists in wok.
 check_pkg_in_wok() {
 	if [ ! -d "$WOK/$pkg" ]; then
 		gettext -e "\nUnable to find package in the wok:"
@@ -99,7 +99,7 @@ if_empty_value() {
 	fi
 }
 
-# Initialise files used in $CACHE
+# Initialize files used in $CACHE
 init_db_files() {
 	gettext "Creating directories structure in:"; echo " $SLITAZ"
 	mkdir -p $WOK $PKGS $SRC $CACHE $LOGS
@@ -110,7 +110,7 @@ init_db_files() {
 	done
 }
 
-# QA: check a receip consistency befor building.
+# QA: check a receipt consistency before building.
 receipt_quality() {
 	gettext -e "QA: checking package receipt...\n"
 	unset online
@@ -130,12 +130,12 @@ receipt_quality() {
 					multimedia office development system-tools security games \
 					misc meta non-free"
 				if ! echo "$valid" | grep -q -w "$value"; then
-					gettext "QA: unknow category:"; echo -e " $value\n"
+					gettext "QA: unknown category:"; echo -e " $value\n"
 					exit 1
 				fi ;;
 			WEB_SITE)
-				# We dont check WGET_URL since if dl is needed it will fail.
-				# Break also if we not online. Here error is not fatal.
+				# We don't check WGET_URL since if dl is needed it will fail.
+				# Break also if we're not online. Here error is not fatal.
 				if_empty_value
 				[ -z "$online" ] || break
 				if ! busybox wget -s $value 2>/dev/null; then
@@ -150,7 +150,7 @@ unset_receipt() {
 	unset DEPENDS BUILD_DEPENDS WANTED EXTRAVERSION WGET_URL PROVIDE TARBALL
 }
 
-# Path's used in receipt and by cook itself.
+# Paths used in receipt and by cook itself.
 set_paths() {
 	pkgdir=$WOK/$PACKAGE
 	src=$pkgdir/source/$PACKAGE-$VERSION
@@ -234,7 +234,7 @@ summary() {
 	cookdate=$(date "+%Y-%m-%d %H:%M")
 	gettext "Summary for:"; echo " $PACKAGE $VERSION"
 	separator
-	[ "$prod" ] && echo "Produce    : $prod"
+	[ "$prod" ] && echo "Produced    : $prod"
 	cat << EOT
 Packed     : $fs
 Compressed : $size
@@ -245,7 +245,7 @@ $(separator)
 EOT
 }
 
-# Display debugging erroe info.
+# Display debugging error info.
 debug_info() {
 	echo -e "\nDebug information"
 	separator
@@ -365,7 +365,7 @@ cookit() {
 	export DESTDIR MAKEFLAGS CFLAGS CXXFLAGS BUILD_HOST CONFIG_SITE
 	local LC_ALL=POSIX LANG=POSIX
 
-	# Check for build dep.
+	# Check for build deps.
 	cd $INSTALLED && ls -1 > $CACHE/installed.list
 	[ "$DEPENDS" ] && gettext -e "Checking build dependencies...\n"
 	for dep in $BUILD_DEPENDS
@@ -373,24 +373,24 @@ cookit() {
 		if [ ! -f "$INSTALLED/$dep/receipt" ]; then
 			# Try local package first
 			if [ -f "$PKGS/$dep-*.tazpkg" ]; then
-				gettext "Installing dep (local):"; echo " $dep"
+				gettext "Installing deps (local):"; echo " $dep"
 				cd $PKGS && tazpkg install $dep-*.tazpkg >/dev/null
 			else
-				gettext "Installing dep (web/cache):"; echo " $dep"
+				gettext "Installing deps (web/cache):"; echo " $dep"
 				tazpkg get-install $dep >/dev/null
 			fi
 		fi
 	done
 	ls -1 > $CACHE/installed.cook && cd $CACHE
 	
-	# If a cook failed deps are not remove since we exit 1.
+	# If a cook failed deps are not removed since we exit 1.
 	[ ! -s "installed.diff" ] && \
 		diff installed.list installed.cook > installed.diff
 	deps=$(cat installed.diff | grep ^+[a-zA-Z0-9] | wc -l)
 
 	# Get source tarball and make sure we have source dir named:
-	# $PACKAGE-$VERSION to be standard in receipts. Her we use tar.lzma
-	# tarball if it exist.
+	# $PACKAGE-$VERSION to be standard in receipts. Here we use tar.lzma
+	# tarball if it exists.
 	if [ "$WGET_URL" ] && [ ! -f "$SRC/$TARBALL" ]; then
 		if [ -f "$SRC/${SOURCE:-$PACKAGE}-$VERSION.tar.lzma" ]; then
 			TARBALL=${SOURCE:-$PACKAGE}-$VERSION.tar.lzma
@@ -401,7 +401,7 @@ cookit() {
 	if [ ! "$WANTED" ] && [ "$TARBALL" ] && [ ! -d "$src" ]; then
 		mkdir -p $pkgdir/source/tmp && cd $pkgdir/source/tmp
 		extract_source || exit 1
-		# Some archives are not well done and dont extract to one dir (ex lzma).
+		# Some archives are not well done and don't extract to one dir (ex lzma).
 		files=$(ls | wc -l)
 		[ "$files" == 1 ] && mv * ../$PACKAGE-$VERSION
 		[ "$files" -gt 1 ]  && mkdir -p ../$PACKAGE-$VERSION && \
@@ -438,7 +438,7 @@ cookit_quality() {
 }
 
 # Create the package. Wanted to use Tazpkg to create a tazpkg package at first,
-# but it dont handle EXTRAVERSION.
+# but it doesn't handle EXTRAVERSION.
 packit() {
 	set_paths
 	echo "Pack: $PACKAGE $VERSION"
@@ -457,7 +457,7 @@ packit() {
 		cp -f ../$file $pack && chown 0.0 $pack/$file && status
 	done
 	
-	# Create files.list with redirecting find outpout.
+	# Create files.list with redirecting find output.
 	gettext "Creating the list of files..." && cd $fs
 	find . -type f -print > ../files.list
 	find . -type l -print >> ../files.list
@@ -522,7 +522,7 @@ packit() {
 	separator && gettext "Package:"; echo -e " $tazpkg\n"
 }
 
-# Verify package quality and consitensy.
+# Verify package quality and consistency.
 packit_quality() {
 	if fgrep -q ERROR: $LOGS/$pkg.log; then
 		rm -f $command && exit 1
@@ -570,7 +570,7 @@ case "$1" in
 			--wok|-w)
 				[ ! -f "$INSTALLED/mercurial/receipt" ] && \
 					tazpkg get-install mercurial
-				[ -d "$WOK" ] && echo -e "A wok already exist.\n" && exit 1
+				[ -d "$WOK" ] && echo -e "A wok already exists.\n" && exit 1
 				hg clone $HG_URL ;;
 		esac
 
@@ -597,7 +597,7 @@ case "$1" in
 		[ -d "${WOK}-hg" ] && WOK=${WOK}-hg
 		echo ""
 		if [ -d "$WOK/$pkg" ]; then
-			echo -n  "$pkg " && gettext "package already exist."
+			echo -n  "$pkg " && gettext "package already exists."
 			echo -e "\n" && exit 1
 		fi
 		gettext "Creating"; echo -n " $WOK/$pkg"
@@ -625,16 +625,16 @@ case "$1" in
 		status && echo "" ;;
 	clean-src)
 		check_root
-		gettext -e "\nCleaning all packages source..."
+		gettext -e "\nCleaning all packages sources..."
 		rm -rf $WOK/*/source
 		status && echo "" ;;
 	pkglist)
-		# Create suitable packages list for TazPKG and only for builded packages.
+		# Create suitable packages list for TazPKG and only for built packages.
 		[ "$2" ] && PKGS="$2"
 		[ ! -d "$PKGS" ] && \
-			gettext -e "\nPackages directory dont exist\n\n" && exit 1
+			gettext -e "\nPackages directory doesn't exist\n\n" && exit 1
 		cd $PKGS
-		echo "Cook pkglist: Creating all packages list" | log
+		echo "Cook pkglist: Creating all packages lists" | log
 		gettext -e "\nCreating lists for:"; echo " $PKGS"
 		separator
 		rm -f packages.* files.list*
@@ -715,7 +715,7 @@ EOT
 				status && echo "" && exit 0 ;;
 		esac
 
-		# Check if wanted is build now so we have separate log files.
+		# Check if wanted is built now so we have separate log files.
 		if [ "$WANTED" ] && [ ! -d "$WOK/$WANTED/install" ]; then
 			cook "$WANTED"
 		fi
@@ -744,7 +744,7 @@ EOT
 				cd $PKGS && tazpkg install \
 					$PACKAGE-${VERSION}${EXTRAVERSION}.tazpkg --forced
 			else
-				gettext -e "Unable to install package, build have failed.\n\n"
+				gettext -e "Unable to install package, build has failed.\n\n"
 				exit 1
 			fi
 		fi

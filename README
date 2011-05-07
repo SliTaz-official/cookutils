@@ -79,12 +79,12 @@ Database files in the cache folder
 
     * activity   : Activity information for the web interface
     * blocked    : List of manually blocked packages
-    * broken     : Broken packages list when cook fail it is add here
+    * broken     : Broken packages list, when cook fails it is added here
     * commits    : List of packages of the last commit check
-    * cooklist   : Cooklist for unbuild packages or custom command
+    * cooklist   : Cooklist for unbuilt packages or custom commands
     * cooknotes  : All the notes added with 'cooker -n "My note"
-    * installed* : Lists used to compare installed package before a package
-                   is cooked and after so we can remove them.
+    * installed* : Lists used to compare installed packages before and after 
+		   a package is cooked so we can remove them
 
 
 Toolchain
