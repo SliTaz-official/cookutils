@@ -2,8 +2,8 @@
 #
 # SliTaz Build Bot. The Cooker is a tool to automate and test SliTaz package 
 # building. Please read the Cookbook documentation for more information 
-# and put talk to AUTHORS before adding anything here. PS: no translation
-# here since it's not a end user tool and it's not usfull, all devs should
+# and discuss with the AUTHORS before adding anything here. PS: no translations
+# here since it's not an end user tool and it's not useful, all devs should
 # at least understand basic English.
 #
 
@@ -43,7 +43,7 @@ Options:
   unblock|-ub     Unblock a blocked package.
   pkg|-p          Same as 'cook pkg' but with cooker log.
   flavor|-f       Cook all packages of a flavor.
-  list|-l         Cook all package in the given list.
+  list|-l         Cook all packages in the given list.
   cat|-c          Cook all packages of a category.
   all|-a          Find and cook all unbuilt packages.
 
@@ -65,7 +65,7 @@ log() {
 		sed s"#^[A-Z]\([^']*\)#$(date '+%Y-%m-%d %H:%M') : \0#" >> $activity
 }
 
-# Some message goes in activity but log verbose output when checking for commits
+# Some messages occur in activity but log verbose output when checking for commits
 # into a log file.
 log_commits() {
 	sed '/^.\//'d | sed '/^.hg/'d | tee -a $LOGS/commits.log
@@ -76,7 +76,7 @@ broken() {
 	echo "$pkg" >> $broken
 }
 
-# Clean up after cook sucess.
+# Clean up after cook success.
 empty_command() {
 	rm -f $command && touch $command
 }
@@ -94,7 +94,7 @@ commits_summary() {
 	echo "Check date       : $(date '+%Y-%m-%d %H:%M')"
 }
 
-# Scan packages build deps an fill up cookorder list.
+# Scan packages build deps and fill up cookorder list.
 cook_order_scan() {
 	touch $cooklist $cookorder
 	for pkg in $(cat $cooklist)
@@ -114,7 +114,7 @@ cook_order_scan() {
 		done
 	done
 	
-	# Append unordered packages to cookored.
+	# Append unordered packages to cookorder.
 	for pkg in $(cat $cooklist)
 	do
 		if ! grep -q "^$pkg$" $cookorder; then
@@ -123,7 +123,7 @@ cook_order_scan() {
 	done
 }
 
-# Scan and rescan untill the cooklist is ordered then handle WANTED.
+# Scan and rescan until the cooklist is ordered then handle WANTED.
 cook_order() {
 	time=$(date +%s)
 	scan=0
@@ -154,7 +154,7 @@ cook_order() {
 	diff $cooklist.0 $cooklist > $cooklist.diff
 	rm -f $cookorder $cookorder.diff $cooklist.0
 
-	# Scan is finish: append pkg to WANTED
+	# Scan is finished: append pkg to WANTED
 	echo -e "\nHandle WANTED package"
 	separator
 	for pkg in $(cat $cooklist)
@@ -193,7 +193,7 @@ strip_blocked() {
 	done && sed -i /^$/d $cooklist
 }
 
-# Uses in default mode and with all cmd.
+# Use in default mode and with all cmd.
 cook_commits() {
 	if [ -s "$commits" ]; then
 		for pkg in $(cat $commits)
@@ -206,7 +206,7 @@ cook_commits() {
 	fi
 }
 
-# Cook all package in a cooklist.
+# Cook all packages in a cooklist.
 cook_list() {
 	for pkg in $(cat $cooklist)
 	do
@@ -234,9 +234,9 @@ case "$1" in
 			[ ! -d "$INSTALLED/$pkg" ] && tazpkg get-install $pkg
 		done
 		mkdir -p $SLITAZ && cd $SLITAZ
-		[ -d "${wok}-hg" ] && echo -e "Hg wok already exist.\n" && exit 1
-		[ -d "$wok" ] && echo -e "Build wok already exist.\n" && exit 1
-		[ -d "$flavors" ] && echo -e "Flavors repo already exist.\n" && exit 1
+		[ -d "${wok}-hg" ] && echo -e "Hg wok already exists.\n" && exit 1
+		[ -d "$wok" ] && echo -e "Build wok already exists.\n" && exit 1
+		[ -d "$flavors" ] && echo -e "Flavors repo already exists.\n" && exit 1
 
 		# Directories and files
 		echo "mkdir's and touch files in: $SLITAZ"
@@ -250,7 +250,7 @@ case "$1" in
 		cp -a ${wok}-hg $wok
 		separator && echo "" ;;
 	note|-n)
-		# Blocked a pkg and want other to know why ? Post a note!
+		# Blocked a pkg and want others to know why ? Post a note!
 		note="$2"
 		date=$(date "+%Y-%m-%d %H:%M")
 		[ "$note" ] && echo "$date : $note" >> $cooknotes ;;
@@ -267,8 +267,8 @@ case "$1" in
 		# Unblock a package.
 		[ "$pkg" ] && cook $pkg --unblock ;;
 	reverse|-r)
-		# Cook all reverse dependencies for a packages. This command let us
-		# control the Cooker manually for commit that will cook a lot of packages.
+		# Cook all reverse dependencies for a package. This command lets us
+		# control the Cooker manually for commits that will cook a lot of packages.
 		#
 		# Use hg commit ? Ex: hg commit -m "Message bla bla | cooker:reverse"
 		#
@@ -315,7 +315,7 @@ case "$1" in
 		cook_order | tee $LOGS/cookorder.log
 		cook_list ;;
 	list|-l)
-		# Cook a list og package given in argument.
+		# Cook a list of packages given in argument.
 		list="$2"
 		[ ! -f "$list" ] && \
 			echo -e "\nSpecified list does not exist: $list\n" && exit 1
@@ -361,7 +361,7 @@ case "$1" in
 		[ -f "${wok}-hg/.hg/hgrc" ] && cd ${wok}-hg && hg pull -u | log_commits
 		new=$(hg head --template '{rev}\n')
 		
-		# Sync build wok with rsync so we dont take care about removing old
+		# Sync build wok with rsync so we don't take care about removing old
 		# files as before.
 		if [ "$new" -gt "$cur" ]; then
 			echo "Changes found from: $cur to $new" | log
@@ -391,7 +391,7 @@ case "$1" in
 			done
 		done
 		
-		# Keep previews commit and discard duplicate lines
+		# Keep previous commit and discard duplicate lines
 		cat $commits $commits.tmp | sed /"^$"/d > $commits.new
 		uniq $commits.new > $commits && rm $commits.*
 		echo "Packages to cook : $(cat $commits | wc -l)" | log_commits
