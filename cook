@@ -139,7 +139,7 @@ receipt_quality() {
 				if_empty_value
 				[ -z "$online" ] || break
 				if ! busybox wget -s $value 2>/dev/null; then
-					gettext "QA: Unable to reach:"; echo -e " $value\n"
+					gettext "QA: Unable to reach:"; echo -e " $value"
 				fi ;;
 		esac
 	done
@@ -176,7 +176,6 @@ get_source() {
 				(echo -e "ERROR: wget $WGET_URL" && exit 1) ;;
 		hg*|mercurial*)
 			# We are in cache so clone here and create a tarball
-			pwd=$(pwd)
 			if $(echo "$WGET_URL" | fgrep -q "hg|"); then
 				url=${WGET_URL#hg|}
 			else
@@ -184,14 +183,23 @@ get_source() {
 			fi
 			pkgsrc=${SOURCE:-$PACKAGE}-$VERSION
 			tarball=$pkgsrc.tar.bz2
-			gettext "Getting source from Hg: "; echo $url
+			gettext -e "Getting source from Hg...\n"
+			echo "URL: $url"
 			gettext "Cloning to: "; echo "$pwd/$pkgsrc"
 			hg clone $url $pkgsrc || (echo "ERROR: hg clone $url" && exit 1)
 			gettext "Creating tarball: "; echo "$tarball"
 			tar cjf $tarball $pkgsrc || exit 1
 			mv $tarball $SRC && rm -rf $pkgsrc ;;
 		git*)
-			echo "TODO: git implementation in cook" && exit 1 ;;
+			url=${WGET_URL#git|}
+			pkgsrc=${SOURCE:-$PACKAGE}-$VERSION
+			tarball=$pkgsrc.tar.bz2
+			gettext -e "Getting source from Git...\n"
+			echo "URL: $url"
+			git clone $url $pkgsrc || (echo "ERROR: git clone $url" && exit 1)
+			gettext "Creating tarball: "; echo "$tarball"
+			tar cjf $tarball $pkgsrc || exit 1
+			mv $tarball $SRC && rm -rf $pkgsrc ;;
 		svn*)
 			echo "TODO: svn implementation in cook" && exit 1 ;;
 		*)
