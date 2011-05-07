@@ -10,7 +10,8 @@
 [ -f "/etc/slitaz/cook.conf" ] && . /etc/slitaz/cook.conf
 [ -f "cook.conf" ] && . ./cook.conf
 
-# The same wok as cook.
+# Set pkg name and use same wok as cook.
+pkg="$2"
 wok="$WOK"
 flavors="$SLITAZ/flavors"
 
@@ -34,15 +35,17 @@ usage() {
 Usage: cooker [command] [pkg|list|note]
 
 Options:
-  usage|-u      Display this short usage.
-  setup|-s      Setup the Cooker environment.
-  note|-n       Add a note to the cooknotes.
-  notes|-ns     Display all the cooknotes.
-  pkg|-p        Same as 'cook pkg' but with cooker log.
-  flavor|-f     Cook all packages of a flavor.
-  list|-l       Cook all package in the given list.
-  cat|-c        Cook all packages of a category.
-  all|-a        Find and cook all unbuilt packages.
+  usage|-u        Display this short usage.
+  setup|-s        Setup the Cooker environment.
+  note|-n         Add a note to the cooknotes.
+  notes|-ns       Display all the cooknotes.
+  block|-b        Block a package so cook will skip it.
+  unblock|-ub     Unblock a blocked package.
+  pkg|-p          Same as 'cook pkg' but with cooker log.
+  flavor|-f       Cook all packages of a flavor.
+  list|-l         Cook all package in the given list.
+  cat|-c          Cook all packages of a category.
+  all|-a          Find and cook all unbuilt packages.
 
 EOT
 	exit 0
@@ -257,13 +260,18 @@ case "$1" in
 		separator
 		cat $cooknotes
 		separator && echo "" ;;
+	block|-b)
+		# Block a package.
+		[ "$pkg" ] && cook $pkg --block ;;
+	unblock|-ub)
+		# Unblock a package.
+		[ "$pkg" ] && cook $pkg --unblock ;;
 	reverse|-r)
 		# Cook all reverse dependencies for a packages. This command let us
 		# control the Cooker manually for commit that will cook a lot of packages.
 		#
 		# Use hg commit ? Ex: hg commit -m "Message bla bla | cooker:reverse"
 		#
-		pkg="$2"
 		[ ! -d "$wok/$pkg" ] && echo -e "\nNo package $2 found.\n" && exit 0
 		rm -f $cooklist && touch $cooklist && cd $wok
 		echo -e "\nReverse cooklist for: $pkg"
@@ -281,7 +289,6 @@ case "$1" in
 		cook_list ;;
 	pkg|-p)
 		# Same as 'cook pkg' but with log for web interface.
-		pkg="$2"
 		echo "Cook started for: <a href='cooker.cgi?pkg=$pkg'>$pkg</a>" | log
 		cook $pkg || broken
 		empty_command ;;

@@ -26,7 +26,9 @@
 	Cook let you compile and create a package, provide a log file and check
 	receipt/package quality. The Cooker is a build bot with more automation
 	and can be used as a frontend to cook, since it provide a CGI/web interface
-	who let you view cook logs in a nice and colored way.
+	who let you view cook logs in a nice and colored way. Cook and the Cooker
+	use the same DB files and wok, ther share <a href="#blocked">blocked</a>
+	and broken packages as well as activity.
 </p>
 
 <h3>Cook usage</h3>
@@ -240,6 +242,29 @@ $ cook list-wok
 # cooker flavor [name]
 # cooker list [/path/to/cooklist]
 # cooker cat [category]
+</pre>
+
+<a name="blocked"></a>
+<h3>Blocked packages</h3>
+<p>
+	Cook and the Cooker handle a file with a list of blocked package so they
+	not cook when commits appends or if a cooklist is used. This is very useful
+	for a Cooker Build Bot in production. When you block or unblock a package
+	you can add a note to the cooknotes. Blocking packages example:
+</p>
+<pre>
+# cook pkgname --block
+# cooker block pkgname
+# cooker -n "Blocked pkgname note"
+</pre>
+<p>
+	The list of blocked packages are also displayed on the Cooker web interface.
+	To unblock a package you have to use the unblock command or cook --unblock
+	option:
+</p>
+<pre>
+# cook pkgname --unblock
+# cooker unblock pkgname
 </pre>
 
 <h3>Cooker CGI/Web</h3>

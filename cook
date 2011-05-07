@@ -40,6 +40,8 @@ $(echo -e "\033[1m$(gettext "Options:")\033[0m")
   --clean|-c      Cook : $(gettext "clean the package in the wok.")
   --install|-i    Cook : $(gettext "cook and install the package.")
   --getsrc|-gs    Cook : $(gettext "get the package source tarball.")
+  --block|-b      Cook : $(gettext "Block a package so cook will skip it.")
+  --unblock|-ub   Cook : $(gettext "Unblock a blocked package.")
   --wok|-w        Setup: $(gettext "create also a wok from Hg repo.")
 
 EOT
@@ -544,12 +546,10 @@ case "$1" in
 
 		# Handle --options
 		case "$2" in
-			--wok)
+			--wok|-w)
 				[ ! -d "$INSTALLED/mercurial" ] && tazpkg get-install mercurial
 				[ -d "$WOK" ] && echo -e "A wok already exist.\n" && exit 1
 				hg clone $HG_URL ;;
-			--chroot)
-				echo "TODO: create a chroot with tazdev" ;;
 		esac
 
 		# SliTaz group and permissions
@@ -659,7 +659,7 @@ EOT
 		check_pkg_in_wok && echo ""
 
 		# Skip blocked, 3 lines also for the Cooker.
-		if grep -q ^$pkg$ $blocked; then
+		if grep -q "^$pkg$" $blocked && [ "$2" == "--*" ]; then
 			gettext -e "Blocked package:"; echo -e " $pkg\n" && exit 0
 		fi
 
@@ -672,15 +672,23 @@ EOT
 		# Handle --options
 		case "$2" in
 			--clean|-c)
-				gettext -e "Cleaning package:"; echo -n " $pkg"
+				gettext -e "Cleaning:"; echo -n " $pkg"
 				cd $WOK/$pkg && rm -rf install taz source
 				status && echo "" && exit 0 ;;
 			--install|-i)
 				inst='yes' ;;
-			--getsrc)
-				echo "Getting source for: $pkg"
+			--getsrc|-gs)
+				gettext "Getting source for:"; echo " $pkg"
 				separator && get_source
 				echo -e "Tarball: $SRC/$TARBALL\n" && exit 0 ;;
+			--block|-b)
+				gettext "Blocking:"; echo -n " $pkg"
+				[ $(grep "^$pkg$" $blocked) ] || echo "$pkg" >> $blocked
+				status && echo "" && exit 0 ;;
+			--unblock|-ub)
+				gettext "Unblocking:"; echo -n " $pkg"
+				sed -i "/^${pkg}$/"d $blocked
+				status && echo "" && exit 0 ;;
 		esac
 
 		# Check if wanted is build now so we have separate log files.
