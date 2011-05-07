@@ -234,7 +234,6 @@ case "$1" in
 		mkdir -p $SLITAZ && cd $SLITAZ
 		[ -d "${wok}-hg" ] && echo -e "Hg wok already exists.\n" && exit 1
 		[ -d "$wok" ] && echo -e "Build wok already exists.\n" && exit 1
-		[ -d "$flavors" ] && echo -e "Flavors repo already exists.\n" && exit 1
 
 		# Directories and files
 		echo "mkdir's and touch files in: $SLITAZ"
@@ -244,7 +243,7 @@ case "$1" in
 			touch $f
 		done
 		hg clone $WOK_URL ${wok}-hg || exit 1
-		hg clone $FLAVORS_URL flavors
+		[ -d "$flavors" ] || hg clone $FLAVORS_URL flavors
 		cp -a ${wok}-hg $wok
 		separator && echo "" ;;
 	note|-n)
@@ -306,6 +305,7 @@ case "$1" in
 		name="$2"
 		[ ! -d "$flavors/$name" ] && \
 			echo -e "\nSpecified flavor does not exist: $name\n" && exit 1
+		[ -d "$flavors/.hg" ] && cd $flavors && hg pull -u
 		list=$flavors/$name/packages.list
 		cp -a $list $cooklist
 		strip_blocked
@@ -351,11 +351,11 @@ case "$1" in
 		separator | tee -a $LOGS/commits.log
 		
 		# Get revisions.
-		cd $wok || ( echo "No wok found: $wok" && exit 1 )
+		cd $wok || exit 1
 		cur=$(hg head --template '{rev}\n')
 		echo "Updating Hg wok: ${wok}-hg" | log
 		echo "hg:pull" > $command
-		[ -f "${wok}-hg/.hg/hgrc" ] && cd ${wok}-hg && hg pull -u | log_commits
+		cd ${wok}-hg && hg pull -u | log_commits
 		new=$(hg head --template '{rev}\n')
 		
 		# Sync build wok with rsync so we don't take care about removing old
