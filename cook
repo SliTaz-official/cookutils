@@ -395,7 +395,6 @@ cookit() {
 		extract_source || exit 1
 		# Some archives are not well done and dont extract to one dir (ex lzma).
 		files=$(ls | wc -l)
-		echo "FILES: $files"
 		[ "$files" == 1 ] && mv * ../$PACKAGE-$VERSION
 		[ "$files" -gt 1 ]  && mkdir -p ../$PACKAGE-$VERSION && \
 			mv * ../$PACKAGE-$VERSION
