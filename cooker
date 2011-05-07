@@ -25,6 +25,9 @@ blocked="$CACHE/blocked"
 broken="$CACHE/broken"
 cooknotes="$CACHE/cooknotes"
 
+# PID file.
+pidfile='/var/run/cooker.pid'
+
 #
 # Functions
 #
@@ -79,9 +82,10 @@ broken() {
 	fi
 }
 
-# Clean up after cook success.
-empty_command() {
+# Clean up before exit when check and cook commits finish.
+clean_exit() {
 	rm -f $command && touch $command
+	rm -f $pidfile
 }
 
 # Summary for commits.
@@ -288,7 +292,7 @@ case "$1" in
 	pkg|-p)
 		# Same as 'cook pkg' but with log for web interface.
 		cook $pkg || broken
-		empty_command ;;
+		clean_exit ;;
 	cat|-c)
 		# Cook all packages of a category.
 		cat="$2"
@@ -355,13 +359,22 @@ case "$1" in
 		cook_order | tee $LOGS/cookorder.log
 		cook_list ;;
 	*)
-		# Default is to cook all commits.
+		# Default is to cook all commits if not yet running.
 		[ "$1" ] && usage
 		cooklist=$CACHE/commits
+		if [ -f "$pidfile" ]; then
+			pid=$(cat /var/run/cooker.pid)
+			gettext -e "\nStill cooking latest commits with pid:"
+			echo -e " $pid\n" && exit 0
+		fi
+
+		# Start and get a PID file.
 		rm -f $LOGS/commits.log
 		echo ""
 		echo "Checking for commits" | log_commits
 		separator | tee -a $LOGS/commits.log
+		gettext "Starting with PID: "
+		echo $$ | tee $pidfile
 		
 		# Get revisions.
 		cd $wok || exit 1
@@ -381,7 +394,7 @@ case "$1" in
 		else
 			echo "No revision changes: $cur vs $new" | log
 			separator | log_commits
-			empty_command && echo "" && exit 0
+			clean_exit && echo "" && exit 0
 		fi
 		
 		# Get and display modifications.
@@ -408,7 +421,8 @@ case "$1" in
 		echo ""
 		strip_blocked
 		cook_order | tee $LOGS/cookorder.log
-		cook_commits && empty_command ;;
+		cook_commits
+		clean_exit ;;
 esac
 
 exit 0
