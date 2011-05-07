@@ -102,7 +102,7 @@ case "${QUERY_STRING}" in
 				else
 					echo "<h3>Cook summary</h3>"
 					echo '<pre>'
-					grep -A 8 "^Summary " $LOGS/$pkg.log | sed /^$/d | \
+					grep -A 20 "^Summary " $LOGS/$pkg.log | sed /^$/d | \
 						syntax_highlighter log
 					echo '</pre>'
 				fi
