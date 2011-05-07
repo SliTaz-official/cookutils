@@ -106,7 +106,7 @@ receipt_quality() {
 	for var in PACKAGE VERSION CATEGORY SHORT_DESC MAINTAINER WEB_SITE
 	do
 		unset value
-		value=$(grep ^$var= receipt | cut -d \" -f 2)
+		value=$(grep ^$var= $receipt | cut -d \" -f 2)
 		case "$var" in
 			PACKAGE|VERSION|SHORT_DESC)
 				if_empty_value ;;
@@ -140,7 +140,8 @@ unset_receipt() {
 set_paths() {
 	pkgdir=$WOK/$PACKAGE
 	src=$pkgdir/source/$PACKAGE-$VERSION
-	pack=$pkgdir/taz/$PACKAGE-${VERSION}${EXTRAVERSION}
+	taz=$pkgdir/taz
+	pack=$taz/$PACKAGE-${VERSION}${EXTRAVERSION}
 	fs=$pack/fs
 	stuff=$pkgdir/stuff
 	install=$pkgdir/install
@@ -206,8 +207,8 @@ summary() {
 	cd $WOK/$pkg
 	[ -d install ] && prod=$(du -sh install | awk '{print $1}' 2>/dev/null)
 	fs=$(du -sh taz/* | awk '{print $1}')
-	size=$(du -sh $PKGS/$PACKAGE-${VERSION}*.tazpkg | awk '{print $1}')
-	files=$(cat taz/$PACKAGE-*/files.list | wc -l)
+	size=$(du -sh $PKGS/$pkg-${VERSION}*.tazpkg | awk '{print $1}')
+	files=$(cat taz/$pkg-*/files.list | wc -l)
 	cookdate=$(date "+%Y-%m-%d %H:%M")
 	gettext "Summary for:"; echo " $PACKAGE $VERSION"
 	separator
@@ -324,6 +325,7 @@ cookit() {
 	separator
 	set_paths
 	[ "$QA" ] && receipt_quality
+	cd $pkgdir
 	rm -rf install taz source
 
 	# Disable -pipe if less than 512Mb free RAM.
@@ -336,7 +338,7 @@ cookit() {
 	unset free
 
 	# Export flags and path to be used by make
-	DESTDIR=$WOK/$PACKAGE/install
+	DESTDIR=$pkgdir/install
 	export DESTDIR MAKEFLAGS CFLAGS CXXFLAGS BUILD_HOST CONFIG_SITE
 	local LC_ALL=POSIX LANG=POSIX
 
@@ -381,7 +383,7 @@ cookit() {
 	fi
 
 	# Execute receipt rules.
-	if grep -q ^compile_rules $pkgdir/receipt; then
+	if grep -q ^compile_rules $receipt; then
 		gettext -e "Executing: compile_rules\n"
 		[ -d "$src" ] && cd $src 
 		compile_rules || echo "" && exit 1
@@ -414,13 +416,13 @@ packit() {
 	set_paths
 	echo "Pack: $PACKAGE $VERSION"
 	separator
-	if grep -q ^genpkg_rules $pkgdir/receipt; then
+	if grep -q ^genpkg_rules $receipt; then
 		gettext -e "Executing: genpkg_rules\n"
 		cd $pkgdir
 		mkdir -p $fs && genpkg_rules || (echo -e \
 			"\nERROR: genpkg_rules failed\n" >> $LOGS/$pkg.log && exit 1)
 	fi
-	cd $pkgdir/taz
+	cd $taz
 	for file in receipt description.txt
 	do
 		[ ! -f "../$file" ] && continue
@@ -498,12 +500,13 @@ packit_quality() {
 	if fgrep -q ERROR: $LOGS/$pkg.log; then
 		rm -f $command && exit 1
 	fi
+	gettext "QA: Checking for empty package..."
 	files=$(grep -q ^/ $pkgdir/taz/$pkg-*/files.list)
 	if [ ! "$files" ] && [ "$CATEGORY" != "meta" ]; then
-		echo -e "ERROR: empty package"
+		echo -e "\nERROR: empty package"
 		rm -f $command && exit 1
 	else
-		mv -f $WOK/$pkg/taz/$pkg-*.tazpkg $PKGS
+		status && mv -f $pkgdir/taz/$pkg-*.tazpkg $PKGS
 		sed -i /^${pkg}$/d $broken
 	fi
 }
@@ -649,11 +652,12 @@ EOT
 		time=$(date +%s)
 		pkg="$1"
 		[ -z "$pkg" ] && usage
+		receipt="$WOK/$pkg/receipt"
 		check_pkg_in_wok && echo ""
 		echo "cook:$pkg" > $command
 		unset inst
 		unset_receipt
-		cd $WOK/$pkg && . ./receipt
+		. $receipt
 		
 		# Handle --options
 		case "$2" in

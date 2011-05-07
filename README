@@ -35,13 +35,20 @@ Cook does not:
     * The work of a Build Bot, unix philosophy: one tool for one task
     * Cook a package if your receipt is crappy :-)
 
-Cook variables used in receipt:
+Cook paths variables used in receipt:
 
-    * $src     : Path to package source: wok/pkg/source
-    * $stuff   : Path to package stuff: wok/pkg/stuff
-    * $fs      : Path to package file system: wok/pkg/taz/*/fs
-    * $install : Path to all installed files by the package
+    * $src     : Package source: wok/pkg/source
+    * $stuff   : Package stuff: wok/pkg/stuff
+    * $fs      : Package file system: wok/pkg/taz/*/fs
+    * $install : All installed files by the package
                  Old style is $_pkg and cook is compatible
+
+Cook internal paths variables:
+
+    * $pkgdir  : Package directory in the wok: wok/pkg
+    * $receipt : Package receipt in wok: wok/pkg/receipt
+    * $taz     : The taz directory: wok/pkg/taz
+    * $pack    : Package to compress: wok/taz/pkg-*
 
 Cook also manages packages lists so they can be used for a personal packages
 repository or sent to the official mirror. We create and use:
@@ -55,9 +62,9 @@ repository or sent to the official mirror. We create and use:
 
 Cooker
 --------------------------------------------------------------------------------
-The Cooker is a Build Bot which automates the build process but doesn't make the dinner
-for you! We need quality receipts to cook succesfully and the goal is not to have
-a bloated script so please Keep It Short and Simple.
+The Cooker is a Build Bot which automates the build process but doesn't make
+the dinner for you! We need quality receipts to cook succesfully and the goal
+is not to have a bloated script so please Keep It Short and Simple.
 
 Cmdline tool  : /usr/bin/cooker
 Web interface : /var/www/cgi-bin/cooker
@@ -65,8 +72,8 @@ Cache folder  : /home/slitaz/cache
 
 The web interface consists of one CGI script and one CSS style. Cook logs can
 be produced by cook and the cooker just acts as a fronted to check them in
-a nice way. A web interface also highlights success and error and can show receipts
-and the cooker logs such as the last ordered list or commits check.
+a nice way. A web interface also highlights success and error and can show
+receipts and the cooker logs such as the last ordered list or commits check.
 
 
 Toolchain
@@ -84,6 +91,7 @@ included in the package.
 
     * In all cases: KISS
     * Use tab and not space to indent
+    * Max 80 char by line (try to edit in a Xterm 80x24)
     * Use names rather than $1 $2 $3
     * Variables from config file are $UPPERCASE
     * Variables initialized by cook are $lowercase
