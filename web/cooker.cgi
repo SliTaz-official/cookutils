@@ -171,7 +171,7 @@ case "${QUERY_STRING}" in
 		# Main page with summary.
 		inwok=$(ls $WOK | wc -l)
 		cooked=$(ls $PKGS/*.tazpkg | wc -l)
-		unbuilt=$(($cooked - $inwok))
+		unbuilt=$(($inwok - $cooked))
 		[ "$cooked" -gt 0 ] && div=$(($inwok / 100))
 		[ "$cooked" -gt 0 ] && pct=$(($cooked / $div))
 		[ "$cooked" == 0 ] && pct=0
