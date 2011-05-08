@@ -171,8 +171,9 @@ case "${QUERY_STRING}" in
 		# Main page with summary.
 		cooked=$(ls $PKGS/*.tazpkg | wc -l)
 		inwok=$(ls $WOK | wc -l)
-		div=$(($inwok / 100))
-		pct=$(($cooked / $div))
+		[ "$cooked" -gt 0 ] && div=$(($inwok / 100))
+		[ "$cooked" -gt 0 ] && pct=$(($cooked / $div))
+		[ "$cooked" == 0 ] && pct=0
 		cat << EOT
 <div style="float: right;">
 	<form method="get" action="$SCRIPT_NAME">
@@ -185,7 +186,8 @@ case "${QUERY_STRING}" in
 
 <pre>
 Running command  : $([ -s "$command" ] && cat $command || echo "Not running")
-Wok revision     : <a href="http://hg.slitaz.org/wok">$(cd $WOK && hg head --template '{rev}\n')</a>
+Wok revision     : <a href="http://hg.slitaz.org/wok">$(cd $WOK && \
+	hg head --template '{rev}\n' || echo "No Hg wok")</a>
 Commits to cook  : $(cat $commits | wc -l)
 Current cooklist : $(cat $cooklist | wc -l)
 Broken packages  : $(cat $broken | wc -l)
