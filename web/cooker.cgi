@@ -121,7 +121,7 @@ case "${QUERY_STRING}" in
 			echo "<pre>No log: $pkg</pre>"
 		fi ;;
 	file=*)
-		# Dont allown all files on the system for security reason.
+		# Dont allow all files on the system for security reasons.
 		file=${QUERY_STRING#file=}
 		case "$file" in
 			activity|cooknotes)
