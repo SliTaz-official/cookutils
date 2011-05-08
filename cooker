@@ -99,6 +99,7 @@ commits_summary() {
 	echo "Hg wok revision  : $cur"
 	echo "Pulled revision  : $new"
 	echo "Check date       : $(date '+%Y-%m-%d %H:%M:%S')"
+	echo "Packages to cook : $(cat $commits | wc -l)"
 }
 
 # Scan packages build deps and fill up cookorder list.
@@ -137,6 +138,7 @@ cook_order() {
 
 	# Keep an original cooklist so we do a diff when ordering is finished.
 	cp -f $cooklist $cooklist.0
+	echo "cookorder" > $command
 	echo -e "\nInitial Cooker order scan"
 	separator
 	cook_order_scan
@@ -189,7 +191,7 @@ Ordered packages : $pkgs
 Scans executed   : $scan
 Scan duration    : ${time}s
 EOT
-	separator
+	separator && rm -f $command
 }
 
 # Remove blocked (faster this way than grepping before).
@@ -356,8 +358,8 @@ case "$1" in
 		done
 
 		strip_blocked
-		echo "Packages to cook: $(cat $cooklist | wc -l)" | log
 		cook_order | tee $LOGS/cookorder.log
+		echo "Packages to cook: $(cat $cooklist | wc -l)" | log
 		cook_list ;;
 	*)
 		# Default is to cook all commits if not yet running.
@@ -418,11 +420,9 @@ case "$1" in
 		done
 		
 		# Keep previous commit and discard duplicate lines
-		pkgs=$(cat $commits | wc -l)
 		cat $commits $commits.tmp | sed /"^$"/d > $commits.new
 		uniq $commits.new > $commits && rm $commits.*
-		echo "Packages to cook: $pkgs" | log_commits
-		echo "Packages to cook: $pkgs" | log
+		echo "Packages to cook: $(cat $commits | wc -l)" | log
 		separator | log_commits
 		echo ""
 		strip_blocked
