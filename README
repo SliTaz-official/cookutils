@@ -120,6 +120,7 @@ included in the package.
 	  esac
 	* Make commands and options as short as possible
 	* Think to log everything to help debug
+	* Quote variables if used in a test: [ "$var" ]
 
 
 ================================================================================
