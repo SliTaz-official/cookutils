@@ -169,8 +169,9 @@ case "${QUERY_STRING}" in
 		fi ;;
 	*)
 		# Main page with summary.
-		cooked=$(ls $PKGS/*.tazpkg | wc -l)
 		inwok=$(ls $WOK | wc -l)
+		cooked=$(ls $PKGS/*.tazpkg | wc -l)
+		unbuilt=$(($cooked - $inwok))
 		[ "$cooked" -gt 0 ] && div=$(($inwok / 100))
 		[ "$cooked" -gt 0 ] && pct=$(($cooked / $div))
 		[ "$cooked" == 0 ] && pct=0
@@ -195,7 +196,7 @@ Blocked packages : $(cat $blocked | wc -l)
 </pre>
 
 <p>
-	Packages: $cooked cooked on $inwok in the wok.
+	Packages: $inwok in the wok - $cooked cooked - $unbuilt unbuilt
 </p>
 <div class="pctbar">
 	<div class="pct" style="width: ${pct}%;">${pct}%</div>
