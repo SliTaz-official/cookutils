@@ -238,6 +238,8 @@ summary() {
 	size=$(du -sh $PKGS/$pkg-${VERSION}*.tazpkg | awk '{print $1}')
 	files=$(cat taz/$pkg-*/files.list | wc -l)
 	cookdate=$(date "+%Y-%m-%d %H:%M")
+	sec=$time
+	min=$(($time / 60))
 	gettext "Summary for:"; echo " $PACKAGE $VERSION"
 	separator
 	[ "$prod" ] && echo "Produced   : $prod"
@@ -245,7 +247,7 @@ summary() {
 Packed     : $fs
 Compressed : $size
 Files      : $files
-Cook time  : ${time}s
+Cook time  : ${sec}s (${min}m)
 Cook date  : $cookdate
 $(separator)
 EOT
