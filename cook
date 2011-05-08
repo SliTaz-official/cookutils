@@ -392,10 +392,10 @@ cookit() {
 		if [ ! -f "$INSTALLED/$dep/receipt" ]; then
 			# Try local package first
 			if [ -f "$PKGS/$dep-*.tazpkg" ]; then
-				gettext "Installing deps (local):"; echo " $dep"
+				gettext "Installing dep (local):"; echo " $dep"
 				cd $PKGS && tazpkg install $dep-*.tazpkg >/dev/null
 			else
-				gettext "Installing deps (web/cache):"; echo " $dep"
+				gettext "Installing dep (web/cache):"; echo " $dep"
 				tazpkg get-install $dep >/dev/null
 			fi
 		fi
