@@ -173,8 +173,8 @@ case "${QUERY_STRING}" in
 		cooked=$(ls $PKGS/*.tazpkg | wc -l)
 		unbuilt=$(($inwok - $cooked))
 		[ "$cooked" -gt 0 ] && div=$(($inwok / 100))
-		[ "$cooked" -gt 0 ] && pct=$(($cooked / $div))
-		[ "$cooked" == 0 ] && pct=0
+		[ "$div" -gt 0 ] && pct=$(($cooked / $div))
+		[ "$div" == 0 ] && pct=0
 		cat << EOT
 <div style="float: right;">
 	<form method="get" action="$SCRIPT_NAME">
