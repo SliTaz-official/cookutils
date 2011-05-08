@@ -124,7 +124,7 @@ case "${QUERY_STRING}" in
 		# Dont allow all files on the system for security reasons.
 		file=${QUERY_STRING#file=}
 		case "$file" in
-			activity|cooknotes)
+			activity|cooknotes|cooklist)
 				echo "<h2>DB: $file</h2>"
 				echo '<pre>'
 				tac $CACHE/$file | \
@@ -181,13 +181,13 @@ case "${QUERY_STRING}" in
 
 <h2>Summary</h2>
 
-
 <pre>
 Running command  : $([ -s "$command" ] && cat $command || echo "Not running")
 Wok revision     : <a href="http://hg.slitaz.org/wok">$(cd $WOK && hg head --template '{rev}\n')</a>
 Commits to cook  : $(cat $commits | wc -l)
 Current cooklist : $(cat $cooklist | wc -l)
 Broken packages  : $(cat $broken | wc -l)
+Bloked packages  : $(cat $bloked | wc -l)
 </pre>
 
 <p>
@@ -224,8 +224,9 @@ $(cat $commits)
 
 <h2>Cooklist</h2>
 <pre>
-$(cat $cooklist)
+$(cat $cooklist | head -n 20)
 </pre>
+<a class="button" href="cooker.cgi?file=cooklist">Full cooklist</a>
 
 <h2>Broken</h2>
 <pre>
