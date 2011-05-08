@@ -98,7 +98,7 @@ commits_summary() {
 	separator
 	echo "Hg wok revision  : $cur"
 	echo "Pulled revision  : $new"
-	echo "Check date       : $(date '+%Y-%m-%d %H:%M')"
+	echo "Check date       : $(date '+%Y-%m-%d %H:%M:%S')"
 }
 
 # Scan packages build deps and fill up cookorder list.
@@ -373,13 +373,16 @@ case "$1" in
 		echo ""
 		echo "Checking for commits" | log_commits
 		separator | tee -a $LOGS/commits.log
-		gettext "Starting with PID: "
-		echo $$ | tee $pidfile
+		echo $$ > $pidfile
+		echo "Cooker PID   : $$" | log_commits
+		echo "Cooker date  : $(date '+%Y-%m-%d %H:%M:%S')" | log_commits
 		
-		# Get revisions.
+		# Get revisions. Here we have 2 echo since we want msg on screen,
+		# in commits log and activity DB without space before :
 		cd $wok || exit 1
 		cur=$(hg head --template '{rev}\n')
-		echo "Updating Hg wok: ${wok}-hg" | log
+		echo "Updating wok : ${wok}-hg (rev $cur)" | log_commits
+		echo "Updating wok: ${wok}-hg" | log
 		echo "hg:pull" > $command
 		cd ${wok}-hg && hg pull -u | log_commits
 		new=$(hg head --template '{rev}\n')
@@ -414,9 +417,11 @@ case "$1" in
 		done
 		
 		# Keep previous commit and discard duplicate lines
+		pkgs=$(cat $commits | wc -l)
 		cat $commits $commits.tmp | sed /"^$"/d > $commits.new
 		uniq $commits.new > $commits && rm $commits.*
-		echo "Packages to cook : $(cat $commits | wc -l)" | log_commits
+		echo "Packages to cook: $pkgs" | log_commits
+		echo "Packages to cook: $pkgs" | log
 		separator | log_commits
 		echo ""
 		strip_blocked
