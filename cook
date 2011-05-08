@@ -665,7 +665,7 @@ case "$1" in
 		separator
 		rm -f packages.* files.list*
 		gettext -e "Creating: packages.list\n"
-		ls -1 | sed s'/.tazpkg//' > $PKGS/packages.list
+		ls -1 *.tazpkg | sed s'/.tazpkg//' > $PKGS/packages.list
 		gettext -e "Creating: packages.md5\n"
 		md5sum *.tazpkg > $PKGS/packages.md5
 		gettext -e "Creating: packages.desc\n"
