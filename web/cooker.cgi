@@ -97,7 +97,7 @@ case "${QUERY_STRING}" in
 		# Check for a log file and display summary if it exists.
 		if [ -f "$log" ]; then
 			if grep -q "cook:$pkg$" $command; then
-				echo "<pre>The Cooker is currently cooking: $pkg</pre>"
+				echo "<pre>The Cooker is currently building: $pkg</pre>"
 			fi
 			if fgrep -q "Summary " $LOGS/$pkg.log; then
 				echo "<h3>Cook summary</h3>"
