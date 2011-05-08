@@ -189,7 +189,7 @@ Wok revision     : <a href="http://hg.slitaz.org/wok">$(cd $WOK && hg head --tem
 Commits to cook  : $(cat $commits | wc -l)
 Current cooklist : $(cat $cooklist | wc -l)
 Broken packages  : $(cat $broken | wc -l)
-Bloked packages  : $(cat $bloked | wc -l)
+Blocked packages  : $(cat $blocked | wc -l)
 </pre>
 
 <p>
