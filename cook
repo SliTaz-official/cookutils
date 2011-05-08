@@ -432,7 +432,7 @@ cookit() {
 	if grep -q ^compile_rules $receipt; then
 		gettext -e "Executing: compile_rules\n"
 		[ -d "$src" ] && cd $src
-		compile_rules || exit 1
+		compile_rules $@ || exit 1
 		# Stay compatible with _pkg
 		[ -d "$src/_pkg" ] && mv $src/_pkg $install
 		# QA: compile_rules success so valid.
@@ -747,7 +747,7 @@ EOT
 		fi
 
 		# Cook and pack or exit on error and log everything.
-		cookit 2>&1 | tee $LOGS/$pkg.log
+		cookit $@ 2>&1 | tee $LOGS/$pkg.log
 		remove_deps | tee -a $LOGS/$pkg.log
 		cookit_quality
 		packit 2>&1 | tee -a $LOGS/$pkg.log
