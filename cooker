@@ -115,7 +115,6 @@ cook_order_scan() {
 		do
 			if grep -q "^$dep$" $cooklist; then
 				if ! grep -q "^$dep$" $cookorder; then
-					
 					echo "$dep" >> $cookorder
 				fi
 			fi
@@ -163,7 +162,7 @@ cook_order() {
 	diff $cooklist.0 $cooklist > $cooklist.diff
 	rm -f $cookorder $cookorder.diff $cooklist.0
 
-	# Scan is finished: append pkg to WANTED
+	# Scan finished: append pkg to WANTED or leave it in the ordered cooklist.
 	echo -e "\nHandle WANTED package"
 	separator
 	for pkg in $(cat $cooklist)
@@ -172,8 +171,10 @@ cook_order() {
 		. $wok/$pkg/receipt
 		if [ "$WANTED" ]; then
 			echo "$pkg :: $WANTED"
-			sed -i -e "/^$pkg$/"d  \
-				-e "/^$WANTED$/ a $pkg"  $cooklist
+			if grep ^${WANTED}$ $cooklist; then
+				sed -i -e "/^$pkg$/"d  \
+					-e "/^$WANTED$/ a $pkg" $cooklist
+			fi
 		fi
 	done
 
