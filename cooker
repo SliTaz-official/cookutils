@@ -99,7 +99,7 @@ commits_summary() {
 	echo "Hg wok revision  : $cur"
 	echo "Pulled revision  : $new"
 	echo "Check date       : $(date '+%Y-%m-%d %H:%M:%S')"
-	echo "Packages to cook : $(cat $commits | wc -l)"
+	echo "Packages to cook : $pkgs"
 }
 
 # Scan packages build deps and fill up cookorder list.
@@ -406,6 +406,7 @@ case "$1" in
 		# Get and display modifications.
 		cd ${wok}-hg
 		cur=$(($cur + 1))
+		
 		commits_summary | log_commits
 		rm -f $commits.tmp && touch $commits.tmp
 		for rev in $(seq $cur $new)
@@ -418,11 +419,13 @@ case "$1" in
 				echo $pkg >> $commits.tmp
 			done
 		done
+		pkgs=$(cat $commits | wc -l)
+		echo "Packages to cook : $pkgs" | log_commits
 		
 		# Keep previous commit and discard duplicate lines
 		cat $commits $commits.tmp | sed /"^$"/d > $commits.new
 		uniq $commits.new > $commits && rm $commits.*
-		echo "Packages to cook: $(cat $commits | wc -l)" | log
+		echo "Packages to cook: $pkgs" | log
 		separator | log_commits
 		echo ""
 		strip_blocked
