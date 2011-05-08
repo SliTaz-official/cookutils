@@ -323,7 +323,8 @@ case "$1" in
 			echo -e "\nSpecified list does not exist: $list\n" && exit 1
 		cp -a $list $cooklist
 		strip_blocked
-		cook_order | tee $LOGS/cookorder.log ;;
+		cook_order | tee $LOGS/cookorder.log
+		cook_list ;;
 	rev|-r)
 		# Cook or recook a specific Hg revision.
 		rev="$2"

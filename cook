@@ -465,9 +465,15 @@ packit() {
 	if grep -q ^genpkg_rules $receipt; then
 		gettext -e "Executing: genpkg_rules\n"
 		cd $pkgdir
-		mkdir -p $fs && genpkg_rules || (echo -e \
-			"\nERROR: genpkg_rules failed\n" >> $LOGS/$pkg.log && exit 1)
+		mkdir -p $fs && genpkg_rules || echo -e \
+			"\nERROR: genpkg_rules failed\n" >> $LOGS/$pkg.log
 	fi
+
+	# First QA check to stop now if genpkg_rules failed.
+	if fgrep -q ERROR: $LOGS/$pkg.log; then
+		exit 1
+	fi
+	
 	cd $taz
 	for file in receipt description.txt
 	do
