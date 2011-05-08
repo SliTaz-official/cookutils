@@ -126,7 +126,7 @@ case "${QUERY_STRING}" in
 		case "$file" in
 			activity|cooknotes|cooklist)
 				[ "$file" == "cooklist" ] && \
-					nb="packages: $(cat $cooklist | wc -l)"
+					nb="- Packages: $(cat $cooklist | wc -l)"
 				echo "<h2>DB: $file $nb</h2>"
 				echo '<pre>'
 				tac $CACHE/$file | \
@@ -134,7 +134,7 @@ case "${QUERY_STRING}" in
 				echo '</pre>' ;;
 			broken)
 				nb=$(cat $broken | wc -l)
-				echo "<h2>DB: broken packages: $nb</h2>"
+				echo "<h2>DB: broken - Packages: $nb</h2>"
 				echo '<pre>'
 				tac $CACHE/$file | \
 					sed s"#^[^']*#<a href='cooker.cgi?pkg=\0'>\0</a>#"g
