@@ -126,7 +126,7 @@ case "${QUERY_STRING}" in
 		case "$file" in
 			activity|cooknotes|cooklist)
 				[ "$file" == "cooklist" ] && \
-					nb="packages: $(cat $cooklist | wc -l)
+					nb="packages: $(cat $cooklist | wc -l)"
 				echo "<h2>DB: $file $nb</h2>"
 				echo '<pre>'
 				tac $CACHE/$file | \
