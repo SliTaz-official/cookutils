@@ -96,16 +96,15 @@ case "${QUERY_STRING}" in
 
 		# Check for a log file and display summary if it exists.
 		if [ -f "$log" ]; then
+			if grep -q "cook:$pkg$" $command; then
+				echo "<pre>The Cooker is currently cooking: $pkg</pre>"
+			fi
 			if fgrep -q "Summary " $LOGS/$pkg.log; then
-				if grep -q "cook:$pkg$" $command; then
-					echo "<pre>The Cooker is currently cooking: $pkg</pre>"
-				else
-					echo "<h3>Cook summary</h3>"
-					echo '<pre>'
-					grep -A 8 "^Summary " $LOGS/$pkg.log | sed /^$/d | \
-						syntax_highlighter log
-					echo '</pre>'
-				fi
+				echo "<h3>Cook summary</h3>"
+				echo '<pre>'
+				grep -A 8 "^Summary " $LOGS/$pkg.log | sed /^$/d | \
+					syntax_highlighter log
+				echo '</pre>'
 			fi
 			if fgrep -q "Debug " $LOGS/$pkg.log; then
 				echo "<h3>Cook failed</h3>"
