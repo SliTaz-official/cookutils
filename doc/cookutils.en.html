@@ -342,7 +342,12 @@ $ cp -f cookutils/cook.conf ~/Public/cgi-bin/cooker
 <p>
 	The Cooker is designed to be a Built Bot for SliTaz, this means it monitors
 	2 woks, updates the Hg wok, gets the differences and cooks all packages that
-	have been committed. To run The Cooker automatically you must use cron and add a
+	have been committed. The safer and cleaner way to run the Cooker as a Build
+	Bot with cron is to use a chroot environment, but it can run directly on the
+	host if you want.
+</p>
+<p>
+	To run The Cooker automatically you must use cron from the chroot and add a
 	single line to root crontabs in /var/spool/cron/crontabs. Say you would like
 	to run the Cooker every 2 hours:
 </p>
