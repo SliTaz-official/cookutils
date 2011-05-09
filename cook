@@ -492,6 +492,7 @@ packit() {
 		gettext "Copying"; echo -n " $file..."
 		cp -f ../$file $pack && chown 0.0 $pack/$file && status
 	done
+	copy_generic_files
 	
 	# Create files.list with redirecting find output.
 	gettext "Creating the list of files..." && cd $fs
@@ -500,10 +501,8 @@ packit() {
 	cd .. && sed -i s/'^.'/''/ files.list
 	status
 
-	# QA, strip and stuff files.
-	
+	# Strip and stuff files.
 	strip_package
-	copy_generic_files
 
 	# Md5sum of files.
 	gettext "Creating md5sum of files..."
