@@ -347,10 +347,10 @@ strip_package()
 # Remove installed deps.
 remove_deps() {
 	# Now remove installed build deps.
-	diff="$CACHE/installed.diff"
-	deps=$(cat $diff | grep ^+[a-zA-Z0-9] | sed s/^+//)
-	nb=$(cat $diff | grep ^+[a-zA-Z0-9] | wc -l)
-	if [ -s "$CACHE/installed.diff" ]; then
+	diff="$CACHE/installed.cook.diff"
+	if [ -s "$CACHE/installed.cook.diff" ]; then
+		deps=$(cat $diff | grep ^+[a-zA-Z0-9] | sed s/^+//)
+		nb=$(cat $diff | grep ^+[a-zA-Z0-9] | wc -l)
 		gettext "Build dependencies to remove:"; echo " $nb"
 		gettext "Removing:"
 		for dep in $deps
@@ -359,7 +359,8 @@ remove_deps() {
 			yes | tazpkg remove $dep >/dev/null
 		done
 		echo -e "\n"
-		mv -f $CACHE/installed.diff $CACHE/installed.last.diff
+		# Keep the last diff for debug and info.
+		mv -f $CACHE/installed.cook.diff $CACHE/installed.diff
 	fi
 }
 
@@ -406,9 +407,9 @@ cookit() {
 	ls -1 > $CACHE/installed.cook && cd $CACHE
 	
 	# If a cook failed deps are not removed since we exit 1.
-	[ ! -s "installed.diff" ] && \
-		diff installed.list installed.cook > installed.diff
-	deps=$(cat installed.diff | grep ^+[a-zA-Z0-9] | wc -l)
+	[ ! -s "installed.cook.diff" ] && \
+		diff installed.list installed.cook > installed.cook.diff
+	deps=$(cat installed.cook.diff | grep ^+[a-zA-Z0-9] | wc -l)
 
 	# Get source tarball and make sure we have source dir named:
 	# $PACKAGE-$VERSION to be standard in receipts. Here we use tar.lzma
