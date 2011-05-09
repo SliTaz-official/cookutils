@@ -348,13 +348,19 @@ case "$1" in
 		echo "Cooker cooklist"
 		separator
 		
-		# Find all unbuilt packages.
+		# Find all unbuilt packages. Get EXTRAVERSION from packed receipt
+		# if exist since extra version is add when packing the package.
 		echo "Searching for all unbuilt packages" | log
 		for pkg in *
 		do
+			unset EXTRAVERSION
 			. $pkg/receipt
-			[ ! -f "$PKGS/$PACKAGE-${VERSION}${EXTRAVERSION}.tazpkg" ] && \
-				echo $pkg >> $cooklist
+			[ -f "$pkg/taz/$PACKAGE-$VERSION/receipt" ] && \
+				. $pkg/taz/$PACKAGE-$VERSION/receipt
+			if [ ! -f "$PKGS/$PACKAGE-${VERSION}${EXTRAVERSION}.tazpkg" ]
+			then
+				echo $pkg && echo $pkg >> $cooklist
+			fi
 		done
 
 		strip_blocked
