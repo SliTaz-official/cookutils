@@ -172,6 +172,7 @@ set_paths() {
 
 # Get package source.
 get_source() {
+	pwd=$(pwd)
 	case "$WGET_URL" in
 		http://*|ftp://*)
 			# Busybox Wget is better!
