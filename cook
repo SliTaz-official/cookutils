@@ -240,7 +240,7 @@ summary() {
 	cookdate=$(date "+%Y-%m-%d %H:%M")
 	sec=$time
 	div=$(($time / 60))
-	[ "$div" != 0 ] && min="- ${div}m"
+	[ "$div" != 0 ] && min="~ ${div}m"
 	gettext "Summary for:"; echo " $PACKAGE $VERSION"
 	separator
 	[ "$prod" ] && echo "Produced   : $prod"
