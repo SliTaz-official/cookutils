@@ -165,6 +165,7 @@ set_paths() {
 	if [ "$WANTED" ]; then
 		src=$WOK/$WANTED/source/$WANTED-$VERSION
 		install=$WOK/$WANTED/install
+		wanted_stuff=$WOK/$WANTED/stuff
 	fi
 	# Old way compatibility.
 	_pkg=$install
