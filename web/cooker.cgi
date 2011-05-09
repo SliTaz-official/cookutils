@@ -257,7 +257,10 @@ cat << EOT
 </div>
 
 <div id="footer">
-	<a href="cooker.cgi">SliTaz Cooker</a>
+	<a href="http://www.slitaz.org/">SliTaz Website</a>
+	<a href="cooker.cgi">Cooker</a>
+	<a href="http://hg.slitaz.org/cookutils/raw-file/tip/doc/cookutils.en.html">
+		Documentation</a>
 </div>
 
 </body>

@@ -13,22 +13,36 @@ pre {
 	font-size: 96%;
 }
 
+/* Header */
+
 #header {
 	background: #351a0a;
 	height: 40px;
 	border-bottom: 8px solid #d66018;
 }
 
+#header h1 {
+	margin: 0;
+	/* padding: 8px 0 0 42px; */
+	width: 250px;
+}
+
+#header h1 a { 
+	color: white; 
+	text-decoration: none;
+	font-size: 20px;
+	font-style: italic;
+}
+
+#header h1 a:hover { 
+	color: #d66018;
+}
+
+/* Content */
+
 #content {
 	margin: 40px 80px;
 	text-align: justify;
-}
-
-#footer {
-	text-align: center;
-	padding: 20px;
-	border-top: 1px solid #ddd;
-	font-size: 90%;
 }
 
 .span-ok { color: green; }
@@ -73,3 +87,14 @@ pre, .button, .pctbar {
 	-webkit-border-radius: 4px; */
 	border-radius: 4px;
 }
+
+/* Footer */
+
+#footer {
+	text-align: center;
+	padding: 20px;
+	border-top: 1px solid #ddd;
+	font-size: 90%;
+}
+
+#footer a { padding: 0 2px; }
