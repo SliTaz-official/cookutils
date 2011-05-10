@@ -418,7 +418,7 @@ cookit() {
 			fi
 		done
 	done
-	ls -1 > $CACHE/installed.cook && cd $CACHE
+	cd $INSTALLED && ls -1 > $CACHE/installed.cook && cd $CACHE
 	
 	# If a cook failed deps are not removed since we exit 1.
 	[ ! -s "installed.cook.diff" ] && \
@@ -729,6 +729,10 @@ EOT
 		[ -z "$pkg" ] && usage
 		receipt="$WOK/$pkg/receipt"
 		check_pkg_in_wok && echo ""
+
+		# Display and log info if cook process stopped.
+		trap 'gettext -e "\n\nCook stopped: control-C\n\n" | \
+			tee -a $LOGS/$pkg.log' INT
 
 		# Skip blocked, 3 lines also for the Cooker.
 		if grep -q "^$pkg$" $blocked && [ "$2" != "--*" ]; then
