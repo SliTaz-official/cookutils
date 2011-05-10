@@ -403,17 +403,17 @@ cookit() {
 	for dep in $BUILD_DEPENDS
 	do
 		implicit=${dep%-dev}
-		for pkg in $dep $implicit
+		for i in $dep $implicit
 		do
-			if [ ! -f "$INSTALLED/$pkg/receipt" ]; then
+			if [ ! -f "$INSTALLED/$i/receipt" ]; then
 				# Try local package first.
-				vers=$(grep ^VERSION $WOK/$pkg/receipt | cut -d '"' -f 2)
-				if [ -f "$PKGS/$pkg-$vers.tazpkg" ]; then
-					gettext "Installing dep (pkg/local):"; echo " $pkg"
-					cd $PKGS && tazpkg install $pkg-$vers.tazpkg >/dev/null
+				vers=$(grep ^VERSION $WOK/$i/receipt | cut -d '"' -f 2)
+				if [ -f "$PKGS/$i-$vers.tazpkg" ]; then
+					gettext "Installing dep (pkg/local):"; echo " $i"
+					cd $PKGS && tazpkg install $i-$vers.tazpkg >/dev/null
 				else
-					gettext "Installing dep (web/cache):"; echo " $pkg"
-					tazpkg get-install $pkg >/dev/null
+					gettext "Installing dep (web/cache):"; echo " $i"
+					tazpkg get-install $i >/dev/null
 				fi
 			fi
 		done
