@@ -682,10 +682,11 @@ case "$1" in
 		[ "$2" ] && PKGS="$2"
 		[ ! -d "$PKGS" ] && \
 			gettext -e "\nPackages directory doesn't exist\n\n" && exit 1
-		cd $PKGS
+		echo "cook:pkglist" > $command
 		echo "Cook pkglist: Creating all packages lists" | log
 		gettext -e "\nCreating lists for:"; echo " $PKGS"
 		separator
+		cd $PKGS
 		rm -f packages.* files.list*
 		gettext -e "Creating: packages.list\n"
 		ls -1 *.tazpkg | sed s'/.tazpkg//' > $PKGS/packages.list
@@ -720,7 +721,8 @@ EOT
 		#lzma e files.list files.list.lzma
 		separator
 		nb=$(ls $PKGS/*.tazpkg | wc -l)
-		echo -e "Packages: $nb\n" ;;
+		echo -e "Packages: $nb\n"
+		rm -f $command ;;
 	*)
 		# Just cook and generate a package.
 		check_root
