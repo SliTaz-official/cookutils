@@ -349,7 +349,7 @@ case "$1" in
 		separator
 		
 		# Find all unbuilt packages. Get EXTRAVERSION from packed receipt
-		# if exist since extra version is add when packing the package.
+		# if it exists since extra version is added when packing the package.
 		echo "Searching for all unbuilt packages" | log
 		for pkg in *
 		do
@@ -386,8 +386,8 @@ case "$1" in
 		echo "Cooker PID   : $$" | log_commits
 		echo "Cooker date  : $(date '+%Y-%m-%d %H:%M:%S')" | log_commits
 		
-		# Get revisions. Here we have 2 echo since we want msg on screen,
-		# in commits log and activity DB without space before :
+		# Get revisions. Here we have 2 echoes since we want a msg on screen,
+		# in commits log and activity DB without a space before.
 		cd $wok || exit 1
 		cur=$(hg head --template '{rev}\n')
 		echo "Updating wok : ${wok}-hg (rev $cur)" | log_commits
