@@ -103,7 +103,7 @@ commits_summary() {
 
 # Scan packages build deps and fill up cookorder list.
 cook_order_scan() {
-	rm $cookorder
+	rm -f $cookorder
 	for pkg in $(cat $cooklist)
 	do
 		unset BUILD_DEPENDS
