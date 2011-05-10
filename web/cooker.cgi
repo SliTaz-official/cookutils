@@ -32,9 +32,9 @@ syntax_highlighter() {
 			sed -e 's#OK$#<span class="span-ok">OK</span>#g' \
 				-e 's#yes$#<span class="span-ok">yes</span>#g' \
 				-e 's#no$#<span class="span-no">no</span>#g' \
-				-e 's#error$#<span class="span-error">error</span>#g' \
-				-e 's#ERROR:#<span class="span-error">ERROR:</span>#g' \
-				-e 's#WARNING:#<span class="span-error">WARNING:</span>#g' \
+				-e 's#error$#<span class="span-red">error</span>#g' \
+				-e 's#ERROR:#<span class="span-red">ERROR:</span>#g' \
+				-e 's#WARNING:#<span class="span-red">WARNING:</span>#g' \
 				-e s"#^Executing:\([^']*\).#<span class='sh-val'>\0</span>#"g \
 				-e s"#^====\([^']*\).#<span class='span-line'>\0</span>#"g \
 				-e s"#^[a-zA-Z0-9]\([^']*\) :: #<span class='span-sky'>\0</span>#"g \
@@ -43,6 +43,13 @@ syntax_highlighter() {
 		receipt)
 			sed -e s"#^\#\([^']*\)#<span class='sh-comment'>\0</span>#"g \
 				-e s"#\"\([^']*\)\"#<span class='sh-val'>\0</span>#"g ;;
+		diff)
+			sed -e 's|&|\&amp;|g' -e 's|<|\&lt;|g' -e 's|>|\&gt;|g' \
+				-e s"#^-\([^']*\).#<span class='span-red'>\0</span>#"g \
+				-e s"#^+\([^']*\).#<span class='span-ok'>\0</span>#"g \
+				-e s"#@@\([^']*\)@@#<span class='span-sky'>@@\1@@</span>#"g ;;
+		activity)
+			sed s"#^\([^']* : \)#<span class='log-date'>\0</span>#"g ;;
 	esac
 }
 
@@ -130,15 +137,23 @@ case "${QUERY_STRING}" in
 					nb="- Packages: $(cat $cooklist | wc -l)"
 				echo "<h2>DB: $file $nb</h2>"
 				echo '<pre>'
-				tac $CACHE/$file | \
-					sed s"#^\([^']* : \)#<span class='log-date'>\0</span>#"g
+				tac $CACHE/$file | syntax_highlighter activity
 				echo '</pre>' ;;
 			broken)
 				nb=$(cat $broken | wc -l)
 				echo "<h2>DB: broken - Packages: $nb</h2>"
 				echo '<pre>'
-				tac $CACHE/$file | \
+				cat $CACHE/$file | sort | \
 					sed s"#^[^']*#<a href='cooker.cgi?pkg=\0'>\0</a>#"g
+				echo '</pre>' ;;
+			*.diff)
+				diff=$CACHE/$file
+				echo "<h2>Diff for: ${file%.diff}</h2>"
+				[ "$file" == "installed.diff" ] && echo \
+					"<p>This is the latest diff between installed packages \
+					and build dependencies installed to cook.</p>"
+				echo '<pre>'
+				cat $diff | syntax_highlighter diff
 				echo '</pre>' ;;
 			*.log)
 				log=$LOGS/$file
@@ -204,22 +219,21 @@ Blocked packages : $(cat $blocked | wc -l)
 </div>
 
 <p>
-	Latest logs:
-	<a href="cooker.cgi?file=cookorder.log">cookorder</a>
-	<a href="cooker.cgi?file=commits.log">commits</a>
+	Latest:
+	<a href="cooker.cgi?file=cookorder.log">cookorder.log</a>
+	<a href="cooker.cgi?file=commits.log">commits.log</a>
+	<a href="cooker.cgi?file=installed.diff">installed.diff</a>
 </p>
 
 <h2>Activity</h2>
 <pre>
-$(tac $CACHE/activity | head -n 12 | \
-	sed s"#^\([^']* : \)#<span class='log-date'>\0</span>#"g)
+$(tac $CACHE/activity | head -n 12 | syntax_highlighter activity)
 </pre>
 <a class="button" href="cooker.cgi?file=activity">More activity</a>
 
 <h2>Cooknotes</h2>
 <pre>
-$(tac $cooknotes | head -n 12 | \
-	sed s"#^\([^']* : \)#<span class='log-date'>\0</span>#"g)
+$(tac $cooknotes | head -n 12 | syntax_highlighter activity)
 </pre>
 <a class="button" href="cooker.cgi?file=cooknotes">More notes</a>
 

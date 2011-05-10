@@ -4,6 +4,7 @@ body { font: 13px sans-serif, vernada, arial; margin: 0; }
 h1 { margin: 0; padding: 8px; color: #fff; font-size: 20px; }
 h1 a { color: #fff; text-decoration: none; }
 h2 { color: #444; } h3 { color: #666; font-size: 140%; }
+a { text-decoration: underline; color: #215090; }
 a:hover { text-decoration: none; }
 pre {
 	background-color: #f8f8f8;
@@ -46,7 +47,7 @@ pre {
 }
 
 .span-ok { color: green; }
-.span-error { color: red; }
+.span-red { color: red; }
 .span-sky { color: blue; }
 .span-no { color: orange; }
 .span-line { color: #888; }
