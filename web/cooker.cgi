@@ -34,6 +34,7 @@ syntax_highlighter() {
 				-e 's#no$#<span class="span-no">no</span>#g' \
 				-e 's#error$#<span class="span-error">error</span>#g' \
 				-e 's#ERROR:#<span class="span-error">ERROR:</span>#g' \
+				-e 's#WARNING:#<span class="span-error">WARNING:</span>#g' \
 				-e s"#^Executing:\([^']*\).#<span class='sh-val'>\0</span>#"g \
 				-e s"#^====\([^']*\).#<span class='span-line'>\0</span>#"g \
 				-e s"#^[a-zA-Z0-9]\([^']*\) :: #<span class='span-sky'>\0</span>#"g \
