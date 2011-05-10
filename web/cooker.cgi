@@ -151,7 +151,7 @@ case "${QUERY_STRING}" in
 				echo "<h2>Diff for: ${file%.diff}</h2>"
 				[ "$file" == "installed.diff" ] && echo \
 					"<p>This is the latest diff between installed packages \
-					and build dependencies installed to cook.</p>"
+					and installed build dependencies to cook.</p>"
 				echo '<pre>'
 				cat $diff | syntax_highlighter diff
 				echo '</pre>' ;;
