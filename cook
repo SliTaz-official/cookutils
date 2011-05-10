@@ -396,21 +396,27 @@ cookit() {
 	export DESTDIR MAKEFLAGS CFLAGS CXXFLAGS BUILD_HOST CONFIG_SITE
 	local LC_ALL=POSIX LANG=POSIX
 
-	# Check for build deps.
+	# Check for build deps and handle implicit depends of *-dev packages
+	# (ex: libusb-dev :: libusb).
 	cd $INSTALLED && ls -1 > $CACHE/installed.list
 	[ "$DEPENDS" ] && gettext -e "Checking build dependencies...\n"
 	for dep in $BUILD_DEPENDS
 	do
-		if [ ! -f "$INSTALLED/$dep/receipt" ]; then
-			# Try local package first
-			if [ -f "$PKGS/$dep-*.tazpkg" ]; then
-				gettext "Installing dep (local):"; echo " $dep"
-				cd $PKGS && tazpkg install $dep-*.tazpkg >/dev/null
-			else
-				gettext "Installing dep (web/cache):"; echo " $dep"
-				tazpkg get-install $dep >/dev/null
+		implicit=${dep%-dev}
+		for pkg in $dep $implicit
+		do
+			if [ ! -f "$INSTALLED/$pkg/receipt" ]; then
+				# Try local package first.
+				vers=$(grep ^VERSION $WOK/$pkg/receipt | cut -d '"' -f 2)
+				if [ -f "$PKGS/$pkg-$vers.tazpkg" ]; then
+					gettext "Installing dep (local)    :"; echo " $pkg"
+					cd $PKGS && tazpkg install $pkg-$vers.tazpkg >/dev/null
+				else
+					gettext "Installing dep (web/cache):"; echo " $pkg"
+					tazpkg get-install $pkg >/dev/null
+				fi
 			fi
-		fi
+		done
 	done
 	ls -1 > $CACHE/installed.cook && cd $CACHE
 	
