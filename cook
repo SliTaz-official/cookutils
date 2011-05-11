@@ -422,7 +422,7 @@ cookit() {
 	
 	# If a cook failed deps are not removed since we exit 1.
 	[ ! -s "installed.cook.diff" ] && \
-		diff installed.list installed.cook > installed.cook.diff
+		busybox diff installed.list installed.cook > installed.cook.diff
 	deps=$(cat installed.cook.diff | grep ^+[a-zA-Z0-9] | wc -l)
 
 	# Get source tarball and make sure we have source dir named:
