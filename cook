@@ -576,7 +576,7 @@ packit_quality() {
 		rm -f $command && exit 1
 	else
 		# Ls sort by name so the first file is the one we want.
-		old=$(ls $PKGS/$pkg-*.tazpkg | head -n 1 2>/dev/null)
+		old=$(ls $PKGS/$pkg-*.tazpkg 2>/dev/null | head -n 1)
 		status
 		[ "$old" ] && echo -n "Removing old: $(basename $old)" && \
 			rm -f $old && status
