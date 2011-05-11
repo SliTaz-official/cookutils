@@ -566,9 +566,16 @@ packit() {
 
 # Verify package quality and consistency.
 packit_quality() {
+	gettext "QA: Checking for broken link..."
+	if find $taz -type l -follow; then
+		echo -e "\nERROR: broken link in filesystem"
+	fi
+	
+	# Exit if any error found in log file.
 	if fgrep -q ERROR: $LOGS/$pkg.log; then
 		rm -f $command && exit 1
 	fi
+	
 	gettext "QA: Checking for empty package..."
 	files=$(cat $WOK/$pkg/taz/$pkg-*/files.list | wc -l)
 	if [ "$files" -lt 0 ] && [ "$CATEGORY" != "meta" ]; then
