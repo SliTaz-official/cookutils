@@ -209,6 +209,7 @@ get_source() {
 			echo "URL: $url"
 			git clone $url $pkgsrc || (echo "ERROR: git clone $url" && exit 1)
 			if [ "$BRANCH" ]; then
+				echo "Git branch: $BRANCH"
 				cd $pkgsrc && git checkout $BRANCH && cd ..	
 			fi
 			create_tarball ;;
@@ -218,12 +219,20 @@ get_source() {
 			[ "$CVS_MODULE" ] && mod=$CVS_MODULE
 			gettext -e "Getting source from CVS...\n"
 			echo "URL: $url"
-			echo "CVS module: $mod"
+			[ "$CVS_MODULE" ] && echo "CVS module: $mod"
 			gettext "Cloning to: "; echo "$pwd/$mod"
 			cvs -d:$url co $mod && mv $mod $pkgsrc
 			create_tarball ;;
 		svn*|subversion*)
-			echo "TODO: svn implementation in cook" && exit 1 ;;
+			if $(echo "$WGET_URL" | fgrep -q "hg|"); then
+				url=${WGET_URL#svn|}
+			else
+				url=${WGET_URL#subversion|}
+			fi
+			gettext -e "Getting source from SVN...\n"
+			echo "URL: $url"
+			svn co $url $pkgsrc
+			create_tarball ;;
 		*)
 			gettext -e "\nERROR: Unable to handle:"; echo -e " $WGET_URL \n" | \
 				tee -a $LOGS/$PACKAGE.log
