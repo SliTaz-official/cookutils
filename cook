@@ -777,7 +777,9 @@ EOT
 
 		# Check if wanted is built now so we have separate log files.
 		if [ "$WANTED" ] && [ ! -d "$WOK/$WANTED/install" ]; then
-			cook "$WANTED"
+			if ! grep -q "^$WANTED$" $broken
+				cook "$WANTED"
+			fi
 		fi
 
 		# Cook and pack or exit on error and log everything.
