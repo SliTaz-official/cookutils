@@ -171,9 +171,18 @@ set_paths() {
 	_pkg=$install
 }
 
+# Create source tarball when URL is a SCM.
+create_tarball() {
+	gettext "Creating tarball: "; echo "$tarball"
+	tar cjf $tarball $pkgsrc || exit 1
+	mv $tarball $SRC && rm -rf $pkgsrc
+}
+
 # Get package source.
 get_source() {
 	pwd=$(pwd)
+	pkgsrc=${SOURCE:-$PACKAGE}-$VERSION
+	tarball=$pkgsrc.tar.bz2
 	case "$WGET_URL" in
 		http://*|https://*|ftp://*)
 			# Busybox Wget is better!
@@ -186,28 +195,30 @@ get_source() {
 			else
 				url=${WGET_URL#mercurial|}
 			fi
-			pkgsrc=${SOURCE:-$PACKAGE}-$VERSION
-			tarball=$pkgsrc.tar.bz2
 			gettext -e "Getting source from Hg...\n"
 			echo "URL: $url"
 			gettext "Cloning to: "; echo "$pwd/$pkgsrc"
 			hg clone $url $pkgsrc || (echo "ERROR: hg clone $url" && exit 1)
-			gettext "Creating tarball: "; echo "$tarball"
-			tar cjf $tarball $pkgsrc || exit 1
-			mv $tarball $SRC && rm -rf $pkgsrc ;;
+			create_tarball ;;
 		git*)
 			url=${WGET_URL#git|}
-			pkgsrc=${SOURCE:-$PACKAGE}-$VERSION
-			tarball=$pkgsrc.tar.bz2
 			gettext -e "Getting source from Git...\n"
 			echo "URL: $url"
 			git clone $url $pkgsrc || (echo "ERROR: git clone $url" && exit 1)
 			if [ "$BRANCH" ]; then
 				cd $pkgsrc && git checkout $BRANCH && cd ..	
 			fi
-			gettext "Creating tarball: "; echo "$tarball"
-			tar cjf $tarball $pkgsrc || exit 1
-			mv $tarball $SRC && rm -rf $pkgsrc ;;
+			create_tarball ;;
+		cvs*)
+			url=${WGET_URL#cvs|}
+			mod=$PACKAGE
+			[ "$CVS_MODULE" ] && mod=$CVS_MODULE
+			gettext -e "Getting source from CVS...\n"
+			echo "URL: $url"
+			echo "CVS module: $mod"
+			gettext "Cloning to: "; echo "$pwd/$mod"
+			cvs -d:$url co $mod && mv $mod $pkgsrc
+			create_tarball ;;
 		svn*|subversion*)
 			echo "TODO: svn implementation in cook" && exit 1 ;;
 		*)
