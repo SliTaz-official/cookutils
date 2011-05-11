@@ -567,9 +567,9 @@ packit() {
 # Verify package quality and consistency.
 packit_quality() {
 	gettext "QA: Checking for broken link..."
-	if find $taz -type l -follow; then
-		echo -e "\nERROR: broken link in filesystem"
-	fi
+	link=$(find $taz -type l -follow)
+	[ "$link" ] && echo -e "\nERROR: broken link in filesystem"
+	status
 	
 	# Exit if any error found in log file.
 	if fgrep -q ERROR: $LOGS/$pkg.log; then
