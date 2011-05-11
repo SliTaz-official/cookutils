@@ -362,7 +362,6 @@ case "$1" in
 				echo $pkg && echo $pkg >> $cooklist
 			fi
 		done
-
 		strip_blocked
 		cook_order | tee $LOGS/cookorder.log
 		echo "Packages to cook: $(cat $cooklist | wc -l)" | log
