@@ -175,9 +175,9 @@ set_paths() {
 get_source() {
 	pwd=$(pwd)
 	case "$WGET_URL" in
-		http://*|ftp://*)
+		http://*|https://*|ftp://*)
 			# Busybox Wget is better!
-			busybox wget -c -P $SRC $WGET_URL || \
+			wget -c -P $SRC $WGET_URL || \
 				(echo -e "ERROR: wget $WGET_URL" && exit 1) ;;
 		hg*|mercurial*)
 			# We are in cache so clone here and create a tarball
@@ -422,7 +422,7 @@ cookit() {
 	
 	# If a cook failed deps are not removed since we exit 1.
 	[ ! -s "installed.cook.diff" ] && \
-		busybox diff installed.list installed.cook > installed.cook.diff
+		diff installed.list installed.cook > installed.cook.diff
 	deps=$(cat installed.cook.diff | grep ^+[a-zA-Z0-9] | wc -l)
 
 	# Get source tarball and make sure we have source dir named:
