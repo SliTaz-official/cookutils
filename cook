@@ -178,18 +178,21 @@ create_tarball() {
 	mv $tarball $SRC && rm -rf $pkgsrc
 }
 
-# Get package source.
+# Get package source. For SCM we are in cache so clone here and create a
+# tarball here.
 get_source() {
 	pwd=$(pwd)
 	pkgsrc=${SOURCE:-$PACKAGE}-$VERSION
 	tarball=$pkgsrc.tar.bz2
 	case "$WGET_URL" in
-		http://*|https://*|ftp://*)
+		http://*|ftp://*)
 			# Busybox Wget is better!
-			wget -c -P $SRC $WGET_URL || \
+			busybox wget -c -P $SRC $WGET_URL || \
+				(echo -e "ERROR: wget $WGET_URL" && exit 1) ;;
+		https://*)
+			wget -c --no-check-certificate -P $SRC $WGET_URL || \
 				(echo -e "ERROR: wget $WGET_URL" && exit 1) ;;
 		hg*|mercurial*)
-			# We are in cache so clone here and create a tarball
 			if $(echo "$WGET_URL" | fgrep -q "hg|"); then
 				url=${WGET_URL#hg|}
 			else
