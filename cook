@@ -359,7 +359,7 @@ strip_package()
 	status
 
 	# Remove Python .pyc and .pyo from packages.
-	if echo "$DEPENDS" | fgrep -q "python"; then
+	if echo "$PACKAGE $DEPENDS" | fgrep -q "python"; then
 		gettext "Removing Python compiled files..."
 		find $fs -type f -name "*.pyc" -delete 2>/dev/null
 		find $fs -type f -name "*.pyo" -delete 2>/dev/null
