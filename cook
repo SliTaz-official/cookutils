@@ -778,7 +778,7 @@ EOT
 			tee -a $LOGS/$pkg.log' INT
 
 		# Skip blocked, 3 lines also for the Cooker.
-		if grep -q "^$pkg$" $blocked && [ "$2" != "--*" ]; then
+		if grep -q "^$pkg$" $blocked && [ "$2" != "--unblock" ]; then
 			gettext -e "Blocked package:"; echo -e " $pkg\n" && exit 0
 		fi
 
