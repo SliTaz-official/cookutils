@@ -590,7 +590,7 @@ packit() {
 # Verify package quality and consistency.
 packit_quality() {
 	gettext "QA: Checking for broken link..."
-	link=$(find $taz -type l -follow)
+	link=$(find $fs/usr -type l -follow)
 	[ "$link" ] && echo -e "\nERROR: broken link in filesystem"
 	status
 	
