@@ -722,7 +722,7 @@ case "$1" in
 		gettext -e "\nCreating lists for:"; echo " $PKGS"
 		separator
 		cd $PKGS
-		rm -f packages.* files.list*
+		rm -f packages.* files.*
 		gettext -e "Creating: packages.list\n"
 		ls -1 *.tazpkg | sed s'/.tazpkg//' > $PKGS/packages.list
 		gettext -e "Creating: packages.md5\n"
@@ -752,8 +752,14 @@ EOT
 				done
 			fi
 		done
+
+		# packages.txt (redudency list, all info are in pkgs desc).
+		touch packages.txt
+		
 		# files.list.lzma
-		#lzma e files.list files.list.lzma
+		touch files.list
+		lzma e files.list files.list.lzma
+		
 		separator
 		nb=$(ls $PKGS/*.tazpkg | wc -l)
 		echo -e "Packages: $nb\n"
