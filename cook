@@ -734,7 +734,7 @@ case "$1" in
 		do
 			unset_receipt
 			. $pkg/receipt
-			# packages.desc let us search easily in DB
+			# packages.desc lets us search easily in DB
 			if [ -f "$PKGS/$PACKAGE-${VERSION}${EXTRAVERSION}.tazpkg" ]; then
 				cat >> $PKGS/packages.desc << EOT
 $PACKAGE | $VERSION$EXTRAVERSION | $SHORT_DESC | $CATEGORY | $WEB_SITE
@@ -753,7 +753,7 @@ EOT
 			fi
 		done
 
-		# packages.txt (redudency list, all info are in pkgs desc).
+		# packages.txt (redundancy list, all info is in pkgs desc).
 		touch packages.txt
 		
 		# files.list.lzma
