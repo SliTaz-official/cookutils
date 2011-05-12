@@ -107,17 +107,17 @@ case "${QUERY_STRING}" in
 			if grep -q "cook:$pkg$" $command; then
 				echo "<pre>The Cooker is currently building: $pkg</pre>"
 			fi
-			if fgrep -q "Summary " $LOGS/$pkg.log; then
+			if fgrep -q "Summary for:" $LOGS/$pkg.log; then
 				echo "<h3>Cook summary</h3>"
 				echo '<pre>'
-				grep -A 8 "^Summary " $LOGS/$pkg.log | sed /^$/d | \
+				grep -A 8 "^Summary for:" $LOGS/$pkg.log | sed /^$/d | \
 					syntax_highlighter log
 				echo '</pre>'
 			fi
-			if fgrep -q "Debug " $LOGS/$pkg.log; then
+			if fgrep -q "Debug information" $LOGS/$pkg.log; then
 				echo "<h3>Cook failed</h3>"
 				echo '<pre>'
-				grep -A 8 "^Debug " $LOGS/$pkg.log | sed /^$/d | \
+				grep -A 8 "^Debug information" $LOGS/$pkg.log | sed /^$/d | \
 						syntax_highlighter log
 				echo '</pre>'
 			fi
