@@ -754,11 +754,13 @@ EOT
 				done
 			fi
 		done
-
+		cd $PKGS
+		
 		# packages.txt (redundancy list, all info is in pkgs desc).
 		touch packages.txt
 		
 		# files.list.lzma
+		gettext -e "Creating: packages.equiv\n"
 		touch files.list
 		lzma e files.list files.list.lzma
 		
