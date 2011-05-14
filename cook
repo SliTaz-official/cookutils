@@ -224,7 +224,7 @@ get_source() {
 			cvs -d:$url co $mod && mv $mod $pkgsrc
 			create_tarball ;;
 		svn*|subversion*)
-			if $(echo "$WGET_URL" | fgrep -q "hg|"); then
+			if $(echo "$WGET_URL" | fgrep -q "svn|"); then
 				url=${WGET_URL#svn|}
 			else
 				url=${WGET_URL#subversion|}
