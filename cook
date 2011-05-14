@@ -680,7 +680,6 @@ case "$1" in
 		# Create the package folder and an empty receipt.
 		pkg="$2"
 		[ "$pkg" ] || usage
-		[ -d "${WOK}-hg" ] && WOK=${WOK}-hg
 		echo ""
 		if [ -d "$WOK/$pkg" ]; then
 			echo -n  "$pkg " && gettext "package already exists."
