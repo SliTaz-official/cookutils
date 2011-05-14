@@ -231,7 +231,11 @@ get_source() {
 			fi
 			gettext -e "Getting source from SVN...\n"
 			echo "URL: $url"
-			svn co $url $pkgsrc
+			if [ "$BRANCH" ]; then
+				echo t | svn co $url -r $BRANCH $pkgsrc
+			else
+				echo t | svn co $url $pkgsrc
+			fi
 			create_tarball ;;
 		*)
 			gettext -e "\nERROR: Unable to handle:"; echo -e " $WGET_URL \n" | \
