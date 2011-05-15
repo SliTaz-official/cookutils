@@ -394,6 +394,9 @@ case "$1" in
 		echo "hg:pull" > $command
 		cd ${wok}-hg && hg pull -u | log_commits
 		new=$(hg head --template '{rev}\n')
+		# Store last rev to be used by CGI so it dont need to call hg head
+		# on each load.
+		echo "$new" > $CACHE/wokrev
 		
 		# Sync build wok with rsync so we don't take care about removing old
 		# files as before.

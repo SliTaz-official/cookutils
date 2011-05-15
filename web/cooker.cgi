@@ -20,6 +20,7 @@ command="$CACHE/command"
 blocked="$CACHE/blocked"
 broken="$CACHE/broken"
 cooknotes="$CACHE/cooknotes"
+wokrev="$CACHE/wokrev"
 
 #
 # Functions
@@ -203,8 +204,7 @@ case "${QUERY_STRING}" in
 
 <pre>
 Running command  : $([ -s "$command" ] && cat $command || echo "Not running")
-Wok revision     : <a href="http://hg.slitaz.org/wok">$(cd $WOK && \
-	hg head --template '{rev}\n' || echo "No Hg wok")</a>
+Wok revision     : <a href="http://hg.slitaz.org/wok">$(cat $wokrev)</a>
 Commits to cook  : $(cat $commits | wc -l)
 Current cooklist : $(cat $cooklist | wc -l)
 Broken packages  : $(cat $broken | wc -l)
