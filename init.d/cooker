@@ -1,11 +1,14 @@
 #!/bin/sh
 # /etc/init.d/cooker: Start, stop or restart Cooker daemon.
 #
-. /etc/slitaz/cook.conf
+
+# This is the only real path we need for the daemon and it make it independant
+# from cookutils itself.
+SLITAZ="/home/slitaz"
 
 case "$i" in
 	start)
-		# When 4.0: for version in stable cooking undigest
+		# When 4.0: version: stable cooking undigest
 		for version in cooking
 		do
 			if [ -d "$SLITAZ/$version/chroot" ]; then
@@ -27,6 +30,7 @@ case "$i" in
 			fi
 		done ;;
 	stop)
+		# When 4.0: version: stable cooking undigest
 		for version in cooking
 		do
 			rootfs=$SLITAZ/$version/chroot
