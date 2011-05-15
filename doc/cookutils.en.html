@@ -357,14 +357,21 @@ $ cp -f cookutils/cook.conf ~/Public/cgi-bin/cooker
 
 <h3>Cooker BB started at boot</h3>
 <p>
-	The Cooker environment and deamon can automaticaly started at boot time. You
-	must have cookutils installed on the host and use standard SliTaz to make it
-	work properly (cooking goes in /home/slitaz/cooking). The deamon script will
-	mount virtual filesystems if needed as well as source and packages. Sources
-	files are in /home/slitaz/src and binded into the chroot so you can share
-	packages source between several version (stable, cooking, undiguest). To
-	start the daemon you must have a cron file definition for root in the chroot,
-	the deamon script work like all other system daemon and can be handled with:
+	The Cooker environment and cron task can automaticaly started at boot time.
+	You must have cookutils-daemon installed on the host and use standard SliTaz
+	to make it work properly (cooking goes in /home/slitaz/cooking). The deamon
+	script will mount virtual filesystems if needed as well as source and
+	packages. Sources files are in /home/slitaz/src and binded into the chroot
+	so you can share packages source between several version (stable, cooking,
+	undiguest). If the package is not yet installed:
+</p>
+<pre>
+# tazpkg get-install cookutils-daemon
+</pre>
+<p>
+	To start the daemon you must have a cron file definition for
+	root in the chroot, the deamon script work like all other system daemon
+	and can be handled with:
 </p>
 <pre>
 # /etc/init.d/cooker [start|stop|restart]
