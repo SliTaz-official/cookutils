@@ -1,0 +1,49 @@
+#!/bin/sh
+# /etc/init.d/cooker: Start, stop or restart Cooker daemon.
+#
+. /etc/slitaz/cook.conf
+
+case "$i" in
+	start)
+		# When 4.0: for version in stable cooking undigest
+		for version in cooking
+		do
+			if [ -d "$SLITAZ/$version/chroot" ]; then
+				echo "Starting $version cooker..."
+				rootfs=$SLITAZ/$version/chroot
+				if [ ! -d $rootfs/proc/1 ]; then
+					mount -t proc proc $rootfs/proc
+					mount -t sysfs sysfs $rootfs/sys
+					mount -t devpts devpts $rootfs/dev/pts
+					mount -t tmpfs shm $rootfs/dev/shm
+				fi
+				if [ ! $(mount | grep -q ${roots}$SLITAZ/src) ]
+					mount -o bind $SLITAZ/src ${rootfs}$SLITAZ/src
+					mount -o bind $SLITAZ/$version/packages \
+						${rootfs}$SLITAZ/packages
+				fi
+				# Start cron in chroot.
+				chroot $rootfs /etc/init.d/cron start
+			fi
+		done ;;
+	stop)
+		for version in cooking
+		do
+			rootfs=$SLITAZ/$version/chroot
+			if [ -d "$SLITAZ/$version/chroot" ]; then
+				echo "Stoping $version cooker..."
+				# Stop cron in chroot.
+				chroot $rootfs /etc/init.d/cron stop
+				for i in /dev/shm /dev/pts /sys /proc $SLITAZ/src $SLITAZ/packages
+				do
+					umount ${rootfs}$i
+				done
+			fi
+		done ;;
+	restart)
+		$0 stop && sleep 2 && $0 start ;;
+	*)
+		echo "Usage: $0 [start|stop|restart]" ;;
+esac
+
+exit 0
