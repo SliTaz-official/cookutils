@@ -2,7 +2,7 @@
 # /etc/init.d/cooker: Start, stop or restart Cooker daemon.
 #
 
-# This is the only real path we need for the daemon and it make it independant
+# This is the only real path we need for the daemon and it makes it independent
 # from cookutils itself.
 SLITAZ="/home/slitaz"
 
