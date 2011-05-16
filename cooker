@@ -426,6 +426,18 @@ case "$1" in
 				echo $pkg >> $commits.tmp
 			done
 		done
+
+		# We may have deleted packages and files in stuff/
+		cd $wok
+		for pkg in *
+		do
+			if [ ! -d "${wok}-hg/$pkg" ]; then
+				echo "Removing package: $pkg"
+				. $wok/$pkg/receipt
+				rm -rf $PKGS/$PACKAGE-$VERSION*
+				rm -rf $wok/$pkg
+			fi
+		done
 		
 		# Keep previous commit and discard duplicate lines
 		cat $commits $commits.tmp | sed /"^$"/d > $commits.new
