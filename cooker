@@ -422,7 +422,7 @@ case "$1" in
 			do
 				pkg=$(echo $file | cut -d "/" -f 1)
 				desc=$(hg log --rev=$rev --template "{desc}" $file)
-				echo "Commited         : $pkg - $desc" | log_commits
+				echo "Commited : $pkg - $desc" | log_commits
 				echo $pkg >> $commits.tmp
 			done
 		done
@@ -432,7 +432,7 @@ case "$1" in
 		for pkg in *
 		do
 			if [ ! -d "${wok}-hg/$pkg" ]; then
-				echo "Removing package: $pkg"
+				echo "Removing package: $pkg" | log_commits
 				. $wok/$pkg/receipt
 				rm -rf $PKGS/$PACKAGE-$VERSION*
 				rm -rf $wok/$pkg
