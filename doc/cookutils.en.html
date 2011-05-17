@@ -35,7 +35,7 @@
 <p>
 	Cook provides a small built-in help usage that you can display with the
 	command 'usage'. It also has some options to perform special tasks on
-	a package before cooking it or after. To get help and usage:
+	a package before cooking it or afterwards. To get help and usage:
 </p>
 <pre>
 # cook usage
@@ -56,7 +56,7 @@
 	can specify a custom path in the argument. The chroot location is not
 	important, when you will be in the chroot you will use standard SliTaz
 	paths such as /home/slitaz/wok for the wok directory or /home/slitaz/log
-	for all the cook logs. As usual you can diplay tazdev help usage with:
+	for all the cook logs. As usual you can display tazdev help usage with:
 	tazdev usage.
 </p>
 <p>
@@ -94,9 +94,9 @@
 <h3>Test your environment</h3>
 <p>
 	Cook provides a test command which will create a package and cook it. This lets
-	you see if your enviroment is working and it provides an example package with
+	you see if your environment is working and it provides an example package with
 	a receipt. The dummy package is named 'cooktest' and can be removed after
-	testing. To cook the cooktest:
+	testing. To cook the test package:
 </p>
 <pre>
 # cook test
@@ -104,7 +104,7 @@
 
 <h3>Create and cook</h3>
 <p>
-	If you environment is setup corectly you can start creating and compiling
+	If your environment is setup correctly you can start creating and compiling
 	SliTaz packages from your wok. To create a new package with an empty receipt:
 </p>
 <pre>
@@ -112,14 +112,14 @@
 </pre>
 <p>
 	If you have just created a new package, you'll have to edit the receipt with your
-	favorite text editor. When the receipt is ready or if you have existing
-	packages, you can cook it:
+	favorite text editor. When the receipt is ready or if you have an existing
+	package, you can cook it:
 </p>
 <pre>
 # cook pkgname
 </pre>
 <p>
-	If all went well you will find your packages in the $SLITAZ/packages
+	If all went well you will find your package in the $SLITAZ/packages
 	directory and any produced files in $SLITAZ/wok/pkgname.
 </p>
 
@@ -218,7 +218,7 @@ $ cook list-wok
 # cooker setup
 </pre>
 <p>
-	If all went well you have now 2 woks, base developement packages installed
+	If all went well you now have 2 woks, base development packages installed
 	and all needed files created. The default behavior is to check for commits,
 	you can run a test:
 </p>
@@ -232,7 +232,7 @@ $ cook list-wok
 	cooker without any arguments or cook packages manually. The cooker lets you
 	cook a single package or all packages of a category or a flavor. You can also
 	try to build all unbuilt packages, but be aware the Cooker was not designed
-	to handle thousand of packages.
+	to handle thousands of packages.
 </p>
 <p>
 	To cook a single package which is the same as 'cook pkgname' but with more
@@ -253,7 +253,7 @@ $ cook list-wok
 # cooker cat [category]
 </pre>
 <p>
-	The Cooker lets you also recook a specific Hg revision. It useful in
+	The Cooker lets you also recook a specific Hg revision. It's useful in
 	production so that if the Build Bot was interrupted while cooking commits, you
 	can then cook packages manually:
 </p>
@@ -359,10 +359,10 @@ $ cp -f cookutils/cook.conf ~/Public/cgi-bin/cooker
 <p>
 	The Cooker environment and cron task can automatically be started at boot time.
 	You must have the cookutils-daemon installed on the host and use a standard SliTaz
-	to make it work properly (cooking goes in /home/slitaz/cooking). The daemon
-	script will mount any virtual filesystems if needed as well as source and
-	packages. Sources files are in /home/slitaz/src and bound into the chroot
-	so you can share packages sources between several versions (stable, cooking,
+	installation to make it work properly (cooking goes in /home/slitaz/cooking). The 
+	daemon script will mount any virtual filesystems if needed as well as source and
+	packages. Source files are in /home/slitaz/src and bound into the chroot
+	so you can share package's sources between several versions (stable, cooking,
 	undigest). If the package is not yet installed:
 </p>
 <pre>
