@@ -673,7 +673,7 @@ case "$1" in
 				[ ! -f "$INSTALLED/mercurial/receipt" ] && \
 					tazpkg get-install mercurial
 				[ -d "$WOK" ] && echo -e "A wok already exists.\n" && exit 1
-				hg clone $HG_URL ;;
+				hg clone $WOK_URL ;;
 		esac
 
 		# SliTaz group and permissions
