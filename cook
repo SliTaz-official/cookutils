@@ -441,14 +441,18 @@ cookit() {
 		for i in $dep $implicit
 		do
 			if [ ! -f "$INSTALLED/$i/receipt" ]; then
-				# Try local package first.
-				vers=$(grep ^VERSION $WOK/$i/receipt | cut -d '"' -f 2)
+				# Try local package first. In some case implicit dont exist, ex:
+				# libboost-dev exist but not libboost, so check if we got vers.
+				unset vers
+				vers=$(grep ^VERSION $WOK/$i/receipt 2>/dev/null | cut -d '"' -f 2)
 				if [ -f "$PKGS/$i-$vers.tazpkg" ]; then
 					gettext "Installing dep (pkg/local):"; echo " $i"
 					cd $PKGS && tazpkg install $i-$vers.tazpkg >/dev/null
 				else
-					gettext "Installing dep (web/cache):"; echo " $i"
-					tazpkg get-install $i >/dev/null
+					if [ "$vers" ]; then
+						gettext "Installing dep (web/cache):"; echo " $i"
+						tazpkg get-install $i >/dev/null
+					fi
 				fi
 			fi
 		done
