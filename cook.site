@@ -21,10 +21,9 @@ fi
 # Default options (BUILD_HOST is set in cook.conf)
 prefix=/usr
 datarootdir=$prefix/share
-#datadir=$datarootdir
+datadir=$datadir
 localedir=$datarootdir/locale
 infodir=$datarootdir/info
 mandir=$datarootdir/man
 build="$BUILD_HOST"
 host="$BUILD_HOST"
-target="$BUILD_HOST"
