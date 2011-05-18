@@ -254,6 +254,13 @@ get_source() {
 
 # Extract source package.
 extract_source() {
+	if [ ! -s "$SRC/$TARBALL" ]; then
+		local url
+		url="http://mirror.slitaz.org/sources/packages"
+		url=$url/${TARBALL:0:1}/$TARBALL
+		gettext "Getting source from mirror:"; echo " $url"
+		busybox wget -c -P $SRC $url || echo -e "ERROR: wget $url"
+	fi
 	gettext "Extracting:"; echo " $TARBALL"
 	case "$TARBALL" in
 		*.tar.gz|*.tgz) tar xzf $SRC/$TARBALL 2>/dev/null ;;
