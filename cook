@@ -264,7 +264,7 @@ extract_source() {
 	gettext "Extracting:"; echo " $TARBALL"
 	case "$TARBALL" in
 		*.tar.gz|*.tgz) tar xzf $SRC/$TARBALL 2>/dev/null ;;
-		*.tar.bz2|*.tbz) tar xjf $SRC/$TARBALL 2>/dev/null ;;
+		*.tar.bz2|*.tbz|*.tbz2) tar xjf $SRC/$TARBALL 2>/dev/null ;;
 		*.tar.lzma) tar xaf $SRC/$TARBALL ;;
 		*.tar) tar xf $SRC/$TARBALL ;;
 		*.zip|*.xpi) unzip -o $SRC/$TARBALL ;;
