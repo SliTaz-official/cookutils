@@ -529,7 +529,7 @@ packit() {
 	if grep -q ^genpkg_rules $receipt; then
 		gettext -e "Executing: genpkg_rules\n"
 		cd $pkgdir
-		mkdir -p $fs && genpkg_rules || echo -e \
+		mkdir -p $fs && ( set -e; genpkg_rules ) || echo -e \
 			"\nERROR: genpkg_rules failed\n" >> $LOGS/$pkg.log
 	fi
 
