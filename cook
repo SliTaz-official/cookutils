@@ -759,24 +759,34 @@ case "$1" in
 		gettext -e "\nCreating lists for:"; echo " $PKGS"
 		separator
 		cd $PKGS
-		rm -f packages.* files.*
+		rm -f packages.*
 		gettext -e "Creating: packages.list\n"
 		ls -1 *.tazpkg | sed s'/.tazpkg//' > $PKGS/packages.list
 		gettext -e "Creating: packages.md5\n"
 		md5sum *.tazpkg > $PKGS/packages.md5
 		gettext -e "Creating: packages.desc\n"
+		gettext -e "Creating: packages.txt\n"
 		gettext -e "Creating: packages.equiv\n"
 		cd $WOK
 		for pkg in *
 		do
 			unset_receipt
 			. $pkg/receipt
-			# packages.desc lets us search easily in DB
 			if [ -f "$PKGS/$PACKAGE-${VERSION}${EXTRAVERSION}.tazpkg" ]; then
+				# packages.desc lets us search easily in DB
 				cat >> $PKGS/packages.desc << EOT
 $PACKAGE | $VERSION$EXTRAVERSION | $SHORT_DESC | $CATEGORY | $WEB_SITE
 EOT
-				# Packages.equiv is used by tazpkg install to check depends.
+				# packages.txt used by tazpkg and tazpkg-web also to provide
+				# a human readable package list with version and description.
+				cat >> $PKGS/packages.txt << EOT
+$PACKAGE
+	${VERSION}$EXTRAVERSION
+	$SHORT_DESC
+	$PACKED_SIZE ($UNPACKED_SIZE installed)
+
+EOT
+				# packages.equiv is used by tazpkg install to check depends.
 				for i in $PROVIDE; do
 					DEST=""
 					echo $i | fgrep -q : && DEST="${i#*:}:"
@@ -787,17 +797,15 @@ EOT
 						echo "${i%:*}=$DEST$PACKAGE" >> $PKGS/packages.equiv
 					fi
 				done
+				# packages.files provide a list of all packages files.
+				cat $pkg/taz/*/files.list >> $PKGS/packages.files
 			fi
 		done
 		cd $PKGS
 		
-		# packages.txt (redundancy list, all info is in pkgs desc).
-		touch packages.txt
-		
-		# files.list.lzma
-		gettext -e "Creating: files.list.lzma\n"
-		touch files.list
-		lzma e files.list files.list.lzma
+		# files.list.lzma --> packages.files.lzma
+		gettext -e "Creating: packages.files.lzma\n"
+		lzma e packages.files packages.files.lzma
 		
 		separator
 		nb=$(ls $PKGS/*.tazpkg | wc -l)
