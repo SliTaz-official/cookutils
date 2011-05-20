@@ -477,6 +477,7 @@ cookit() {
 	if [ "$WGET_URL" ] && [ ! -f "$SRC/$TARBALL" ]; then
 		if [ -f "$SRC/${SOURCE:-$PACKAGE}-$VERSION.tar.lzma" ]; then
 			TARBALL=${SOURCE:-$PACKAGE}-$VERSION.tar.lzma
+			LZMA_SRC=""
 		else
 			get_source || exit 1
 		fi
@@ -484,6 +485,17 @@ cookit() {
 	if [ ! "$WANTED" ] && [ "$TARBALL" ] && [ ! -d "$src" ]; then
 		mkdir -p $pkgdir/source/tmp && cd $pkgdir/source/tmp
 		extract_source || exit 1
+		if [ "$LZMA_SRC" ]; then
+			cd $pkgdir/source
+			if [ "$(ls -A tmp | wc -l)" -gl 1 ] || [ -f "$(echo tmp/*)" ]; then
+				mv tmp tmp-1 && mkdir tmp
+				mv tmp-1 tmp/${SOURCE:-$PACKAGE}-$VERSION
+			fi
+			if [ -d "tmp/${SOURCE:-$PACKAGE}-$VERSION" ]; then
+				cd tmp && tar -c * | lzma e $SRC/$TARBALL -si 
+			fi
+		fi
+		cd $pkgdir/source/tmp
 		# Some archives are not well done and don't extract to one dir (ex lzma).
 		files=$(ls | wc -l)
 		[ "$files" == 1 ] && mv * ../$PACKAGE-$VERSION
