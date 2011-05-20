@@ -797,15 +797,17 @@ EOT
 						echo "${i%:*}=$DEST$PACKAGE" >> $PKGS/packages.equiv
 					fi
 				done
-				# packages.files provide a list of all packages files.
-				cat $pkg/taz/*/files.list >> $PKGS/packages.files
+				# files.list provide a list of all packages files.
+				cat $pkg/taz/*/files.list | sed s/^/"$pkg: \0"/ >> \
+					$PKGS/files.list
 			fi
 		done
 		cd $PKGS
 		
-		# files.list.lzma --> packages.files.lzma
+		# files.list.lzma
 		gettext -e "Creating: packages.files.lzma\n"
-		lzma e packages.files packages.files.lzma
+		lzma e files.list files.list.lzma
+		rm -f files.list
 		
 		separator
 		nb=$(ls $PKGS/*.tazpkg | wc -l)
