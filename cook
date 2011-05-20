@@ -271,6 +271,7 @@ extract_source() {
 		*.xz) unxz -c $SRC/$TARBALL | tar xf - ;;
 		*.Z) uncompress -c $SRC/$TARBALL | tar xf - ;;
 		*.rpm) rpm2cpio $SRC/$TARBALL | cpio -idm --quiet ;;
+		*) cp $SRC/$TARBALL $(pwd) ;;
 	esac
 }
 
