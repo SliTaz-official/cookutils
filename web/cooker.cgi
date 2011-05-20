@@ -192,6 +192,7 @@ case "${QUERY_STRING}" in
 		[ "$cooked" -gt 0 ] && div=$(($inwok / 100))
 		[ "$div" -gt 0 ] && pct=$(($cooked / $div))
 		[ "$div" == 0 ] && pct=0
+		[ "$div" == "" ] && pct=0
 		cat << EOT
 <div style="float: right;">
 	<form method="get" action="$SCRIPT_NAME">
@@ -223,6 +224,8 @@ Blocked packages : $(cat $blocked | wc -l)
 	<a href="cooker.cgi?file=cookorder.log">cookorder.log</a>
 	<a href="cooker.cgi?file=commits.log">commits.log</a>
 	<a href="cooker.cgi?file=installed.diff">installed.diff</a>
+	- $ARCH:
+	<a href="cooker.cgi?pkg=slitaz-toolchain">toolchain.log</a>
 </p>
 
 <h2>Activity</h2>
