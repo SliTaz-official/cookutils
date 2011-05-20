@@ -224,7 +224,7 @@ Blocked packages : $(cat $blocked | wc -l)
 	<a href="cooker.cgi?file=cookorder.log">cookorder.log</a>
 	<a href="cooker.cgi?file=commits.log">commits.log</a>
 	<a href="cooker.cgi?file=installed.diff">installed.diff</a>
-	- Arch $ARCH:
+	- Architecture $ARCH:
 	<a href="cooker.cgi?pkg=slitaz-toolchain">toolchain.log</a>
 </p>
 
