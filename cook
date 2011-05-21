@@ -46,6 +46,7 @@ $(echo -e "\033[1m$(gettext "Options:")\033[0m")
   --getsrc|-gs    Cook : $(gettext "get the package source tarball.")
   --block|-b      Cook : $(gettext "Block a package so cook will skip it.")
   --unblock|-ub   Cook : $(gettext "Unblock a blocked package.")
+  --interactive   Cook : $(gettext "create a receipt interactively.")
   --wok|-w        Setup: $(gettext "create also a wok from Hg repo.")
 
 EOT
@@ -841,7 +842,7 @@ EOT
 						echo "${i%:*}=$DEST$PACKAGE" >> $PKGS/packages.equiv
 					fi
 				done
-				# files.list provide a list of all packages files.
+				# files.list provides a list of all packages files.
 				cat $pkg/taz/*/files.list | sed s/^/"$pkg: \0"/ >> \
 					$PKGS/files.list
 			fi
