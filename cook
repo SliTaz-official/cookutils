@@ -726,7 +726,51 @@ case "$1" in
 		gettext "Preparing the package receipt..."
 		cp $DATA/receipt .
 		sed -i s"/^PACKAGE=.*/PACKAGE=\"$pkg\"/" receipt
-		status && echo "" ;;
+		status && echo "" 
+		
+		# Interactive mode, asking and seding.
+		case "$3" in
+			--interactive|-i)
+				echo "Entering interactive mode..." 
+				echo "================================================================================"
+				echo "Package       : $pkg"
+				# Version.
+				echo -n "Version       : " ; read anser
+				sed -i s/'VERSION=\"\"'/"VERSION=\"$anser\""/ receipt
+				# Category.
+				echo -n "Category      : " ; read anser
+				sed -i s/'CATEGORY=\"\"'/"CATEGORY=\"$anser\""/ receipt
+				# Short description.
+				echo -n "Short desc    : " ; read anser
+				sed -i s/'SHORT_DESC=\"\"'/"SHORT_DESC=\"$anser\""/ receipt
+				# Maintainer.
+				echo -n "Maintainer    : " ; read anser
+				sed -i s/'MAINTAINER=\"\"'/"MAINTAINER=\"$anser\""/ receipt
+				# Web site.
+				echo -n "Web site      : " ; read anser
+				sed -i s#'WEB_SITE=\"\"'#"WEB_SITE=\"$anser\""# receipt
+				echo ""
+				# Wget URL.
+				echo "Wget URL to download source tarball."
+				echo "Example  : \$GNU_MIRROR/\$PACKAGE/\$TARBALL"
+				echo -n "Wget url : " ; read anser
+				sed -i s#'WGET_URL=\"\"'#"WGET_URL=\"$anser\""# receipt
+				# Ask for a stuff dir.
+				echo -n "Do you need a stuff directory ? (y/N) : " ; read anser
+				if [ "$anser" = "y" ]; then
+					echo -n "Creating the stuff directory..."
+					mkdir $WOK/$pkg/stuff && status
+				fi
+				# Ask for a description file.
+				echo -n "Are you going to write a description ? (y/N) : " ; read anser
+				if [ "$anser" = "y" ]; then
+					echo -n "Creating the description.txt file..."
+					echo "" > $WOK/$pkg/description.txt && status
+				fi
+				echo "================================================================================"
+				echo "Receipt is ready to use."
+				echo "" ;;
+		esac ;;
 	list)
 		# Cook a list of packages (better use the Cooker since it will order
 		# packages before executing cook).
@@ -858,6 +902,7 @@ EOT
 				gettext "Unblocking:"; echo -n " $pkg"
 				sed -i "/^${pkg}$/"d $blocked
 				status && echo "" && exit 0 ;;
+				
 		esac
 
 		# Check if wanted is built now so we have separate log files.
