@@ -408,7 +408,7 @@ remove_deps() {
 		for dep in $deps
 		do
 			echo -n " $dep"
-			yes | tazpkg remove $dep >/dev/null
+			echo 'y' | tazpkg remove $dep >/dev/null
 		done
 		echo -e "\n"
 		# Keep the last diff for debug and info.
@@ -482,12 +482,15 @@ cookit() {
 	
 	# Have we missing build dep to cook ?
 	if [ -s "$CACHE/missing" ] && [ "$AUTO_COOK" ]; then
+		gettext -e "Auto cook config is set   : AUTO_COOK\n"
 		cp -f $LOGS/$PACKAGE.log $LOGS/$PACKAGE.log.$$
 		for i in $(cat $CACHE/missing)
 		do
-			(gettext "Building dep (wok/pkg):"; echo " $i $vers") | \
+			(gettext "Building dep (wok/pkg)    :"; echo " $i $vers") | \
 				tee -a $LOGS/$PACKAGE.log.$$
-			cook $i || echo "ERROR: can't cook dep: $i $vers" | \
+			cook $i || (echo -e "ERROR: can't cook dep '$i'\n" && \
+				fgrep "remove: " $LOGS/$i.log && \
+				fgrep "Removing: " $LOGS/$i.log && echo "") | \
 				tee -a $LOGS/$PACKAGE.log.$$ && break
 		done
 		rm -f $CACHE/missing
