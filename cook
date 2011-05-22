@@ -453,14 +453,20 @@ cookit() {
 				# Try local package first. In some cases implicit doesn't exist, ex:
 				# libboost-dev exists but not libboost, so check if we got vers.
 				unset vers
-				vers=$(grep ^VERSION $WOK/$i/receipt 2>/dev/null | cut -d '"' -f 2)
+				vers=$(grep ^VERSION= $WOK/$i/receipt 2>/dev/null | cut -d '"' -f 2)
 				if [ -f "$PKGS/$i-$vers.tazpkg" ]; then
-					gettext "Installing dep (pkg/local):"; echo " $i"
+					gettext "Installing dep (pkg/local):"; echo " $i $vers"
 					cd $PKGS && tazpkg install $i-$vers.tazpkg >/dev/null
 				else
 					if [ "$vers" ]; then
-						gettext "Installing dep (web/cache):"; echo " $i"
-						tazpkg get-install $i >/dev/null
+						if grep -q ^$i-$vers.tazpkg $DB/packages.list; then
+							gettext "Installing dep (web/cache):"; echo " $i $vers"
+							tazpkg get-install $i >/dev/null
+						else
+							# So package exist in wok but not available.
+							gettext "Missing dep:" ; echo " $i $vers"
+							exit 1
+						fi
 					fi
 				fi
 			fi
