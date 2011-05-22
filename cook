@@ -459,13 +459,13 @@ cookit() {
 					cd $PKGS && tazpkg install $i-$vers.tazpkg >/dev/null
 				else
 					if [ "$vers" ]; then
-						if grep -q ^$i-$vers.tazpkg $DB/packages.list; then
+						if fgrep -q $i-$vers $DB/packages.list; then
 							gettext "Installing dep (web/cache):"; echo " $i $vers"
 							tazpkg get-install $i >/dev/null
 						else
 							# So package exist in wok but not available.
-							# FIXME: if we exit previews bdeps are not removed.
-							gettext "Missing dep:" ; echo " $i $vers"
+							#cook $i || echo -n "ERROR: missing dep: $i $vers"
+							echo -n "ERROR: missing dep: $i $vers"
 						fi
 					fi
 				fi
@@ -478,6 +478,11 @@ cookit() {
 	[ ! -s "installed.cook.diff" ] && \
 		busybox diff installed.list installed.cook > installed.cook.diff
 	deps=$(cat installed.cook.diff | grep ^+[a-zA-Z0-9] | wc -l)
+
+	# QA: Exit on missing dep error.
+	if fgrep -q ERROR: $LOGS/$pkg.log; then
+		exit 1
+	fi
 
 	# Get source tarball and make sure we have source dir named:
 	# $PACKAGE-$VERSION to be standard in receipts. Here we use tar.lzma
