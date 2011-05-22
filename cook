@@ -501,7 +501,8 @@ cookit() {
 	# is enable and cook fail we have ERROR in log, if no auto cook we have
 	# missing dep in cached file.
 	if fgrep -q "ERROR:" $LOGS/$pkg.log || [ -s "$CACHE/missing" ]; then
-		echo -e "ERROR: missing dep\n"
+		[ -s "$CACHE/missing" ] && nb=$(cat $CACHE/missing | wc -l)
+		echo -e "ERROR: missing dep $nb\n"
 		exit 1
 	fi
 
