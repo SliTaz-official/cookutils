@@ -464,8 +464,7 @@ cookit() {
 							tazpkg get-install $i >/dev/null
 						else
 							# So package exist in wok but not available.
-							#cook $i || echo -n "ERROR: missing dep: $i $vers"
-							echo -n "ERROR: missing dep: $i $vers"
+							echo "ERROR: missing dep: $i $vers"
 						fi
 					fi
 				fi
