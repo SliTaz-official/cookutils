@@ -464,7 +464,7 @@ cookit() {
 							gettext "Installing dep (web/cache):"; echo " $i $vers"
 							tazpkg get-install $i >/dev/null
 						else
-							# So package exist in wok but not available.
+							# So package exists in wok but not available.
 							gettext "Missing dep (wok/pkg)     :"; echo " $i $vers"
 							echo $i >> $CACHE/missing
 						fi
@@ -480,7 +480,7 @@ cookit() {
 		busybox diff installed.list installed.cook > installed.cook.diff
 	deps=$(cat installed.cook.diff | grep ^+[a-zA-Z0-9] | wc -l)
 	
-	# Have we missing build dep to cook ?
+	# Have we a missing build dep to cook ?
 	if [ -s "$CACHE/missing" ] && [ "$AUTO_COOK" ]; then
 		gettext -e "Auto cook config is set   : AUTO_COOK\n"
 		cp -f $LOGS/$PACKAGE.log $LOGS/$PACKAGE.log.$$
@@ -497,8 +497,8 @@ cookit() {
 		mv  $LOGS/$PACKAGE.log.$$ $LOGS/$PACKAGE.log
 	fi
 	
-	# QA: Exit on missing dep errors. We exit in both case, if AUTO_COOK
-	# is enable and cook fail we have ERROR in log, if no auto cook we have
+	# QA: Exit on missing dep errors. We exit in both cases, if AUTO_COOK
+	# is enabled and cook fails we have ERROR in log, if no auto cook we have
 	# missing dep in cached file.
 	if fgrep -q "ERROR:" $LOGS/$pkg.log || [ -s "$CACHE/missing" ]; then
 		[ -s "$CACHE/missing" ] && nb=$(cat $CACHE/missing | wc -l)
@@ -765,8 +765,8 @@ case "$1" in
 		# Interactive mode, asking and seding.
 		case "$3" in
 			--interactive|-i)
-				echo "Entering interactive mode..." 
-				echo "================================================================================"
+				gettext -e "Entering interactive mode...\n" 
+				separator
 				echo "Package       : $pkg"
 				# Version.
 				echo -n "Version       : " ; read anser
@@ -788,7 +788,7 @@ case "$1" in
 				echo "Wget URL to download source tarball."
 				echo "Example  : \$GNU_MIRROR/\$PACKAGE/\$TARBALL"
 				echo -n "Wget url : " ; read anser
-				sed -i s#'WGET_URL=\"\"'#"WGET_URL=\"$anser\""# receipt
+				sed -i s#'WGET_URL=\"$TARBALL\"'#"WGET_URL=\"$anser\""# receipt
 				# Ask for a stuff dir.
 				echo -n "Do you need a stuff directory ? (y/N) : " ; read anser
 				if [ "$anser" = "y" ]; then
@@ -801,8 +801,8 @@ case "$1" in
 					echo -n "Creating the description.txt file..."
 					echo "" > $WOK/$pkg/description.txt && status
 				fi
-				echo "================================================================================"
-				echo "Receipt is ready to use."
+				separator
+				gettext -e "Receipt is ready to use.\n"
 				echo "" ;;
 		esac ;;
 	list)
