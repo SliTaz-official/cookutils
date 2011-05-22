@@ -464,8 +464,8 @@ cookit() {
 							tazpkg get-install $i >/dev/null
 						else
 							# So package exist in wok but not available.
+							# FIXME: if we exit previews bdeps are not removed.
 							gettext "Missing dep:" ; echo " $i $vers"
-							exit 1
 						fi
 					fi
 				fi
