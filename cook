@@ -443,6 +443,7 @@ cookit() {
 	# Check for build deps and handle implicit depends of *-dev packages
 	# (ex: libusb-dev :: libusb).
 	cd $INSTALLED && ls -1 > $CACHE/installed.list
+	rm -f $CACHE/missing
 	[ "$DEPENDS" ] && gettext -e "Checking build dependencies...\n"
 	for dep in $BUILD_DEPENDS
 	do
@@ -464,7 +465,8 @@ cookit() {
 							tazpkg get-install $i >/dev/null
 						else
 							# So package exist in wok but not available.
-							echo "ERROR: missing dep: $i $vers"
+							gettext "Missing dep (wok/pkg)     :"; echo " $i $vers"
+							echo $i >> $CACHE/missing
 						fi
 					fi
 				fi
@@ -473,13 +475,30 @@ cookit() {
 	done
 	cd $INSTALLED && ls -1 > $CACHE/installed.cook && cd $CACHE
 	
-	# If a cook failed deps are not removed since we exit 1.
+	# If a cook failed deps are removed.
 	[ ! -s "installed.cook.diff" ] && \
 		busybox diff installed.list installed.cook > installed.cook.diff
 	deps=$(cat installed.cook.diff | grep ^+[a-zA-Z0-9] | wc -l)
-
-	# QA: Exit on missing dep error.
-	if fgrep -q ERROR: $LOGS/$pkg.log; then
+	
+	# Have we missing build dep to cook ?
+	if [ -s "$CACHE/missing" ] && [ "$AUTO_COOK" ]; then
+		cp -f $LOGS/$PACKAGE.log $LOGS/$PACKAGE.log.$$
+		for i in $(cat $CACHE/missing)
+		do
+			(gettext "Building dep (wok/pkg):"; echo " $i $vers") | \
+				tee -a $LOGS/$PACKAGE.log.$$
+			cook $i || echo "ERROR: can't cook dep: $i $vers" | \
+				tee -a $LOGS/$PACKAGE.log.$$ && break
+		done
+		rm -f $CACHE/missing
+		mv  $LOGS/$PACKAGE.log.$$ $LOGS/$PACKAGE.log
+	fi
+	
+	# QA: Exit on missing dep errors. We exit in both case, if AUTO_COOK
+	# is enable and cook fail we have ERROR in log, if no auto cook we have
+	# missing dep in cached file.
+	if fgrep -q "ERROR:" $LOGS/$pkg.log || [ -s "$CACHE/missing" ]; then
+		echo "ERROR: missing build dep"
 		exit 1
 	fi
 
