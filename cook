@@ -145,7 +145,7 @@ receipt_quality() {
 				# Break also if we're not online. Here error is not fatal.
 				if_empty_value
 				[ -z "$online" ] || break
-				if ! busybox wget -s $value 2>/dev/null; then
+				if ! busybox wget -T 12 -s $value 2>/dev/null; then
 					gettext "QA: Unable to reach:"; echo -e " $value"
 				fi ;;
 		esac
@@ -196,7 +196,7 @@ get_source() {
 	case "$WGET_URL" in
 		http://*|ftp://*)
 			# Busybox Wget is better!
-			busybox wget -c -P $SRC $WGET_URL || \
+			busybox wget -T 12 -c -P $SRC $WGET_URL || \
 				(echo -e "ERROR: wget $WGET_URL" && exit 1) ;;
 		https://*)
 			wget -c --no-check-certificate -P $SRC $WGET_URL || \
