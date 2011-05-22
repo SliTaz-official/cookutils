@@ -466,7 +466,9 @@ cookit() {
 						else
 							# So package exist in wok but not available.
 							gettext "Missing dep (wok/pkg)     :"; echo " $i $vers"
-							echo $i >> $CACHE/missing
+							if ! fgrep ^${i}$ $CACHE/missing; then
+								echo $i >> $CACHE/missing
+							fi
 						fi
 					fi
 				fi
