@@ -29,25 +29,25 @@ usage() {
 $(echo -e "\033[1m$(gettext "Usage:")\033[0m") cook [package|command] [list|--option]
 
 $(echo -e "\033[1m$(gettext "Commands:")\033[0m")
-  usage|help      $(gettext "Display this short usage.")
-  setup           $(gettext "Setup your build environment.")
-  test            $(gettext "Test environment and cook a package.")
-  list-wok        $(gettext "List packages in the wok.")
-  search          $(gettext "Simple packages search function.")
-  new             $(gettext "Create a new package with a receipt".)
-  list            $(gettext "Cook a list of packages.") 
-  clean-wok       $(gettext "Clean-up all packages files.")
-  clean-src       $(gettext "Clean-up all packages sources.")
-  pkglist         $(gettext "Create all packages.* lists.")
+  usage|help         $(gettext "Display this short usage.")
+  setup              $(gettext "Setup your build environment.")
+  test               $(gettext "Test environment and cook a package.")
+  list-wok           $(gettext "List packages in the wok.")
+  search             $(gettext "Simple packages search function.")
+  new                $(gettext "Create a new package with a receipt".)
+  list               $(gettext "Cook a list of packages.") 
+  clean-wok          $(gettext "Clean-up all packages files.")
+  clean-src          $(gettext "Clean-up all packages sources.")
+  pkglist            $(gettext "Create all packages.* lists.")
 
 $(echo -e "\033[1m$(gettext "Options:")\033[0m")
-  --clean|-c      Cook : $(gettext "clean the package in the wok.")
-  --install|-i    Cook : $(gettext "cook and install the package.")
-  --getsrc|-gs    Cook : $(gettext "get the package source tarball.")
-  --block|-b      Cook : $(gettext "Block a package so cook will skip it.")
-  --unblock|-ub   Cook : $(gettext "Unblock a blocked package.")
-  --interactive   Cook : $(gettext "create a receipt interactively.")
-  --wok|-w        Setup: $(gettext "create also a wok from Hg repo.")
+  --clean|-c         Cook : $(gettext "clean the package in the wok.")
+  --install|-i       Cook : $(gettext "cook and install the package.")
+  --getsrc|-gs       Cook : $(gettext "get the package source tarball.")
+  --block|-b         Cook : $(gettext "Block a package so cook will skip it.")
+  --unblock|-ub      Cook : $(gettext "Unblock a blocked package.")
+  --interactive|-x   Cook : $(gettext "create a receipt interactively.")
+  --wok|-w           Setup: $(gettext "create also a wok from Hg repo.")
 
 EOT
 	exit 0
@@ -764,7 +764,7 @@ case "$1" in
 		
 		# Interactive mode, asking and seding.
 		case "$3" in
-			--interactive|-i)
+			--interactive|-x)
 				gettext -e "Entering interactive mode...\n" 
 				separator
 				echo "Package       : $pkg"
