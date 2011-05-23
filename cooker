@@ -170,7 +170,7 @@ cook_order() {
 		. $wok/$pkg/receipt
 		if [ "$WANTED" ]; then
 			echo "$pkg :: $WANTED"
-			if grep ^${WANTED}$ $cooklist; then
+			if grep -q ^${WANTED}$ $cooklist; then
 				sed -i -e "/^$pkg$/"d  \
 					-e "/^$WANTED$/ a $pkg" $cooklist
 			fi
