@@ -162,6 +162,7 @@ cook_order() {
 	rm -f $cookorder $cookorder.diff $cooklist.0
 
 	# Scan finished: append pkg to WANTED or leave it in the ordered cooklist.
+	# TODO: grep the line number to get pkg positition and keep he higher.
 	echo -e "\nHandle WANTED package"
 	separator
 	for pkg in $(cat $cooklist)

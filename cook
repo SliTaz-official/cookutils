@@ -838,13 +838,13 @@ case "$1" in
 		separator
 		cd $PKGS
 		rm -f packages.*
-		gettext -e "Creating: packages.list\n"
+		gettext "Creating: packages.list: "
 		ls -1 *.tazpkg | sed s'/.tazpkg//' > $PKGS/packages.list
-		gettext -e "Creating: packages.md5\n"
+		echo $(du -sh $PKGS/packages.list | awk '{print $1}')
+		gettext "Creating: packages.md5: "
 		md5sum *.tazpkg > $PKGS/packages.md5
-		gettext -e "Creating: packages.desc\n"
-		gettext -e "Creating: packages.txt\n"
-		gettext -e "Creating: packages.equiv\n"
+		echo $(du -sh $PKGS/packages.md5 | awk '{print $1}')
+		gettext -e "Creating lists from:"; echo " $WOK"
 		cd $WOK
 		for pkg in *
 		do
@@ -881,11 +881,20 @@ EOT
 			fi
 		done
 		cd $PKGS
+
+		# Display list size.
+		gettext "Done: packages.desc: "
+		echo $(du -sh $PKGS/packages.desc | awk '{print $1}')
+		gettext "Done: packages.txt: "
+		echo $(du -sh $PKGS/packages.txt | awk '{print $1}')
+		gettext "Done: packages.equiv: "
+		echo $(du -sh $PKGS/packages.equiv | awk '{print $1}')
 		
 		# files.list.lzma
-		gettext -e "Creating: files.list.lzma\n"
+		gettext "Creating: files.list.lzma: "
 		lzma e files.list files.list.lzma
 		rm -f files.list
+		echo $(du -sh $PKGS/files.list.lzma | awk '{print $1}')
 		
 		separator
 		nb=$(ls $PKGS/*.tazpkg | wc -l)
