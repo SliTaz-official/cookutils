@@ -1,7 +1,7 @@
 # /etc/slitaz/cook.site: Default options passed to ./configure in SliTaz
 #
 # This file is used since we can't export these variables, but configure
-# handles CONFIG_SITE and will source this file automatically if set.
+# handles CONFIG_SITE and will source this file automatically.
 #
 # If you want to use your own cook.site, you can use:
 # export CONFIG_SITE=config.site in compile_rules of a receipt.
@@ -18,12 +18,10 @@ if echo "$mandir" | grep -q \${prefix}; then
 	mandir=$( echo "$mandir" | sed 's/${prefix}/${datarootdir}/')
 fi
 
-# Default options (BUILD_HOST is set in cook.conf)
+# Default options.
 prefix=/usr
 datarootdir=$prefix/share
 datadir=$datadir
 localedir=$datarootdir/locale
 infodir=$datarootdir/info
 mandir=$datarootdir/man
-build="$BUILD_HOST"
-host="$BUILD_HOST"
