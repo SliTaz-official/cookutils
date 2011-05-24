@@ -964,7 +964,7 @@ EOT
 		esac
 
 		# Check if wanted is built now so we have separate log files.
-		if [ "$WANTED" ] && [ ! -d "$WOK/$WANTED/install" ]; then
+		if [ "$WANTED" ]; then
 			if grep -q "^$WANTED$" $blocked; then
 				echo "WANTED package is blocked: $WANTED" | tee -a $LOGS/$pkg.log
 				exit 1
@@ -972,7 +972,8 @@ EOT
 			if grep -q "^$WANTED$" $broken; then
 				echo "WANTED package is broken: $WANTED" | tee -a $LOGS/$pkg.log
 				exit 1
-			else
+			fi
+			if [ ! -d "$WOK/$WANTED/install" ]; then
 				cook "$WANTED" || exit 1
 			fi
 		fi
