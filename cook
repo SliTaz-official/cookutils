@@ -967,11 +967,11 @@ EOT
 		if [ "$WANTED" ]; then
 			if grep -q "^$WANTED$" $blocked; then
 				echo "WANTED package is blocked: $WANTED" | tee -a $LOGS/$pkg.log
-				exit 1
+				echo "" && exit 1
 			fi
 			if grep -q "^$WANTED$" $broken; then
 				echo "WANTED package is broken: $WANTED" | tee -a $LOGS/$pkg.log
-				exit 1
+				echo "" && exit 1
 			fi
 			if [ ! -d "$WOK/$WANTED/install" ]; then
 				cook "$WANTED" || exit 1
