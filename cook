@@ -437,14 +437,13 @@ cookit() {
 
 	# Export flags and path to be used by make
 	DESTDIR=$pkgdir/install
-	export DESTDIR MAKEFLAGS CFLAGS CXXFLAGS BUILD_HOST CONFIG_SITE
-	local LC_ALL=POSIX LANG=POSIX
+	export DESTDIR MAKEFLAGS CFLAGS CXXFLAGS CONFIG_SITE LC_ALL=C LANG=C
 
 	# Check for build deps and handle implicit depends of *-dev packages
 	# (ex: libusb-dev :: libusb).
-	cd $INSTALLED && ls -1 > $CACHE/installed.list
-	rm -f $CACHE/missing
-	[ "$DEPENDS" ] && gettext -e "Checking build dependencies...\n"
+	rm -f $CACHE/installed.local $CACHE/installed.web $CACHE/missing.dep
+	touch $CACHE/installed.local $CACHE/installed.web
+	[ "$BUILD_DEPENDS" ] && gettext -e "Checking build dependencies...\n"
 	for dep in $BUILD_DEPENDS
 	do
 		implicit=${dep%-dev}
@@ -456,35 +455,30 @@ cookit() {
 				unset vers
 				vers=$(grep ^VERSION= $WOK/$i/receipt 2>/dev/null | cut -d '"' -f 2)
 				if [ -f "$PKGS/$i-$vers.tazpkg" ]; then
-					gettext "Installing dep (pkg/local):"; echo " $i $vers"
-					cd $PKGS && tazpkg install $i-$vers.tazpkg >/dev/null
+					echo $i-$vers.tazpkg >> $CACHE/installed.local
 				else
 					if [ "$vers" ]; then
 						if fgrep -q $i-$vers $DB/packages.list; then
-							gettext "Installing dep (web/cache):"; echo " $i $vers"
-							tazpkg get-install $i >/dev/null
+							echo $i >> $CACHE/installed.web
 						else
 							# So package exists in wok but not available.
-							gettext "Missing dep (wok/pkg)     :"; echo " $i $vers"
-							echo $i >> $CACHE/missing
+							gettext "Missing dep (wok/pkg):"; echo " $i $vers"
+							echo $i >> $CACHE/missing.dep
 						fi
 					fi
 				fi
 			fi
 		done
 	done
-	cd $INSTALLED && ls -1 > $CACHE/installed.cook && cd $CACHE
 	
-	# If a cook failed deps are removed.
-	[ ! -s "installed.cook.diff" ] && \
-		busybox diff installed.list installed.cook > installed.cook.diff
-	deps=$(cat installed.cook.diff | grep ^+[a-zA-Z0-9] | wc -l)
+	# Get the list of installed packages
+	cd $INSTALLED && ls -1 > $CACHE/installed.list
 	
 	# Have we a missing build dep to cook ?
-	if [ -s "$CACHE/missing" ] && [ "$AUTO_COOK" ]; then
+	if [ -s "$CACHE/missing.dep" ] && [ "$AUTO_COOK" ]; then
 		gettext -e "Auto cook config is set   : AUTO_COOK\n"
 		cp -f $LOGS/$PACKAGE.log $LOGS/$PACKAGE.log.$$
-		for i in $(cat $CACHE/missing)
+		for i in $(cat $CACHE/missing.dep)
 		do
 			(gettext "Building dep (wok/pkg)    :"; echo " $i $vers") | \
 				tee -a $LOGS/$PACKAGE.log.$$
@@ -493,18 +487,39 @@ cookit() {
 				fgrep "Removing: " $LOGS/$i.log && echo "") | \
 				tee -a $LOGS/$PACKAGE.log.$$ && break
 		done
-		rm -f $CACHE/missing
+		rm -f $CACHE/missing.dep
 		mv  $LOGS/$PACKAGE.log.$$ $LOGS/$PACKAGE.log
 	fi
 	
 	# QA: Exit on missing dep errors. We exit in both cases, if AUTO_COOK
 	# is enabled and cook fails we have ERROR in log, if no auto cook we have
 	# missing dep in cached file.
-	if fgrep -q "ERROR:" $LOGS/$pkg.log || [ -s "$CACHE/missing" ]; then
-		[ -s "$CACHE/missing" ] && nb=$(cat $CACHE/missing | wc -l)
-		echo -e "ERROR: missing dep $nb\n"
-		exit 1
+	if fgrep -q "ERROR:" $LOGS/$pkg.log || [ -s "$CACHE/missing.dep" ]; then
+		[ -s "$CACHE/missing.dep" ] && nb=$(cat $CACHE/missing.dep | wc -l)
+		echo "ERROR: missing dep $nb" && exit 1
 	fi
+	
+	# Install local packages.
+	cd $PKGS
+	for i in $(cat $CACHE/installed.local)
+	do
+		gettext "Installing dep (pkg/local):"; echo " $i $vers"
+		tazpkg install $i >/dev/null
+	done
+	
+	# Install web or cached packages (if mirror is set to $PKGS we only
+	# use local packages).
+	for i in $(cat $CACHE/installed.web)
+	do
+		gettext "Installing dep (web/cache):"; echo " $i $vers"
+		tazpkg get-install $i >/dev/null
+	done
+	
+	# If a cook failed deps are removed.
+	cd $INSTALLED && ls -1 > $CACHE/installed.cook && cd $CACHE
+	[ ! -s "installed.cook.diff" ] && \
+		busybox diff installed.list installed.cook > installed.cook.diff
+	deps=$(cat installed.cook.diff | grep ^+[a-zA-Z0-9] | wc -l)
 
 	# Get source tarball and make sure we have source dir named:
 	# $PACKAGE-$VERSION to be standard in receipts. Here we use tar.lzma
