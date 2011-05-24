@@ -853,10 +853,10 @@ case "$1" in
 		separator
 		cd $PKGS
 		rm -f packages.*
-		gettext "Creating: packages.list: "
+		gettext "Creating: packages.list "
 		ls -1 *.tazpkg | sed s'/.tazpkg//' > $PKGS/packages.list
 		echo $(du -sh $PKGS/packages.list | awk '{print $1}')
-		gettext "Creating: packages.md5: "
+		gettext "Creating: packages.md5 "
 		md5sum *.tazpkg > $PKGS/packages.md5
 		echo $(du -sh $PKGS/packages.md5 | awk '{print $1}')
 		gettext -e "Creating lists from:"; echo " $WOK"
@@ -898,15 +898,15 @@ EOT
 		cd $PKGS
 
 		# Display list size.
-		gettext "Done: packages.desc: "
+		gettext "Done: packages.desc "
 		echo $(du -sh $PKGS/packages.desc | awk '{print $1}')
-		gettext "Done: packages.txt: "
+		gettext "Done: packages.txt "
 		echo $(du -sh $PKGS/packages.txt | awk '{print $1}')
-		gettext "Done: packages.equiv: "
+		gettext "Done: packages.equiv "
 		echo $(du -sh $PKGS/packages.equiv | awk '{print $1}')
 		
 		# files.list.lzma
-		gettext "Creating: files.list.lzma: "
+		gettext "Creating: files.list.lzma "
 		lzma e files.list files.list.lzma
 		rm -f files.list
 		echo $(du -sh $PKGS/files.list.lzma | awk '{print $1}')
