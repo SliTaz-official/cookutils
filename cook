@@ -478,7 +478,7 @@ cookit() {
 	if [ -s "$CACHE/missing.dep" ] && [ "$AUTO_COOK" ]; then
 		gettext -e "Auto cook config is set   : AUTO_COOK\n"
 		cp -f $LOGS/$PACKAGE.log $LOGS/$PACKAGE.log.$$
-		for i in $(cat $CACHE/missing.dep)
+		for i in $(uniq $CACHE/missing.dep)
 		do
 			(gettext "Building dep (wok/pkg)    :"; echo " $i $vers") | \
 				tee -a $LOGS/$PACKAGE.log.$$
@@ -501,15 +501,15 @@ cookit() {
 	
 	# Install local packages.
 	cd $PKGS
-	for i in $(cat $CACHE/installed.local)
+	for i in $(uniq $CACHE/installed.local)
 	do
-		gettext "Installing dep (pkg/local):"; echo " $i $vers"
+		gettext "Installing dep (pkg/local):"; echo " $i"
 		tazpkg install $i >/dev/null
 	done
 	
 	# Install web or cached packages (if mirror is set to $PKGS we only
 	# use local packages).
-	for i in $(cat $CACHE/installed.web)
+	for i in $(uniq $CACHE/installed.web)
 	do
 		gettext "Installing dep (web/cache):"; echo " $i $vers"
 		tazpkg get-install $i >/dev/null
