@@ -520,7 +520,7 @@ cookit() {
 	# use local packages).
 	for i in $(uniq $CACHE/installed.web)
 	do
-		gettext "Installing dep (web/cache):"; echo " $i $vers"
+		gettext "Installing dep (web/cache):"; echo " $i"
 		tazpkg get-install $i >/dev/null
 	done
 	
