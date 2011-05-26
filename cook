@@ -457,8 +457,8 @@ cookit() {
 				if [ -f "$PKGS/$i-$vers.tazpkg" ]; then
 					echo $i-$vers.tazpkg >> $CACHE/installed.local
 				else
-					# Priority to package version in wok (maybe mor up-to-date)
-					# tha the mirrored one.
+					# Priority to package version in wok (maybe more up-to-date)
+					# than the mirrored one.
 					if [ "$vers" ]; then
 						if fgrep -q $i-$vers $DB/packages.list; then
 							echo $i >> $CACHE/installed.web
@@ -472,7 +472,7 @@ cookit() {
 						if fgrep -q $i-$vers $DB/packages.list; then
 							echo $i >> $CACHE/installed.web
 						else
-							echo "ERROR: unknow dep $i" && exit 1
+							echo "ERROR: unknown dep $i" && exit 1
 						fi
 					fi
 				fi
@@ -861,7 +861,7 @@ case "$1" in
 		echo "Cook pkglist: Creating all packages lists" | log
 		gettext -e "\nCreating lists for:"; echo " $PKGS"
 		separator
-		gettext "Cook pkglist tarted at: "; date "+%H:%M"
+		gettext "Cook pkglist started at: "; date "+%H:%M"
 		cd $PKGS
 		rm -f packages.*
 		gettext "Creating: packages.list "
