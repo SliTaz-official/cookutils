@@ -457,6 +457,8 @@ cookit() {
 				if [ -f "$PKGS/$i-$vers.tazpkg" ]; then
 					echo $i-$vers.tazpkg >> $CACHE/installed.local
 				else
+					# Priority to package version in wok (maybe mor up-to-date)
+					# tha the mirrored one.
 					if [ "$vers" ]; then
 						if fgrep -q $i-$vers $DB/packages.list; then
 							echo $i >> $CACHE/installed.web
@@ -465,12 +467,19 @@ cookit() {
 							gettext "Missing dep (wok/pkg):"; echo " $i $vers"
 							echo $i >> $CACHE/missing.dep
 						fi
+					else
+						# Package is not in wok but may be in repo.
+						if fgrep -q $i-$vers $DB/packages.list; then
+							echo $i >> $CACHE/installed.web
+						else
+							echo "ERROR: unknow dep $i" && exit 1
+						fi
 					fi
 				fi
 			fi
 		done
 	done
-	
+
 	# Get the list of installed packages
 	cd $INSTALLED && ls -1 > $CACHE/installed.list
 	
