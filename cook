@@ -856,10 +856,12 @@ case "$1" in
 		[ "$2" ] && PKGS="$2"
 		[ ! -d "$PKGS" ] && \
 			gettext -e "\nPackages directory doesn't exist\n\n" && exit 1
+		time=$(date +%s)
 		echo "cook:pkglist" > $command
 		echo "Cook pkglist: Creating all packages lists" | log
 		gettext -e "\nCreating lists for:"; echo " $PKGS"
 		separator
+		gettext "Cook pkglist tarted at: "; date "+%H:%M"
 		cd $PKGS
 		rm -f packages.*
 		gettext "Creating: packages.list "
@@ -922,7 +924,8 @@ EOT
 		
 		separator
 		nb=$(ls $PKGS/*.tazpkg | wc -l)
-		echo -e "Packages: $nb\n"
+		time=$(($(date +%s) - $time))
+		echo -e "Packages: $nb - Time: $time\n"
 		rm -f $command ;;
 	*)
 		# Just cook and generate a package.
