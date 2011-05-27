@@ -549,7 +549,7 @@ cookit() {
 			get_source || exit 1
 		fi
 	fi
-	if [ ! "$WANTED" ] && [ "$TARBALL" ] && [ ! -d "$src" ]; then
+	if [ ! "$WANTED" ] && [ "$TARBALL" ] && [ $(grep -q [c-g]*_rules $receipt) ]; then
 		mkdir -p $pkgdir/source/tmp && cd $pkgdir/source/tmp
 		extract_source || exit 1
 		if [ "$LZMA_SRC" ]; then
@@ -610,6 +610,9 @@ packit() {
 		cd $pkgdir && mkdir -p $fs
 		genpkg_rules || echo -e "\nERROR: genpkg_rules failed\n" >> \
 			$LOGS/$pkg.log
+	else
+		gettext "No packages rules: meta package"; echo
+		mkdir -p $fs
 	fi
 
 	# First QA check to stop now if genpkg_rules failed.
