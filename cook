@@ -549,7 +549,7 @@ cookit() {
 			get_source || exit 1
 		fi
 	fi
-	if [ ! "$WANTED" ] && [ "$TARBALL" ] && [ $(grep -q [c-g]*_rules $receipt) ]; then
+	if [ ! "$WANTED" ] && [ "$TARBALL" ] && [ ! -d "$src" ]; then
 		mkdir -p $pkgdir/source/tmp && cd $pkgdir/source/tmp
 		extract_source || exit 1
 		if [ "$LZMA_SRC" ]; then
