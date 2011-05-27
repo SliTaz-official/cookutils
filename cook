@@ -868,10 +868,9 @@ case "$1" in
 			--flavors)
 				continue ;;
 			*)
-				PKGS="$2"
+				[ "$2" ] && PKGS="$2"
 				[ ! -d "$PKGS" ] && \
-					gettext -e "\nPackages directory doesn't exist\n\n" &&
-					exit 1 ;;
+					gettext -e "\nPackages directory doesn't exist\n\n" && exit 1 ;;
 		esac
 		time=$(date +%s)
 		flavors=$SLITAZ/flavors
