@@ -174,7 +174,7 @@ set_paths() {
 		install=$WOK/$WANTED/install
 		wanted_stuff=$WOK/$WANTED/stuff
 	fi
-	# Kernel version is set from linux-api-headers since it part of toolchain.
+	# Kernel version is set from linux-api-headers since it is part of toolchain.
 	if [ -f "$INSTALLED/linux-api-headers/receipt" ]; then
 		kvers=$(grep ^VERSION= $INSTALLED/linux-api-headers/receipt | cut -d '"' -f 2)
 	fi
@@ -866,7 +866,7 @@ case "$1" in
 	pkgdb)
 		# Create suitable packages list for TazPKG and only for built packages
 		# as well as flavors files for TazLiTo. We dont need logs since we do it
-		# manualy to ensure everything is fine before syncing the mirror.
+		# manually to ensure everything is fine before syncing the mirror.
 		case "$2" in
 			--flavors)
 				continue ;;
@@ -943,8 +943,8 @@ EOT
 		time=$(($(date +%s) - $time))
 		echo -e "Packages: $nb - Time: ${time}s\n"
 		
-		# Create all flavors files at once. Do we realy need code to monitor
-		# flavors changes ? Let just build them with packages lists before
+		# Create all flavors files at once. Do we really need code to monitor
+		# flavors changes ? Lets just build them with packages lists before
 		# syncing the mirror.
 		[ "$2" == "--flavors" ] || exit 1
 		[ ! -d "$flavors" ] && echo -e "Missing flavors: $flavors\n" && exit 1
