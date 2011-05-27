@@ -438,9 +438,14 @@ cookit() {
 	fi
 	unset free
 
-	# Export flags and path to be used by make
+	# Export flags and path to be used by make and receipt. Kernel version is
+	# set from linux-api-headers since it part of toolchain and modules are
+	# build with linux-module-headers wich is of course the same version.
+	if [ -f "$INSTALLED/linux-api-headers/receipt" ]; then
+		KVERS=$(grep ^VERSION= $INSTALLED/linux-api-headers/receipt | cut -d '"' -f 2)
+	fi
 	DESTDIR=$pkgdir/install
-	export DESTDIR MAKEFLAGS CFLAGS CXXFLAGS CONFIG_SITE LC_ALL=C LANG=C
+	export DESTDIR KVERS MAKEFLAGS CFLAGS CXXFLAGS CONFIG_SITE LC_ALL=C LANG=C
 
 	# Check for build deps and handle implicit depends of *-dev packages
 	# (ex: libusb-dev :: libusb).
