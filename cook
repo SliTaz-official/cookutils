@@ -38,7 +38,7 @@ $(echo -e "\033[1m$(gettext "Commands:")\033[0m")
   list               $(gettext "Cook a list of packages.") 
   clean-wok          $(gettext "Clean-up all packages files.")
   clean-src          $(gettext "Clean-up all packages sources.")
-  pkglist            $(gettext "Create all packages.* lists.")
+  pkgdb              $(gettext "Create packages lists and pack flavors.")
 
 $(echo -e "\033[1m$(gettext "Options:")\033[0m")
   --clean|-c         Cook : $(gettext "clean the package in the wok.")
@@ -859,26 +859,27 @@ case "$1" in
 		gettext -e "\nCleaning all packages sources..."
 		rm -rf $WOK/*/source
 		status && echo "" ;;
-	pkglist)
-		# Create suitable packages list for TazPKG and only for built packages.
+	pkgdb)
+		# Create suitable packages list for TazPKG and only for built packages
+		# as well as flavors files for TazLiTo. We dont need logs since we do it
+		# manualy to ensure everything is fine before syncing the mirror.
 		[ "$2" ] && PKGS="$2"
 		[ ! -d "$PKGS" ] && \
 			gettext -e "\nPackages directory doesn't exist\n\n" && exit 1
 		time=$(date +%s)
-		echo "cook:pkglist" > $command
-		echo "Cook pkglist: Creating all packages lists" | log
-		gettext -e "\nCreating lists for:"; echo " $PKGS"
+		echo "cook:pkgdb" > $command
+		echo "Cook pkgdb: Creating all packages lists" | log
+		echo ""
+			gettext "Creating lists for: "; echo "$PKGS"
 		separator
-		gettext "Cook pkglist started at: "; date "+%H:%M"
+		gettext "Cook pkgdb started: "; date "+%Y-%m-%d %H:%M"
 		cd $PKGS
 		rm -f packages.*
-		gettext "Creating: packages.list "
+		gettext -e "Creating: packages.list\n"
 		ls -1 *.tazpkg | sed s'/.tazpkg//' > $PKGS/packages.list
-		echo $(du -sh $PKGS/packages.list | awk '{print $1}')
-		gettext "Creating: packages.md5 "
+		gettext -e "Creating: packages.md5\n"
 		md5sum *.tazpkg > $PKGS/packages.md5
-		echo $(du -sh $PKGS/packages.md5 | awk '{print $1}')
-		gettext -e "Creating lists from:"; echo " $WOK"
+		gettext -e "Creating lists from: "; echo "$WOK"
 		cd $WOK
 		for pkg in *
 		do
@@ -887,16 +888,16 @@ case "$1" in
 			if [ -f "$PKGS/$PACKAGE-${VERSION}${EXTRAVERSION}.tazpkg" ]; then
 				# packages.desc lets us search easily in DB
 				cat >> $PKGS/packages.desc << EOT
-$PACKAGE | $VERSION$EXTRAVERSION | $SHORT_DESC | $CATEGORY | $WEB_SITE
+$PACKAGE | ${VERSION}$EXTRAVERSION | $SHORT_DESC | $CATEGORY | $WEB_SITE
 EOT
 				# packages.txt used by tazpkg and tazpkg-web also to provide
 				# a human readable package list with version and description.
 				cat >> $PKGS/packages.txt << EOT
 $PACKAGE
-	${VERSION}$EXTRAVERSION
-	$SHORT_DESC
-	$PACKED_SIZE ($UNPACKED_SIZE installed)
-
+${VERSION}$EXTRAVERSION
+$SHORT_DESC
+$PACKED_SIZE ($UNPACKED_SIZE installed)
+	
 EOT
 				# packages.equiv is used by tazpkg install to check depends.
 				for i in $PROVIDE; do
@@ -914,27 +915,56 @@ EOT
 					$PKGS/files.list
 			fi
 		done
-		cd $PKGS
-
+		
 		# Display list size.
-		gettext "Done: packages.desc "
-		echo $(du -sh $PKGS/packages.desc | awk '{print $1}')
-		gettext "Done: packages.txt "
-		echo $(du -sh $PKGS/packages.txt | awk '{print $1}')
-		gettext "Done: packages.equiv "
-		echo $(du -sh $PKGS/packages.equiv | awk '{print $1}')
+		gettext -e "Done: packages.desc\n"
+		gettext -e "Done: packages.txt\n"
+		gettext -e "Done: packages.equiv\n"
 		
 		# files.list.lzma
-		gettext "Creating: files.list.lzma "
-		lzma e files.list files.list.lzma
+		gettext -e "Creating: files.list.lzma\n"
+		cd $PKGS && lzma e files.list files.list.lzma
 		rm -f files.list
-		echo $(du -sh $PKGS/files.list.lzma | awk '{print $1}')
 		
+		# Display some info.
 		separator
 		nb=$(ls $PKGS/*.tazpkg | wc -l)
 		time=$(($(date +%s) - $time))
-		echo -e "Packages: $nb - Time: $time\n"
-		rm -f $command ;;
+		echo -e "Packages: $nb - Time: ${time}s\n"
+		
+		# Create all flavors files at once. Do we realy need code to monitor
+		# flavors changes ? Let just build them with packages lists before
+		# syncing the mirror.
+		flavors=$SLITAZ/flavors
+		live=$SLITAZ/live
+		[ -d "$flavors" ] || exit 0
+		echo "Creating flavors files in: $live"
+		separator
+		
+		# We need a custom tazlito config to set working dir to /home/slitaz.
+		if [ ! -f "$live/tazlito.conf" ]; then
+			echo "Creating configuration file: tazlito.conf"
+			cp /etc/tazlito/tazlito.conf $live
+			sed -i s@WORK_DIR=.*@WORK_DIR=\"/home/slitaz\"@ \
+				$live/tazlito.conf
+		fi
+
+		# Update flavors repo and pack.
+		cd $flavors && hg pull -u
+		mkdir -p $live && cd $live
+		echo "Starting to generate flavors..."
+		rm -f flavors.list *.flavor
+		for i in $flavors/*
+		do
+			fl=$(basename $i)
+			echo "Packing flavor: $(basename $i)"
+			tazlito pack-flavor $fl >/dev/null || exit 1
+			tazlito show-flavor $fl --brief --noheader 2> \
+				/dev/null >> flavors.list
+		done
+		cp -f *.flavor flavors.list $PKGS
+		separator && gettext "Flavors size: "; du -sh $live | awk '{print $1}'
+		echo "" && rm -f $command ;;
 	*)
 		# Just cook and generate a package.
 		check_root
