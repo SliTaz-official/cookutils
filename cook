@@ -173,6 +173,10 @@ set_paths() {
 		install=$WOK/$WANTED/install
 		wanted_stuff=$WOK/$WANTED/stuff
 	fi
+	# Kernel version is set from linux-api-headers since it part of toolchain.
+	if [ -f "$INSTALLED/linux-api-headers/receipt" ]; then
+		kvers=$(grep ^VERSION= $INSTALLED/linux-api-headers/receipt | cut -d '"' -f 2)
+	fi
 	# Old way compatibility.
 	_pkg=$install
 }
@@ -438,14 +442,9 @@ cookit() {
 	fi
 	unset free
 
-	# Export flags and path to be used by make and receipt. Kernel version is
-	# set from linux-api-headers since it part of toolchain and modules are
-	# build with linux-module-headers wich is of course the same version.
-	if [ -f "$INSTALLED/linux-api-headers/receipt" ]; then
-		KVERS=$(grep ^VERSION= $INSTALLED/linux-api-headers/receipt | cut -d '"' -f 2)
-	fi
+	# Export flags and path to be used by make and receipt.
 	DESTDIR=$pkgdir/install
-	export DESTDIR KVERS MAKEFLAGS CFLAGS CXXFLAGS CONFIG_SITE LC_ALL=C LANG=C
+	export DESTDIR MAKEFLAGS CFLAGS CXXFLAGS CONFIG_SITE LC_ALL=C LANG=C
 
 	# Check for build deps and handle implicit depends of *-dev packages
 	# (ex: libusb-dev :: libusb).
@@ -607,9 +606,9 @@ packit() {
 	separator
 	if grep -q ^genpkg_rules $receipt; then
 		gettext -e "Executing: genpkg_rules\n"
-		cd $pkgdir
-		mkdir -p $fs && ( set -e; genpkg_rules ) || echo -e \
-			"\nERROR: genpkg_rules failed\n" >> $LOGS/$pkg.log
+		cd $pkgdir && mkdir -p $fs
+		genpkg_rules || echo -e "\nERROR: genpkg_rules failed\n" >> \
+		$LOGS/$pkg.log
 	fi
 
 	# First QA check to stop now if genpkg_rules failed.
@@ -642,7 +641,7 @@ packit() {
 		[ -L "fs$file" ] && continue
 		[ -f "fs$file" ] || continue
 		case "$file" in
-		/lib/modules/*/modules.*|*.pyc) continue;;
+			/lib/modules/*/modules.*|*.pyc) continue ;;
 		esac
 		md5sum "fs$file" | sed 's/  fs/  /'
 	done < files.list > md5sum
