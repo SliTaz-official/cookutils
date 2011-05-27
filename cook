@@ -46,8 +46,10 @@ $(echo -e "\033[1m$(gettext "Options:")\033[0m")
   --getsrc|-gs       Cook : $(gettext "get the package source tarball.")
   --block|-b         Cook : $(gettext "Block a package so cook will skip it.")
   --unblock|-ub      Cook : $(gettext "Unblock a blocked package.")
-  --interactive|-x   Cook : $(gettext "create a receipt interactively.")
-  --wok|-w           Setup: $(gettext "create also a wok from Hg repo.")
+  --interactive|-x   New  : $(gettext "create a receipt interactively.")
+  --wok|-w           Setup: $(gettext "clone the cooking wok from Hg repo.")
+  --stable           Setup: $(gettext "clone the stable wok from Hg repo.")
+  --undigest         Setup: $(gettext "clone the undigest wok from Hg repo.")
 
 EOT
 	exit 0
@@ -749,10 +751,11 @@ case "$1" in
 		# Handle --options
 		case "$2" in
 			--wok|-w)
-				[ ! -f "$INSTALLED/mercurial/receipt" ] && \
-					tazpkg get-install mercurial
-				[ -d "$WOK" ] && echo -e "A wok already exists.\n" && exit 1
-				hg clone $WOK_URL ;;
+				hg clone $WOK_URL wok || exit 1 ;;
+			--stable)
+				hg clone $WOK_URL-stable wok || exit 1 ;;
+			--undigest)
+				hg clone $WOK_URL-undigest wok || exit 1 ;;
 		esac
 
 		# SliTaz group and permissions
