@@ -964,7 +964,7 @@ EOT
 			tazlito show-flavor $fl --brief --noheader 2> \
 				/dev/null >> flavors.list
 		done
-		cp -f *.flavor flavors.list $PKGS
+		cp -f $live/*.flavor $live/flavors.list $PKGS
 		separator && gettext "Flavors size: "; du -sh $live | awk '{print $1}'
 		echo "" && rm -f $command ;;
 	*)
