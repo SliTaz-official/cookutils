@@ -382,7 +382,11 @@ case "$1" in
 		echo ""
 		echo "Checking for commits" | log_commits
 		separator | tee -a $LOGS/commits.log
+		
 		echo $$ > $pidfile
+		trap 'echo -e "\nCooker stopped: PID $$\n" && \
+			rm -f $pidfile $command && exit 1' INT TERM
+		
 		echo "Cooker PID   : $$" | log_commits
 		echo "Cooker date  : $(date '+%Y-%m-%d %H:%M:%S')" | log_commits
 		
