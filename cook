@@ -938,8 +938,10 @@ EOT
 		flavors=$SLITAZ/flavors
 		live=$SLITAZ/live
 		[ -d "$flavors" ] || exit 0
-		echo "Creating flavors files in: $live"
+		gettext "Creating flavors files in:"; echo " $live"
 		separator
+		gettext -e "Recharging lists to use latest packages...\n"
+		tazpkg recharge 2>&1 >/dev/null
 		
 		# We need a custom tazlito config to set working dir to /home/slitaz.
 		if [ ! -f "$live/tazlito.conf" ]; then

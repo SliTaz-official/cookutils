@@ -85,10 +85,11 @@
 	The setup command has a --wok option which lets you clone a SliTaz wok while
 	setting up your cook environment. Even if you are not yet an official developer
 	you can	clone it and use existing packages as an example to create your own.
-	To setup and clone the wok:
+	To setup and clone the default cooking wok or the undigest wok:
 </p>
 <pre>
 # cook setup --wok
+# cook setup --undigest
 </pre>
 
 <h3>Test your environment</h3>
@@ -168,7 +169,7 @@
 # cook search busybox
 </pre>
 
-<h3>Packages list</h3>
+<h3>Packages DB list</h3>
 <p>
 	Cook can list packages in the wok and also create a suitable packages list
 	for Tazpkg. This lets you create a local packages repository quite easily
@@ -179,10 +180,13 @@
 $ cook list-wok
 </pre>
 <p>
-	To create a packages list:
+	When creatin packages DB, cook will check if you have a flavors repo in
+	/home/slitaz/flavors, if so, it will pack all flavor using the latest
+	packages list available. To create a packages list and the Live flavors
+	files:
 </p>
 <pre>
-# cook pkglist
+# cook pkgdb
 </pre>
 
 <a name="cooker"></a>
