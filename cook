@@ -608,7 +608,7 @@ packit() {
 		gettext -e "Executing: genpkg_rules\n"
 		cd $pkgdir && mkdir -p $fs
 		genpkg_rules || echo -e "\nERROR: genpkg_rules failed\n" >> \
-		$LOGS/$pkg.log
+			$LOGS/$pkg.log
 	fi
 
 	# First QA check to stop now if genpkg_rules failed.
