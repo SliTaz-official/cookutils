@@ -203,10 +203,10 @@ get_source() {
 	case "$WGET_URL" in
 		http://*|ftp://*)
 			# Busybox Wget is better!
-			busybox wget -T 12 -c -P $SRC $WGET_URL || \
+			busybox wget -T 12 -c -O $SRC/$TARBALL $WGET_URL || \
 				(echo -e "ERROR: wget $WGET_URL" && exit 1) ;;
 		https://*)
-			wget -c --no-check-certificate -P $SRC $WGET_URL || \
+			wget -c --no-check-certificate -O $SRC/$TARBALL $WGET_URL || \
 				(echo -e "ERROR: wget $WGET_URL" && exit 1) ;;
 		hg*|mercurial*)
 			if $(echo "$WGET_URL" | fgrep -q "hg|"); then
