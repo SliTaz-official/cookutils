@@ -189,10 +189,8 @@ case "${QUERY_STRING}" in
 		inwok=$(ls $WOK | wc -l)
 		cooked=$(ls $PKGS/*.tazpkg | wc -l)
 		unbuilt=$(($inwok - $cooked))
-		[ "$cooked" -gt 0 ] && div=$(($inwok / 100))
-		[ "$div" -gt 0 ] && pct=$(($cooked / $div))
-		[ "$div" == 0 ] && pct=0
-		[ "$div" == "" ] && pct=0
+		pct=0
+		[ $inwok -gt 0 ] && pct=$(( ($cooked * 100) / $inwok ))
 		cat << EOT
 <div style="float: right;">
 	<form method="get" action="$SCRIPT_NAME">
@@ -213,7 +211,7 @@ Blocked packages : $(cat $blocked | wc -l)
 </pre>
 
 <p>
-	Packages: $inwok in the wok - $cooked cooked - $unbuilt unbuilt
+	$(date '+%Y-%M-%d %H:%M') Packages: $inwok in the wok - $cooked cooked - $unbuilt unbuilt
 </p>
 <div class="pctbar">
 	<div class="pct" style="width: ${pct}%;">${pct}%</div>
