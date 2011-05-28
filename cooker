@@ -415,18 +415,6 @@ case "$1" in
 			separator | log_commits
 			clean_exit && echo "" && exit 0
 		fi
-
-		# We may have deleted packages and files in stuff/
-		cd $wok
-		for pkg in *
-		do
-			if [ ! -d "${wok}-hg/$pkg" ]; then
-				echo "Removing package: $pkg" | log_commits
-				. $wok/$pkg/receipt
-				rm -rf $PKGS/$PACKAGE-$VERSION*
-				rm -rf $wok/$pkg
-			fi
-		done
 		
 		# Get and display modifications.
 		cd ${wok}-hg
@@ -442,6 +430,19 @@ case "$1" in
 				echo "Commited package : $pkg - $desc" | log_commits
 				echo $pkg >> $commits.tmp
 			done
+		done
+
+		# We may have deleted packages and files in stuff/. Remove it and
+		# clean DB as well as log file.
+		cd $wok
+		for pkg in *
+		do
+			if [ ! -d "${wok}-hg/$pkg" ]; then
+				echo "Removing package: $pkg" | log_commits
+				. $wok/$pkg/receipt
+				rm -rf $PKGS/$PACKAGE-$VERSION* $wok/$pkg $LOGS/$pkg.log
+				sed -i "/^${pkg}$/"d $CACHE/blocked $CACHE/broken $commits.tmp
+			fi
 		done
 		
 		# Keep previous commit and discard duplicate lines
