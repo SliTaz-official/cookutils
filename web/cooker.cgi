@@ -211,7 +211,8 @@ Blocked packages : $(cat $blocked | wc -l)
 </pre>
 
 <p>
-	$(date '+%Y-%M-%d %H:%M') Packages: $inwok in the wok - $cooked cooked - $unbuilt unbuilt
+	Packages: $inwok in the wok - $cooked cooked - $unbuilt unbuilt -
+	Server date: $(date '+%Y-%m-%d %H:%M')
 </p>
 <div class="pctbar">
 	<div class="pct" style="width: ${pct}%;">${pct}%</div>
