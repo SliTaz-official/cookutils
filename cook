@@ -217,7 +217,13 @@ get_source() {
 			gettext -e "Getting source from Hg...\n"
 			echo "URL: $url"
 			gettext "Cloning to: "; echo "$pwd/$pkgsrc"
-			hg clone $url $pkgsrc || (echo "ERROR: hg clone $url" && exit 1)
+			if [ "$BRANCH" ]; then
+				echo "Hg branch: $BRANCH"
+				hg clone $url --rev $BRANCH $pkgsrc || \
+					(echo "ERROR: hg clone $url --rev $BRANCH" && exit 1)
+			else
+				hg clone $url $pkgsrc || (echo "ERROR: hg clone $url" && exit 1)
+			fi
 			create_tarball ;;
 		git*)
 			url=${WGET_URL#git|}
