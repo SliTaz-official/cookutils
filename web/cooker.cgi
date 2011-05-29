@@ -68,8 +68,11 @@ list_packages() {
 	done
 }
 
-# xHTML header
-cat << EOT
+# xHTML header. Pages can be customized with a separated html.header file.
+if [ -f "header.html" ]; then
+	cat header.html
+else
+	cat << EOT
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
@@ -81,12 +84,14 @@ cat << EOT
 <body>
 
 <div id="header">
+	<div id="logo"></div>
 	<h1><a href="cooker.cgi">SliTaz Cooker</a></h1>
 </div>
 
 <!-- Content -->
 <div id="content">
 EOT
+fi
 
 #
 # Load requested page

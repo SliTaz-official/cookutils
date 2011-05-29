@@ -29,7 +29,8 @@ Cook features:
 Cook does not:
 
     * Depend on Hg but can use it to manage a wok
-    * Do complex work like compiling the whole system from source
+    * Do complex work like compiling the whole system from source in
+      one command, but can rebuild the full system step by step.
     * Check build deps for you, use: BUILD_DEPENDS
       If all deps are also build deps do: BUILD_DEPENDS="$DEPENDS"
     * The work of a Build Bot, unix philosophy: one tool for one task
@@ -85,6 +86,11 @@ Database files in the cache folder
     * cooknotes  : All the notes added with 'cooker -n "My note"
     * installed* : Lists used to compare installed packages before and after 
 		   a package is cooked so we can remove them
+
+The Cooker we interface can by highly customized through the CSS style and via
+an optionnal header.html file that must be in the same directory than the CGI
+script, like for style.css and a custom favicon. Yoou can find a header.html
+example in the data/ directory or in /usr/share/cook if cookutils are installed.
 
 
 Toolchain
