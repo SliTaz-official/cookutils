@@ -22,7 +22,7 @@ broken="$CACHE/broken"
 cooknotes="$CACHE/cooknotes"
 wokrev="$CACHE/wokrev"
 
-# We not logged and want time zone to display correct server date.
+# We're not logged and want time zone to display correct server date.
 export TZ=$(cat /etc/TZ)
 
 #
