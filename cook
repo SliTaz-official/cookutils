@@ -224,6 +224,7 @@ get_source() {
 			else
 				hg clone $url $pkgsrc || (echo "ERROR: hg clone $url" && exit 1)
 			fi
+			rm -rf $pkgsrc/.hg
 			create_tarball ;;
 		git*)
 			url=${WGET_URL#git|}
