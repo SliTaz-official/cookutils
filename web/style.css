@@ -35,8 +35,23 @@ pre {
 	font-style: italic;
 }
 
-#header h1 a:hover { 
+#header h1 a:hover, #network a:hover { 
 	color: #d66018;
+}
+
+/* Header links */
+
+#network { 
+	float: right; 
+	padding: 10px 5px 0; 
+	font-size: 12px;
+}
+
+#network a {
+	padding: 0 6px;
+	color: #fff; 
+	font-weight: bold;
+	text-decoration: none;
 }
 
 /* Content */
