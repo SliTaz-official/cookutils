@@ -616,7 +616,7 @@ packit() {
 	separator
 	if grep -q ^genpkg_rules $receipt; then
 		gettext -e "Executing: genpkg_rules\n"
-		cd $pkgdir && mkdir -p $fs
+		set -e && cd $pkgdir && mkdir -p $fs
 		genpkg_rules || echo -e "\nERROR: genpkg_rules failed\n" >> \
 			$LOGS/$pkg.log
 	else
@@ -715,7 +715,7 @@ packit_quality() {
 	
 	gettext "QA: Checking for empty package..."
 	files=$(cat $WOK/$pkg/taz/$pkg-*/files.list | wc -l)
-	if [ "$files" -lt 0 ] && [ "$CATEGORY" != "meta" ]; then
+	if [ "$files" == 0 ] && [ "$CATEGORY" != "meta" ]; then
 		echo -e "\nERROR: empty package"
 		rm -f $command && exit 1
 	else
