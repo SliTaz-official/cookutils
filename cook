@@ -335,12 +335,12 @@ copy_generic_files()
 {
 	# $LOCALE is set in cook.conf
 	if [ "$LOCALE"  ]; then
-		if [ -d "$_pkg/usr/share/locale" ]; then
+		if [ -d "$install/usr/share/locale" ]; then
 			mkdir -p $fs/usr/share/locale
 			for i in $LOCALE
 			do
-				if [ -d "$_pkg/usr/share/locale/$i" ]; then
-					cp -a $_pkg/usr/share/locale/$i $fs/usr/share/locale
+				if [ -d "$install/usr/share/locale/$i" ]; then
+					cp -a $install/usr/share/locale/$i $fs/usr/share/locale
 				fi
 			done
 		fi
@@ -348,12 +348,12 @@ copy_generic_files()
 
 	# Generic pixmaps copy can be disabled with GENERIC_PIXMAPS="no"
 	if [ "$GENERIC_PIXMAPS" != "no" ]; then
-		if [ -d "$_pkg/usr/share/pixmaps" ]; then
+		if [ -d "$install/usr/share/pixmaps" ]; then
 			mkdir -p $fs/usr/share/pixmaps
-			cp -a $_pkg/usr/share/pixmaps/$PACKAGE.png \
-				$fs/usr/share/pixmaps 2>/dev/null
-			cp -a $_pkg/usr/share/pixmaps/$PACKAGE.xpm \
-				$fs/usr/share/pixmaps 2>/dev/null
+			cp -a $install/usr/share/pixmaps/$PACKAGE.png \
+				$fs/usr/share/pixmaps 2>/dev/null || return 0
+			cp -a $install/usr/share/pixmaps/$PACKAGE.xpm \
+				$fs/usr/share/pixmaps 2>/dev/null || return 0
 		fi
 
 		# Custom or homemade PNG pixmap can be in stuff.
@@ -364,8 +364,8 @@ copy_generic_files()
 	fi
 
 	# Desktop entry (.desktop).
-	if [ -d "$_pkg/usr/share/applications" ]; then
-		cp -a $_pkg/usr/share/applications $fs/usr/share
+	if [ -d "$install/usr/share/applications" ]; then
+		cp -a $install/usr/share/applications $fs/usr/share
 	fi
 
 	# Homemade desktop file(s) can be in stuff.
