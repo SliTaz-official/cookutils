@@ -1,6 +1,5 @@
 [Desktop Entry]
 Name=Cookutils documentation
-Name[fr]=Manuel de Tazwok
 Exec=browser file:///usr/share/doc/cookutils/cookutils.html
 Icon=text-html
 Type=Application

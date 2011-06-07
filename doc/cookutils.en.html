@@ -30,6 +30,10 @@
 	use the same DB files and wok, they both share <a href="#blocked">blocked</a>
 	and broken packages as well as any activity.
 </p>
+<p>
+	For some technical informations, the coding style, please refer to the
+	README in source tree or: /usr/share/doc/cookutils
+</p>
 
 <h3>Cook usage</h3>
 <p>
@@ -294,10 +298,10 @@ $ cook list-wok
 <p>
 	To let you view log files in a nice way, keep trace of activity and help find
 	errors, you can use the Cooker Web interface located by default in the folder
-	/var/www/cgi-bin/cooker. If you don't use a chroot and the Busybox httpd
-	web server is running, the web interface will work without configuration and
-	should be reachable at: <a href="http://localhost/cgi-bin/cooker/cooker.cgi">
-		http://localhost/cgi-bin/cooker/cooker.cgi</a> 
+	/var/www/cooker. If you don't use a chroot and the Busybox httpd web server
+	is running, the web interface will work without configuration and should be
+	reachable at: <a href="http://localhost/cooker/cooker.cgi">
+		http://localhost/cooker/cooker.cgi</a> 
 </p>
 <p>
 	If you used a chroot environment, you should also install cookutils on your
@@ -315,10 +319,11 @@ SLITAZ="/home/slitaz/cooking/chroot/home/slitaz"
 </pre>
 <p>
 	Note: It's not obligatory to install the cookutils on your host to use the
-	web interface, you can also copy the cooker.cgi and style.css files for
-	example into your ~/Public directory and use a custom cook.conf with it. The
-	advantage of installing cookutils on the host is to get regular updates via
-	the Tazpkg packages manager. Say you have cloned or downloaded the cookutils:
+	web interface. If you use Lighttpd you can also copy the cooker.cgi and
+	style.css files for example into your ~/Public directory and use a custom
+	cook.conf with it. The advantage of installing cookutils on the host is to
+	get regular updates via the Tazpkg packages manager. Say you have cloned or
+	downloaded the cookutils:
 </p>
 <pre>
 $ cp -a cookutils/web ~/Public/cgi-bin/cooker

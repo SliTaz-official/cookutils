@@ -68,7 +68,7 @@ the dinner for you! We need quality receipts to cook succesfully and the goal
 is not to have a bloated script so please Keep It Short and Simple.
 
 Cmdline tool  : /usr/bin/cooker
-Web interface : /var/www/cgi-bin/cooker
+Web interface : /var/www/cooker
 Cache folder  : /home/slitaz/cache
 
 The web interface consists of one CGI script and one CSS style. Cook logs can
@@ -120,10 +120,10 @@ included in the package.
     * Cook uses gettext for messages, not the cooker
     * If you add a feature, add also the doc to explain it
     * Use clean case with space before case end ;;
-        case "$pkg" in
-	      a) echo "Hello World" ;;
-	      *) continue ;;
-        esac
+      case "$pkg" in
+	    a) echo "Hello World" ;;
+	    *) continue ;;
+      esac
     * Make commands and options as short as possible
     * Think to log everything to help debug
     * Quote variables if used in a test: [ "$var" ]
