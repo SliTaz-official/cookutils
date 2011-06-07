@@ -25,6 +25,7 @@ Cook features:
     * Provide a log for each cook
     * Clean one or all packages in the wok
     * Check for receipt and package quality
+    * Clean chroot even on Ctrl-C
 
 Cook does not:
 
@@ -32,7 +33,6 @@ Cook does not:
     * Do complex work like compiling the whole system from source in
       one command (but it can rebuild the full system step by step).
     * Check build deps for you, use: BUILD_DEPENDS
-      If all deps are also build deps do: BUILD_DEPENDS="$DEPENDS"
     * The work of a Build Bot, unix philosophy: one tool for one task
     * Cook a package if your receipt is crappy :-)
 
@@ -56,6 +56,7 @@ repository or sent to the official mirror. We create and use:
 
     * packages.list    Simple list of package-versions
     * packages.md5     MD5sum list of all packages
+    * packages.txt     List of packages with version, desc and sizes
     * packages.desc    Packages with name, version, category, desc
     * packages.equiv   Equivalent packages list
     * files.list.lzma  A list of files provided by all packages
