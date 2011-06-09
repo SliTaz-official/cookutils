@@ -364,7 +364,7 @@ copy_generic_files()
 	fi
 
 	# Desktop entry (.desktop).
-	if [ -d "$install/usr/share/applications" ]; then
+	if [ -d "$install/usr/share/applications" ] && [ "$WANTED" == "" ]; then
 		cp -a $install/usr/share/applications $fs/usr/share
 	fi
 
