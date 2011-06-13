@@ -723,11 +723,13 @@ packit_quality() {
 		old=$(ls $PKGS/$pkg-*.tazpkg 2>/dev/null | head -n 1)
 		status
 		if [ -f "$old" ]; then
-			echo -n "Removing old: $(basename $old)"
+			gettext "Removing old: $(basename $old)"
 			rm -f $old && status
 		fi
 		mv -f $pkgdir/taz/$pkg-*.tazpkg $PKGS
 		sed -i /^${pkg}$/d $broken
+		#gettext "Removing source tree..."
+		#rm -f $WOK/$pkg/source && status
 	fi
 }
 
