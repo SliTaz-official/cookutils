@@ -203,7 +203,7 @@ get_source() {
 	case "$WGET_URL" in
 		http://*|ftp://*)
 			# Busybox Wget is better!
-			busybox wget -T 12 -c -O $SRC/$TARBALL $WGET_URL || \
+			busybox wget -T 60 -c -O $SRC/$TARBALL $WGET_URL || \
 				(echo -e "ERROR: wget $WGET_URL" && exit 1) ;;
 		https://*)
 			wget -c --no-check-certificate -O $SRC/$TARBALL $WGET_URL || \
@@ -558,7 +558,10 @@ cookit() {
 	fi
 	if [ ! "$WANTED" ] && [ "$TARBALL" ] && [ ! -d "$src" ]; then
 		mkdir -p $pkgdir/source/tmp && cd $pkgdir/source/tmp
-		extract_source || exit 1
+		if ! extract_source ; then
+			get_source
+			extract_source || exit 1
+		fi
 		if [ "$LZMA_SRC" ]; then
 			cd $pkgdir/source
 			if [ "$(ls -A tmp | wc -l)" -gl 1 ] || [ -f "$(echo tmp/*)" ]; then
