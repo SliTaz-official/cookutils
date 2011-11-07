@@ -106,11 +106,11 @@ cook_order_scan() {
 	rm -f $cookorder
 	for pkg in $(cat $cooklist)
 	do
-		unset BUILD_DEPENDS
+		unset WANTED BUILD_DEPENDS
 		. $wok/$pkg/receipt
 		# The :: is for web interface color.
-		[ "$BUILD_DEPENDS" ] && echo "$pkg :: $BUILD_DEPENDS"
-		for dep in $BUILD_DEPENDS
+		[ "$WANTED$BUILD_DEPENDS" ] && echo "$pkg :: $WANTED $BUILD_DEPENDS"
+		for dep in $WANTED $BUILD_DEPENDS
 		do
 			if grep -q "^$dep$" $cooklist; then
 				if ! grep -q "^$dep$" $cookorder; then
@@ -283,8 +283,8 @@ case "$1" in
 		separator && cd $wok
 		for rev in *
 		do
-			unset DEPENDS BUILD_DEPENDS && . $wok/$rev/receipt
-			if echo "$DEPENDS $BUILD_DEPENDS" | fgrep -q $pkg; then
+			unset WANTED DEPENDS BUILD_DEPENDS && . $wok/$rev/receipt
+			if echo "$WANTED $DEPENDS $BUILD_DEPENDS" | fgrep -q $pkg; then
 				echo "$rev" | tee -a $cooklist
 			fi
 		done && separator
