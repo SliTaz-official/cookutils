@@ -244,7 +244,7 @@ $(tac $CACHE/activity | head -n 12 | syntax_highlighter activity)
 </pre>
 <a class="button" href="cooker.cgi?file=activity">More activity</a>
 
-<a name="cooknotes">w/a>
+<a name="cooknotes">/a>
 <h2>Cooknotes</h2>
 <pre>
 $(tac $cooknotes | head -n 12 | syntax_highlighter activity)
