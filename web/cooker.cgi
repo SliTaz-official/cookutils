@@ -237,47 +237,47 @@ Blocked packages : $(cat $blocked | wc -l)
 	<a href="cooker.cgi?pkg=slitaz-toolchain">toolchain.log</a>
 </p>
 
-<a name="activity">
+<a name="activity"></a>
 <h2>Activity</h2>
 <pre>
 $(tac $CACHE/activity | head -n 12 | syntax_highlighter activity)
 </pre>
 <a class="button" href="cooker.cgi?file=activity">More activity</a>
 
-<a name="cooknotes">
+<a name="cooknotes">w/a>
 <h2>Cooknotes</h2>
 <pre>
 $(tac $cooknotes | head -n 12 | syntax_highlighter activity)
 </pre>
 <a class="button" href="cooker.cgi?file=cooknotes">More notes</a>
 
-<a name="commits">
+<a name="commits"></a>
 <h2>Commits</h2>
 <pre>
 $(cat $commits)
 </pre>
 
-<a name="cooklist">
+<a name="cooklist"></a>
 <h2>Cooklist</h2>
 <pre>
 $(cat $cooklist | head -n 20)
 </pre>
 <a class="button" href="cooker.cgi?file=cooklist">Full cooklist</a>
 
-<a name="broken">
+<a name="broken"></a>
 <h2>Broken</h2>
 <pre>
 $(cat $broken | head -n 20 | sed s"#^[^']*#<a href='cooker.cgi?pkg=\0'>\0</a>#"g)
 </pre>
 <a class="button" href="cooker.cgi?file=broken">All broken packages</a>
 
-<a name="blocked">
+<a name="blocked"></a>
 <h2>Blocked</h2>
 <pre>
 $(cat $blocked | sed s"#^[^']*#<a href='cooker.cgi?pkg=\0'>\0</a>#"g)
 </pre>
 
-<a name="lastcook">
+<a name="lastcook"></a>
 <h2>Latest cook</h2>
 <pre>
 $(list_packages | sed s"#^\([^']*\).* : #<span class='log-date'>\0</span>#"g)
