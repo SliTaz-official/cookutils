@@ -912,7 +912,9 @@ case "$1" in
 			. $pkg/receipt
 			if [ -f "$PKGS/$PACKAGE-${VERSION}${EXTRAVERSION}.tazpkg" ]; then
 				# PACKED_SIZE and UNPACKED_SIZE are only in built receipt
-				. $pkg/taz/*/receipt
+				if [ -s $pkg/taz/*/receipt ]; then
+					. $pkg/taz/*/receipt
+				fi
 				# packages.desc lets us search easily in DB
 				cat >> $PKGS/packages.desc << EOT
 $PACKAGE | ${VERSION}$EXTRAVERSION | $SHORT_DESC | $CATEGORY | $WEB_SITE

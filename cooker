@@ -373,8 +373,11 @@ case "$1" in
 		cooklist=$CACHE/commits
 		if [ -f "$pidfile" ]; then
 			pid=$(cat /var/run/cooker.pid)
-			gettext -e "\nStill cooking latest commits with pid:"
-			echo -e " $pid\n" && exit 0
+			if [ -s /proc/$pid/status ]; then
+				gettext -e "\nStill cooking latest commits with pid:"
+				echo -e " $pid\n" && exit 0
+			fi
+			rm -f "$pidfile"
 		fi
 
 		# Start and get a PID file.
