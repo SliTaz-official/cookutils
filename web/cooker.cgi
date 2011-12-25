@@ -108,6 +108,10 @@ case "${QUERY_STRING}" in
 		echo '<div id="info">'
 		if [ -f "$wok/$pkg/receipt" ]; then
 			echo "<a href='cooker.cgi?receipt=$pkg'>receipt</a>"
+			unset WEB_SITE
+			. $wok/$pkg/receipt
+			[ -n "$WEB_SITE" ] && busybox wget -s $WEB_SITE &&
+			echo "<a href='$WEB_SITE'>home</a>"
 		else
 			echo "No package named: $pkg"
 		fi
