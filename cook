@@ -736,6 +736,21 @@ packit_quality() {
 	fi
 }
 
+mkinstall_list() {
+	local pkg
+	for pkg in $@ ; do
+		[ -s /home/slitaz/wok/$pkg/receipt ] || continue
+		case " $INSTALL_LIST " in
+		*\ $pkg\ *) ;;
+		*)	unset DEPENDS
+			. /home/slitaz/wok/$pkg/receipt
+			INSTALL_LIST="$INSTALL_LIST $pkg"
+			[ -n "$DEPENDS" ] && mkinstall_list $DEPENDS
+			echo $pkg
+		esac
+	done
+}
+
 #
 # Commands
 #
@@ -765,10 +780,19 @@ case "$1" in
 		separator && cd $SLITAZ
 		init_db_files
 		gettext -e "Checking for packages to install...\n"
-		for pkg in $SETUP_PKGS
-		do
-			[ ! -f "$INSTALLED/$pkg/receipt" ] && tazpkg get-install $pkg
-		done
+		case " $@ " in
+		*\ --reinstall\ *)
+			INSTALL_LIST=""
+			for pkg in $(mkinstall_list $SETUP_PKGS); do
+				tazpkg get-install $pkg --forced
+			done ;;
+		*)	
+			for pkg in $SETUP_PKGS
+			do
+				[ ! -f "$INSTALLED/$pkg/receipt" ] && 
+					tazpkg get-install $pkg
+			done ;;
+		esac
 
 		# Handle --options
 		case "$2" in
