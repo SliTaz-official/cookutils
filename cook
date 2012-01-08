@@ -739,15 +739,15 @@ packit_quality() {
 mkinstall_list() {
 	local pkg
 	for pkg in $@ ; do
-		[ -s /home/slitaz/wok/$pkg/receipt ] || continue
+		[ -s /home/slitaz/wok/$pkg/receipt ] &&
 		case " $INSTALL_LIST " in
-		*\ $pkg\ *) ;;
+		*\ $pkg\ *) continue ;;
 		*)	unset DEPENDS
 			. /home/slitaz/wok/$pkg/receipt
 			INSTALL_LIST="$INSTALL_LIST $pkg"
 			[ -n "$DEPENDS" ] && mkinstall_list $DEPENDS
-			echo $pkg
 		esac
+		echo $pkg
 	done
 }
 
