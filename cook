@@ -810,8 +810,8 @@ case "$1" in
 			addgroup slitaz
 		fi
 		gettext -e "Setting permissions for slitaz group...\n"
-		chown -R root.slitaz $SLITAZ
-		chmod -R g+w $SLITAZ
+		find $SLITAZ -maxdepth 2 -exec chown root.slitaz {} \;
+		find $SLITAZ -maxdepth 2 -exec chmod g+w {} \;
 		separator
 		gettext -e "All done, ready to cook packages :-)\n\n" ;;
 	test)
