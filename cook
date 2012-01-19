@@ -130,7 +130,7 @@ receipt_quality() {
 	for var in PACKAGE VERSION CATEGORY SHORT_DESC MAINTAINER WEB_SITE
 	do
 		unset value
-		value=$(grep ^$var= $receipt | cut -d \" -f 2)
+		value="$(. $receipt ; eval echo \$$var)"
 		case "$var" in
 			PACKAGE|VERSION|SHORT_DESC)
 				if_empty_value ;;
@@ -739,15 +739,16 @@ packit_quality() {
 mkinstall_list() {
 	local pkg
 	for pkg in $@ ; do
-		[ -s /home/slitaz/wok/$pkg/receipt ] &&
 		case " $INSTALL_LIST " in
 		*\ $pkg\ *) continue ;;
-		*)	unset DEPENDS
-			. /home/slitaz/wok/$pkg/receipt
-			INSTALL_LIST="$INSTALL_LIST $pkg"
-			[ -n "$DEPENDS" ] && mkinstall_list $DEPENDS
+		*)	if [ -s /home/slitaz/wok/$pkg/receipt ]; then
+				unset DEPENDS
+				. /home/slitaz/wok/$pkg/receipt
+				INSTALL_LIST="$INSTALL_LIST $pkg"
+				[ -n "$DEPENDS" ] && mkinstall_list $DEPENDS
+			fi
+			echo $pkg
 		esac
-		echo $pkg
 	done
 }
 
