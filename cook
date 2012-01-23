@@ -300,7 +300,7 @@ summary() {
 	files=$(cat taz/$pkg-*/files.list | wc -l)
 	cookdate=$(date "+%Y-%m-%d %H:%M")
 	sec=$time
-	div=$(($time / 60))
+	div=$(( ($time + 30) / 60))
 	[ "$div" != 0 ] && min="~ ${div}m"
 	gettext "Summary for:"; echo " $PACKAGE $VERSION"
 	separator
