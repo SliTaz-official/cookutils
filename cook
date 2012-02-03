@@ -334,7 +334,7 @@ debug_info() {
 copy_generic_files()
 {
 	# $LOCALE is set in cook.conf
-	if [ "$LOCALE"  ]; then
+	if [ "$LOCALE" ]; then
 		if [ -d "$install/usr/share/locale" ]; then
 			mkdir -p $fs/usr/share/locale
 			for i in $LOCALE
@@ -351,9 +351,9 @@ copy_generic_files()
 		if [ -d "$install/usr/share/pixmaps" ]; then
 			mkdir -p $fs/usr/share/pixmaps
 			cp -a $install/usr/share/pixmaps/$PACKAGE.png \
-				$fs/usr/share/pixmaps 2>/dev/null || return 0
+				$fs/usr/share/pixmaps 2>/dev/null || continue
 			cp -a $install/usr/share/pixmaps/$PACKAGE.xpm \
-				$fs/usr/share/pixmaps 2>/dev/null || return 0
+				$fs/usr/share/pixmaps 2>/dev/null || continue
 		fi
 
 		# Custom or homemade PNG pixmap can be in stuff.
