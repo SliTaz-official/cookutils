@@ -364,8 +364,11 @@ copy_generic_files()
 	fi
 
 	# Desktop entry (.desktop).
-	if [ -d "$install/usr/share/applications" ] && [ "$WANTED" == "" ]; then
-		cp -a $install/usr/share/applications $fs/usr/share
+	# Generic desktop entry copy can be disabled with GENERIC_MENUS="no"
+	if [ "$GENERIC_MENUS" != "no" ]; then
+		if [ -d "$install/usr/share/applications" ] && [ "$WANTED" == "" ]; then
+			cp -a $install/usr/share/applications $fs/usr/share
+		fi
 	fi
 
 	# Homemade desktop file(s) can be in stuff.
