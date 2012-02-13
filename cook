@@ -755,6 +755,66 @@ mkinstall_list() {
 	done
 }
 
+tac()
+{
+	sed '1!G;h;$!d' $1
+}
+
+# Launch the cook command into a chroot jail protected by aufs.
+# The current filesystems are used read-only and updates are
+# stored in a separate branch.
+try_aufs_chroot() {
+
+	# Can we setup the chroot ? Is it already done ?
+	[ -n "$AUFS_MOUNTS" -a ! -f /aufs-umount.sh ] || return
+	lsmod | grep -q aufs || modprobe aufs 2> /dev/null || return
+
+	echo "Setup aufs chroot..."
+	base=/dev/shm/aufsmnt$$
+	mkdir ${base}root ${base}rw
+
+	# Sanity check
+	for i in / /proc /sys /dev/shm ; do
+		case " $AUFS_MOUNTS " in
+		*\ $i\ *) ;;
+		*)	AUFS_MOUNTS="$AUFS_MOUNTS $i" ;;
+		esac
+	done
+	for mnt in $(echo $AUFS_MOUNTS | sort | uniq); do
+		mount --bind $mnt ${base}root$mnt
+		if [ $mnt == / ] && ! mount -t aufs -o br=${base}rw:/ none ${base}root; then
+	    		echo "Aufs mountage failure"
+	    		umount ${base}root
+	    		rmdir ${base}*
+	    		return
+		fi
+		echo "umount ${base}root$mnt" >> ${base}rw/aufs-umount.sh
+	done
+	mount --bind /home ${base}root/home
+
+	chroot ${base}root $(cd $(dirname $0); pwd)/$(basename $0) "$@"
+	status=$?
+
+	echo "Leave aufs chroot..."
+	umount ${base}root/home
+	tac ${base}rw/aufs-umount.sh | sh
+	rm -rf ${base}rw
+	umount ${base}root
+	rmdir $base*
+
+	# Install package if requested
+	if [ "$inst" ]; then
+		if [ -f "$PKGS/$PACKAGE-${VERSION}${EXTRAVERSION}.tazpkg" ]; then
+			cd $PKGS && tazpkg install \
+				$PACKAGE-${VERSION}${EXTRAVERSION}.tazpkg --forced
+		else
+			gettext -e "Unable to install package, build has failed.\n\n"
+			exit 1
+		fi
+	fi
+	exit $status 
+}
+
 #
 # Commands
 #
@@ -1035,10 +1095,6 @@ EOT
 		receipt="$WOK/$pkg/receipt"
 		check_pkg_in_wok && echo ""
 
-		# Display and log info if cook process stopped.
-		trap 'gettext -e "\n\nCook stopped: control-C\n\n" | \
-			tee -a $LOGS/$pkg.log' INT
-
 		# Skip blocked, 3 lines also for the Cooker.
 		if grep -q "^$pkg$" $blocked && [ "$2" != "--unblock" ]; then
 			gettext -e "Blocked package:"; echo -e " $pkg\n" && exit 0
@@ -1047,6 +1103,13 @@ EOT
 		# Log and source receipt.
 		echo "Cook started for: <a href='cooker.cgi?pkg=$pkg'>$pkg</a>" | log
 		echo "cook:$pkg" > $command
+
+		try_aufs_chroot "$@"
+
+		# Display and log info if cook process stopped.
+		trap 'gettext -e "\n\nCook stopped: control-C\n\n" | \
+			tee -a $LOGS/$pkg.log' INT
+
 		unset inst
 		unset_receipt
 		. $receipt
