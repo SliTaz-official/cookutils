@@ -1099,11 +1099,11 @@ EOT
 			gettext -e "Blocked package:"; echo -e " $pkg\n" && exit 0
 		fi
 
+		try_aufs_chroot "$@"
+
 		# Log and source receipt.
 		echo "Cook started for: <a href='cooker.cgi?pkg=$pkg'>$pkg</a>" | log
 		echo "cook:$pkg" > $command
-
-		try_aufs_chroot "$@"
 
 		# Display and log info if cook process stopped.
 		trap 'gettext -e "\n\nCook stopped: control-C\n\n" | \
