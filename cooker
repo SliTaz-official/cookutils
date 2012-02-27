@@ -169,13 +169,13 @@ cook_order() {
 	do
 		unset WANTED
 		. $wok/$pkg/receipt
-		if [ "$WANTED" ]; then
-			echo "$pkg :: $WANTED"
-			if grep -q ^${WANTED}$ $cooklist; then
+		for wanted in $WANTED ; then
+			echo "$pkg :: $wanted"
+			if grep -q ^${wanted}$ $cooklist; then
 				sed -i -e "/^$pkg$/"d  \
-					-e "/^$WANTED$/ a $pkg" $cooklist
+					-e "/^$wanted$/ a $pkg" $cooklist
 			fi
-		fi
+		done
 	done
 
 	# Show ordered cooklist

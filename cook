@@ -170,9 +170,10 @@ set_paths() {
 	stuff=$pkgdir/stuff
 	install=$pkgdir/install
 	if [ "$WANTED" ]; then
-		src=$WOK/$WANTED/source/$WANTED-$VERSION
-		install=$WOK/$WANTED/install
-		wanted_stuff=$WOK/$WANTED/stuff
+		wanted=${WANTED%% *}
+		src=$WOK/$wanted/source/$wanted-$VERSION
+		install=$WOK/$wanted/install
+		wanted_stuff=$WOK/$wanted/stuff
 	fi
 	# Kernel version is set from linux-api-headers since it is part of toolchain.
 	if [ -f "$INSTALLED/linux-api-headers/receipt" ]; then
@@ -1137,19 +1138,19 @@ EOT
 		esac
 
 		# Check if wanted is built now so we have separate log files.
-		if [ "$WANTED" ]; then
-			if grep -q "^$WANTED$" $blocked; then
-				echo "WANTED package is blocked: $WANTED" | tee $LOGS/$pkg.log
+		for wanted in $WANTED ; then
+			if grep -q "^$wanted$" $blocked; then
+				echo "WANTED package is blocked: $wanted" | tee $LOGS/$pkg.log
 				echo "" && rm -f $command && exit 1
 			fi
-			if grep -q "^$WANTED$" $broken; then
-				echo "WANTED package is broken: $WANTED" | tee $LOGS/$pkg.log
+			if grep -q "^$wanted$" $broken; then
+				echo "WANTED package is broken: $wanted" | tee $LOGS/$pkg.log
 				echo "" && rm -f $command && exit 1
 			fi
-			if [ ! -d "$WOK/$WANTED/install" ]; then
-				cook "$WANTED" || exit 1
+			if [ ! -d "$WOK/$wanted/install" ]; then
+				cook "$wanted" || exit 1
 			fi
-		fi
+		done
 
 		# Cook and pack or exit on error and log everything.
 		cookit $@ 2>&1 | tee $LOGS/$pkg.log
