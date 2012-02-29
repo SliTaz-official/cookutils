@@ -1139,7 +1139,7 @@ EOT
 		esac
 
 		# Check if wanted is built now so we have separate log files.
-		for wanted in $WANTED ; then
+		for wanted in $WANTED ; do
 			if grep -q "^$wanted$" $blocked; then
 				echo "WANTED package is blocked: $wanted" | tee $LOGS/$pkg.log
 				echo "" && rm -f $command && exit 1
