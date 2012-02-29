@@ -993,6 +993,7 @@ case "$1" in
 		ls -1 *.tazpkg | sed s'/.tazpkg//' > $PKGS/packages.list
 		gettext -e "Creating: packages.md5\n"
 		md5sum *.tazpkg > $PKGS/packages.md5
+		md5sum packages.md5 | cut -f1 -d' ' > ID
 		gettext -e "Creating lists from: "; echo "$WOK"
 		cd $WOK
 		for pkg in *
