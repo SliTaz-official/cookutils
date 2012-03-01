@@ -110,8 +110,9 @@ case "${QUERY_STRING}" in
 			echo "<a href='cooker.cgi?receipt=$pkg'>receipt</a>"
 			unset WEB_SITE
 			. $wok/$pkg/receipt
-			[ -n "$WEB_SITE" ] && busybox wget -s $WEB_SITE &&
+			[ -n "$WEB_SITE" ] && # busybox wget -s $WEB_SITE &&
 			echo "<a href='$WEB_SITE'>home</a>"
+			echo "<a href='cooker.cgi?files=$pkg'>files</a>"
 		else
 			echo "No package named: $pkg"
 		fi
@@ -196,7 +197,19 @@ case "${QUERY_STRING}" in
 			cat $wok/$pkg/receipt | syntax_highlighter receipt
 			echo '</pre>'
 		else
-			echo "<pre>No receipt for: $log</pre>"
+			echo "<pre>No receipt for: $pkg</pre>"
+		fi ;;
+	files=*)
+		pkg=${QUERY_STRING#files=}
+		echo "<h2>Installed files by: $pkg</h2>"
+		dir=$(ls -d $WOK/$pkg/taz/$pkg-*)
+		if [ -d "$dir/fs" ]; then
+			echo '<pre>'
+			find $dir/fs -not -type d | xargs ls -ld | \
+				sed "s|$dir/fs||" | syntax_highlighter log
+			echo '</pre>'
+		else
+			echo "<pre>No files list for: $pkg</pre>"
 		fi ;;
 	*)
 		# Main page with summary.
@@ -217,7 +230,7 @@ case "${QUERY_STRING}" in
 
 <pre>
 Running command  : $([ -s "$command" ] && cat $command || echo "Not running")
-Wok revision     : <a href="http://hg.slitaz.org/wok">$(cat $wokrev)</a>
+Wok revision     : <a href="$WOK_URL">$(cat $wokrev)</a>
 Commits to cook  : $(cat $commits | wc -l)
 Current cooklist : $(cat $cooklist | wc -l)
 Broken packages  : $(cat $broken | wc -l)
