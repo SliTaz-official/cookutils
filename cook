@@ -1183,9 +1183,11 @@ EOT
 			fi
 		fi
 		
-		# Install package if ipart of the chroot to keep env up-to-date.
+		# Install package if part of the chroot to keep env up-to-date.
 		if [ -d "$INSTALLED/$PACKAGE" ]; then
-			tazpkg install $PACKAGE-${VERSION}${EXTRAVERSION}.tazpkg --forced
+			echo -n "$PACKAGE "; gettext -e "package is installed, updating chroot...\n"
+			cd $PKGS && tazpkg install \
+				$PACKAGE-${VERSION}${EXTRAVERSION}.tazpkg --forced
 		fi
 		
 		# Finally we DONT WANT to build the *-dev or packages with WANTED="$pkg"
