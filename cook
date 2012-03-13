@@ -813,6 +813,13 @@ try_aufs_chroot() {
 			exit 1
 		fi
 	fi
+	
+	# Install package if part of the chroot to keep env up-to-date.
+	if [ -d "$INSTALLED/$PACKAGE" ]; then
+		echo -n "$PACKAGE "; gettext -e "package is installed, updating chroot...\n"
+		cd $PKGS && tazpkg install \
+			$PACKAGE-${VERSION}${EXTRAVERSION}.tazpkg --forced
+	fi
 	exit $status 
 }
 
