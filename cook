@@ -1182,6 +1182,12 @@ EOT
 				exit 1
 			fi
 		fi
+		
+		# Install package if ipart of the chroot to keep env up-to-date.
+		if [ -d "$INSTALLED/$PACKAGE" ]; then
+			tazpkg install $PACKAGE-${VERSION}${EXTRAVERSION}.tazpkg --forced
+		fi
+		
 		# Finally we DONT WANT to build the *-dev or packages with WANTED="$pkg"
 		# You want automation: use the Cooker Build Bot.
 		#[ -d "$WOK/$pkg-dev" ] && cook $pkg-dev
