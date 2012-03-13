@@ -1191,7 +1191,7 @@ EOT
 		fi
 		
 		# Install package if part of the chroot to keep env up-to-date.
-		if [ -d "$INSTALLED/$PACKAGE" ]; then
+		if [ -d "$INSTALLED/$PACKAGE" ] && [ -z "$AUFS_MOUNTS" ]; then
 			echo -n "$PACKAGE "; gettext -e "package is installed, updating chroot...\n"
 			cd $PKGS && tazpkg install \
 				$PACKAGE-${VERSION}${EXTRAVERSION}.tazpkg --forced
