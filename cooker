@@ -236,7 +236,7 @@ case "$1" in
 		echo -e "\nSetting up the Cooker"
 		echo "Cooker setup using: $SLITAZ" | log
 		separator
-		for pkg in $SETUP_PKGS mercurial rsync
+		for pkg in $SETUP_PKGS mercurial rsync tazlito
 		do
 			[ ! -d "$INSTALLED/$pkg" ] && tazpkg get-install $pkg
 		done
