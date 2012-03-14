@@ -29,6 +29,30 @@ export TZ=$(cat /etc/TZ)
 # Functions
 #
 
+# RSS feed generator
+if [ "$QUERY_STRING" == "rss" ]; then
+	pubdate=$(date "+%a, %d %b %Y %X")
+	cat << EOT
+<?xml version="1.0" encoding="utf-8" ?>
+<rss version="2.0">
+<channel>
+	<title>SliTaz Cooker</title>
+	<description>The SliTaz packages cooker feed</description>
+	<link>$COOKER_URL</link>
+	<lastBuildDate>$pubdate GMT</lastBuildDate>
+	<pubDate>$pubdate GMT</pubDate>
+EOT
+	for rss in $(ls -lt $FEEDS/*.xml | head -n 12)
+	do
+		cat $rss
+	done
+	cat << EOT
+</channel>
+</rss>
+EOT
+	exit 0
+fi
+
 # Put some colors in log and DB files.
 syntax_highlighter() {
 	case $1 in
