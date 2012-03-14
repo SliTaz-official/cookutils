@@ -246,7 +246,7 @@ case "$1" in
 
 		# Directories and files
 		echo "mkdir's and touch files in: $SLITAZ"
-		mkdir -p $PKGS $LOGS $CACHE $SRC
+		mkdir -p $PKGS $LOGS $FEEDS $CACHE $SRC
 		for f in $activity $blocked $broken $commits $cooklist $command
 		do
 			touch $f
