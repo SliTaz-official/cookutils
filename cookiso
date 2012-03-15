@@ -139,6 +139,7 @@ gen_flavors() {
 
 # Push an ISO to a server.
 push_iso() {
+	echo "Pushing to host: ${SSH_HOST}"
 	export DROPBEAR_PASSWORD=none
 	for flavor in $flavors
 	do
@@ -182,7 +183,7 @@ case "$1" in
 		echo "" ;;
 	push)
 		# Manually upload an ISO to a server.
-		flavors_cook
+		flavors_list
 		push_iso ;;
 	gen)
 		# Build one or more flavor.
