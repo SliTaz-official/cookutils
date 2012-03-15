@@ -94,6 +94,23 @@ script, like for style.css and a custom favicon. You can find a header.html
 example in the data/ directory or in /usr/share/cook if cookutils are installed.
 
 
+Cookiso
+-------------------------------------------------------------------------------
+Cookiso the the official tool to automate the ISO build. The goal is to provide
+a simple to use, rock solid tool with a web interface à la Cooker. It share
+configuration and template with the Cooker but can be run on it's own so it
+can be used by contributors or customers to automate custom ISO building.
+Cookiso must be run in a chroot wich can be the same chroot tan the Cooker.
+
+Cookiso is also used to build rolling ISO by tracking changes in packages
+list or a Hg repository. The rolling command is designed to be run by cron
+in a chroot environment. Here is some usage examples:
+
+# cookiso setup
+# cookiso gen --flavors="base justx"
+# cookiso gen --flavors=base --version=cooking
+
+
 Toolchain
 --------------------------------------------------------------------------------
 To rebuild the full SliTaz toolchain at once - cook and the Cooker will use the
