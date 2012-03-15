@@ -15,6 +15,7 @@ install:
 	install -m 0777 -d $(DESTDIR)$(PREFIX)/share/doc/cookutils
 	install -m 0755 cook $(DESTDIR)$(PREFIX)/bin
 	install -m 0755 cooker $(DESTDIR)$(PREFIX)/bin
+	install -m 0755 cookiso $(DESTDIR)$(PREFIX)/bin
 	install -m 0644 cook.conf $(DESTDIR)/etc/slitaz
 	install -m 0644 cook.site $(DESTDIR)/etc/slitaz
 	install -m 0644 web/* $(DESTDIR)/var/www/cooker
