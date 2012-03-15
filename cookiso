@@ -128,6 +128,7 @@ gen_flavors() {
 		echo "Cookiso started: $(date '+%Y-%m-%d %H:%M')" | tee -a $log
 		tazlito pack-flavor $flavor | tee -a $log
 		tazlito get-flavor $flavor | tee -a $log
+		# BUG: script sometimes screw up conspy on Tank
 		script -c "echo -e '\n' | tazlito gen-distro" -a $log
 		# Rename ISO and md5
 		mv -f $SLITAZ/distro/slitaz-$flavor.iso $iso/$name.iso
@@ -258,8 +259,7 @@ case "$1" in
 		nb=$(cat $commits | wc -l)
 		echo "Flavors to cook  : $nb" | log_bot
 		flavors=$(cat $commits) 
-		gen_flavors 
-		;;
+		gen_flavors ;;
 	spider)
 		# SliTaz Easter egg command :-)
 		spider ;;
