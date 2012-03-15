@@ -43,7 +43,7 @@ list_isos() {
 	done
 }
 
-# xHTML header. Pages can be customized with a separated html.header file.
+# xHTML header. Pages can be customized with a separate html.header file.
 if [ -f "header.html" ]; then
 	cat header.html | sed s'/Cooker/ISO Cooker/'
 else

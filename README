@@ -96,15 +96,15 @@ example in the data/ directory or in /usr/share/cook if cookutils are installed.
 
 Cookiso
 -------------------------------------------------------------------------------
-Cookiso the the official tool to automate the ISO build. The goal is to provide
-a simple to use, rock solid tool with a web interface à la Cooker. It share
-configuration and template with the Cooker but can be run on it's own so it
+Cookiso is the official tool to automate the ISO build. The goal is to provide
+a simple to use, rock solid tool with a web interface à la Cooker. It shares
+configuration and templates with the Cooker but can be run on its own so it
 can be used by contributors or customers to automate custom ISO building.
-Cookiso must be run in a chroot wich can be the same chroot tan the Cooker.
+Cookiso must be run in a chroot which can be the same chroot as the Cooker.
 
-Cookiso is also used to build rolling ISO by tracking changes in packages
-list or a Hg repository. The rolling command is designed to be run by cron
-in a chroot environment. Here is some usage examples:
+Cookiso is also used to build rolling ISOs by tracking changes in a packages
+list or Hg repository. The rolling command is designed to be run by cron
+in a chroot environment. Here are some usage examples:
 
 # cookiso setup
 # cookiso gen --flavors="base justx"

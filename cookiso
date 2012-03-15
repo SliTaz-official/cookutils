@@ -1,8 +1,8 @@
 #!/bin/sh
 #
-# Cookiso utility - Build official ISO's in a chroot environment.
-# The goal is ti have a tool well integrated to cookutils but who
-# can run on it's own and to automate official SliTaz ISO creation.
+# Cookiso utility - Build official ISOs in a chroot environment.
+# The goal is to have a tool well integrated with cookutils but which
+# can run on its own and automate official SliTaz ISO creation.
 #
 
 [ -f "/etc/slitaz/cook.conf" ] && . /etc/slitaz/cook.conf
@@ -31,7 +31,7 @@ do
 		--pkgdb)
 			cook pkgdb --flavors ;;
 		--push)
-			echo "TODO: Uplaod iso's to mirror"
+			echo "TODO: Upload isos to mirror"
 			exit 0 ;;
 		--flavors=*)
 			flavors=${opt#--flavors=} ;;
@@ -70,7 +70,7 @@ $(echo -e "\033[1mCommands:\033[0m")
   push          Manually push ISO to a server via SSH.
   gen           Generate specified flavors.
   4in1          Generate all 4in1 flavors.
-  rolling       Build the rollings ISO's if any changes.
+  rolling       Build the rolling ISOs if any changes.
 
 $(echo -e "\033[1mOptions:\033[0m")
   --pkgdb       Generate packages DB before building ISO.
@@ -88,7 +88,7 @@ spider() {
 	echo ' | \__/ |'
 }
 
-# Check for one a some flavors on cmdline
+# Check for some flavors on cmdline
 flavors_list() {
 	if [ "$flavors" == "all" ]; then
 		flavors=$(ls $SLITAZ/flavors)
@@ -127,7 +127,7 @@ gen_flavors() {
 		echo "Cookiso started: $(date '+%Y-%m-%d %H:%M')" | tee -a $log
 		tazlito pack-flavor $flavor | tee -a $log
 		tazlito get-flavor $flavor | tee -a $log
-		# BUG: script sometimes screw up conspy on Tank
+		# BUG: script sometimes screws up conspy on Tank
 		script -c "echo -e '\n' | tazlito gen-distro" -a $log
 		# Rename ISO and md5
 		mv -f $SLITAZ/distro/slitaz-$flavor.iso $iso/$name.iso
@@ -185,20 +185,20 @@ case "$1" in
 		flavors_list
 		push_iso ;;
 	gen)
-		# Build one or more flavor.
+		# Build one or more flavors.
 		flavors_list
 		echo -e "\nGenerating flavors:\n$flavors"
 		gen_flavors ;;
 	4in1)
-		echo -e "\nGenerating 4in1 distro's..."
+		echo -e "\nGenerating 4in1 distros..."
 		flavors="base justx gtkonly core core-4in1"
 		gen_flavors ;;
 	rolling)
 		#
-		# Official SliTaz rolling release flavors are automaticaly build.
+		# Official SliTaz rolling release flavors are automatically built.
 		#
-		# Check if packages list was modified or if any commit have been
-		# done in one the rolling flavors and rebuild ISO's if needed.
+		# Check if packages list was modified or if any commits have been
+		# done in one of the rolling flavors and rebuild ISOs if needed.
 		#
 		pkgs=$SLITAZ/packages/packages.md5
 		last=$cache/packages.md5
@@ -215,7 +215,7 @@ case "$1" in
 		[ -f "$last" ] || cp -f $pkgs $cache
 		diff $last $pkgs > $diff 
 		if [ -s "$diff" ]; then
-			echo "Found new or rebuilded packages" | log_bot
+			echo "Found new or rebuilt packages" | log_bot
 			cat $diff >> $rollog
 			#
 			# TODO: Check new pkg and see if it's part of one of the rolling
@@ -245,7 +245,7 @@ case "$1" in
 			do
 				flavor=$(echo $file | cut -d "/" -f 1)
 				desc=$(hg log --rev=$rev --template "{desc}" $file)
-				echo "Commited flavor  : $flavor - $desc" | log_bot
+				echo "Committed flavor  : $flavor - $desc" | log_bot
 				# Build only rolling flavor
 				if echo "$cook" | fgrep -q $flavor; then
 					echo $flavor >> $commits.tmp
