@@ -14,6 +14,7 @@ iso="$SLITAZ/iso"
 activity="$cache/activity"
 command="$cache/command"
 rollog="$cache/rolling.log"
+synclog="$cache/rsync.log"
 
 #
 # Functions
