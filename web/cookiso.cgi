@@ -108,6 +108,13 @@ EOT
 			echo '<pre>'
 			cat $rollog
 			echo '</pre>'
+		fi
+		# Rsync log.
+		if [ -f "$synclog" ]; then
+			echo "<h2>Rsync log</h2>"
+			echo '<pre>'
+			cat $synclog
+			echo '</pre>'
 		fi ;;
 esac
 

@@ -22,6 +22,7 @@ iso="$SLITAZ/iso"
 activity="$cache/activity"
 command="$cache/command"
 rollog="$cache/rolling.log"
+synclog="$cache/rsync.log"
 commits="$cache/commits"
 
 # Parse cmdline options.
@@ -144,7 +145,7 @@ push_iso() {
 	do
 		rsync $BWLIMIT -vtP -e "$SSH_CMD" \
 			$iso/slitaz-$string-$flavor.* \
-			${SSH_HOST}:$SSH_ISO/$string
+			${SSH_HOST}:$SSH_ISO/$string | tee $synclog
 	done
 }
 
