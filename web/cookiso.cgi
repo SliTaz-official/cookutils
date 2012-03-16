@@ -114,7 +114,14 @@ EOT
 		if [ -f "$synclog" ]; then
 			echo "<h2>Rsync log</h2>"
 			echo '<pre>'
-			cat $synclog
+			awk '{
+	if (/\/s/) h=$0; 
+	else {
+		if (h!="") print h;
+		h="";
+		print;
+	}
+}'< $synclog
 			echo '</pre>'
 		fi ;;
 esac
