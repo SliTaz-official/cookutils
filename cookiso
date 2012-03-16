@@ -130,7 +130,7 @@ gen_flavors() {
 		tazlito get-flavor $flavor | tee -a $log
 		# BUG: script sometimes screws up conspy on Tank
 		#script -c "yes '' | tazlito gen-distro" -a $log
-		yes '' | tazlito gen-distro 2&>1 | tee -a $log
+		yes '' | tazlito gen-distro 2>&1 | tee -a $log
 		# Rename ISO and md5
 		mv -f $SLITAZ/distro/slitaz-$flavor.iso $iso/$name.iso
 		cd $iso && md5sum $name.iso > $name.md5
