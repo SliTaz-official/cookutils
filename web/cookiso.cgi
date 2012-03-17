@@ -83,6 +83,7 @@ case "${QUERY_STRING}" in
 		echo "<p>Description: $SHORT_DESC</p>"
 		echo '<h3>Summary</h3>'
 		echo '<pre>'
+		fgrep "Build time" $log
 		fgrep "Build date" $log
 		fgrep "Packages" $log
 		fgrep "Rootfs size" $log
