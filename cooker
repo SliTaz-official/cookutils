@@ -24,6 +24,7 @@ command="$CACHE/command"
 blocked="$CACHE/blocked"
 broken="$CACHE/broken"
 cooknotes="$CACHE/cooknotes"
+crontabs="/var/spool/cron/crontabs/root"
 
 # PID file.
 pidfile='/var/run/cooker.pid'
@@ -35,11 +36,12 @@ pidfile='/var/run/cooker.pid'
 usage() {
 	cat << EOT
 
-Usage: cooker [command] [pkg|list|note]
+Usage: cooker [command] [pkg|list|note|hours]
 
 Options:
   usage|-u        Display this short usage.
   setup|-s        Setup the Cooker environment.
+  setup-cron      Setup a cron job for the Cooker.
   note|-n         Add a note to the cooknotes.
   notes|-ns       Display all the cooknotes.
   block|-b        Block a package so cook will skip it.
@@ -255,6 +257,22 @@ case "$1" in
 		[ -d "$flavors" ] || hg clone $FLAVORS_URL flavors
 		cp -a ${wok}-hg $wok
 		separator && echo "" ;;
+	setup-cron)
+		# Create cron job for the cooker.
+		[ "$2" ] || hours=2
+		if [ ! -f "$crontabs" ]; then
+			mkdir -p /var/spool/cron/crontabs
+			echo "# Run SliTaz Cooker each $hours hours" > $crontabs
+			echo "0 */$hours * * *  /usr/bin/cooker" >> $crontabs
+			/etc/init.d/crond start
+		fi
+		if ! fgrep -q /usr/bin/cooker $crontabs; then
+			echo "# Run SliTaz Cooker each $hours hours" > $crontabs
+			echo "0 */$hours * * *  /usr/bin/cooker" >> $crontabs
+			killall crond 2>/dev/null && /etc/init.d/crond start
+		fi ;;
+	check-cron)
+		fgrep /usr/bin/cooker $crontabs ;;
 	note|-n)
 		# Blocked a pkg and want others to know why ? Post a note!
 		note="$2"
