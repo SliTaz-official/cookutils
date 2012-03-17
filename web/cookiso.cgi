@@ -85,9 +85,15 @@ case "${QUERY_STRING}" in
 		. $SLITAZ/flavors/${distro#*-}/receipt
 		echo "<h2>Distro: $distro</h2>"
 		echo "<p>Description: $SHORT_DESC</p>"
+		echo '<h3>Summary</h3>'
+		echo '<pre>'
+		fgrep "Build date" $log
+		fgrep "Packages" $log
+		fgrep "Rootfs size" $log
+		fgrep "ISO image size" $log
+		echo '</pre>'
 		echo '<h3>Cookiso log</h3>'
 		echo '<pre>'
-		fgrep "ISO image size" $log
 		cat $log | syntax_highlighter log
 		echo '</pre>' ;;
 	*)
