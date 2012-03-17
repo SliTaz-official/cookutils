@@ -145,7 +145,7 @@ push_iso() {
 	export DROPBEAR_PASSWORD=none
 	for flavor in $flavors
 	do
-		file=slitaz-${string}${$flavor%-core-4in1}.*
+		file=slitaz-${string}${flavor%-core-4in1}
 		rsync $BWLIMIT -vtP -e "$SSH_CMD" $iso/$file.* \
 			${SSH_HOST}:$SSH_ISO/$string 2>&1 | tee $synclog
 	done
