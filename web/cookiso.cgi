@@ -87,6 +87,7 @@ case "${QUERY_STRING}" in
 		echo "<p>Description: $SHORT_DESC</p>"
 		echo '<h3>Cookiso log</h3>'
 		echo '<pre>'
+		fgrep "ISO image size" $log
 		cat $log | syntax_highlighter log
 		echo '</pre>' ;;
 	*)
