@@ -142,14 +142,14 @@ gen_flavors() {
 # Push an ISO to a server.
 push_iso() {
 	echo "Pushing to host: ${SSH_HOST}"
-	if echo $flavor | fgrep core-4in1; then
-		file=slitaz-$string
-	else
-		file=slitaz-$string-$flavor
-	fi
 	export DROPBEAR_PASSWORD=none
 	for flavor in $flavors
 	do
+		if echo $flavor | fgrep core-4in1; then
+			file=slitaz-$string
+		else
+			file=slitaz-$string-$flavor
+		fi
 		rsync $BWLIMIT -vtP -e "$SSH_CMD" $iso/$file.* \
 			${SSH_HOST}:$SSH_ISO/$string 2>&1 | tee $synclog
 	done
