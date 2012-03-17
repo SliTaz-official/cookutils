@@ -32,8 +32,7 @@ do
 		--pkgdb)
 			cook pkgdb --flavors ;;
 		--push)
-			echo "TODO: Upload isos to mirror"
-			exit 0 ;;
+			push="yes" ;;
 		--flavors=*)
 			flavors=${opt#--flavors=} ;;
 		--version=*)
@@ -136,16 +135,22 @@ gen_flavors() {
 		cd $iso && md5sum $name.iso > $name.md5
 		echo "Cookiso ended: $(date '+%Y-%m-%d %H:%M')" | tee -a $log
 	done && echo ""
+	# Push ISO to mirror if requested.
+	[ "$push" ] && push_iso
 }
 
 # Push an ISO to a server.
 push_iso() {
 	echo "Pushing to host: ${SSH_HOST}"
+	if echo $flavor | fgrep core-4in1; then
+		file=slitaz-$string
+	else
+		file=slitaz-$string-$flavor
+	fi
 	export DROPBEAR_PASSWORD=none
 	for flavor in $flavors
 	do
-		rsync $BWLIMIT -vtP -e "$SSH_CMD" \
-			$iso/slitaz-$string-$flavor.* \
+		rsync $BWLIMIT -vtP -e "$SSH_CMD" $iso/$file.* \
 			${SSH_HOST}:$SSH_ISO/$string 2>&1 | tee $synclog
 	done
 }
@@ -218,7 +223,7 @@ case "$1" in
 		diff $last $pkgs > $diff 
 		if [ -s "$diff" ]; then
 			echo "Found new or rebuilt packages" | log_bot
-			cat $diff >> $rollog
+			cat $diff | grep "^+" >> $rollog
 			#
 			# TODO: Check new pkg and see if it's part of one of the rolling
 			# flavors, if not we have nothing to build.
