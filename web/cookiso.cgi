@@ -76,12 +76,7 @@ fi
 case "${QUERY_STRING}" in
 	distro=*)
 		distro=${QUERY_STRING#distro=}
-		if echo $distro | fgrep core-4in1; then
-			ver=${distro%-core-4in1}
-			log=$iso/slitaz-$ver.log
-		else
-			log=$iso/slitaz-$distro.log
-		fi
+		log=$iso/slitaz-${distro%-core-4in1}.log
 		. $SLITAZ/flavors/${distro#*-}/receipt
 		echo "<h2>Distro: $distro</h2>"
 		echo "<p>Description: $SHORT_DESC</p>"
