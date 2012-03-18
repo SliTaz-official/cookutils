@@ -35,7 +35,7 @@ case "$i" in
 		do
 			rootfs=$SLITAZ/$version/chroot
 			if [ -d "$SLITAZ/$version/chroot" ]; then
-				echo "Stoping $version cooker..."
+				echo "Stopping $version cooker..."
 				# Stop cron in chroot.
 				chroot $rootfs /etc/init.d/cron stop
 				for i in /dev/shm /dev/pts /sys /proc $SLITAZ/src $SLITAZ/packages
