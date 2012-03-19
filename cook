@@ -472,7 +472,7 @@ cookit() {
 				# Try local package first. In some cases implicit doesn't exist, ex:
 				# libboost-dev exists but not libboost, so check if we got vers.
 				unset vers
-				vers=$(grep ^VERSION= $WOK/$i/receipt 2>/dev/null | cut -d '"' -f 2)
+				vers=$(. $WOK/$i/receipt 2>/dev/null ; echo $VERSION)
 				if [ -f "$PKGS/$i-$vers.tazpkg" ]; then
 					echo $i-$vers.tazpkg >> $CACHE/installed.local
 				else
