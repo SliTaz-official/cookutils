@@ -78,7 +78,7 @@ pre {
 	color: #000;
 }
 
-a.button, .pctbar  {
+a.button  {
 	text-decoration: none;
 	color: #666;
 }
@@ -88,12 +88,23 @@ a.button, .pctbar  {
 	border: 1px solid #999;
 }
 
-.pct { background: #9dff4a; padding: 2px 4px; }
-
-.button, .pctbar {
+.button {
 	margin: 0;
 	background: #f1f1f1;
 	border: 1px solid #ddd;
+}
+
+/* Progress bar */
+
+.pct { background: #9dff4a; padding: 2px 4px; }
+
+.pctbar {
+	margin: 0;
+	color: #666;
+	background: #f1f1f1;
+	border: 1px solid #ddd;
+	overflow: hidden;
+	clear: both;
 }
 
 /* Round corner */
