@@ -236,6 +236,7 @@ case "$1" in
 	setup|-s)
 		# Setup the Cooker environment.
 		echo -e "\nSetting up the Cooker"
+		mkdir -p $CACHE
 		echo "Cooker setup using: $SLITAZ" | log
 		separator
 		for pkg in $SETUP_PKGS mercurial rsync tazlito
