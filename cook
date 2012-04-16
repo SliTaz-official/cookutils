@@ -590,7 +590,6 @@ cookit() {
 	# Execute receipt rules.
 	if grep -q ^compile_rules $receipt; then
 		echo "Executing: compile_rules"
-		echo "Configure: $CONFIGURE_ARGS"
 		echo "CFLAGS   : $CFLAGS"
 		[ -d "$src" ] && cd $src
 		compile_rules $@ || exit 1
