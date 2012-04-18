@@ -2,8 +2,6 @@
 #
 # SliTaz Cooker CGI/web interface.
 #
-echo "Content-Type: text/html"
-echo ""
 
 [ -f "/etc/slitaz/cook.conf" ] && . /etc/slitaz/cook.conf
 [ -f "cook.conf" ] && . ./cook.conf
@@ -25,9 +23,20 @@ wokrev="$CACHE/wokrev"
 # We're not logged and want time zone to display correct server date.
 export TZ=$(cat /etc/TZ)
 
-#
-# Functions
-#
+if [ "${QUERY_STRING%%=*}" == "download" ]; then
+	file=$PKGS/${QUERY_STRING#*=}
+	cat <<EOT
+Content-Type: application/octet-stream
+Content-Length: $(stat -c %s $file)
+Content-Disposition: attachment; filename=$(basename $file)
+
+EOT
+	cat $file
+	exit
+fi
+
+echo "Content-Type: text/html"
+echo ""
 
 # RSS feed generator
 if [ "$QUERY_STRING" == "rss" ]; then
@@ -52,6 +61,10 @@ EOT
 EOT
 	exit 0
 fi
+
+#
+# Functions
+#
 
 # Put some colors in log and DB files.
 syntax_highlighter() {
@@ -137,6 +150,13 @@ case "${QUERY_STRING}" in
 			[ -n "$WEB_SITE" ] && # busybox wget -s $WEB_SITE &&
 			echo "<a href='$WEB_SITE'>home</a>"
 			echo "<a href='cooker.cgi?files=$pkg'>files</a>"
+			if [ -f "$wok/$pkg/taz/$PACKAGE-$VERSION/receipt" ]; then
+				unset EXTRAVERSION
+				. $wok/$pkg/taz/$PACKAGE-$VERSION/receipt
+				if [ -f $PKGS/$PACKAGE-$VERSION$EXTRAVERSION.tazpkg ]; then
+					echo "<a href='cooker.cgi?download=$PACKAGE-$VERSION$EXTRAVERSION.tazpkg'>download</a>"
+				fi
+			fi
 		else
 			echo "No package named: $pkg"
 		fi
