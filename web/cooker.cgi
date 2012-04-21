@@ -149,8 +149,8 @@ case "${QUERY_STRING}" in
 			. $wok/$pkg/receipt
 			[ -n "$WEB_SITE" ] && # busybox wget -s $WEB_SITE &&
 			echo "<a href='$WEB_SITE'>home</a>"
-			echo "<a href='cooker.cgi?files=$pkg'>files</a>"
 			if [ -f "$wok/$pkg/taz/$PACKAGE-$VERSION/receipt" ]; then
+				echo "<a href='cooker.cgi?files=$pkg'>files</a>"
 				unset EXTRAVERSION
 				. $wok/$pkg/taz/$PACKAGE-$VERSION/receipt
 				if [ -f $PKGS/$PACKAGE-$VERSION$EXTRAVERSION.tazpkg ]; then
