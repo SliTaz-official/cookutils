@@ -876,6 +876,11 @@ case "$1" in
 			for pkg in $(mkinstall_list $SETUP_PKGS); do
 				tazpkg get-install $pkg --forced
 			done ;;
+		*\ --arm\ *)
+				hg clone $WOK_URL wok || exit 1
+				sed -i s'/ARCH=.*/ARCH="arm"/' /etc/slitaz/cook.conf 
+				sed -i s'/BUILD_SYSTEM=.*/BUILD_SYSTEM=i486-slitaz-linux/' \
+					/etc/slitaz/cook.conf ;;
 		*)	
 			for pkg in $SETUP_PKGS
 			do
