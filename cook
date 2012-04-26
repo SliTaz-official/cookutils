@@ -35,7 +35,7 @@ $(echo -e "\033[1m$(gettext "Commands:")\033[0m")
   list-wok           $(gettext "List packages in the wok.")
   search             $(gettext "Simple packages search function.")
   new                $(gettext "Create a new package with a receipt".)
-  list               $(gettext "Cook a list of packages.") 
+  list               $(gettext "Cook a list of packages.")
   clean-wok          $(gettext "Clean-up all packages files.")
   clean-src          $(gettext "Clean-up all packages sources.")
   pkgdb              $(gettext "Create packages DB lists and flavors.")
@@ -234,7 +234,7 @@ get_source() {
 			git clone $url $pkgsrc || (echo "ERROR: git clone $url" && exit 1)
 			if [ "$BRANCH" ]; then
 				echo "Git branch: $BRANCH"
-				cd $pkgsrc && git checkout $BRANCH && cd ..	
+				cd $pkgsrc && git checkout $BRANCH && cd ..
 			fi
 			create_tarball ;;
 		cvs*)
@@ -457,6 +457,7 @@ cookit() {
 	# Export flags and path to be used by make and receipt.
 	DESTDIR=$pkgdir/install
 	export DESTDIR MAKEFLAGS CFLAGS CXXFLAGS CONFIG_SITE LC_ALL=C LANG=C
+	#LDFLAGS
 
 	# Check for build deps and handle implicit depends of *-dev packages
 	# (ex: libusb-dev :: libusb).
@@ -501,7 +502,7 @@ cookit() {
 
 	# Get the list of installed packages
 	cd $INSTALLED && ls -1 > $CACHE/installed.list
-	
+
 	# Have we a missing build dep to cook ?
 	if [ -s "$CACHE/missing.dep" ] && [ "$AUTO_COOK" ]; then
 		gettext -e "Auto cook config is set   : AUTO_COOK\n"
@@ -518,7 +519,7 @@ cookit() {
 		rm -f $CACHE/missing.dep
 		mv  $LOGS/$PACKAGE.log.$$ $LOGS/$PACKAGE.log
 	fi
-	
+
 	# QA: Exit on missing dep errors. We exit in both cases, if AUTO_COOK
 	# is enabled and cook fails we have ERROR in log, if no auto cook we have
 	# missing dep in cached file.
@@ -526,7 +527,7 @@ cookit() {
 		[ -s "$CACHE/missing.dep" ] && nb=$(cat $CACHE/missing.dep | wc -l)
 		echo "ERROR: missing dep $nb" && exit 1
 	fi
-	
+
 	# Install local packages.
 	cd $PKGS
 	for i in $(uniq $CACHE/installed.local)
@@ -534,7 +535,7 @@ cookit() {
 		gettext "Installing dep (pkg/local):"; echo " $i"
 		tazpkg install $i >/dev/null
 	done
-	
+
 	# Install web or cached packages (if mirror is set to $PKGS we only
 	# use local packages).
 	for i in $(uniq $CACHE/installed.web)
@@ -542,7 +543,7 @@ cookit() {
 		gettext "Installing dep (web/cache):"; echo " $i"
 		tazpkg get-install $i >/dev/null
 	done
-	
+
 	# If a cook failed deps are removed.
 	cd $INSTALLED && ls -1 > $CACHE/installed.cook && cd $CACHE
 	[ ! -s "installed.cook.diff" ] && \
@@ -573,7 +574,7 @@ cookit() {
 				mv tmp-1 tmp/${SOURCE:-$PACKAGE}-$VERSION
 			fi
 			if [ -d "tmp/${SOURCE:-$PACKAGE}-$VERSION" ]; then
-				cd tmp && tar -c * | lzma e $SRC/$TARBALL -si 
+				cd tmp && tar -c * | lzma e $SRC/$TARBALL -si
 			fi
 		fi
 		cd $pkgdir/source/tmp
@@ -591,6 +592,7 @@ cookit() {
 	if grep -q ^compile_rules $receipt; then
 		echo "Executing: compile_rules"
 		echo "CFLAGS   : $CFLAGS"
+		#echo "LDFLAGS  : $LDFLAGS"
 		[ -d "$src" ] && cd $src
 		compile_rules $@ || exit 1
 		# Stay compatible with _pkg
@@ -636,7 +638,7 @@ packit() {
 	if fgrep -q ERROR: $LOGS/$pkg.log; then
 		exit 1
 	fi
-	
+
 	cd $taz
 	for file in receipt description.txt
 	do
@@ -645,7 +647,7 @@ packit() {
 		cp -f ../$file $pack && chown 0.0 $pack/$file && status
 	done
 	copy_generic_files
-	
+
 	# Create files.list with redirecting find output.
 	gettext "Creating the list of files..." && cd $fs
 	find . -type f -print > ../files.list
@@ -670,7 +672,7 @@ packit() {
 	UNPACKED_SIZE=$(du -chs fs receipt files.list md5sum \
 		description.txt 2> /dev/null | awk \
 		'{ sz=$1 } END { print sz }')
-	
+
 	# Build cpio archives.
 	gettext "Compressing the fs... "
 	find fs | cpio -o -H newc --quiet | lzma e fs.cpio.lzma -si
@@ -715,12 +717,12 @@ packit_quality() {
 	#link=$(find $fs/usr -type l -follow)
 	#[ "$link" ] && echo -e "\nERROR: broken link in filesystem"
 	#status
-	
+
 	# Exit if any error found in log file.
 	if fgrep -q ERROR: $LOGS/$pkg.log; then
 		rm -f $command && exit 1
 	fi
-	
+
 	gettext "QA: Checking for empty package..."
 	files=$(cat $WOK/$pkg/taz/$pkg-*/files.list | wc -l)
 	if [ "$files" == 0 ] && [ "$CATEGORY" != "meta" ]; then
@@ -814,7 +816,7 @@ try_aufs_chroot() {
 			exit 1
 		fi
 	fi
-	
+
 	# Install package if part of the chroot to keep env up-to-date.
 	if [ -d "$INSTALLED/$pkg" ]; then
 		. /etc/slitaz/cook.conf
@@ -824,7 +826,7 @@ try_aufs_chroot() {
 		cd $PKGS && tazpkg install \
 			$pkg-${VERSION}${EXTRAVERSION}.tazpkg --forced
 	fi
-	exit $status 
+	exit $status
 }
 
 # Create a XML feed for freshly builded package.
@@ -878,13 +880,13 @@ case "$1" in
 			done ;;
 		*\ --arm\ *)
 				hg clone $WOK_URL wok || exit 1
-				sed -i s'/ARCH=.*/ARCH="arm"/' /etc/slitaz/cook.conf 
+				sed -i s'/ARCH=.*/ARCH="arm"/' /etc/slitaz/cook.conf
 				sed -i s'/BUILD_SYSTEM=.*/BUILD_SYSTEM=i486-slitaz-linux/' \
 					/etc/slitaz/cook.conf ;;
-		*)	
+		*)
 			for pkg in $SETUP_PKGS
 			do
-				[ ! -f "$INSTALLED/$pkg/receipt" ] && 
+				[ ! -f "$INSTALLED/$pkg/receipt" ] &&
 					tazpkg get-install $pkg
 			done ;;
 		esac
@@ -929,12 +931,12 @@ case "$1" in
 		gettext "Preparing the package receipt..."
 		cp $DATA/receipt .
 		sed -i s"/^PACKAGE=.*/PACKAGE=\"$pkg\"/" receipt
-		status && echo "" 
-		
+		status && echo ""
+
 		# Interactive mode, asking and seding.
 		case "$3" in
 			--interactive|-x)
-				gettext -e "Entering interactive mode...\n" 
+				gettext -e "Entering interactive mode...\n"
 				separator
 				echo "Package       : $pkg"
 				# Version.
@@ -1046,7 +1048,7 @@ $PACKAGE
 ${VERSION}$EXTRAVERSION
 $SHORT_DESC
 $PACKED_SIZE ($UNPACKED_SIZE installed)
-	
+
 EOT
 				# packages.equiv is used by tazpkg install to check depends.
 				for i in $PROVIDE; do
@@ -1064,23 +1066,23 @@ EOT
 					$PKGS/files.list
 			fi
 		done
-		
+
 		# Display list size.
 		gettext -e "Done: packages.desc\n"
 		gettext -e "Done: packages.txt\n"
 		gettext -e "Done: packages.equiv\n"
-		
+
 		# files.list.lzma
 		gettext -e "Creating: files.list.lzma\n"
 		cd $PKGS && lzma e files.list files.list.lzma
 		rm -f files.list
-		
+
 		# Display some info.
 		separator
 		nb=$(ls $PKGS/*.tazpkg | wc -l)
 		time=$(($(date +%s) - $time))
 		echo -e "Packages: $nb - Time: ${time}s\n"
-		
+
 		# Create all flavors files at once. Do we really need code to monitor
 		# flavors changes ? Lets just build them with packages lists before
 		# syncing the mirror.
@@ -1092,7 +1094,7 @@ EOT
 		separator
 		gettext -e "Recharging lists to use latest packages...\n"
 		tazpkg recharge >/dev/null 2>/dev/null
-		
+
 		# We need a custom tazlito config to set working dir to /home/slitaz.
 		if [ ! -f "$live/tazlito.conf" ]; then
 			echo "Creating configuration file: tazlito.conf"
@@ -1103,7 +1105,7 @@ EOT
 
 		# Update Hg flavors repo and pack.
 		[ -d "$flavors/.hg" ] && cd $flavors && hg pull -u
-		
+
 		cd $live
 		echo "Starting to generate flavors..."
 		rm -f flavors.list *.flavor
@@ -1145,7 +1147,7 @@ EOT
 		unset inst
 		unset_receipt
 		. $receipt
-		
+
 		# Handle --options
 		case "$2" in
 			--clean|-c)
@@ -1166,7 +1168,7 @@ EOT
 				gettext "Unblocking:"; echo -n " $pkg"
 				sed -i "/^${pkg}$/"d $blocked
 				status && echo "" && exit 0 ;;
-				
+
 		esac
 
 		# Check if wanted is built now so we have separate log files.
@@ -1196,10 +1198,10 @@ EOT
 			debug_info | tee -a $LOGS/$pkg.log
 			rm -f $command && exit 1
 		fi
-		
+
 		# Create an XML feed
 		gen_rss
-		
+
 		# Time and summary
 		time=$(($(date +%s) - $time))
 		summary | tee -a $LOGS/$pkg.log
@@ -1215,7 +1217,7 @@ EOT
 				exit 1
 			fi
 		fi
-		
+
 		# Install package if part of the chroot to keep env up-to-date.
 		if [ -d "$INSTALLED/$PACKAGE" ] && [ -z "$AUFS_MOUNTS" ]; then
 			echo "Updating chroot environment..."
@@ -1223,7 +1225,7 @@ EOT
 			cd $PKGS && tazpkg install \
 				$PACKAGE-${VERSION}${EXTRAVERSION}.tazpkg --forced
 		fi
-		
+
 		# Finally we DONT WANT to build the *-dev or packages with WANTED="$pkg"
 		# You want automation: use the Cooker Build Bot.
 		#[ -d "$WOK/$pkg-dev" ] && cook $pkg-dev
