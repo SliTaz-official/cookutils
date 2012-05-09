@@ -312,6 +312,7 @@ Compressed : $size
 Files      : $files
 Cook time  : ${sec}s $min
 Cook date  : $cookdate
+Arch type  : $ARCH
 $(separator)
 EOT
 }
@@ -440,6 +441,17 @@ cookit() {
 	echo "Cook: $PACKAGE $VERSION"
 	separator
 	set_paths
+
+	# Handle cross compilation
+	case "$ARCH" in
+		arm|x86_64)
+			echo "cook: adding /usr/cross/$ARCH/bin to PATH"
+			export PATH=$PATH:/usr/cross/$ARCH/bin
+			echo "cook: using C compiler $HOST_SYSTEM-gcc"
+			export CC=${HOST_SYSTEM}-gcc
+			export CXX=${HOST_SYSTEM}-g++ ;;
+	esac
+
 	[ "$QA" ] && receipt_quality
 	cd $pkgdir
 	rm -rf install taz source
@@ -622,8 +634,15 @@ cookit_quality() {
 # but it doesn't handle EXTRAVERSION.
 packit() {
 	set_paths
+
+	# Handle cross compilation
+	case "$ARCH" in
+		arm|x86_64) VERSION="$VERSION-$ARCH" ;;
+	esac
+
 	echo "Pack: $PACKAGE $VERSION"
 	separator
+
 	if grep -q ^genpkg_rules $receipt; then
 		gettext -e "Executing: genpkg_rules\n"
 		set -e && cd $pkgdir && mkdir -p $fs
@@ -878,11 +897,6 @@ case "$1" in
 			for pkg in $(mkinstall_list $SETUP_PKGS); do
 				tazpkg get-install $pkg --forced
 			done ;;
-		*\ --arm\ *)
-				hg clone $WOK_URL wok || exit 1
-				sed -i s'/ARCH=.*/ARCH="arm"/' /etc/slitaz/cook.conf
-				sed -i s'/BUILD_SYSTEM=.*/BUILD_SYSTEM=i486-slitaz-linux/' \
-					/etc/slitaz/cook.conf ;;
 		*)
 			for pkg in $SETUP_PKGS
 			do
@@ -911,6 +925,22 @@ case "$1" in
 		find $SLITAZ -maxdepth 2 -exec chmod g+w {} \;
 		separator
 		gettext -e "All done, ready to cook packages :-)\n\n" ;;
+	arm-setup)
+		# Setup fro cross ARM compiling.
+		sed -i \
+			-e s'/ARCH=.*/ARCH="arm"/' \
+			-e s'/CFLAGS=.*/CFLAGS=""/' \
+			-e s'/BUILD_SYSTEM=.*/BUILD_SYSTEM=i486-slitaz-linux/' \
+			-e s'/HOST_SYSTEM=.*/HOST_SYSTEM=$ARCH-slitaz-linux-gnueabi/' \
+				/etc/slitaz/cook.conf
+		. /etc/slitaz/cook.conf
+		echo "Target arch   : $ARCH"
+		echo "Configure args: $CONFIGURE_ARGS"
+		if [ -x /usr/cross/$ARCH/bin/${HOST_SYSTEM}-gcc ]; then
+			echo "Cross compiler: ${HOST_SYSTEM}-gcc"
+		else
+			echo "ERROR: C compiler is missing: ${HOST_SYSTEM}-gcc"
+		fi ;;
 	test)
 		# Test a cook environment.
 		echo "Cook test: testing the cook environment" | log
