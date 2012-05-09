@@ -1,0 +1,272 @@
+#!/bin/sh
+#
+# Cross - Help build a cross toolchain on SliTaz.
+#
+# Copyright 2012 (C) SliTaz GNU/Linux - BSD License
+# Author: Christophe Lincoln <pankso@slitaz.org>
+#
+. /lib/libtaz.sh
+. cross.conf || exit 1
+
+# Help and usage.
+usage() {
+	cat << EOT
+
+Usage: $(basename $0) command --option
+
+Commands:
+  howto           Man alike and howto
+  info            Dispaly cross-tools info
+  testsuite       Execute a small testsuite
+  check-env       Check build host tools
+  download        Download necessary sources
+  clean           Clean-up environment
+  show-log        Show a compile log
+  binutils        Compile Binutils
+  gcc-static      Compile GCC static
+  linux-headers   Install Kernel headers
+  glibc           Compile GNU Glibc
+  gcc-final       Compile final GCC
+  busybox         Cross compile Busybox
+  compile         Compile everything at once
+
+EOT
+}
+
+# Make sure we have all directories.
+init_compile() {
+	export LC_ALL=POSIX LANG=POSIX
+	export PATH=$PATH:$PREFIX/bin
+	export CROSS_COMPILE=$TARGET-
+	source=$WORK/source
+	logdir=$WORK/log
+	mkdir -p $source $logdir $install
+	cd $source
+}
+
+# Get source if not yet in $SRC.
+download_src() {
+	mkdir -p $SRC && cd $SRC
+	[ -f "binutils-$BINUTILS_VERSION.tar.bz2" ] || wget $BINUTILS_WGET
+	[ -f "linux-$LINUX_VERSION.tar.bz2" ] || wget $LINUX_WGET
+	[ -f "glibc-$GLIBC_VERSION.tar.bz2" ] || wget $GLIBC_WGET
+	[ -f "gcc-$GCC_VERSION.tar.bz2" ] || wget $GCC_WGET
+	[ -f "busybox-$BUSYBOX_VERSION.tar.bz2" ] || wget $BUSYBOX_WGET
+}
+
+# 1. Binutils
+binutils() {
+	echo "Extracting: binutils-$BINUTILS_VERSION.tar.bz2"
+	tar xjf $SRC/binutils-$BINUTILS_VERSION.tar.bz2
+	# Peer arch options --disable-werror
+	case $ARCH in
+		arm) archopts="" ;;
+		x86_64) archopts="" ;;
+	esac
+	cd binutils-$BINUTILS_VERSION
+	./configure \
+		--prefix=$PREFIX \
+		--target=$TARGET \
+		--enable-targets=$BUILD_SYSTEM \
+		--enable-shared $archopts
+	make || exit 1
+	make install
+}
+
+# 2. Kernel headers
+linux_headers() {
+	echo "Extracting: linux-$LINUX_VERSION.tar.bz2"
+	tar xjf $SRC/linux-$LINUX_VERSION.tar.bz2
+	cd linux-$LINUX_VERSION
+	make mrproper
+	make ARCH=$ARCH headers_check
+	make ARCH=$ARCH headers_install \
+		INSTALL_HDR_PATH=$PREFIX
+}
+
+# 3. GCC static (first pass)
+gcc_static() {
+	echo "Extracting: gcc-$GCC_VERSION.tar.bz2"
+	tar xjf $SRC/gcc-$GCC_VERSION.tar.bz2
+	# Peer arch options
+	case $ARCH in
+		arm) archopts="" ;;
+		x86_64) archopts="" ;;
+	esac
+	rm -rf gcc-static
+	mkdir gcc-static && cd gcc-static
+	../gcc-$GCC_VERSION/configure \
+		--prefix=$PREFIX \
+		--target=$TARGET \
+		--disable-shared \
+		--disable-threads \
+		--without-headers \
+		--with-newlib \
+		--enable-languages=c
+	make all-gcc all-target-libgcc || exit 1
+	make install-gcc install-target-libgcc
+	cd $PREFIX/lib/gcc/$TARGET/$GCC_VERSION
+	ln -s libgcc.a libgcc_eh.a
+}
+
+# 4. GNU Glibc
+glibc() {
+	echo "Extracting: glibc-$GLIBC_VERSION.tar.bz2"
+	tar xjf $SRC/glibc-$GLIBC_VERSION.tar.bz2
+	[ "$continue" ] || rm -rf glibc-build
+	# Peer arch options
+	case $ARCH in
+		arm)
+			archopts=""
+			echo "Extracting: glibc-ports-$GLIBC_VERSION.tar.bz2"
+			rm -rf glibc-$GLIBC_VERSION/ports
+			tar xjf $SRC/glibc-ports-$GLIBC_VERSION.tar.bz2
+			mv glibc-ports-$GLIBC_VERSION glibc-$GLIBC_VERSION/ports ;;
+		x86_64)
+			archopts="" ;;
+	esac
+	mkdir -p glibc-build && cd glibc-build
+	BUILD_CC="gcc"
+	CC="$PREFIX/bin/$TARGET-gcc" \
+	libc_cv_forced_unwind=yes \
+	libc_cv_c_cleanup=yes \
+	../glibc-$GLIBC_VERSION/configure \
+		--prefix=$PREFIX \
+		--host=$TARGET \
+		--with-headers=$PREFIX/include \
+		--with-binutils=$PREFIX/bin \
+		--enable-add-ons
+	make || exit 1
+	make install
+	cd $PREFIX/$TARGET
+	rm -rf lib include
+	ln -s ../lib lib
+	ln -s ../include include
+}
+
+# 5. GCC final
+gcc_final() {
+	if [ ! -d "gcc-$GCC_VERSION" ]; then
+		echo "Extracting: gcc-$GCC_VERSION.tar.bz2"
+		tar xjf $SRC/gcc-$GCC_VERSION.tar.bz2
+	fi
+	# Peer arch options
+	case $ARCH in
+		arm) archopts="" ;;
+		x86_64) archopts="" ;;
+	esac
+	rm -rf gcc-build
+	mkdir gcc-build && cd gcc-build
+	../gcc-$GCC_VERSION/configure \
+		--prefix=$PREFIX \
+		--target=$TARGET \
+		--enable-shared \
+		--enable-languages=c,c++ \
+		--enable-c99 \
+		--enable-long-long \
+		--enable-__cxa_atexit \
+		--with-pkgversion="SliTaz"
+	make || exit 1
+	make install
+}
+
+# Build Busybox to we can create prebuild tiny rootfs image and boot
+# from NFS ?
+cross_busybox() {
+	echo "Extracting: busybox-$BUSYBOX_VERSION.tar.bz2"
+	tar xjf $SRC/busybox-$BUSYBOX_VERSION.tar.bz2
+	cd busybox-$BUSYBOX_VERSION
+	# CROSS_COMPILE is exported via init_compile, but be sure.
+	make CROSS_COMPILE=$TARGET- defconfig
+	make CROSS_COMPILE=$TARGET- || exit 1
+	make CROSS_COMPILE=$TARGET- install
+	chmod 4755 _install/bin/busybox
+	readelf -h _install/bin/busybox
+}
+
+#
+# Commands
+#
+
+case "$1" in
+	howto|man)
+		doc=/usr/share/doc/cookutils/cross.txt
+		[ -f "$doc" ] && less -E $doc ;;
+	info)
+		init_compile
+		CC=${TARGET}-gcc
+		echo -e "\nCross Toolchain iformation" && separator
+		cat << EOT
+Target arch   : $ARCH
+C Compiler    : $CC
+Additonal path: /usr/cross/$ARCH/bin
+EOT
+		separator && echo ""
+		echo "GCC version" && separator
+		$CC -v
+		separator && echo "" ;;
+	testsuite)
+		init_compile
+		echo "[COMPILING] $TARGET-gcc -v -Wall -o test.out test.c" \
+			| tee $logdir/testsuite.log
+		echo 'int main() { return 0; }' > test.c
+		$TARGET-gcc -v -Wall -o test.out test.c 2>&1 | tee -a $logdir/testsuite.log
+		if [ -x /usr/bin/file ]; then
+			echo -e "\n[CHECKING] file test.out" | tee -a $logdir/testsuite.log
+			file test.out | tee -a $logdir/testsuite.log
+		fi
+		echo -e "\n[CHECKING] readelf -h test.out" | tee -a $logdir/testsuite.log
+		readelf -h test.out | tee -a $logdir/testsuite.log ;;
+	check-host)
+		for pkg in mpfr mpfr-dev gmp gmp-dev mpc-library gawk autoconf
+		do
+			if [ ! -d "/var/lib/tazpkg/installed/$pkg" ]; then
+				echo "Missing packages: $pkg"
+				[ "$install" ] && tazpkg -gi $pkg
+			fi
+		done ;;
+	download)
+		download_src ;;
+	clean)
+		echo -n "Remove all source files..."
+		rm -rf $WORK/source/* && status
+		[ "$log" ] && rm -f $WORK/log/*.log
+		echo "To clean chroot: rm -rf $PREFIX" ;;
+	show-log)
+		pkg=$2
+		less -E $logdir/$pkg.log ;;
+	binutils)
+		init_compile
+		rm -f $logdir/binutils.log
+		binutils 2>&1 | tee $logdir/binutils.log ;;
+	linux-headers)
+		init_compile
+		linux_headers 2>&1 | tee $logdir/$logdir/linux-headers.log ;;
+	gcc-static)
+		init_compile
+		gcc_static 2>&1 | tee $logdir/gcc-static.log ;;
+	glibc)
+		init_compile
+		glibc 2>&1 | tee $logdir/glibc.log ;;
+	gcc-final)
+		init_compile
+		gcc_final 2>&1 | tee $logdir/gcc-final.log ;;
+	busybox)
+		init_compile
+		cross_busybox 2>&1 | tee $logdir/busybox.log ;;
+	compile)
+		init_compile
+		echo "Compile start: $(date)" | tee $logdir/compile.log
+		download_src
+		binutils 2>&1 | tee $logdir/binutils.log
+		linux_headers 2>&1 | tee $logdir/linux-headers.log
+		gcc_static 2>&1 | tee $logdir/gcc-static.log
+		glibc 2>&1 | tee $logdir/glibc.log
+		gcc_final 2>&1 | tee $logdir/gcc-final.log
+		echo ""
+		echo "Compile end: $(date)" | tee -a $logdir/compile.log
+		echo "" ;;
+	*)
+		usage ;;
+esac
+

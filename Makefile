@@ -7,12 +7,12 @@ DESTDIR?=
 all:
 
 install:
-	install -m 0777 -d $(DESTDIR)/etc/slitaz
-	install -m 0777 -d $(DESTDIR)$(PREFIX)/bin
-	install -m 0777 -d $(DESTDIR)/var/www/cooker
-	install -m 0777 -d $(DESTDIR)$(PREFIX)/share/applications
-	install -m 0777 -d $(DESTDIR)$(PREFIX)/share/cook
-	install -m 0777 -d $(DESTDIR)$(PREFIX)/share/doc/cookutils
+	install -m 0755 -d $(DESTDIR)/etc/slitaz
+	install -m 0755-d $(DESTDIR)$(PREFIX)/bin
+	install -m 0755 -d $(DESTDIR)/var/www/cooker
+	install -m 0755 -d $(DESTDIR)$(PREFIX)/share/applications
+	install -m 0755 -d $(DESTDIR)$(PREFIX)/share/cook
+	install -m 0755 -d $(DESTDIR)$(PREFIX)/share/doc/cookutils
 	install -m 0755 cook $(DESTDIR)$(PREFIX)/bin
 	install -m 0755 cooker $(DESTDIR)$(PREFIX)/bin
 	install -m 0755 cookiso $(DESTDIR)$(PREFIX)/bin
@@ -32,3 +32,19 @@ uninstall:
 		$(DESTDIR)$(PREFIX)/bin/cooker \
 		$(DESTDIR)/etc/slitaz/cook.* \
 		$(DESTDIR)/var/www/cooker
+
+# Cross
+
+install-cross:
+	install -m 0755 -d $(DESTDIR)/etc/slitaz
+	install -m 0755 -d $(DESTDIR)$(PREFIX)/bin
+	install -m 0755 -d $(DESTDIR)$(PREFIX)/share/doc/cookutils
+	install -m 0755 cross $(DESTDIR)$(PREFIX)/bin
+	install -m 0644 cross.conf $(DESTDIR)/etc/slitaz
+	install -m 0644 doc/cross.txt $(DESTDIR)$(PREFIX)/share/doc/cookutils
+
+uninstall-cross:
+	rm -rf \
+		$(DESTDIR)$(PREFIX)/bin/cross \
+		$(DESTDIR)/etc/slitaz/cross.conf \
+		$(DESTDIR)$(PREFIX)/share/doc/cookutils/cross.txt
