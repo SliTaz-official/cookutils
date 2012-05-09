@@ -118,6 +118,9 @@ glibc() {
 	case $ARCH in
 		arm)
 			archopts=""
+			[ -f "$SRC/glibc-ports-$GLIBC_VERSION.tar.bz2" ] || wget \
+				http://ftp.gnu.org/gnu/libc/glibc-ports-$GLIBC_VERSION.tar.bz2 \
+				-O $SRC/glibc-ports-$GLIBC_VERSION.tar.bz2 || exit 1
 			echo "Extracting: glibc-ports-$GLIBC_VERSION.tar.bz2"
 			rm -rf glibc-$GLIBC_VERSION/ports
 			tar xjf $SRC/glibc-ports-$GLIBC_VERSION.tar.bz2

@@ -8,23 +8,26 @@ all:
 
 install:
 	install -m 0755 -d $(DESTDIR)/etc/slitaz
-	install -m 0755-d $(DESTDIR)$(PREFIX)/bin
-	install -m 0755 -d $(DESTDIR)/var/www/cooker
+	install -m 0755 -d $(DESTDIR)/etc/init.d
+	install -m 0755 -d $(DESTDIR)$(PREFIX)/bin
+	install -m 0755 -d $(DESTDIR)/var/www/cgi-bin/cooker
 	install -m 0755 -d $(DESTDIR)$(PREFIX)/share/applications
-	install -m 0755 -d $(DESTDIR)$(PREFIX)/share/cook
+	install -m 0755 -d $(DESTDIR)$(PREFIX)/share/cook/cooktest
 	install -m 0755 -d $(DESTDIR)$(PREFIX)/share/doc/cookutils
 	install -m 0755 cook $(DESTDIR)$(PREFIX)/bin
 	install -m 0755 cooker $(DESTDIR)$(PREFIX)/bin
 	install -m 0755 cookiso $(DESTDIR)$(PREFIX)/bin
 	install -m 0644 cook.conf $(DESTDIR)/etc/slitaz
 	install -m 0644 cook.site $(DESTDIR)/etc/slitaz
-	install -m 0644 web/* $(DESTDIR)/var/www/cooker
-	cp -r data/*.desktop $(DESTDIR)$(PREFIX)/share/applications
-	cp -r data/* $(DESTDIR)$(PREFIX)/share/cook
-	rm $(DESTDIR)$(PREFIX)/share/cook/*.desktop
-	cp -r doc/* $(DESTDIR)$(PREFIX)/share/doc/cookutils
-	cp -r README $(DESTDIR)$(PREFIX)/share/doc/cookutils
-	cp -r init.d $(DESTDIR)/etc
+	install -m 0644 web/* $(DESTDIR)/var/www/cgi-bin/cooker
+	install -m 0644 data/*.desktop $(DESTDIR)$(PREFIX)/share/applications
+	install -m 0644 data/cooklist $(DESTDIR)$(PREFIX)/share/cook
+	install -m 0644 data/receipt $(DESTDIR)$(PREFIX)/share/cook
+	install -m 0644 data/cooktest/* $(DESTDIR)$(PREFIX)/share/cook/cooktest
+	install -m 0644 doc/* $(DESTDIR)$(PREFIX)/share/doc/cookutils
+	install -m 0644 README $(DESTDIR)$(PREFIX)/share/doc/cookutils
+	install -m 0755 init.d/cooker $(DESTDIR)/etc/init.d
+	chmod 0755 $(DESTDIR)/var/www/cgi-bin/cooker/*.cgi
 
 uninstall:
 	rm -rf \
