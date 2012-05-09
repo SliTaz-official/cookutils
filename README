@@ -85,7 +85,7 @@ Database files in the cache folder
     * commits    : List of packages of the last commit check
     * cooklist   : Cooklist for unbuilt packages or custom commands
     * cooknotes  : All the notes added with 'cooker -n "My note"
-    * installed* : Lists used to compare installed packages before and after 
+    * installed* : Lists used to compare installed packages before and after
 		   a package is cooked so we can remove them
 
 The Cooker web interface can by highly customized through the CSS style and via
@@ -109,6 +109,14 @@ in a chroot environment. Here are some usage examples:
 # cookiso setup
 # cookiso gen --flavors="base justx"
 # cookiso gen --flavors=base --version=cooking
+
+
+Cross
+-------------------------------------------------------------------------------
+See   : doc/cross.txt
+Istall: make install-cross
+Usage : cross usage
+Howto : cross howto
 
 
 Toolchain

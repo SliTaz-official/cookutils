@@ -18,20 +18,26 @@ HOWTO:
 	When building a cross toolchain it's better to understand what is a
 	linker or or C compiler such as GCC. The configure option --target is
 	used by 'cross' to build cross-tools. When the toolchain is build on
-	your machine you can then build packages with cook and the wok. Here
-	is commands used to create a chroot (use last tazdev):
+	your machine you can then build packages with cook and the wok. Cross
+	use by default the same source tarball's than cook by path can by
+	changed via the config file. Configuration is: cross.conf. Here is a
+	cmdline howto:
 
+	Create a chroot (use last tazdev)
+	---------------------------------
 	# tazdev gen-chroot --arch=arm
 	# tazdev chroot
 
-	--> Clone cookutils to get last cook and cross
+	Clone cookutils to get last cook and cross
+	------------------------------------------
 	# tazpkg -gi mercurial
 	# tazpkg -gi make
 	# cd && hg clone http://hg.slitaz.org/cookutils
 	# cd cookutils
 	# make install-cross
 
-	--> Now setup the build environment and compile a cross toolchain:
+	Setup the build environment and compile a cross toolchain
+	-------------------------------------------------------------
 	# cook setup
 	# cook arm-setup
 	# mkdir -p /home/slitaz/cross
@@ -41,7 +47,8 @@ HOWTO:
 	# cross check-env --install
 	# cross compile
 
-	--> Test the cross tools
+	Test the cross toolchain
+	------------------------
 	# cross testsuite
 
 AUTHOR
