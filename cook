@@ -6,6 +6,7 @@
 # Copyright (C) SliTaz GNU/Linux - GNU gpl v3
 # Author: Christophe Lincoln <pankso@slitaz.org>
 #
+. /lib/libtaz.sh
 
 [ -f "/etc/slitaz/cook.conf" ] && . /etc/slitaz/cook.conf
 [ -f "cook.conf" ] && . ./cook.conf
@@ -31,6 +32,7 @@ $(echo -e "\033[1m$(gettext "Usage:")\033[0m") cook [package|command] [list|--op
 $(echo -e "\033[1m$(gettext "Commands:")\033[0m")
   usage|help         $(gettext "Display this short usage.")
   setup              $(gettext "Setup your build environment.")
+  arm-setup          $(gettext "Create packages DB lists and flavors.")
   test               $(gettext "Test environment and cook a package.")
   list-wok           $(gettext "List packages in the wok.")
   search             $(gettext "Simple packages search function.")
@@ -54,25 +56,6 @@ $(echo -e "\033[1m$(gettext "Options:")\033[0m")
 
 EOT
 	exit 0
-}
-
-# Be sure we're root.
-check_root() {
-	[ $(id -u) != 0 ] && gettext -e "\nYou must be root to cook.\n\n" && exit 0
-}
-
-separator() {
-	echo "================================================================================"
-}
-
-status() {
-	echo -en "\\033[70G[ "
-	if [ $? = 0 ]; then
-		echo -en "\\033[1;32mOK"
-	else
-		echo -en "\\033[1;31mFailed"
-	fi
-	echo -e "\\033[0;39m ]"
 }
 
 # Log activities, we want first letter capitalized.
@@ -616,6 +599,14 @@ cookit() {
 		mkdir -p $install
 	fi
 	separator && echo ""
+
+	# Execute testsuite.
+	if grep -q ^testsuite $receipt; then
+		echo "Running testsuite"
+		separator
+		testsuite $@ || exit 1
+		separator && echo ""
+	fi
 }
 
 # Cook quality assurance.
