@@ -244,7 +244,7 @@ EOT
 		binutils 2>&1 | tee $logdir/binutils.log ;;
 	linux-headers)
 		init_compile
-		linux_headers 2>&1 | tee $logdir/$logdir/linux-headers.log ;;
+		linux_headers 2>&1 | tee $logdir/linux-headers.log ;;
 	gcc-static)
 		init_compile
 		gcc_static 2>&1 | tee $logdir/gcc-static.log ;;
