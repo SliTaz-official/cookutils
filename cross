@@ -6,7 +6,9 @@
 # Author: Christophe Lincoln <pankso@slitaz.org>
 #
 . /lib/libtaz.sh
-. cross.conf || exit 1
+
+[ -f "/etc/slitaz/cross.conf" ] && . /etc/slitaz/cross.conf
+[ -f "cross.conf" ] && . ./cross.conf
 
 # Help and usage.
 usage() {
