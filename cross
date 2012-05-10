@@ -63,15 +63,15 @@ binutils() {
 	tar xjf $SRC/binutils-$BINUTILS_VERSION.tar.bz2
 	# Peer arch options --disable-werror
 	case $ARCH in
-		arm) archopts="" ;;
-		x86_64) archopts="" ;;
+		arm) archopts="--enable-shared" ;;
+		x86_64) archopts="--disable-multilib" ;;
 	esac
 	cd binutils-$BINUTILS_VERSION
 	./configure \
 		--prefix=$PREFIX \
 		--target=$TARGET \
 		--enable-targets=$BUILD_SYSTEM \
-		--enable-shared $archopts
+		$archopts
 	make || exit 1
 	make install
 }
