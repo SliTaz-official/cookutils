@@ -106,7 +106,8 @@ gcc_static() {
 	make all-gcc all-target-libgcc || exit 1
 	make install-gcc install-target-libgcc
 	cd $PREFIX/lib/gcc/$TARGET/$GCC_VERSION
-	ln -s libgcc.a libgcc_eh.a
+	echo "Creating symlink forstatic libgcc: libgcc_eh.a"
+	rm -f libgcc_eh.a && ln -s libgcc.a libgcc_eh.a
 }
 
 # 4. GNU Glibc
@@ -269,6 +270,31 @@ EOT
 		echo ""
 		echo "Compile end  : $(date)" | tee -a $logdir/compile.log
 		echo "" ;;
+	gen-rootfs)
+		#
+		# TESTING
+		#
+		# Create a bootable rootfs ? dd for an HD image ?
+		init_compile
+		rootfs=/tmp/cross/rootfs
+		tarball="rootfs.tar.bz2"
+		rm -rf $rootfs && mkdir -p $rootfs
+		cd /tmp/cross
+		echo -n "Installing SliTaz base files..."
+		tar xzf $SRC/slitaz-base-files-5.2.tar.gz
+		cp -a slitaz-base-files-*/rootfs/* $rootfs
+		status
+		echo -n "Installing Busybox..."
+		cp -a $source/busybox-$BUSYBOX_VERSION/_install/* $rootfs
+		status
+		echo -n "Creating tarball: $tarball"
+		tar cjf $tarball rootfs
+		status
+		echo -n "Moving rootfs to: $WORK"
+		mv $tarball $WORK
+		status
+		du -sh $WORK/$tarball
+		rm -rf /tmp/cross ;;
 	*)
 		usage ;;
 esac
