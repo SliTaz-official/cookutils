@@ -22,7 +22,8 @@ Commands:
   testsuite       Execute a small testsuite
   check-env       Check build host tools
   download        Download necessary sources
-  clean           Clean-up environment
+  clean           Clean-up build environment
+  clean-tools     Clean: $PREFIX
   show-log        Show a compile log
   binutils        Compile Binutils
   gcc-static      Compile GCC static
@@ -240,7 +241,11 @@ EOT
 		echo "To clean chroot: rm -rf $PREFIX" ;;
 	show-log)
 		pkg=$2
-		less -E $logdir/$pkg.log ;;
+		log=$logdir/$pkg.log
+		if [ ! -f "$log" ]; then
+			echo "No log file found for: $pkg" && exit 1
+		fi
+		less -E $log ;;
 	binutils)
 		init_compile
 		rm -f $logdir/binutils.log
@@ -272,6 +277,24 @@ EOT
 		echo ""
 		echo "Compile end  : $(date)" | tee -a $logdir/compile.log
 		echo "" ;;
+	clean-tools)
+		# Remove crap :-)
+		init_compile
+		echo "Cleaning  : $PREFIX"
+		for dir in info man locale
+		do
+			echo -n "Removing  : $dir"
+			rm -rf $PREFIX/share && status
+		done
+		echo -n "Stripping : binaries"
+		for bin in $PREFIX/bin/${TARGET}-*
+		do
+			[ "$bin" == "$PREFIX/bin/${TARGET}-strip" ] && continue
+			if [ -x "$bin" ]; then
+				${TARGET}-strip -s $bin 2>/dev/null
+			fi
+		done && status
+		echo -n "Tools size: " && du -sh $PREFIX | awk '{print $1}' ;;
 	gen-rootfs)
 		#
 		# TESTING
