@@ -141,6 +141,7 @@ receipt_quality() {
 # Executed before sourcing a receipt.
 unset_receipt() {
 	unset DEPENDS BUILD_DEPENDS WANTED EXTRAVERSION WGET_URL PROVIDE TARBALL
+	unset HOST_ARCH CROSS_BUG
 }
 
 # Paths used in receipt and by cook itself.
@@ -426,6 +427,9 @@ cookit() {
 	set_paths
 
 	# Handle cross compilation
+	if [ "$HOST_ARCH" ] && [ ! $(echo "$HOST_ARCH" | fgrep $ARCH) ]; then
+		echo "ERROR: This package dont build on: $ARCH" && exit 1
+	fi
 	case "$ARCH" in
 		arm|x86_64)
 			echo "cook: adding /usr/cross/$ARCH/bin to PATH"
@@ -931,6 +935,7 @@ case "$1" in
 			echo "Cross compiler: ${HOST_SYSTEM}-gcc"
 		else
 			echo "ERROR: C compiler is missing: ${HOST_SYSTEM}-gcc"
+			echo "Run 'cross compile' for cook a toolchain"
 		fi ;;
 	test)
 		# Test a cook environment.
