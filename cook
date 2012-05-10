@@ -427,10 +427,12 @@ cookit() {
 	set_paths
 
 	# Handle cross compilation.
-	if [ "$HOST_ARCH" ] && [ ! $(echo "$HOST_ARCH" | fgrep $ARCH) ]; then
-		echo "ERROR: This package dont cook or is not include in: $ARCH"
-		[ "$CROSS_BUGS" ] && echo "Bug: $CROSS_BUGS"
-		exit 1
+	if [ "$HOST_ARCH" ]; then
+		if ! echo "$HOST_ARCH" | fgrep -q $ARCH; then
+			echo "ERROR: This package dont cook or is not include in: $ARCH"
+			[ "$CROSS_BUGS" ] && echo "Bug: $CROSS_BUGS"
+			exit 1
+		fi
 	fi
 	case "$ARCH" in
 		arm|x86_64)
@@ -833,8 +835,10 @@ try_aufs_chroot() {
 		fi
 	fi
 
+	# Skip install if target host dont match build system.
+	build=$(echo $BUILD_SYSTEM | cut -d "-" -f 1)
 	# Install package if part of the chroot to keep env up-to-date.
-	if [ -d "$INSTALLED/$pkg" ]; then
+	if [ -d "$INSTALLED/$pkg" ] && [ "$build" != "$ARCH" ]; then
 		. /etc/slitaz/cook.conf
 		. $WOK/$pkg/taz/$pkg-*/receipt
 		echo "Updating chroot environment..."
@@ -926,7 +930,7 @@ case "$1" in
 		# Setup fro cross ARM compiling.
 		sed -i \
 			-e s'/ARCH=.*/ARCH="arm"/' \
-			-e s'/CFLAGS=.*/CFLAGS=""/' \
+			-e s'/CFLAGS=.*/CFLAGS="-march=armv6"/' \
 			-e s'/BUILD_SYSTEM=.*/BUILD_SYSTEM=i486-slitaz-linux/' \
 			-e s'/HOST_SYSTEM=.*/HOST_SYSTEM=$ARCH-slitaz-linux-gnueabi/' \
 				/etc/slitaz/cook.conf
@@ -1246,8 +1250,11 @@ EOT
 			fi
 		fi
 
+		# Skip install if target host dont match build system.
+		build=$(echo $BUILD_SYSTEM | cut -d "-" -f 1)
 		# Install package if part of the chroot to keep env up-to-date.
-		if [ -d "$INSTALLED/$PACKAGE" ] && [ -z "$AUFS_MOUNTS" ]; then
+		if [ -d "$INSTALLED/$PACKAGE" ] && [ -z "$AUFS_MOUNTS" ] && \
+			[ "$build" != "$ARCH" ]; then
 			echo "Updating chroot environment..."
 			echo "Updating chroot: $PACKAGE (${VERSION}${EXTRAVERSION})" | log
 			cd $PKGS && tazpkg install \
