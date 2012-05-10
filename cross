@@ -129,7 +129,7 @@ glibc() {
 			archopts="" ;;
 	esac
 	mkdir -p glibc-build && cd glibc-build
-	BUILD_CC="gcc"
+	BUILD_CC="gcc" \
 	CC="$PREFIX/bin/$TARGET-gcc" \
 	libc_cv_forced_unwind=yes \
 	libc_cv_c_cleanup=yes \
@@ -220,7 +220,7 @@ EOT
 		fi
 		echo -e "\n[CHECKING] readelf -h test.out" | tee -a $logdir/testsuite.log
 		readelf -h test.out | tee -a $logdir/testsuite.log ;;
-	check-host)
+	check-env)
 		for pkg in mpfr mpfr-dev gmp gmp-dev mpc-library gawk autoconf
 		do
 			if [ ! -d "/var/lib/tazpkg/installed/$pkg" ]; then
@@ -267,7 +267,7 @@ EOT
 		glibc 2>&1 | tee $logdir/glibc.log
 		gcc_final 2>&1 | tee $logdir/gcc-final.log
 		echo ""
-		echo "Compile end: $(date)" | tee -a $logdir/compile.log
+		echo "Compile end  : $(date)" | tee -a $logdir/compile.log
 		echo "" ;;
 	*)
 		usage ;;
