@@ -10,6 +10,9 @@
 [ -f "/etc/slitaz/cross.conf" ] && . /etc/slitaz/cross.conf
 [ -f "cross.conf" ] && . ./cross.conf
 
+# Handle --config=/path/to/cross.conf
+[ "$config" ] && . $config
+
 # Help and usage.
 usage() {
 	cat << EOT
@@ -100,6 +103,7 @@ gcc_static() {
 	mkdir gcc-static && cd gcc-static
 	../gcc-$GCC_VERSION/configure \
 		--prefix=$PREFIX \
+		--libexec=$PREFIX/lib \
 		--target=$TARGET \
 		--disable-shared \
 		--disable-threads \
@@ -166,6 +170,7 @@ gcc_final() {
 	mkdir gcc-build && cd gcc-build
 	../gcc-$GCC_VERSION/configure \
 		--prefix=$PREFIX \
+		--libexec=$PREFIX/lib \
 		--target=$TARGET \
 		--enable-shared \
 		--enable-languages=c,c++ \
@@ -203,14 +208,20 @@ case "$1" in
 		init_compile
 		CC=${TARGET}-gcc
 		echo -e "\nCross Toolchain iformation" && separator
+		[ "$config" ] && echo "Config file     : $config"
 		cat << EOT
-Target arch   : $ARCH
-C Compiler    : $CC
-Additonal path: /usr/cross/$ARCH/bin
+Target arch     : $ARCH
+C Compiler      : $CC
+Additonal path  : /usr/cross/$ARCH/bin
+Build directory : $WORK
 EOT
 		separator && echo ""
 		echo "GCC version" && separator
-		$CC -v
+		if [ -x "$PREFIX/$CC" ]; then
+			$CC -v
+		else
+			echo "No C compiler. To build a toolchain run: cross compile"
+		fi
 		separator && echo "" ;;
 	testsuite)
 		init_compile
