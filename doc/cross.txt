@@ -13,13 +13,14 @@ COMMANDS
 OPTIONS
 	--log      clean: Will also clean log files
 	--install  check-env: Install needed packages
+	--config=  Use specified configuration file
 
 HOWTO:
 	When building a cross toolchain it's better to understand what is a
 	linker or or C compiler such as GCC. The configure option --target is
 	used by 'cross' to build cross-tools. When the toolchain is build on
 	your machine you can then build packages with cook and the wok. Cross
-	use by default the same source tarball's than cook by path can by
+	use by default the same source tarball's than cook but path can by
 	changed via the config file. Configuration is: cross.conf. Here is a
 	cmdline howto:
 
@@ -40,10 +41,7 @@ HOWTO:
 	-------------------------------------------------------------
 	# cook setup
 	# cook arm-setup
-	# mkdir -p /home/slitaz/cross
-	# cd /home/slitaz/cross
-	# cp /etc/slitaz/cross.conf .
-	(vi/nano config)
+	(vi/nano /etc/slitaz/cross.conf)
 	# cross check-env --install
 	# cross compile
 
