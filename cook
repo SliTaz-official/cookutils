@@ -426,21 +426,22 @@ cookit() {
 	separator
 	set_paths
 
-	# Handle cross compilation.
-	if [ "$HOST_ARCH" ]; then
-		if ! echo "$HOST_ARCH" | fgrep -q $ARCH; then
-			echo "ERROR: This package dont cook or is not include in: $ARCH"
-			[ "$CROSS_BUGS" ] && echo "Bug: $CROSS_BUGS"
-			exit 1
-		fi
-	fi
+	# Handle cross-tools.
 	case "$ARCH" in
 		arm|x86_64)
+			# CROSS_COMPILE is used by at leat Busybox and the kernel to set
+			# the cross-tools prefix.
 			echo "cook: adding /usr/cross/$ARCH/bin to PATH"
 			export PATH=$PATH:/usr/cross/$ARCH/bin
-			echo "cook: using C compiler $HOST_SYSTEM-gcc"
+			export CROSS_COMPILE=$HOST_SYSTEM-
+			echo "cook: using cross-tools: $CROSS_COMPILE"
 			export CC=${HOST_SYSTEM}-gcc
-			export CXX=${HOST_SYSTEM}-g++ ;;
+			export CXX=${HOST_SYSTEM}-g++
+			export AR=${HOST_SYSTEM}-ar
+			export AS=${HOST_SYSTEM}-as
+			export RANLIB=${HOST_SYSTEM}-ranlib
+			export LD=${HOST_SYSTEM}-ld
+			export STRIP=${HOST_SYSTEM}-strip ;;
 	esac
 
 	[ "$QA" ] && receipt_quality
@@ -1161,6 +1162,42 @@ EOT
 		receipt="$WOK/$pkg/receipt"
 		check_pkg_in_wok && echo ""
 
+		unset inst
+		unset_receipt
+		. $receipt
+
+		# Handle cross compilation.
+		#
+		# CROSS_NOTE: Actually we are running an ARM cooker but running
+		# the cooker and build each commit in wok is not possible since
+		# we dont cook the full wok for this arch. For ARM we need a set
+		# of packages to handle a touch sreen desktop, servers but not
+		# erland.
+		#
+		# The temporary solution is to build only reviewed and tested
+		# packages with HOST_ARCH set in receipt.
+		case "$ARCH" in
+			arm)
+				if [ ! "$HOST_ARCH" ]; then
+					echo "cook: HOST_ARCH is not set in receipt"
+					echo "cook: This package is not include in: $ARCH"
+					[ "$CROSS_BUGS" ] && echo "bugs: $CROSS_BUGS"
+					echo "Cook skip $pkg: HOST_ARCH is not set" | log
+					echo "" && exit 1
+				fi ;;
+		esac
+
+		# Some packages are not include in some arch or fails to cross compile.
+		if [ "$HOST_ARCH" ]; then
+			if ! $(echo "$HOST_ARCH" | fgrep -q $ARCH); then
+				echo "cook: HOST_ARCH=$HOST_ARCH"
+				echo "cook: This package dont cook or is not include in: $ARCH"
+				[ "$CROSS_BUGS" ] && echo "bugs: $CROSS_BUGS"
+				echo "Cook skip $pkg: is not include in: $ARCH" | log
+				echo "" && exit 1
+			fi
+		fi
+
 		# Skip blocked, 3 lines also for the Cooker.
 		if grep -q "^$pkg$" $blocked && [ "$2" != "--unblock" ]; then
 			gettext -e "Blocked package:"; echo -e " $pkg\n" && exit 0
@@ -1175,10 +1212,6 @@ EOT
 		# Display and log info if cook process stopped.
 		trap 'gettext -e "\n\nCook stopped: control-C\n\n" | \
 			tee -a $LOGS/$pkg.log' INT
-
-		unset inst
-		unset_receipt
-		. $receipt
 
 		# Handle --options
 		case "$2" in
