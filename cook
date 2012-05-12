@@ -878,6 +878,8 @@ case "$1" in
 		separator
 		echo -n "Packages: " && ls | wc -l
 		echo "" ;;
+	activity)
+		cat $activity ;;
 	search)
 		# Just a simple search function, we dont need more actually.
 		query="$2"
@@ -1182,7 +1184,7 @@ EOT
 					echo "cook: HOST_ARCH is not set in receipt"
 					echo "cook: This package is not include in: $ARCH"
 					[ "$CROSS_BUGS" ] && echo "bugs: $CROSS_BUGS"
-					echo "Cook skip $pkg: HOST_ARCH is not set" | log
+					echo "Cook skip: $pkg HOST_ARCH is not set" | log
 					echo "" && exit 1
 				fi ;;
 		esac
@@ -1193,7 +1195,7 @@ EOT
 				echo "cook: HOST_ARCH=$HOST_ARCH"
 				echo "cook: This package dont cook or is not include in: $ARCH"
 				[ "$CROSS_BUGS" ] && echo "bugs: $CROSS_BUGS"
-				echo "Cook skip $pkg: is not include in: $ARCH" | log
+				echo "Cook skip: $pkg is not include in: $ARCH" | log
 				echo "" && exit 1
 			fi
 		fi
