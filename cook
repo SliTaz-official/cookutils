@@ -1181,10 +1181,10 @@ EOT
 		case "$ARCH" in
 			arm)
 				if [ ! "$HOST_ARCH" ]; then
-					echo "cook: HOST_ARCH is not set in receipt"
+					echo "cook: HOST_ARCH is not set in $pkg receipt"
 					echo "cook: This package is not include in: $ARCH"
 					[ "$CROSS_BUGS" ] && echo "bugs: $CROSS_BUGS"
-					echo "Cook skip: $pkg HOST_ARCH is not set" | log
+					echo "Cook skip: $pkg is not include in: $ARCH" | log
 					echo "" && exit 1
 				fi ;;
 		esac
@@ -1193,9 +1193,9 @@ EOT
 		if [ "$HOST_ARCH" ]; then
 			if ! $(echo "$HOST_ARCH" | fgrep -q $ARCH); then
 				echo "cook: HOST_ARCH=$HOST_ARCH"
-				echo "cook: This package dont cook or is not include in: $ARCH"
+				echo "cook: $pkg dont cook or is not include in: $ARCH"
 				[ "$CROSS_BUGS" ] && echo "bugs: $CROSS_BUGS"
-				echo "Cook skip: $pkg is not include in: $ARCH" | log
+				echo "Cook skip: $pkg dont cook or is not include in: $ARCH" | log
 				echo "" && exit 1
 			fi
 		fi
