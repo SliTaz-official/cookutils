@@ -256,8 +256,19 @@ case "${QUERY_STRING}" in
 			echo "<pre>No files list for: $pkg</pre>"
 		fi ;;
 	*)
-		# Main page with summary.
-		inwok=$(ls $WOK | wc -l)
+		# We may have a toolchain.cgi script for cross cooker's
+		if [ -f "toolchain.cgi" ]; then
+			toolchain='toolchain.cgi'
+		else
+			toolchain='cooker.cgi?pkg=slitaz-toolchain'
+		fi
+		# Main page with summary. Count only package include in ARCH,
+		# use 'cooker arch' to manually create arch.$ARCH files.
+		# We may have arm only packages, use arch.i486 ?
+		case "$ARCH" in
+			arm) inwok=$(ls $WOK/*/arch.$ARCH | wc -l) ;;
+			*) inwok=$(ls $WOK | wc -l) ;;
+		esac
 		cooked=$(ls $PKGS/*.tazpkg | wc -l)
 		unbuilt=$(($inwok - $cooked))
 		pct=0
@@ -281,7 +292,7 @@ Broken packages  : $(cat $broken | wc -l)
 Blocked packages : $(cat $blocked | wc -l)
 </pre>
 
-<p>
+<p class="info">
 	Packages: $inwok in the wok - $cooked cooked - $unbuilt unbuilt -
 	Server date: $(date '+%Y-%m-%d %H:%M')
 </p>
@@ -295,7 +306,7 @@ Blocked packages : $(cat $blocked | wc -l)
 	<a href="cooker.cgi?file=commits.log">commits.log</a>
 	<a href="cooker.cgi?file=installed.diff">installed.diff</a>
 	- Architecture $ARCH:
-	<a href="cooker.cgi?pkg=slitaz-toolchain">toolchain.log</a>
+	<a href="$toolchain">toolchain</a>
 </p>
 
 <a name="activity"></a>

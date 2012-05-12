@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# SliTaz Build Bot. The Cooker is a tool to automate and test SliTaz package 
-# building. Please read the Cookbook documentation for more information 
+# SliTaz Build Bot. The Cooker is a tool to automate and test SliTaz package
+# building. Please read the Cookbook documentation for more information
 # and discuss with the AUTHORS before adding anything here. PS: no translations
 # here since it's not an end user tool and it's not useful, all devs should
 # at least understand basic English.
@@ -42,6 +42,7 @@ Options:
   usage|-u        Display this short usage.
   setup|-s        Setup the Cooker environment.
   setup-cron      Setup a cron job for the Cooker.
+  arch-db         Create host arch packages DB.
   note|-n         Add a note to the cooknotes.
   notes|-ns       Display all the cooknotes.
   block|-b        Block a package so cook will skip it.
@@ -106,6 +107,7 @@ commits_summary() {
 # Scan packages build deps and fill up cookorder list.
 cook_order_scan() {
 	rm -f $cookorder
+	touch $cookorder
 	for pkg in $(cat $cooklist)
 	do
 		unset WANTED BUILD_DEPENDS
@@ -121,7 +123,7 @@ cook_order_scan() {
 			fi
 		done
 	done
-	
+
 	# Append unordered packages to cookorder.
 	for pkg in $(cat $cooklist)
 	do
@@ -142,7 +144,7 @@ cook_order() {
 	echo -e "\nInitial Cooker order scan"
 	separator
 	cook_order_scan
-	
+
 	# Diff between the cooklist and new ordered list ? So copy the last
 	# cookorder to cooklist and rescan it.
 	while /bin/true
@@ -227,6 +229,32 @@ cook_list() {
 	done
 }
 
+# Create a arch.$ARCH file for each packages cooked for the target host
+# architecture
+#
+# The deal: we dont want all packages handled by cooker commands and stats,
+# since we dont cross compile all packages for each arch but only a set of
+# packages to provide one full featured desktop, servers and goodies usefull
+# for the host system.
+#
+arch_db() {
+	count=0
+	echo "Cleaning packages DB: arch.$ARCH"
+	rm -f $wok/*/arch.$ARCH
+	echo "Creating $ARCH packages DB..."
+	for pkg in $wok/*
+	do
+		unset HOST_ARCH
+		. $pkg/receipt
+		if $(echo "$HOST_ARCH" | fgrep -q $ARCH); then
+			count=$(($count + 1))
+			echo "Including: $pkg"
+			touch $wok/$pkg/arch.$ARCH
+		fi
+	done
+	echo "Included packages for $ARCH: $count"
+}
+
 #
 # Commands
 #
@@ -258,6 +286,9 @@ case "$1" in
 		[ -d "$flavors" ] || hg clone $FLAVORS_URL flavors
 		cp -a ${wok}-hg $wok
 		separator && echo "" ;;
+	arch-db)
+		# Manually create arch packages DB.
+		arch_db ;;
 	setup-cron)
 		# Create cron job for the cooker.
 		[ "$2" ] || hours=2
@@ -368,7 +399,7 @@ case "$1" in
 		echo "" && cd $wok
 		echo "Cooker cooklist"
 		separator
-		
+
 		# Find all unbuilt packages. Get EXTRAVERSION from packed receipt
 		# if it exists since extra version is added when packing the package.
 		echo "Searching for all unbuilt packages" | log
@@ -405,14 +436,14 @@ case "$1" in
 		echo ""
 		echo "Checking for commits" | log_commits
 		separator | tee -a $LOGS/commits.log
-		
+
 		echo $$ > $pidfile
 		trap 'echo -e "\nCooker stopped: PID $$\n" && \
 			rm -f $pidfile $command && exit 1' INT TERM
-		
+
 		echo "Cooker PID   : $$" | log_commits
 		echo "Cooker date  : $(date '+%Y-%m-%d %H:%M:%S')" | log_commits
-		
+
 		# Get revisions. Here we have 2 echoes since we want a msg on screen,
 		# in commits log and activity DB without a space before.
 		cd $wok || exit 1
@@ -425,7 +456,7 @@ case "$1" in
 		# Store last rev to be used by CGI so it doesn't need to call hg head
 		# on each load.
 		echo "$new" > $CACHE/wokrev
-		
+
 		# Sync build wok with rsync so we don't take care about removing old
 		# files as before.
 		if [ "$new" -gt "$cur" ]; then
@@ -438,7 +469,7 @@ case "$1" in
 			separator | log_commits
 			clean_exit && echo "" && exit 0
 		fi
-		
+
 		# Get and display modifications.
 		cd ${wok}-hg
 		commits_summary | log_commits
@@ -467,10 +498,31 @@ case "$1" in
 				sed -i "/^${pkg}$/"d $CACHE/blocked $CACHE/broken $commits.tmp
 			fi
 		done
-		
+
 		# Keep previous commit and discard duplicate lines
 		cat $commits $commits.tmp | sed /"^$"/d > $commits.new
 		uniq $commits.new > $commits && rm $commits.*
+
+		# Handle cross compilation. Creat arch packages DB and remove pkgs
+		# not cooked for this arch from the commits list.
+		case "$ARCH" in
+			arm)
+				arch_db | log_commits
+				for pkg in $(cat $commits)
+				do
+					if [ ! -f "$wok/$pkg/arch.$ARCH" ]; then
+						echo "Cooker arch : skip $pkg (not include in: $ARCH)" | \
+							log_commits
+						sed -i "/^${pkg}$/"d $commits
+					fi
+				done ;;
+			i486)
+				echo "Cooker arch : $ARCH (default)" | log_commits ;;
+			*)
+				echo "Cooker arch : $ARCH" | log_commits ;;
+		esac
+
+		# Stats
 		pkgs=$(cat $commits | wc -l)
 		echo "Packages to cook: $pkgs" | log
 		echo "Packages to cook : $pkgs" | log_commits

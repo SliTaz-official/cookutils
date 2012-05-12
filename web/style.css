@@ -28,28 +28,28 @@ pre {
 	width: 250px;
 }
 
-#header h1 a { 
-	color: white; 
+#header h1 a {
+	color: white;
 	text-decoration: none;
 	font-size: 20px;
 	font-style: italic;
 }
 
-#header h1 a:hover, #network a:hover { 
+#header h1 a:hover, #network a:hover {
 	color: #d66018;
 }
 
 /* Header links */
 
-#network { 
-	float: right; 
-	padding: 10px 5px 0; 
+#network {
+	float: right;
+	padding: 10px 5px 0;
 	font-size: 12px;
 }
 
 #network a {
 	padding: 0 6px;
-	color: #fff; 
+	color: #fff;
 	font-weight: bold;
 	text-decoration: none;
 }
@@ -73,38 +73,31 @@ pre {
 /* Buttons */
 
 .button {
-	padding: 2px 4px;
 	cursor: pointer;
-	color: #000;
+	padding: 4px;
+	margin: 4px 0px;
 }
 
-a.button  {
+a.button, .pctbar  {
 	text-decoration: none;
 	color: #666;
 }
 
 .button:hover {
-	background-color: #ddd;
 	border: 1px solid #999;
 }
 
-.button {
-	margin: 0;
-	background: #f1f1f1;
-	border: 1px solid #ddd;
-}
-
-/* Progress bar */
-
 .pct { background: #9dff4a; padding: 2px 4px; }
 
-.pctbar {
-	margin: 0;
-	color: #666;
-	background: #f1f1f1;
-	border: 1px solid #ddd;
-	overflow: hidden;
-	clear: both;
+.button, .pctbar {
+	border: 1px solid #cccccc;
+	font-size: 14px;
+	line-height: 1.2em;
+	background-image: -webkit-linear-gradient(#FAFAFA, #F4F4F4 40%, #E5E5E5);
+	background-image: -moz-linear-gradient(#FAFAFA, #F4F4F4 40%, #E5E5E5);
+	-webkit-box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1);
+	-moz-box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1);
+	box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 /* Round corner */
