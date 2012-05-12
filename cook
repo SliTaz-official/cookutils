@@ -1190,14 +1190,12 @@ EOT
 		esac
 
 		# Some packages are not include in some arch or fails to cross compile.
-		if [ "$HOST_ARCH" ]; then
-			if ! $(echo "$HOST_ARCH" | fgrep -q $ARCH); then
-				echo "cook: HOST_ARCH=$HOST_ARCH"
-				echo "cook: $pkg dont cook or is not include in: $ARCH"
-				[ "$CROSS_BUGS" ] && echo "bugs: $CROSS_BUGS"
-				echo "Cook skip: $pkg dont cook or is not include in: $ARCH" | log
-				echo "" && exit 1
-			fi
+		if ! $(echo "$HOST_ARCH" | fgrep -q $ARCH); then
+			echo "cook: HOST_ARCH=$HOST_ARCH"
+			echo "cook: $pkg dont cook or is not include in: $ARCH"
+			[ "$CROSS_BUGS" ] && echo "bugs: $CROSS_BUGS"
+			echo "Cook skip: $pkg dont cook or is not include in: $ARCH" | log
+			echo "" && exit 1
 		fi
 
 		# Skip blocked, 3 lines also for the Cooker.
