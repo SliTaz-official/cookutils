@@ -229,12 +229,12 @@ cook_list() {
 	done
 }
 
-# Create a arch.$ARCH file for each packages cooked for the target host
+# Create a arch.$ARCH file for each package cooked for the target host
 # architecture
 #
 # The deal: we dont want all packages handled by cooker commands and stats,
 # since we dont cross compile all packages for each arch but only a set of
-# packages to provide one full featured desktop, servers and goodies usefull
+# packages to provide one full featured desktop, servers and goodies useful
 # for the host system.
 #
 arch_db() {
@@ -481,7 +481,7 @@ case "$1" in
 			do
 				pkg=$(echo $file | cut -d "/" -f 1)
 				desc=$(hg log --rev=$rev --template "{desc}" $file)
-				echo "Commited package : $pkg - $desc" | log_commits
+				echo "Committed package : $pkg - $desc" | log_commits
 				echo $pkg >> $commits.tmp
 			done
 		done
@@ -503,7 +503,7 @@ case "$1" in
 		cat $commits $commits.tmp | sed /"^$"/d > $commits.new
 		uniq $commits.new > $commits && rm $commits.*
 
-		# Handle cross compilation. Creat arch packages DB and remove pkgs
+		# Handle cross compilation. Create arch packages DB and remove pkgs
 		# not cooked for this arch from the commits list.
 		case "$ARCH" in
 			arm)
@@ -511,7 +511,7 @@ case "$1" in
 				for pkg in $(cat $commits)
 				do
 					if [ ! -f "$wok/$pkg/arch.$ARCH" ]; then
-						echo "Cooker arch : skip $pkg (not include in: $ARCH)" | \
+						echo "Cooker arch : skip $pkg (not included in: $ARCH)" | \
 							log_commits
 						sed -i "/^${pkg}$/"d $commits
 					fi
