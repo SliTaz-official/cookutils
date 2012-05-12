@@ -119,6 +119,25 @@ Usage : cross usage
 Howto : cross howto
 
 
+Cross compiling
+--------------------------------------------------------------------------------
+Cookutils let you cross coile package fro a specofic architecture. Say you want
+to build ARM binaries from an standard i486 machine. Cookutis provide helpers
+for the ARM platform, but the first thing to do is compile a cross toolchain and
+modify the main cook.conf variables to use correct ARCH, CFLAGS and BUILD_SYSTEM
+
+Cook handle HOST_ARCH and CROSS_* receipt variables. Some package dont build or
+are not packaged for an architecture and so cross compiling will fails if the
+package receipt have not been reviewd and include HOST_ARCH. Here is an example
+and a list of cross variables:
+
+HOST_ARCH="i486 arm"
+CROSS_BUGS="Bugs description"
+
+Before cross compiling, cook will automaticaly add cross-tools path to PATH, set
+CC, AR, LD, etc and also export CROSS_COMPILE.
+
+
 Toolchain
 --------------------------------------------------------------------------------
 To rebuild the full SliTaz toolchain at once - cook and the Cooker will use the
