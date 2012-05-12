@@ -240,16 +240,16 @@ cook_list() {
 arch_db() {
 	count=0
 	echo "Cleaning packages DB: arch.$ARCH"
-	rm -f $wok/*/arch.$ARCH
+	rm -f $wok/*/arch.$ARCH && cd $wok
 	echo "Creating $ARCH packages DB..."
-	for pkg in $wok/*
+	for pkg in *
 	do
 		unset HOST_ARCH
-		. $pkg/receipt
+		. $wok/$pkg/receipt
 		if $(echo "$HOST_ARCH" | fgrep -q $ARCH); then
 			count=$(($count + 1))
 			echo "Including: $pkg"
-			touch $wok/$pkg/arch.$ARCH
+			touch $pkg/arch.$ARCH
 		fi
 	done
 	echo "Included packages for $ARCH: $count"
