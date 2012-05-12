@@ -429,7 +429,7 @@ cookit() {
 	# Handle cross-tools.
 	case "$ARCH" in
 		arm|x86_64)
-			# CROSS_COMPILE is used by at leat Busybox and the kernel to set
+			# CROSS_COMPILE is used by at least Busybox and the kernel to set
 			# the cross-tools prefix.
 			echo "cook: adding /usr/cross/$ARCH/bin to PATH"
 			export PATH=$PATH:/usr/cross/$ARCH/bin
@@ -836,7 +836,7 @@ try_aufs_chroot() {
 		fi
 	fi
 
-	# Skip install if target host dont match build system.
+	# Skip install if target host doesn't match build system.
 	build=$(echo $BUILD_SYSTEM | cut -d "-" -f 1)
 	# Install package if part of the chroot to keep env up-to-date.
 	if [ -d "$INSTALLED/$pkg" ] && [ "$build" == "$ARCH" ]; then
@@ -850,7 +850,7 @@ try_aufs_chroot() {
 	exit $status
 }
 
-# Create a XML feed for freshly builded package.
+# Create a XML feed for freshly built packages.
 gen_rss() {
 	pubdate=$(date "+%a, %d %b %Y %X")
 	cat > $FEEDS/$pkg.xml << EOT
@@ -930,7 +930,7 @@ case "$1" in
 		separator
 		gettext -e "All done, ready to cook packages :-)\n\n" ;;
 	arm-setup)
-		# Setup fro cross ARM compiling.
+		# Setup for cross ARM compiling.
 		sed -i \
 			-e s'/ARCH=.*/ARCH="arm"/' \
 			-e s'/CFLAGS=.*/CFLAGS="-march=armv6"/' \
@@ -944,7 +944,7 @@ case "$1" in
 			echo "Cross compiler: ${HOST_SYSTEM}-gcc"
 		else
 			echo "ERROR: C compiler is missing: ${HOST_SYSTEM}-gcc"
-			echo "Run 'cross compile' for cook a toolchain"
+			echo "Run 'cross compile' to cook a toolchain"
 		fi ;;
 	test)
 		# Test a cook environment.
@@ -1173,7 +1173,7 @@ EOT
 		# CROSS_NOTE: Actually we are running an ARM cooker but running
 		# the cooker and build each commit in wok is not possible since
 		# we dont cook the full wok for this arch. For ARM we need a set
-		# of packages to handle a touch sreen desktop, servers but not
+		# of packages to handle a touch screen desktop, servers but not
 		# erland.
 		#
 		# The temporary solution is to build only reviewed and tested
@@ -1182,19 +1182,19 @@ EOT
 			arm)
 				if [ ! "$HOST_ARCH" ]; then
 					echo "cook: HOST_ARCH is not set in $pkg receipt"
-					echo "cook: This package is not include in: $ARCH"
+					echo "cook: This package is not included in: $ARCH"
 					[ "$CROSS_BUGS" ] && echo "bugs: $CROSS_BUGS"
-					echo "Cook skip: $pkg is not include in: $ARCH" | log
+					echo "Cook skip: $pkg is not included in: $ARCH" | log
 					echo "" && exit 1
 				fi ;;
 		esac
 
-		# Some packages are not include in some arch or fails to cross compile.
+		# Some packages are not included in some arch or fail to cross compile.
 		if ! $(echo "$HOST_ARCH" | fgrep -q $ARCH); then
 			echo "cook: HOST_ARCH=$HOST_ARCH"
-			echo "cook: $pkg dont cook or is not include in: $ARCH"
+			echo "cook: $pkg doesn't cook or is not included in: $ARCH"
 			[ "$CROSS_BUGS" ] && echo "bugs: $CROSS_BUGS"
-			echo "Cook skip: $pkg dont cook or is not include in: $ARCH" | log
+			echo "Cook skip: $pkg doesn't cook or is not included in: $ARCH" | log
 			echo "" && exit 1
 		fi
 
