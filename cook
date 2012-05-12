@@ -838,10 +838,10 @@ try_aufs_chroot() {
 	# Skip install if target host dont match build system.
 	build=$(echo $BUILD_SYSTEM | cut -d "-" -f 1)
 	# Install package if part of the chroot to keep env up-to-date.
-	if [ -d "$INSTALLED/$pkg" ] && [ "$build" != "$ARCH" ]; then
+	if [ -d "$INSTALLED/$pkg" ] && [ "$build" == "$ARCH" ]; then
 		. /etc/slitaz/cook.conf
 		. $WOK/$pkg/taz/$pkg-*/receipt
-		echo "Updating chroot environment..."
+		echo "Updating $ARCH chroot environment..."
 		echo "Updating chroot: $pkg (${VERSION}${EXTRAVERSION})" | log
 		cd $PKGS && tazpkg install \
 			$pkg-${VERSION}${EXTRAVERSION}.tazpkg --forced
@@ -1254,7 +1254,7 @@ EOT
 		build=$(echo $BUILD_SYSTEM | cut -d "-" -f 1)
 		# Install package if part of the chroot to keep env up-to-date.
 		if [ -d "$INSTALLED/$PACKAGE" ] && [ -z "$AUFS_MOUNTS" ] && \
-			[ "$build" != "$ARCH" ]; then
+			[ "$build" == "$ARCH" ]; then
 			echo "Updating chroot environment..."
 			echo "Updating chroot: $PACKAGE (${VERSION}${EXTRAVERSION})" | log
 			cd $PKGS && tazpkg install \
