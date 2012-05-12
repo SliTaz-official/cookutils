@@ -21,7 +21,7 @@ Usage: $(basename $0) command --option
 
 Commands:
   howto           Man alike and howto
-  info            Dispaly cross-tools info
+  info            Display cross-tools info
   testsuite       Execute a small testsuite
   check-env       Check build host tools
   download        Download necessary sources
@@ -113,7 +113,7 @@ gcc_static() {
 	make all-gcc all-target-libgcc || exit 1
 	make install-gcc install-target-libgcc
 	cd $PREFIX/lib/gcc/$TARGET/$GCC_VERSION
-	echo "Creating symlink forstatic libgcc: libgcc_eh.a"
+	echo "Creating symlink for static libgcc: libgcc_eh.a"
 	rm -f libgcc_eh.a && ln -s libgcc.a libgcc_eh.a
 }
 
@@ -182,7 +182,7 @@ gcc_final() {
 	make install
 }
 
-# Build Busybox to we can create prebuild tiny rootfs image and boot
+# Build Busybox to we can create prebuilt tiny rootfs image and boot
 # from NFS ?
 cross_busybox() {
 	echo "Extracting: busybox-$BUSYBOX_VERSION.tar.bz2"
@@ -207,12 +207,12 @@ case "$1" in
 	info)
 		init_compile
 		CC=${TARGET}-gcc
-		echo -e "\nCross Toolchain iformation" && separator
+		echo -e "\nCross Toolchain information" && separator
 		[ "$config" ] && echo "Config file     : $config"
 		cat << EOT
 Target arch     : $ARCH
 C Compiler      : $CC
-Additonal path  : /usr/cross/$ARCH/bin
+Additional path : /usr/cross/$ARCH/bin
 Build directory : $WORK
 EOT
 		separator && echo ""
@@ -246,7 +246,7 @@ EOT
 	download)
 		download_src ;;
 	clean)
-		echo -n "Remove all source files..."
+		echo -n "Removing all source files..."
 		rm -rf $WORK/source/* && status
 		[ "$log" ] && rm -f $WORK/log/*.log
 		echo "To clean chroot: rm -rf $PREFIX" ;;

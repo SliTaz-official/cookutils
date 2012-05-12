@@ -4,7 +4,7 @@ SYNOPSIS
 
 DESCRIPTION
 	Cross is a tool to build a cross toolchain on SliTaz GNU/Linux. The
-	ARM platform is actually supported and x86_64 toolchain is on the
+	ARM platform is actually supported and a x86_64 toolchain is on the
 	stove
 
 COMMANDS
@@ -17,10 +17,10 @@ OPTIONS
 
 HOWTO:
 	When building a cross toolchain it's better to understand what is a
-	linker or or C compiler such as GCC. The configure option --target is
-	used by 'cross' to build cross-tools. When the toolchain is build on
+	linker or C compiler such as GCC. The configure option --target is
+	used by 'cross' to build cross-tools. When the toolchain is built on
 	your machine you can then build packages with cook and the wok. Cross
-	use by default the same source tarball's than cook but path can by
+	uses by default the same source tarballs as cook but the path can be
 	changed via the config file. Configuration is: cross.conf. Here is a
 	cmdline howto:
 
@@ -49,5 +49,5 @@ HOWTO:
 	------------------------
 	# cross testsuite
 
-AUTHOR
+AUTHORS
 	Written by Christophe Lincoln

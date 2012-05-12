@@ -65,7 +65,7 @@ repository or sent to the official mirror. We create and use:
 Cooker
 --------------------------------------------------------------------------------
 The Cooker is a Build Bot which automates the build process but doesn't make
-the dinner for you! We need quality receipts to cook succesfully and the goal
+the dinner for you! We need quality receipts to cook successfully and the goal
 is not to have a bloated script so please Keep It Short and Simple.
 
 Cmdline tool  : /usr/bin/cooker
@@ -113,28 +113,28 @@ in a chroot environment. Here are some usage examples:
 
 Cross
 -------------------------------------------------------------------------------
-See   : doc/cross.txt
-Istall: make install-cross
-Usage : cross usage
-Howto : cross howto
+See    : doc/cross.txt
+Install: make install-cross
+Usage  : cross usage
+Howto  : cross howto
 
 
 Cross compiling
 --------------------------------------------------------------------------------
-Cookutils let you cross coile package fro a specofic architecture. Say you want
-to build ARM binaries from an standard i486 machine. Cookutis provide helpers
+Cookutils lets you cross compile a package for a specific architecture. Say you want
+to build ARM binaries from a standard i486 machine. Cookutils provides helpers
 for the ARM platform, but the first thing to do is compile a cross toolchain and
-modify the main cook.conf variables to use correct ARCH, CFLAGS and BUILD_SYSTEM
+modify the main cook.conf variables to use a correct ARCH, CFLAGS and BUILD_SYSTEM
 
-Cook handle HOST_ARCH and CROSS_* receipt variables. Some package dont build or
-are not packaged for an architecture and so cross compiling will fails if the
-package receipt have not been reviewd and include HOST_ARCH. Here is an example
+Cook handles HOST_ARCH and CROSS_* receipt variables. Some packages don't build or
+are not packaged for an architecture and so cross compiling will fail if the
+package receipt has not been reviewed and includes HOST_ARCH. Here is an example
 and a list of cross variables:
 
 HOST_ARCH="i486 arm"
 CROSS_BUGS="Bugs description"
 
-Before cross compiling, cook will automaticaly add cross-tools path to PATH, set
+Before cross compiling, cook will automatically add cross-tools path to PATH, set
 CC, AR, LD, etc and also export CROSS_COMPILE.
 
 
