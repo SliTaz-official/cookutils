@@ -87,7 +87,8 @@ a.button, .pctbar  {
 	border: 1px solid #999;
 }
 
-.pct { background: #9dff4a; padding: 2px 4px; overflow: hidden; }
+.pct { background: #9dff4a; padding: 2px 4px;  }
+.pctbar { overflow: hidden; }
 
 .button, .pctbar {
 	border: 1px solid #cccccc;
