@@ -933,7 +933,7 @@ case "$1" in
 		# Setup for cross compiling.
 		arch=${1%-setup}
 		sed -i \
-			-e s'/ARCH=.*/ARCH="$arch"/' \
+			-e s"/ARCH=.*/ARCH=\"$arch\"/" \
 			-e s'/BUILD_SYSTEM=.*/BUILD_SYSTEM=i486-slitaz-linux/' \
 			/etc/slitaz/cook.conf
 		case "$arch" in
