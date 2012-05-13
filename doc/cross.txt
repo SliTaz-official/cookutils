@@ -39,8 +39,8 @@ HOWTO:
 
 	Setup the build environment and compile a cross toolchain
 	-------------------------------------------------------------
-	# cook setup
 	# cook arm-setup
+	# cook setup
 	(vi/nano /etc/slitaz/cross.conf)
 	# cross check-env --install
 	# cross compile

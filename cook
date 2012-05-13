@@ -433,9 +433,13 @@ cookit() {
 	case "$ARCH" in
 		arm|x86_64)
 			# CROSS_COMPILE is used by at least Busybox and the kernel to set
-			# the cross-tools prefix.
-			echo "cook: adding /usr/cross/$ARCH/bin to PATH"
-			export PATH=$PATH:/usr/cross/$ARCH/bin
+			# the cross-tools prefix but first check if sysroot is used.
+			if [ "$SYSROOT" ]; then
+				echo "cook: $ARCH sysroot: $SYSROOT"
+			else
+				echo "cook: adding /usr/cross/$ARCH/bin to PATH"
+				export PATH=$PATH:/usr/cross/$ARCH/bin
+			fi
 			export CROSS_COMPILE=$HOST_SYSTEM-
 			echo "cook: using cross-tools: $CROSS_COMPILE"
 			export CC=${HOST_SYSTEM}-gcc
@@ -444,7 +448,9 @@ cookit() {
 			export AS=${HOST_SYSTEM}-as
 			export RANLIB=${HOST_SYSTEM}-ranlib
 			export LD=${HOST_SYSTEM}-ld
-			export STRIP=${HOST_SYSTEM}-strip ;;
+			export STRIP=${HOST_SYSTEM}-strip
+			#export PKGCONFIG=${HOST_SYSTEM}-pkg-config
+			;;
 	esac
 
 	[ "$QA" ] && receipt_quality
