@@ -16,7 +16,6 @@ activity="$CACHE/activity"
 command="$CACHE/command"
 broken="$CACHE/broken"
 blocked="$CACHE/blocked"
-installed="/var/lib/tazpkg/installed"
 
 # Old style compatibility
 SOURCES_REPOSITORY=$SRC
@@ -903,7 +902,7 @@ case "$1" in
 			if [ "$forced" ]; then
 				tazpkg get-install $pkg --forced
 			else
-				[ -d "$installed/$pkg" ] || tazpkg get-install $pkg
+				[ -d "$INSTALLED/$pkg" ] || tazpkg get-install $pkg
 			fi
 		done
 
@@ -958,8 +957,10 @@ case "$1" in
 		echo "Target arch   : $ARCH"
 		echo "Configure args: $CONFIGURE_ARGS"
 		if [ "$SYSROOT" ]; then
+			echo "Arch sysroot: $SYSROOT"
 			CC=/usr/bin/${HOST_SYSTEM}-gcc
 		else
+			echo "Path: /usr/cross/$ARCH/bin"
 			CC=/usr/cross/$ARCH/bin/${HOST_SYSTEM}-gcc
 		fi
 		if [ -x $CC ]; then
