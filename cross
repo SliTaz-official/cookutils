@@ -42,10 +42,11 @@ EOT
 # Make sure we have all directories.
 init_compile() {
 	export LC_ALL=POSIX LANG=POSIX
-	export PATH=$PATH:$PREFIX/bin
+	[ "$SYSROOT" ] || export PATH=$PATH:$PREFIX/bin
 	export CROSS_COMPILE=${TARGET}-
 	source=$WORK/source
 	logdir=$WORK/log
+	#install=$WORK/install
 	mkdir -p $source $logdir $install
 	cd $source
 }
@@ -60,36 +61,47 @@ download_src() {
 	[ -f "busybox-$BUSYBOX_VERSION.tar.bz2" ] || wget $BUSYBOX_WGET
 }
 
+# Use sysroot or not ?
+check_sysroot() {
+	if [ "$SYSROOT" ]; then
+		PREFIX=/usr
+		HDR_PATH=$SYSROOT/usr
+		sysroot="--with-sysroot=$SYSROOT"
+		echo "Cross configure: $sysroot"
+	else
+		HDR_PATH=$PREFIX
+	fi
+}
+
 # 1. Binutils
 binutils() {
 	echo "Extracting: binutils-$BINUTILS_VERSION.tar.bz2"
 	tar xjf $SRC/binutils-$BINUTILS_VERSION.tar.bz2
 	: ${BINUTILS_ARGS=--enable-shared}
+	check_sysroot
 	cd binutils-$BINUTILS_VERSION
 	./configure \
 		--prefix=$PREFIX \
 		--target=$TARGET \
 		--enable-targets=$BUILD_SYSTEM \
-		$BINUTILS_ARGS
+		$BINUTILS_ARGS $sysroot
 	make || exit 1
 	make install
 }
 
-# 2. Kernel headers
-linux_headers() {
-	echo "Extracting: linux-$LINUX_VERSION.tar.bz2"
-	tar xjf $SRC/linux-$LINUX_VERSION.tar.bz2
-	cd linux-$LINUX_VERSION
-	make mrproper
-	make ARCH=$ARCH headers_check
-	make ARCH=$ARCH headers_install \
-		INSTALL_HDR_PATH=$PREFIX
-}
-
-# 3. GCC static (first pass)
+# 2. GCC static (first pass)
 gcc_static() {
 	echo "Extracting: gcc-$GCC_VERSION.tar.bz2"
 	tar xjf $SRC/gcc-$GCC_VERSION.tar.bz2
+	check_sysroot
+	# Arch fixes and work around
+	case "$ARCH" in
+		x86_64)
+			# GCC wants Glib headers in cross environment (not tested
+			# with sysroot) Should we install glibc-headers before ?
+			[ "$SYSROOT" ] || \
+				ls -s /usr/include $PREFIX/$TARGET/include ;;
+	esac
 	rm -rf gcc-static
 	mkdir gcc-static && cd gcc-static
 	../gcc-$GCC_VERSION/configure \
@@ -100,12 +112,24 @@ gcc_static() {
 		--disable-threads \
 		--without-headers \
 		--with-newlib \
-		$GCC_STATIC_ARGS
+		$GCC_STATIC_ARGS $sysroot
 	make all-gcc all-target-libgcc || exit 1
 	make install-gcc install-target-libgcc
 	cd $PREFIX/lib/gcc/$TARGET/$GCC_VERSION
 	echo "Creating symlink for static libgcc: libgcc_eh.a"
 	rm -f libgcc_eh.a && ln -s libgcc.a libgcc_eh.a
+}
+
+# 3. Kernel headers use static GCC
+linux_headers() {
+	echo "Extracting: linux-$LINUX_VERSION.tar.bz2"
+	tar xjf $SRC/linux-$LINUX_VERSION.tar.bz2
+	check_sysroot
+	cd linux-$LINUX_VERSION
+	make mrproper
+	make ARCH=$ARCH headers_check
+	make ARCH=$ARCH headers_install \
+		INSTALL_HDR_PATH=$HDR_PATH
 }
 
 # 4. GNU Glibc
@@ -114,7 +138,7 @@ glibc() {
 	tar xjf $SRC/glibc-$GLIBC_VERSION.tar.bz2
 	[ "$continue" ] || rm -rf glibc-build
 	# Some arch may need glibc-ports and custom CFLAGS
-	case $ARCH in
+	case "$ARCH" in
 		arm)
 			#export CFLAGS="-march=armv6 -mtune=generic -g -O2"
 			[ -f "$SRC/glibc-ports-$GLIBC_VERSION.tar.bz2" ] || wget \
@@ -139,11 +163,14 @@ glibc() {
 		--enable-add-ons $GLIBC_ARGS
 	make || exit 1
 	make install
-	cd $PREFIX/$TARGET
-	rm -rf lib include
-	ln -s ../lib lib
-	ln -s ../include include
-	unset CFLAGS
+	# Work around to let GCC find Glibc headers.
+	if [ ! "$SYSROOT" ]; then
+		cd $PREFIX/$TARGET
+		rm -rf lib include
+		ln -s ../lib lib
+		ln -s ../include include
+	fi
+	#unset CFLAGS
 }
 
 # 5. GCC final
@@ -152,6 +179,7 @@ gcc_final() {
 		echo "Extracting: gcc-$GCC_VERSION.tar.bz2"
 		tar xjf $SRC/gcc-$GCC_VERSION.tar.bz2
 	fi
+	check_sysroot
 	rm -rf gcc-build
 	mkdir gcc-build && cd gcc-build
 	../gcc-$GCC_VERSION/configure \
@@ -163,7 +191,7 @@ gcc_final() {
 		--enable-long-long \
 		--enable-__cxa_atexit \
 		--with-pkgversion="SliTaz" \
-		$GCC_FINAL_ARGS
+		$GCC_FINAL_ARGS $sysroot
 	make || exit 1
 	make install
 }
@@ -180,6 +208,7 @@ cross_busybox() {
 	make install
 	chmod 4755 _install/bin/busybox
 	readelf -h _install/bin/busybox
+	echo "Busybox install path: $(pwd)/_install"
 }
 
 #
@@ -198,9 +227,13 @@ case "$1" in
 		cat << EOT
 Target arch     : $ARCH
 C Compiler      : $CC
-Additional path : $PREFIX/bin
 Build directory : $WORK
 EOT
+		if [ "$SYSROOT" ]; then
+			echo "Arch sysroot    : $SYSROOT"
+		else
+			echo "Additional path : $PREFIX/bin"
+		fi
 		separator && echo ""
 		echo "GCC version" && separator
 		if [ -x "$PREFIX/$CC" ]; then
@@ -247,12 +280,12 @@ EOT
 		init_compile
 		rm -f $logdir/binutils.log
 		binutils 2>&1 | tee $logdir/binutils.log ;;
-	linux-headers)
-		init_compile
-		linux_headers 2>&1 | tee $logdir/linux-headers.log ;;
 	gcc-static)
 		init_compile
 		gcc_static 2>&1 | tee $logdir/gcc-static.log ;;
+	linux-headers)
+		init_compile
+		linux_headers 2>&1 | tee $logdir/linux-headers.log ;;
 	glibc)
 		init_compile
 		glibc 2>&1 | tee $logdir/glibc.log ;;
@@ -269,8 +302,8 @@ EOT
 		echo "Compile start: $(date)" | tee $logdir/compile.log
 		download_src
 		binutils 2>&1 | tee $logdir/binutils.log
-		linux_headers 2>&1 | tee $logdir/linux-headers.log
 		gcc_static 2>&1 | tee $logdir/gcc-static.log
+		linux_headers 2>&1 | tee $logdir/linux-headers.log
 		glibc 2>&1 | tee $logdir/glibc.log
 		gcc_final 2>&1 | tee $logdir/gcc-final.log
 		echo ""
