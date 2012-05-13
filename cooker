@@ -214,7 +214,7 @@ cook_commits() {
 		for pkg in $(cat $commits)
 		do
 			echo "cook:$pkg" > $command
-			cook $pkg || broken
+			cook $pkg --output=html || broken
 			sed -i /^${pkg}$/d $commits
 		done
 	fi
@@ -346,7 +346,7 @@ case "$1" in
 		cook_list ;;
 	pkg|-p)
 		# Same as 'cook pkg' but with log for web interface.
-		cook $pkg || broken
+		cook $pkg --output=html || broken
 		clean_exit ;;
 	cat|-c)
 		# Cook all packages of a category.
