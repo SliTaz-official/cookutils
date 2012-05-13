@@ -957,7 +957,12 @@ case "$1" in
 		. /etc/slitaz/cook.conf
 		echo "Target arch   : $ARCH"
 		echo "Configure args: $CONFIGURE_ARGS"
-		if [ -x /usr/cross/$ARCH/bin/${HOST_SYSTEM}-gcc ]; then
+		if [ "$SYSROOT" ]; then
+			CC=/usr/bin/${HOST_SYSTEM}-gcc
+		else
+			CC=/usr/cross/$ARCH/bin/${HOST_SYSTEM}-gcc
+		fi
+		if [ -x $CC ]; then
 			echo "Cross compiler: ${HOST_SYSTEM}-gcc"
 		else
 			echo "WARNING: C compiler is missing: ${HOST_SYSTEM}-gcc"
