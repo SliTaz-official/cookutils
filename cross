@@ -75,6 +75,7 @@ check_sysroot() {
 
 # 1. Binutils
 binutils() {
+	init_compile
 	echo "Extracting: binutils-$BINUTILS_VERSION.tar.bz2"
 	tar xjf $SRC/binutils-$BINUTILS_VERSION.tar.bz2
 	: ${BINUTILS_ARGS=--enable-shared}
@@ -91,6 +92,7 @@ binutils() {
 
 # 2. GCC static (first pass)
 gcc_static() {
+	init_compile
 	echo "Extracting: gcc-$GCC_VERSION.tar.bz2"
 	tar xjf $SRC/gcc-$GCC_VERSION.tar.bz2
 	check_sysroot
@@ -122,6 +124,7 @@ gcc_static() {
 
 # 3. Kernel headers use static GCC
 linux_headers() {
+	init_compile
 	echo "Extracting: linux-$LINUX_VERSION.tar.bz2"
 	tar xjf $SRC/linux-$LINUX_VERSION.tar.bz2
 	check_sysroot
@@ -134,6 +137,7 @@ linux_headers() {
 
 # 4. GNU Glibc
 glibc() {
+	init_compile
 	echo "Extracting: glibc-$GLIBC_VERSION.tar.bz2"
 	tar xjf $SRC/glibc-$GLIBC_VERSION.tar.bz2
 	[ "$continue" ] || rm -rf glibc-build
@@ -178,6 +182,7 @@ glibc() {
 
 # 5. GCC final
 gcc_final() {
+	init_compile
 	if [ ! -d "gcc-$GCC_VERSION" ]; then
 		echo "Extracting: gcc-$GCC_VERSION.tar.bz2"
 		tar xjf $SRC/gcc-$GCC_VERSION.tar.bz2
@@ -202,6 +207,7 @@ gcc_final() {
 # Build Busybox to we can create prebuilt tiny rootfs image and boot
 # from NFS ?
 cross_busybox() {
+	init_compile
 	echo "Extracting: busybox-$BUSYBOX_VERSION.tar.bz2"
 	tar xjf $SRC/busybox-$BUSYBOX_VERSION.tar.bz2
 	cd busybox-$BUSYBOX_VERSION
@@ -281,23 +287,16 @@ EOT
 		fi
 		less -E $log ;;
 	binutils)
-		init_compile
-		rm -f $logdir/binutils.log
 		binutils 2>&1 | tee $logdir/binutils.log ;;
 	gcc-static)
-		init_compile
 		gcc_static 2>&1 | tee $logdir/gcc-static.log ;;
 	linux-headers)
-		init_compile
 		linux_headers 2>&1 | tee $logdir/linux-headers.log ;;
 	glibc)
-		init_compile
 		glibc 2>&1 | tee $logdir/glibc.log ;;
 	gcc-final)
-		init_compile
 		gcc_final 2>&1 | tee $logdir/gcc-final.log ;;
 	busybox)
-		init_compile
 		cross_busybox 2>&1 | tee $logdir/busybox.log ;;
 	compile)
 		# Compile the full toolchain.
