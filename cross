@@ -43,7 +43,7 @@ EOT
 init_compile() {
 	export LC_ALL=POSIX LANG=POSIX
 	export PATH=$PATH:$PREFIX/bin
-	export CROSS_COMPILE=$TARGET-
+	export CROSS_COMPILE=${TARGET}-
 	source=$WORK/source
 	logdir=$WORK/log
 	mkdir -p $source $logdir $install
@@ -64,17 +64,13 @@ download_src() {
 binutils() {
 	echo "Extracting: binutils-$BINUTILS_VERSION.tar.bz2"
 	tar xjf $SRC/binutils-$BINUTILS_VERSION.tar.bz2
-	# Peer arch options --disable-werror
-	case $ARCH in
-		arm) archopts="--enable-shared" ;;
-		x86_64) archopts="--disable-multilib" ;;
-	esac
+	: ${BINUTILS_ARGS=--enable-shared}
 	cd binutils-$BINUTILS_VERSION
 	./configure \
 		--prefix=$PREFIX \
 		--target=$TARGET \
 		--enable-targets=$BUILD_SYSTEM \
-		$archopts
+		$BINUTILS_ARGS
 	make || exit 1
 	make install
 }
@@ -94,11 +90,6 @@ linux_headers() {
 gcc_static() {
 	echo "Extracting: gcc-$GCC_VERSION.tar.bz2"
 	tar xjf $SRC/gcc-$GCC_VERSION.tar.bz2
-	# Peer arch options
-	case $ARCH in
-		arm) archopts="" ;;
-		x86_64) archopts="" ;;
-	esac
 	rm -rf gcc-static
 	mkdir gcc-static && cd gcc-static
 	../gcc-$GCC_VERSION/configure \
@@ -109,7 +100,7 @@ gcc_static() {
 		--disable-threads \
 		--without-headers \
 		--with-newlib \
-		--enable-languages=c
+		$GCC_STATIC_ARGS
 	make all-gcc all-target-libgcc || exit 1
 	make install-gcc install-target-libgcc
 	cd $PREFIX/lib/gcc/$TARGET/$GCC_VERSION
@@ -122,10 +113,10 @@ glibc() {
 	echo "Extracting: glibc-$GLIBC_VERSION.tar.bz2"
 	tar xjf $SRC/glibc-$GLIBC_VERSION.tar.bz2
 	[ "$continue" ] || rm -rf glibc-build
-	# Peer arch options
+	# Some arch may need glibc-ports and custom CFLAGS
 	case $ARCH in
 		arm)
-			archopts=""
+			export CFLAGS="-march=armv6 -mtune=generic -g -O2"
 			[ -f "$SRC/glibc-ports-$GLIBC_VERSION.tar.bz2" ] || wget \
 				http://ftp.gnu.org/gnu/libc/glibc-ports-$GLIBC_VERSION.tar.bz2 \
 				-O $SRC/glibc-ports-$GLIBC_VERSION.tar.bz2 || exit 1
@@ -133,9 +124,8 @@ glibc() {
 			rm -rf glibc-$GLIBC_VERSION/ports
 			tar xjf $SRC/glibc-ports-$GLIBC_VERSION.tar.bz2
 			mv glibc-ports-$GLIBC_VERSION glibc-$GLIBC_VERSION/ports ;;
-		x86_64)
-			archopts="" ;;
 	esac
+	echo "CFLAGS: $CFLAGS"
 	mkdir -p glibc-build && cd glibc-build
 	BUILD_CC="gcc" \
 	CC="$PREFIX/bin/$TARGET-gcc" \
@@ -146,13 +136,14 @@ glibc() {
 		--host=$TARGET \
 		--with-headers=$PREFIX/include \
 		--with-binutils=$PREFIX/bin \
-		--enable-add-ons
+		--enable-add-ons $GLIBC_ARGS
 	make || exit 1
 	make install
 	cd $PREFIX/$TARGET
 	rm -rf lib include
 	ln -s ../lib lib
 	ln -s ../include include
+	unset CFLAGS
 }
 
 # 5. GCC final
@@ -161,11 +152,6 @@ gcc_final() {
 		echo "Extracting: gcc-$GCC_VERSION.tar.bz2"
 		tar xjf $SRC/gcc-$GCC_VERSION.tar.bz2
 	fi
-	# Peer arch options
-	case $ARCH in
-		arm) archopts="" ;;
-		x86_64) archopts="" ;;
-	esac
 	rm -rf gcc-build
 	mkdir gcc-build && cd gcc-build
 	../gcc-$GCC_VERSION/configure \
@@ -173,11 +159,11 @@ gcc_final() {
 		--libexec=$PREFIX/lib \
 		--target=$TARGET \
 		--enable-shared \
-		--enable-languages=c,c++ \
 		--enable-c99 \
 		--enable-long-long \
 		--enable-__cxa_atexit \
-		--with-pkgversion="SliTaz"
+		--with-pkgversion="SliTaz" \
+		$GCC_FINAL_ARGS
 	make || exit 1
 	make install
 }
@@ -188,10 +174,10 @@ cross_busybox() {
 	echo "Extracting: busybox-$BUSYBOX_VERSION.tar.bz2"
 	tar xjf $SRC/busybox-$BUSYBOX_VERSION.tar.bz2
 	cd busybox-$BUSYBOX_VERSION
-	# CROSS_COMPILE is exported via init_compile, but be sure.
-	make CROSS_COMPILE=$TARGET- defconfig
-	make CROSS_COMPILE=$TARGET- || exit 1
-	make CROSS_COMPILE=$TARGET- install
+	# CROSS_COMPILE is exported via init_compile.
+	make defconfig
+	make || exit 1
+	make install
 	chmod 4755 _install/bin/busybox
 	readelf -h _install/bin/busybox
 }
@@ -212,7 +198,7 @@ case "$1" in
 		cat << EOT
 Target arch     : $ARCH
 C Compiler      : $CC
-Additional path : /usr/cross/$ARCH/bin
+Additional path : $PREFIX/bin
 Build directory : $WORK
 EOT
 		separator && echo ""
@@ -277,6 +263,8 @@ EOT
 		init_compile
 		cross_busybox 2>&1 | tee $logdir/busybox.log ;;
 	compile)
+		# Compile the full toolchain.
+		time=$(date +%s)
 		init_compile
 		echo "Compile start: $(date)" | tee $logdir/compile.log
 		download_src
@@ -287,6 +275,11 @@ EOT
 		gcc_final 2>&1 | tee $logdir/gcc-final.log
 		echo ""
 		echo "Compile end  : $(date)" | tee -a $logdir/compile.log
+		time=$(($(date +%s) - $time))
+		sec=$time
+		div=$(( ($time + 30) / 60))
+		[ "$div" != 0 ] && min="~ ${div}m"
+		echo "Build time: ${sec}s $min" | tee -a $logdir/compile.log
 		echo "" ;;
 	clean-tools)
 		# Remove crap :-)
