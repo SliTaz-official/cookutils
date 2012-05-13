@@ -16,6 +16,7 @@ activity="$CACHE/activity"
 command="$CACHE/command"
 broken="$CACHE/broken"
 blocked="$CACHE/blocked"
+installed="/var/lib/tazpkg/installed"
 
 # Old style compatibility
 SOURCES_REPOSITORY=$SRC
@@ -49,9 +50,11 @@ $(echo -e "\033[1m$(gettext "Options:")\033[0m")
   --block|-b         Cook : $(gettext "Block a package so cook will skip it.")
   --unblock|-ub      Cook : $(gettext "Unblock a blocked package.")
   --interactive|-x   New  : $(gettext "create a receipt interactively.")
-  --wok|-w           Setup: $(gettext "clone the cooking wok from Hg repo.")
+  --wok              Setup: $(gettext "clone the cooking wok from Hg repo.")
   --stable           Setup: $(gettext "clone the stable wok from Hg repo.")
   --undigest         Setup: $(gettext "clone the undigest wok from Hg repo.")
+  --tiny             Setup: $(gettext "clone the tiny SliTaz wok from Hg repo.")
+  --forced           Setup: $(gettext "force reinstall of chroot packages.")
   --flavors          Pkgdb: $(gettext "create up-to-date flavors files.")
 
 EOT
@@ -762,22 +765,6 @@ packit_quality() {
 	fi
 }
 
-mkinstall_list() {
-	local pkg
-	for pkg in $@ ; do
-		case " $INSTALL_LIST " in
-		*\ $pkg\ *) continue ;;
-		*)	if [ -s /home/slitaz/wok/$pkg/receipt ]; then
-				unset DEPENDS
-				. /home/slitaz/wok/$pkg/receipt
-				INSTALL_LIST="$INSTALL_LIST $pkg"
-				[ -n "$DEPENDS" ] && mkinstall_list $DEPENDS
-			fi
-			echo $pkg
-		esac
-	done
-}
-
 tac()
 {
 	sed '1!G;h;$!d' $1
@@ -894,29 +881,36 @@ case "$1" in
 		gettext -e "\nSetting up your environment\n"
 		separator && cd $SLITAZ
 		init_db_files
-		gettext -e "Checking for packages to install...\n"
-		case " $@ " in
-		*\ --reinstall\ *)
-			INSTALL_LIST=""
-			for pkg in $(mkinstall_list $SETUP_PKGS); do
-				tazpkg get-install $pkg --forced
-			done ;;
-		*)
-			for pkg in $SETUP_PKGS
-			do
-				[ ! -f "$INSTALLED/$pkg/receipt" ] &&
-					tazpkg get-install $pkg
-			done ;;
+		gettext "Checking for packages to install..."; echo
+		# Use setup pkgs from cross.conf or cook.conf. When cross compiling
+		# ARCH-setup or 'cross check-env' should be used before: cook setup
+		case "$ARCH" in
+			arm)
+				if [ ! -x "/usr/bin/cross" ]; then
+					gettext "ERROR: cross is not installed"; echo
+					exit 1
+				fi
+				gettext "Using config file: /etc/slitaz/cross.conf"; echo
+				. /etc/slitaz/cross.conf ;;
 		esac
+		for pkg in $SETUP_PKGS; do
+			if [ "$forced" ]; then
+				tazpkg get-install $pkg --forced
+			else
+				[ -d "$installed/$pkg" ] || tazpkg get-install $pkg
+			fi
+		done
 
 		# Handle --options
 		case "$2" in
-			--wok|-w)
+			--wok)
 				hg clone $WOK_URL wok || exit 1 ;;
 			--stable)
 				hg clone $WOK_URL-stable wok || exit 1 ;;
 			--undigest)
 				hg clone $WOK_URL-undigest wok || exit 1 ;;
+			--tiny)
+				hg clone $WOK_URL-tiny wok || exit 1 ;;
 		esac
 
 		# SliTaz group and permissions
@@ -932,6 +926,11 @@ case "$1" in
 	*-setup)
 		# Setup for cross compiling.
 		arch=${1%-setup}
+		check_root
+		echo ""
+		gettext "Setting up your cross environment"; echo
+		separator
+		init_db_files
 		sed -i \
 			-e s"/ARCH=.*/ARCH=\"$arch\"/" \
 			-e s'/BUILD_SYSTEM=.*/BUILD_SYSTEM=i486-slitaz-linux/' \
@@ -941,6 +940,7 @@ case "$1" in
 				sed -i \
 					-e s'/CFLAGS=.*/CFLAGS="-march=armv6"/' \
 					-e s'/HOST_SYSTEM=.*/HOST_SYSTEM=$ARCH-slitaz-linux-gnueabi/' \
+					-e s'/xorg-dev/""/' \
 					/etc/slitaz/cook.conf ;;
 			x86_64)
 				sed -i \
@@ -954,9 +954,10 @@ case "$1" in
 		if [ -x /usr/cross/$ARCH/bin/${HOST_SYSTEM}-gcc ]; then
 			echo "Cross compiler: ${HOST_SYSTEM}-gcc"
 		else
-			echo "ERROR: C compiler is missing: ${HOST_SYSTEM}-gcc"
+			echo "WARNING: C compiler is missing: ${HOST_SYSTEM}-gcc"
 			echo "Run 'cross compile' to cook a toolchain"
-		fi ;;
+		fi
+		echo "" ;;
 	test)
 		# Test a cook environment.
 		echo "Cook test: testing the cook environment" | log
