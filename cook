@@ -929,14 +929,25 @@ case "$1" in
 		find $SLITAZ -maxdepth 2 -exec chmod g+w {} \;
 		separator
 		gettext -e "All done, ready to cook packages :-)\n\n" ;;
-	arm-setup)
-		# Setup for cross ARM compiling.
+	*-setup)
+		# Setup for cross compiling.
+		arch=${1%-setup}
 		sed -i \
-			-e s'/ARCH=.*/ARCH="arm"/' \
-			-e s'/CFLAGS=.*/CFLAGS="-march=armv6"/' \
+			-e s'/ARCH=.*/ARCH="$arch"/' \
 			-e s'/BUILD_SYSTEM=.*/BUILD_SYSTEM=i486-slitaz-linux/' \
-			-e s'/HOST_SYSTEM=.*/HOST_SYSTEM=$ARCH-slitaz-linux-gnueabi/' \
-				/etc/slitaz/cook.conf
+			/etc/slitaz/cook.conf
+		case "$arch" in
+			arm)
+				sed -i \
+					-e s'/CFLAGS=.*/CFLAGS="-march=armv6"/' \
+					-e s'/HOST_SYSTEM=.*/HOST_SYSTEM=$ARCH-slitaz-linux-gnueabi/' \
+					/etc/slitaz/cook.conf ;;
+			x86_64)
+				sed -i \
+					-e s'/CFLAGS=.*/CFLAGS=""/' \
+					-e s'/HOST_SYSTEM=.*/HOST_SYSTEM=$ARCH-slitaz-linux/' \
+					/etc/slitaz/cook.conf ;;
+		esac
 		. /etc/slitaz/cook.conf
 		echo "Target arch   : $ARCH"
 		echo "Configure args: $CONFIGURE_ARGS"
