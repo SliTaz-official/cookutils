@@ -149,7 +149,7 @@ glibc() {
 			tar xjf $SRC/glibc-ports-$GLIBC_VERSION.tar.bz2
 			mv glibc-ports-$GLIBC_VERSION glibc-$GLIBC_VERSION/ports ;;
 	esac
-	echo "CFLAGS: $CFLAGS"
+	#echo "CFLAGS: $CFLAGS"
 	mkdir -p glibc-build && cd glibc-build
 	BUILD_CC="gcc" \
 	CC="$PREFIX/bin/$TARGET-gcc" \
@@ -164,7 +164,10 @@ glibc() {
 	make || exit 1
 	make install
 	# Work around to let GCC find Glibc headers.
-	if [ ! "$SYSROOT" ]; then
+	if [ "$SYSROOT" ]; then
+		cd $SYSROOT
+		ln -s usr/include sys-include
+	else
 		cd $PREFIX/$TARGET
 		rm -rf lib include
 		ln -s ../lib lib
@@ -230,13 +233,14 @@ C Compiler      : $CC
 Build directory : $WORK
 EOT
 		if [ "$SYSROOT" ]; then
+			PREFIX=/usr
 			echo "Arch sysroot    : $SYSROOT"
 		else
 			echo "Additional path : $PREFIX/bin"
 		fi
 		separator && echo ""
 		echo "GCC version" && separator
-		if [ -x "$PREFIX/$CC" ]; then
+		if [ -x "$PREFIX/bin/$CC" ]; then
 			$CC -v
 		else
 			echo "No C compiler. To build a toolchain run: cross compile"
