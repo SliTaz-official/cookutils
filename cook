@@ -1202,6 +1202,7 @@ EOT
 		esac
 
 		# Some packages are not included in some arch or fail to cross compile.
+		: ${HOST_ARCH=i486}
 		if ! $(echo "$HOST_ARCH" | fgrep -q $ARCH); then
 			echo "cook: HOST_ARCH=$HOST_ARCH"
 			echo "cook: $pkg doesn't cook or is not included in: $ARCH"
