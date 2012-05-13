@@ -102,7 +102,7 @@ gcc_static() {
 			# GCC wants Glib headers in cross environment (not tested
 			# with sysroot) Should we install glibc-headers before ?
 			[ "$SYSROOT" ] || \
-				ls -s /usr/include $PREFIX/$TARGET/include ;;
+				ln -s /usr/include $PREFIX/$TARGET/include ;;
 	esac
 	rm -rf gcc-static
 	mkdir gcc-static && cd gcc-static
