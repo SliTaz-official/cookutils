@@ -378,11 +378,11 @@ strip_package()
 	for dir in $fs/bin $fs/sbin $fs/usr/bin $fs/usr/sbin $fs/usr/games
 	do
 		if [ -d "$dir" ]; then
-			find $dir -type f -exec strip -s '{}' 2>/dev/null \;
+			find $dir -type f -exec $STRIP -s '{}' 2>/dev/null \;
 		fi
 	done
-	find $fs -name "*.so*" -exec strip -s '{}' 2>/dev/null \;
-	find $fs -name "*.a" -exec strip --strip-debug '{}' 2>/dev/null \;
+	find $fs -name "*.so*" -exec $STRIP -s '{}' 2>/dev/null \;
+	find $fs -name "*.a" -exec $STRIP --strip-debug '{}' 2>/dev/null \;
 	status
 
 	# Remove Python .pyc and .pyo from packages.
@@ -450,6 +450,8 @@ cookit() {
 			export STRIP=${HOST_SYSTEM}-strip
 			#export PKGCONFIG=${HOST_SYSTEM}-pkg-config
 			;;
+		*)
+			export STRIP=strip
 	esac
 
 	[ "$QA" ] && receipt_quality
