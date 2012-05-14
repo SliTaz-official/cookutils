@@ -81,7 +81,6 @@ binutils() {
 	tar xjf $SRC/binutils-$BINUTILS_VERSION.tar.bz2
 	: ${BINUTILS_ARGS=--enable-shared}
 	echo "Configure : $BINUTILS_ARGS"
-	exit 1
 	check_sysroot
 	cd binutils-$BINUTILS_VERSION
 	./configure \
