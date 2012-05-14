@@ -166,6 +166,7 @@ glibc() {
 	libc_cv_c_cleanup=yes \
 	../glibc-$GLIBC_VERSION/configure \
 		--prefix=$PREFIX \
+		--libexec=$PREFIX/lib/glibc \
 		--host=$TARGET \
 		--with-headers=$PREFIX/include \
 		--with-binutils=$PREFIX/bin \
