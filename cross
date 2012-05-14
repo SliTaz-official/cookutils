@@ -67,7 +67,7 @@ check_sysroot() {
 		PREFIX=/usr
 		HDR_PATH=$SYSROOT/usr
 		sysroot="--with-sysroot=$SYSROOT"
-		echo "configure: $sysroot"
+		echo "Configure : $sysroot"
 	else
 		HDR_PATH=$PREFIX
 	fi
@@ -76,12 +76,12 @@ check_sysroot() {
 # 1. Binutils
 binutils() {
 	init_compile
+	rm -rf binutils-$BINUTILS_VERSION
 	echo "Extracting: binutils-$BINUTILS_VERSION.tar.bz2"
 	tar xjf $SRC/binutils-$BINUTILS_VERSION.tar.bz2
 	: ${BINUTILS_ARGS=--enable-shared}
-	echo "configure: $BINUTILS_ARGS"
+	echo "Configure : $BINUTILS_ARGS"
 	check_sysroot
-	rm -rf binutils-$BINUTILS_VERSION
 	cd binutils-$BINUTILS_VERSION
 	./configure \
 		--prefix=$PREFIX \
@@ -98,7 +98,7 @@ gcc_static() {
 	init_compile
 	echo "Extracting: gcc-$GCC_VERSION.tar.bz2"
 	tar xjf $SRC/gcc-$GCC_VERSION.tar.bz2
-	echo "configure: $GCC_STATIC_ARGS"
+	echo "Configure : $GCC_STATIC_ARGS"
 	check_sysroot
 	# Arch fixes and work around
 	case "$ARCH" in
@@ -144,7 +144,7 @@ glibc() {
 	init_compile
 	echo "Extracting: glibc-$GLIBC_VERSION.tar.bz2"
 	tar xjf $SRC/glibc-$GLIBC_VERSION.tar.bz2
-	echo "configure: $GLIBC_ARGS"
+	echo "Configure : $GLIBC_ARGS"
 	[ "$continue" ] || rm -rf glibc-build
 	# Some arch may need glibc-ports and custom CFLAGS
 	case "$ARCH" in
@@ -192,7 +192,7 @@ gcc_final() {
 		echo "Extracting: gcc-$GCC_VERSION.tar.bz2"
 		tar xjf $SRC/gcc-$GCC_VERSION.tar.bz2
 	fi
-	echo "configure: $GCC_FINAL_ARGS"
+	echo "Configure : $GCC_FINAL_ARGS"
 	check_sysroot
 	rm -rf gcc-build
 	mkdir gcc-build && cd gcc-build
