@@ -12,6 +12,9 @@
 
 # Handle --config=/path/to/cross.conf
 [ "$config" ] && . $config
+source=$WORK/source
+logdir=$WORK/log
+install=$WORK/install
 
 # Help and usage.
 usage() {
@@ -44,9 +47,6 @@ init_compile() {
 	export LC_ALL=POSIX LANG=POSIX
 	[ "$SYSROOT" ] || export PATH=$PATH:$PREFIX/bin
 	export CROSS_COMPILE=${TARGET}-
-	source=$WORK/source
-	logdir=$WORK/log
-	#install=$WORK/install
 	mkdir -p $source $logdir $install
 	cd $source
 }
@@ -81,6 +81,7 @@ binutils() {
 	tar xjf $SRC/binutils-$BINUTILS_VERSION.tar.bz2
 	: ${BINUTILS_ARGS=--enable-shared}
 	echo "Configure : $BINUTILS_ARGS"
+	exit 1
 	check_sysroot
 	cd binutils-$BINUTILS_VERSION
 	./configure \
@@ -90,7 +91,7 @@ binutils() {
 		$BINUTILS_ARGS $sysroot
 	make || exit 1
 	make install
-	echo "cross: binutils compiled on: $(date)"
+	#echo "cross: binutils compiled on: $(date)"
 }
 
 # 2. GCC static (first pass)
@@ -293,6 +294,7 @@ EOT
 		fi
 		less -E $log ;;
 	binutils)
+		rm -f $logdir/binutils.log
 		binutils 2>&1 | tee $logdir/binutils.log ;;
 	gcc-static)
 		gcc_static 2>&1 | tee $logdir/gcc-static.log ;;
