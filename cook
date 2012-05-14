@@ -371,9 +371,14 @@ copy_generic_files()
 }
 
 # Find and strip : --strip-all (-s) or --strip-debug on static libs as well
-# as removing uneeded files like in Python packages.
+# as removing uneeded files like in Python packages. Cross compiled binaries
+# must be stripped with cross-tools aka $ARCH-slitaz-*-strip
 strip_package()
 {
+	case "$ARCH" in
+		arm|x86_64) export STRIP=${HOST_SYSTEM}-strip ;;
+		*) export STRIP=strip ;;
+	esac
 	gettext "Executing strip on all files..."
 	for dir in $fs/bin $fs/sbin $fs/usr/bin $fs/usr/sbin $fs/usr/games
 	do
@@ -450,8 +455,6 @@ cookit() {
 			export STRIP=${HOST_SYSTEM}-strip
 			#export PKGCONFIG=${HOST_SYSTEM}-pkg-config
 			;;
-		*)
-			export STRIP=strip
 	esac
 
 	[ "$QA" ] && receipt_quality
