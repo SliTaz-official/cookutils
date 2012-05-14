@@ -28,8 +28,6 @@ Commands:
   testsuite       Execute a small testsuite
   check-env       Check build host tools
   download        Download necessary sources
-  clean           Clean-up build environment
-  clean-tools     Clean: $PREFIX
   show-log        Show a compile log
   binutils        Compile Binutils
   gcc-static      Compile GCC static
@@ -38,6 +36,9 @@ Commands:
   gcc-final       Compile final GCC
   busybox         Cross compile Busybox
   compile         Compile everything at once
+  clean           Clean-up build environment
+  clean-tools     Clean: $PREFIX
+  gen-prebuilt    Create an prebuilt toolchain archive
 
 EOT
 }
@@ -334,64 +335,57 @@ EOT
 		for dir in info man locale
 		do
 			echo -n "Removing   : $dir"
-			rm -rf $PREFIX/share && status
+			rm -rf $PREFIX/share/$dir && status
 		done
 		rm -f $PREFIX/lib/*-gdb.py
-		#echo -n "Stripping  : shared libs"
-		#${TARGET}-strip -s $PREFIX/lib/*.so.*
-		#status
-		echo -n "Stripping  : GCC libs"
+		echo -n "Stripping  : shared libs and binaries"
+		${TARGET}-strip -s $PREFIX/lib/*.so* 2>/dev/null
+		${TARGET}-strip -s $PREFIX/bin/* 2>/dev/null
+		${TARGET}-strip -s $PREFIX/${TARGET}/bin/* 2>/dev/null
 		${TARGET}-strip -s $PREFIX/$TARGET/lib/gcc/$TARGET/*/cc1*
 		${TARGET}-strip -s $PREFIX/$TARGET/lib/gcc/$TARGET/*/lto*
 		sleep 1 && status
-		echo -n "Stripping  : binaries"
-		for bin in $PREFIX/bin/${TARGET}-*
-		do
-			[ "$bin" == "$PREFIX/bin/${TARGET}-strip" ] && continue
-			if [ -x "$bin" ]; then
-				${TARGET}-strip -s $bin 2>/dev/null
-			fi
-		done && status
 		echo -n "Tools size : " && du -sh $PREFIX | awk '{print $1}' ;;
 	gen-rootfs)
-		#
-		# TESTING
-		#
-		# Create a bootable rootfs ? dd for an HD image ?
-		init_compile
-		rootfs=/tmp/cross/rootfs
-		tarball="rootfs.tar.bz2"
-		rm -rf $rootfs && mkdir -p $rootfs
-		cd /tmp/cross
-		echo -n "Installing SliTaz base files..."
-		tar xzf $SRC/slitaz-base-files-5.2.tar.gz
-		cp -a slitaz-base-files-*/rootfs/* $rootfs
-		status
-		echo -n "Installing Busybox..."
-		cp -a $source/busybox-$BUSYBOX_VERSION/_install/* $rootfs
-		status
-		echo -n "Creating tarball: $tarball"
-		tar cjf $tarball rootfs
-		status
-		echo -n "Moving rootfs to: $WORK"
-		mv $tarball $WORK
-		status
-		du -sh $WORK/$tarball
-		rm -rf /tmp/cross ;;
+		echo "Use arm packages: basefile, boot-scripts, busybox and glibc-base"
+		echo "Install them in a rootfs: tazpkg *-arm.tazpkg --root=/my/rootfs" ;;
 	gen-prebuilt)
 		#
 		# TESTING
 		#
 		# Create a prebuilt cross toolchain tarball (or package ?)
 		init_compile
+		package="slitaz-cross-$ARCH-toolchain"
+		tarball="$package.tar.bz2"
 		cd /usr/cross
-		tarball="slitaz-cross-$ARCH-toolchain.tar.bz2"
+		mkdir $package || exit 1
+		echo ""
+		echo -n "Copying $ARCH to: $package"
+		cp -a $ARCH $package
+		rm -rf $package/share $package/etc
+		status
+		echo -n "Creating toolchain README..."
+		cat >> $package/README << EOT
+
+
+Move this $ARCH cross compilation toolchain to /usr/cross then add tools
+to your PATH environment:
+
+	# mv $ARCH /usr/cross
+	# export PATH=\$PATH:/usr/cross/$ARCH/bin
+
+
+EOT
+		status
 		echo -n "Creating prebuilt $ARCH toolchain tarball..."
-		tar cjf $tarball $ARCH
+		tar cjf $tarball $package
 		status
 		mv -f $tarball $WORK
-		#echo "Tarball size: $(du -sh $WORK/$tarball | awk '{print $1}')"
-		du -sh $WORK/$tarball ;;
+		rm -rf $package
+		size=$(du -sh $WORK/$tarball | awk '{print $1}')
+		echo "Tarball path: $WORK/$tarball"
+		echo "Tarball size: $size"
+		echo "" ;;
 	*)
 		usage ;;
 esac
