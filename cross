@@ -67,7 +67,7 @@ check_sysroot() {
 		PREFIX=/usr
 		HDR_PATH=$SYSROOT/usr
 		sysroot="--with-sysroot=$SYSROOT"
-		echo "Cross configure: $sysroot"
+		echo "configure: $sysroot"
 	else
 		HDR_PATH=$PREFIX
 	fi
@@ -79,7 +79,9 @@ binutils() {
 	echo "Extracting: binutils-$BINUTILS_VERSION.tar.bz2"
 	tar xjf $SRC/binutils-$BINUTILS_VERSION.tar.bz2
 	: ${BINUTILS_ARGS=--enable-shared}
+	echo "configure: $BINUTILS_ARGS"
 	check_sysroot
+	rm -rf binutils-$BINUTILS_VERSION
 	cd binutils-$BINUTILS_VERSION
 	./configure \
 		--prefix=$PREFIX \
@@ -88,6 +90,7 @@ binutils() {
 		$BINUTILS_ARGS $sysroot
 	make || exit 1
 	make install
+	echo "cross: binutils compiled on: $(date)"
 }
 
 # 2. GCC static (first pass)
@@ -95,6 +98,7 @@ gcc_static() {
 	init_compile
 	echo "Extracting: gcc-$GCC_VERSION.tar.bz2"
 	tar xjf $SRC/gcc-$GCC_VERSION.tar.bz2
+	echo "configure: $GCC_STATIC_ARGS"
 	check_sysroot
 	# Arch fixes and work around
 	case "$ARCH" in
@@ -140,6 +144,7 @@ glibc() {
 	init_compile
 	echo "Extracting: glibc-$GLIBC_VERSION.tar.bz2"
 	tar xjf $SRC/glibc-$GLIBC_VERSION.tar.bz2
+	echo "configure: $GLIBC_ARGS"
 	[ "$continue" ] || rm -rf glibc-build
 	# Some arch may need glibc-ports and custom CFLAGS
 	case "$ARCH" in
@@ -164,7 +169,7 @@ glibc() {
 		--host=$TARGET \
 		--with-headers=$PREFIX/include \
 		--with-binutils=$PREFIX/bin \
-		--enable-add-ons $GLIBC_ARGS
+		$GLIBC_ARGS
 	make || exit 1
 	make install
 	# Work around to let GCC find Glibc headers.
@@ -187,6 +192,7 @@ gcc_final() {
 		echo "Extracting: gcc-$GCC_VERSION.tar.bz2"
 		tar xjf $SRC/gcc-$GCC_VERSION.tar.bz2
 	fi
+	echo "configure: $GCC_FINAL_ARGS"
 	check_sysroot
 	rm -rf gcc-build
 	mkdir gcc-build && cd gcc-build
