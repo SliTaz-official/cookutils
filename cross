@@ -157,11 +157,13 @@ glibc() {
 			rm -rf glibc-$GLIBC_VERSION/ports
 			tar xjf $SRC/glibc-ports-$GLIBC_VERSION.tar.bz2
 			mv glibc-ports-$GLIBC_VERSION glibc-$GLIBC_VERSION/ports ;;
+		x86_64)
+			ccflags="-m64" ;;
 	esac
 	#echo "CFLAGS: $CFLAGS"
 	mkdir -p glibc-build && cd glibc-build
 	BUILD_CC="gcc" \
-	CC="$PREFIX/bin/$TARGET-gcc" \
+	CC="${TARGET}-gcc $ccflags" \
 	libc_cv_forced_unwind=yes \
 	libc_cv_c_cleanup=yes \
 	../glibc-$GLIBC_VERSION/configure \
