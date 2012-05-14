@@ -280,11 +280,6 @@ EOT
 		done ;;
 	download)
 		download_src ;;
-	clean)
-		echo -n "Removing all source files..."
-		rm -rf $WORK/source/* && status
-		[ "$log" ] && rm -f $WORK/log/*.log
-		echo "To clean chroot: rm -rf $PREFIX" ;;
 	show-log)
 		pkg=$2
 		log=$logdir/$pkg.log
@@ -324,16 +319,29 @@ EOT
 		[ "$div" != 0 ] && min="~ ${div}m"
 		echo "Build time   : ${sec}s $min" | tee -a $logdir/compile.log
 		echo "" ;;
+	clean)
+		echo -n "Removing all source files..."
+		rm -rf $WORK/source/* && status
+		[ "$log" ] && rm -f $WORK/log/*.log
+		echo "To clean chroot: rm -rf $PREFIX" ;;
 	clean-tools)
 		# Remove crap :-)
 		init_compile
-		echo "Cleaning  : $PREFIX"
+		echo "Cleaning   : $PREFIX ($(du -sh $PREFIX | awk '{print $1}'))"
 		for dir in info man locale
 		do
-			echo -n "Removing  : $dir"
+			echo -n "Removing   : $dir"
 			rm -rf $PREFIX/share && status
 		done
-		echo -n "Stripping : binaries"
+		rm -f $PREFIX/lib/*-gdb.py
+		#echo -n "Stripping  : shared libs"
+		#${TARGET}-strip -s $PREFIX/lib/*.so.*
+		#status
+		echo -n "Stripping  : GCC libs"
+		${TARGET}-strip -s $PREFIX/$TARGET/lib/gcc/$TARGET/*/cc1*
+		${TARGET}-strip -s $PREFIX/$TARGET/lib/gcc/$TARGET/*/lto*
+		sleep 1 && status
+		echo -n "Stripping  : binaries"
 		for bin in $PREFIX/bin/${TARGET}-*
 		do
 			[ "$bin" == "$PREFIX/bin/${TARGET}-strip" ] && continue
@@ -341,7 +349,7 @@ EOT
 				${TARGET}-strip -s $bin 2>/dev/null
 			fi
 		done && status
-		echo -n "Tools size: " && du -sh $PREFIX | awk '{print $1}' ;;
+		echo -n "Tools size : " && du -sh $PREFIX | awk '{print $1}' ;;
 	gen-rootfs)
 		#
 		# TESTING
@@ -367,6 +375,20 @@ EOT
 		status
 		du -sh $WORK/$tarball
 		rm -rf /tmp/cross ;;
+	gen-prebuilt)
+		#
+		# TESTING
+		#
+		# Create a prebuilt cross toolchain tarball (or package ?)
+		init_compile
+		cd /usr/cross
+		tarball="slitaz-cross-$ARCH-toolchain.tar.bz2"
+		echo -n "Creating prebuilt $ARCH toolchain tarball..."
+		tar cjf $tarball $ARCH
+		status
+		mv -f $tarball $WORK
+		#echo "Tarball size: $(du -sh $WORK/$tarball | awk '{print $1}')"
+		du -sh $WORK/$tarball ;;
 	*)
 		usage ;;
 esac
