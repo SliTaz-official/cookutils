@@ -43,6 +43,29 @@ Commands:
 EOT
 }
 
+# Prebuilt README
+prebuilt_readme() {
+	echo -n "Creating toolchain README..."
+	cat >> $package/README << EOT
+
+SliTaz Prebuilt $ARCH cross toolchain
+================================================================================
+Move this $ARCH cross compilation toolchain to /usr/cross then add tools
+to your PATH environment and test the toolchain:
+
+	# mv $ARCH /usr/cross
+	# export PATH=\$PATH:/usr/cross/$ARCH/bin
+
+	# echo 'int main() { return 0; }' > test.c
+	# $TARGET-gcc -v -o test.out test.c
+	# readelf -h test.out
+
+================================================================================
+
+EOT
+	status
+}
+
 # Make sure we have all directories.
 init_compile() {
 	export LC_ALL=POSIX LANG=POSIX
@@ -350,12 +373,10 @@ EOT
 		echo "Use arm packages: basefile, boot-scripts, busybox and glibc-base"
 		echo "Install them in a rootfs: tazpkg *-arm.tazpkg --root=/my/rootfs" ;;
 	gen-prebuilt)
-		#
-		# TESTING
-		#
-		# Create a prebuilt cross toolchain tarball (or package ?)
+		# Create a prebuilt cross toolchain tarball.
 		init_compile
-		package="slitaz-cross-$ARCH-toolchain"
+		date=$(date "+%Y%m%d")
+		package="slitaz-cross-$ARCH-toolchain-$date"
 		tarball="$package.tar.bz2"
 		cd /usr/cross
 		mkdir $package || exit 1
@@ -364,19 +385,7 @@ EOT
 		cp -a $ARCH $package
 		rm -rf $package/share $package/etc
 		status
-		echo -n "Creating toolchain README..."
-		cat >> $package/README << EOT
-
-
-Move this $ARCH cross compilation toolchain to /usr/cross then add tools
-to your PATH environment:
-
-	# mv $ARCH /usr/cross
-	# export PATH=\$PATH:/usr/cross/$ARCH/bin
-
-
-EOT
-		status
+		prebuilt_readme
 		echo -n "Creating prebuilt $ARCH toolchain tarball..."
 		tar cjf $tarball $package
 		status
