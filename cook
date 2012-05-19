@@ -981,13 +981,29 @@ case "$1" in
 			CC=$CROSS_PREFIX/bin/${HOST_SYSTEM}-gcc
 			root=$CROSS_PREFIX
 		fi
-		# Tell package manager wher to find package.
+		# Tell the packages manager wher to find packages.
 		echo "Packages DB     : ${root}$DB"
+		mkdir -p ${root}$INSTALLED
 		cd ${root}$DB && rm -f *.bak
 		for list in packages.list packages.desc packages.equiv packages.md5
 		do
 			rm -f $list && ln -s $SLITAZ/packages/$list $list
 		done
+		# We must have the cross compiled glibc-base installed or default
+		# i486 package will be used as dep by tazpkg and then break the
+		# cross environment
+		if [ ! -f "${root}$INSTALLED/glibc-base/receipt" ]; then
+			. /etc/slitaz/cross.conf
+			if [ ! -f "$PKGS/glibc-base-$GLIBC_VERSION-$ARCH.tazpkg" ]; then
+				echo "WARNING: cook glibc-base for $ARCH then run again:"
+				echo "$(basename $0) $ARCH-setup"
+			else
+				echo "Installing      : glibc-base-$GLIBC_VERSION-$ARCH.tazpkg"
+				tazpkg install \
+					$PKGS/glibc-base-$GLIBC_VERSION-$ARCH.tazpkg \
+					--root=$root >/dev/null
+			fi
+		fi
 		# Show GCC version or warn if not yet compiled.
 		if [ -x $CC ]; then
 			echo "Cross compiler  : ${HOST_SYSTEM}-gcc"
