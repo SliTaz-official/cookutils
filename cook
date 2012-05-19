@@ -406,12 +406,12 @@ remove_deps() {
 	if [ -s "$CACHE/installed.cook.diff" ]; then
 		deps=$(cat $diff | grep ^+[a-zA-Z0-9] | sed s/^+//)
 		nb=$(cat $diff | grep ^+[a-zA-Z0-9] | wc -l)
-		gettext "Build dependencies to remove:"; echo " $nb"
+		gettext "Build dependencies to remove:"; echo " $nb $root"
 		gettext "Removing:"
 		for dep in $deps
 		do
 			echo -n " $dep"
-			echo 'y' | tazpkg remove $dep >/dev/null
+			echo 'y' | tazpkg remove $dep --root=$root >/dev/null
 		done
 		echo -e "\n"
 		# Keep the last diff for debug and info.
@@ -431,20 +431,26 @@ cookit() {
 			# CROSS_COMPILE is used by at least Busybox and the kernel to set
 			# the cross-tools prefix but first check if sysroot is used.
 			if [ "$SYSROOT" ]; then
-				echo "cook: $ARCH sysroot: $SYSROOT"
+				echo "$ARCH sysroot: $SYSROOT"
 			else
-				echo "cook: adding /usr/cross/$ARCH/bin to PATH"
+				echo "Adding /usr/cross/$ARCH/bin to PATH"
 				export PATH=$PATH:$CROSS_PREFIX/bin
 			fi
 			export CROSS_COMPILE=${HOST_SYSTEM}-
-			echo "cook: using cross-tools: $CROSS_COMPILE"
+			echo "Using cross-tools: $CROSS_COMPILE"
 			export CC=${HOST_SYSTEM}-gcc
 			export CXX=${HOST_SYSTEM}-g++
 			export AR=${HOST_SYSTEM}-ar
 			export AS=${HOST_SYSTEM}-as
 			export RANLIB=${HOST_SYSTEM}-ranlib
 			export LD=${HOST_SYSTEM}-ld
-			export STRIP=${HOST_SYSTEM}-strip ;;
+			export STRIP=${HOST_SYSTEM}-strip
+			# Set root path when cross compiling. ARM tested but not x86_64
+			# When cross compiling we must install build deps in CROSS_PREFIX
+			# or SYSROOT when it will be support by cross (the final goal is
+			# to use only the sysroot method).
+			root=$CROSS_PREFIX
+			arch=-${ARCH} ;;
 	esac
 
 	[ "$QA" ] && receipt_quality
@@ -471,23 +477,24 @@ cookit() {
 	rm -f $CACHE/installed.local $CACHE/installed.web $CACHE/missing.dep
 	touch $CACHE/installed.local $CACHE/installed.web
 	[ "$BUILD_DEPENDS" ] && gettext -e "Checking build dependencies...\n"
+	[ "$root" ] && echo "Using packages DB: ${root}$DB"
 	for dep in $BUILD_DEPENDS
 	do
 		implicit=${dep%-dev}
 		for i in $dep $implicit
 		do
-			if [ ! -f "$INSTALLED/$i/receipt" ]; then
+			if [ ! -f "${root}$INSTALLED/$i/receipt" ]; then
 				# Try local package first. In some cases implicit doesn't exist, ex:
 				# libboost-dev exists but not libboost, so check if we got vers.
 				unset vers
 				vers=$(. $WOK/$i/receipt 2>/dev/null ; echo $VERSION)
-				if [ -f "$PKGS/$i-$vers.tazpkg" ]; then
-					echo $i-$vers.tazpkg >> $CACHE/installed.local
+				if [ -f "$PKGS/$i-${vers}${arch}.tazpkg" ]; then
+					echo $i-${vers}${arch}.tazpkg >> $CACHE/installed.local
 				else
 					# Priority to package version in wok (maybe more up-to-date)
 					# than the mirrored one.
 					if [ "$vers" ]; then
-						if fgrep -q $i-$vers $DB/packages.list; then
+						if fgrep -q $i-${vers}${arch} ${root}$DB/packages.list; then
 							echo $i >> $CACHE/installed.web
 						else
 							# So package exists in wok but not available.
@@ -496,7 +503,7 @@ cookit() {
 						fi
 					else
 						# Package is not in wok but may be in repo.
-						if fgrep -q $i-$vers $DB/packages.list; then
+						if fgrep -q $i-${vers}${arch} ${root}$DB/packages.list; then
 							echo $i >> $CACHE/installed.web
 						else
 							echo "ERROR: unknown dep $i" && exit 1
@@ -508,7 +515,7 @@ cookit() {
 	done
 
 	# Get the list of installed packages
-	cd $INSTALLED && ls -1 > $CACHE/installed.list
+	cd ${root}$INSTALLED && ls -1 > $CACHE/installed.list
 
 	# Have we a missing build dep to cook ?
 	if [ -s "$CACHE/missing.dep" ] && [ "$AUTO_COOK" ]; then
@@ -535,12 +542,7 @@ cookit() {
 		echo "ERROR: missing dep $nb" && exit 1
 	fi
 
-	# Set root path when cross compiling. ARM tested but not x86_64
-	case "$ARCH" in
-		arm) root=$CROSS_PREFIX ;;
-	esac
-
-	# Install local packages.
+	# Install local packages: package-version${arch}
 	cd $PKGS
 	for i in $(uniq $CACHE/installed.local)
 	do
@@ -557,7 +559,7 @@ cookit() {
 	done
 
 	# If a cook failed deps are removed.
-	cd $INSTALLED && ls -1 > $CACHE/installed.cook && cd $CACHE
+	cd ${root}$INSTALLED && ls -1 > $CACHE/installed.cook && cd $CACHE
 	[ ! -s "installed.cook.diff" ] && \
 		busybox diff installed.list installed.cook > installed.cook.diff
 	deps=$(cat installed.cook.diff | grep ^+[a-zA-Z0-9] | wc -l)
@@ -958,10 +960,20 @@ case "$1" in
 		if [ "$SYSROOT" ]; then
 			echo "Arch sysroot    : $SYSROOT"
 			CC=/usr/bin/${HOST_SYSTEM}-gcc
+			root=$SYSROOT
 		else
-			echo "Additional path : /usr/cross/$ARCH/bin"
-			CC=/usr/cross/$ARCH/bin/${HOST_SYSTEM}-gcc
+			echo "Additional path : $CROSS_PREFIX/bin"
+			CC=$CROSS_PREFIX/bin/${HOST_SYSTEM}-gcc
+			root=$CROSS_PREFIX
 		fi
+		# Tell package manager wher to find package.
+		echo "Packages DB     : ${root}$DB"
+		cd ${root}$DB && rm -f *.bak
+		for list in packages.list packages.desc packages.equiv packages.md5
+		do
+			rm -f $list && ln -s $SLITAZ/packages/$list $list
+		done
+		# Show GCC version or warn if not yet compiled.
 		if [ -x $CC ]; then
 			echo "Cross compiler  : ${HOST_SYSTEM}-gcc"
 		else
