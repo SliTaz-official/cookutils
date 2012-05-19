@@ -308,7 +308,7 @@ debug_info() {
 	do
 		fgrep "$error" $LOGS/$pkg.log
 	done
-	separator && echo ""
+	separator && newline
 }
 
 # Copy all generic files (locale, pixmaps, .desktop). We use standard paths,
@@ -527,7 +527,7 @@ cookit() {
 				tee -a $LOGS/$PACKAGE.log.$$
 			cook $i || (echo -e "ERROR: can't cook dep '$i'\n" && \
 				fgrep "remove: " $LOGS/$i.log && \
-				fgrep "Removing: " $LOGS/$i.log && echo "") | \
+				fgrep "Removing: " $LOGS/$i.log && newline) | \
 				tee -a $LOGS/$PACKAGE.log.$$ && break
 		done
 		rm -f $CACHE/missing.dep
@@ -617,14 +617,14 @@ cookit() {
 		# QA: No compile_rules so no error, valid.
 		mkdir -p $install
 	fi
-	separator && echo ""
+	separator && newline
 
 	# Execute testsuite.
 	if grep -q ^testsuite $receipt; then
 		echo "Running testsuite"
 		separator
 		testsuite $@ || exit 1
-		separator && echo ""
+		separator && newline
 	fi
 }
 
@@ -772,6 +772,7 @@ packit_quality() {
 	fi
 }
 
+# Tic tac, tic tac...
 tac() {
 	sed '1!G;h;$!d' $1
 }
@@ -870,21 +871,23 @@ case "$1" in
 		cd $WOK && ls -1
 		separator
 		echo -n "Packages: " && ls | wc -l
-		echo "" ;;
+		newline ;;
 	activity)
 		cat $activity ;;
 	search)
 		# Just a simple search function, we dont need more actually.
 		query="$2"
-		gettext -e "\nSearch results for:"; echo " $query"
+		newline
+		gettext "Search results for:"; echo " $query"
 		separator
 		cd $WOK && ls -1 | grep "$query"
-		separator && echo "" ;;
+		separator && newline ;;
 	setup)
 		# Setup a build environment
 		check_root
-		echo "Cook: setting up the environment" | log
-		gettext -e "\nSetting up your environment\n"
+		echo "Cook: setup environment" | log
+		newline
+		gettext "Setting up your environment"; newline
 		separator && cd $SLITAZ
 		init_db_files
 		gettext "Checking for packages to install..."; echo
@@ -933,7 +936,8 @@ case "$1" in
 		# Setup for cross compiling.
 		arch=${1%-setup}
 		check_root
-		echo ""
+		echo "Cook: setup $ARCH cross environment" | log
+		newline
 		boldify $(gettext "Setting up your cross environment")
 		separator
 		init_db_files
@@ -980,7 +984,7 @@ case "$1" in
 			colorize "C compiler is missing: ${HOST_SYSTEM}-gcc" 36
 			echo "Run 'cross compile' to cook a toolchain"
 		fi
-		separator && echo "" ;;
+		separator && newline ;;
 	test)
 		# Test a cook environment.
 		echo "Cook test: testing the cook environment" | log
@@ -991,7 +995,7 @@ case "$1" in
 		# Create the package folder and an empty receipt.
 		pkg="$2"
 		[ "$pkg" ] || usage
-		echo ""
+		newline
 		if [ -d "$WOK/$pkg" ]; then
 			echo -n  "$pkg " && gettext "package already exists."
 			echo -e "\n" && exit 1
@@ -1001,7 +1005,7 @@ case "$1" in
 		gettext "Preparing the package receipt..."
 		cp $DATA/receipt .
 		sed -i s"/^PACKAGE=.*/PACKAGE=\"$pkg\"/" receipt
-		status && echo ""
+		status && newline
 
 		# Interactive mode, asking and seding.
 		case "$3" in
@@ -1024,7 +1028,7 @@ case "$1" in
 				# Web site.
 				echo -n "Web site      : " ; read anser
 				sed -i s#'WEB_SITE=\"\"'#"WEB_SITE=\"$anser\""# receipt
-				echo ""
+				newline
 				# Wget URL.
 				echo "Wget URL to download source tarball."
 				echo "Example  : \$GNU_MIRROR/\$PACKAGE/\$TARBALL"
@@ -1040,11 +1044,11 @@ case "$1" in
 				echo -n "Are you going to write a description ? (y/N) : " ; read anser
 				if [ "$anser" = "y" ]; then
 					echo -n "Creating the description.txt file..."
-					echo "" > $WOK/$pkg/description.txt && status
+					newline > $WOK/$pkg/description.txt && status
 				fi
 				separator
 				gettext -e "Receipt is ready to use.\n"
-				echo "" ;;
+				newline ;;
 		esac ;;
 	list)
 		# Cook a list of packages (better use the Cooker since it will order
@@ -1062,12 +1066,12 @@ case "$1" in
 		check_root
 		gettext -e "\nCleaning all packages files..."
 		rm -rf $WOK/*/taz $WOK/*/install $WOK/*/source
-		status && echo "" ;;
+		status && newline ;;
 	clean-src)
 		check_root
 		gettext -e "\nCleaning all packages sources..."
 		rm -rf $WOK/*/source
-		status && echo "" ;;
+		status && newline ;;
 	pkgdb)
 		# Create suitable packages list for TazPKG and only for built packages
 		# as well as flavors files for TazLiTo. We dont need logs since we do it
@@ -1085,7 +1089,7 @@ case "$1" in
 		live=$SLITAZ/live
 		echo "cook:pkgdb" > $command
 		echo "Cook pkgdb: Creating all packages lists" | log
-		echo ""
+		newline
 		gettext "Creating lists for: "; echo "$PKGS"
 		separator
 		gettext "Cook pkgdb started: "; date "+%Y-%m-%d %H:%M"
@@ -1189,7 +1193,7 @@ EOT
 		done
 		cp -f $live/*.flavor $live/flavors.list $PKGS
 		separator && gettext "Flavors size: "; du -sh $live | awk '{print $1}'
-		echo "" && rm -f $command ;;
+		newline && rm -f $command ;;
 	*)
 		# Just cook and generate a package.
 		check_root
@@ -1197,7 +1201,7 @@ EOT
 		pkg="$1"
 		[ -z "$pkg" ] && usage
 		receipt="$WOK/$pkg/receipt"
-		check_pkg_in_wok && echo ""
+		check_pkg_in_wok && newline
 
 		unset inst
 		unset_receipt
@@ -1220,7 +1224,7 @@ EOT
 					echo "cook: This package is not included in: $ARCH"
 					[ "$CROSS_BUGS" ] && echo "bugs: $CROSS_BUGS"
 					echo "Cook skip: $pkg is not included in: $ARCH" | log
-					echo "" && exit 1
+					newline && exit 1
 				fi ;;
 		esac
 
@@ -1231,7 +1235,7 @@ EOT
 			echo "cook: $pkg doesn't cook or is not included in: $ARCH"
 			[ "$CROSS_BUGS" ] && echo "bugs: $CROSS_BUGS"
 			echo "Cook skip: $pkg doesn't cook or is not included in: $ARCH" | log
-			echo "" && exit 1
+			newline && exit 1
 		fi
 
 		# Skip blocked, 3 lines also for the Cooker.
@@ -1254,7 +1258,7 @@ EOT
 			--clean|-c)
 				gettext -e "Cleaning:"; echo -n " $pkg"
 				cd $WOK/$pkg && rm -rf install taz source
-				status && echo "" && exit 0 ;;
+				status && newline && exit 0 ;;
 			--install|-i)
 				inst='yes' ;;
 			--getsrc|-gs)
@@ -1264,11 +1268,11 @@ EOT
 			--block|-b)
 				gettext "Blocking:"; echo -n " $pkg"
 				[ $(grep "^$pkg$" $blocked) ] || echo "$pkg" >> $blocked
-				status && echo "" && exit 0 ;;
+				status && newline && exit 0 ;;
 			--unblock|-ub)
 				gettext "Unblocking:"; echo -n " $pkg"
 				sed -i "/^${pkg}$/"d $blocked
-				status && echo "" && exit 0 ;;
+				status && newline && exit 0 ;;
 
 		esac
 
@@ -1276,11 +1280,11 @@ EOT
 		for wanted in $WANTED ; do
 			if grep -q "^$wanted$" $blocked; then
 				echo "WANTED package is blocked: $wanted" | tee $LOGS/$pkg.log
-				echo "" && rm -f $command && exit 1
+				newline && rm -f $command && exit 1
 			fi
 			if grep -q "^$wanted$" $broken; then
 				echo "WANTED package is broken: $wanted" | tee $LOGS/$pkg.log
-				echo "" && rm -f $command && exit 1
+				newline && rm -f $command && exit 1
 			fi
 			if [ ! -d "$WOK/$wanted/install" ]; then
 				cook "$wanted" || exit 1
@@ -1306,7 +1310,7 @@ EOT
 		# Time and summary
 		time=$(($(date +%s) - $time))
 		summary | tee -a $LOGS/$pkg.log
-		echo ""
+		newline
 
 		# Install package if requested
 		if [ "$inst" ]; then
