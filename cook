@@ -26,7 +26,7 @@ $(echo -e "\033[1m$(gettext "Usage:")\033[0m") cook [package|command] [list|--op
 $(echo -e "\033[1m$(gettext "Commands:")\033[0m")
   usage|help         $(gettext "Display this short usage.")
   setup              $(gettext "Setup your build environment.")
-  arm-setup          $(gettext "Create packages DB lists and flavors.")
+  *-setup            $(gettext "Setup a cross environment.")
   test               $(gettext "Test environment and cook a package.")
   list-wok           $(gettext "List packages in the wok.")
   search             $(gettext "Simple packages search function.")
