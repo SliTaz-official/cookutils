@@ -6,25 +6,11 @@
 # here since it's not an end user tool and it's not useful, all devs should
 # at least understand basic English.
 #
-
-[ -f "/etc/slitaz/cook.conf" ] && . /etc/slitaz/cook.conf
-[ -f "cook.conf" ] && . ./cook.conf
+. /usr/lib/slitaz/libcook.sh
 
 # Set pkg name and use same wok as cook.
 pkg="$2"
 wok="$WOK"
-flavors="$SLITAZ/flavors"
-
-# Cooker DB files.
-activity="$CACHE/activity"
-commits="$CACHE/commits"
-cooklist="$CACHE/cooklist"
-cookorder="$CACHE/cookorder"
-command="$CACHE/command"
-blocked="$CACHE/blocked"
-broken="$CACHE/broken"
-cooknotes="$CACHE/cooknotes"
-crontabs="/var/spool/cron/crontabs/root"
 
 # PID file.
 pidfile='/var/run/cooker.pid'
@@ -58,31 +44,10 @@ EOT
 	exit 0
 }
 
-separator() {
-	echo "================================================================================"
-}
-
-# Lograte activity.
-[ -s "$activity" ] && tail -n 60 $activity > /tmp/tail && \
-	mv -f /tmp/tail $activity
-
-# Log activities, we want first letter capitalized.
-log() {
-	grep ^[A-Z] | \
-		sed s"#^[A-Z]\([^']*\)#$(date '+%Y-%m-%d %H:%M') : \0#" >> $activity
-}
-
 # Some messages occur in activity but log verbose output when checking for commits
 # into a log file.
 log_commits() {
 	sed '/^.\//'d | sed '/^.hg/'d | tee -a $LOGS/commits.log
-}
-
-# Log broken packages.
-broken() {
-	if ! grep -q "^$pkg$" $broken; then
-		echo "$pkg" >> $broken
-	fi
 }
 
 # Clean up before exit when check and cook commits finish.

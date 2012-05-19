@@ -8,12 +8,6 @@
 #
 . /usr/lib/slitaz/libcook.sh
 
-# Share DB and status with the Cooker.
-activity="$CACHE/activity"
-command="$CACHE/command"
-broken="$CACHE/broken"
-blocked="$CACHE/blocked"
-
 #
 # Functions
 #
@@ -64,13 +58,6 @@ log() {
 clean_log() {
 	sed -i -e s'|\[70G\[ \[1;32m| |' \
 		-e s'|\[0;39m \]||' $LOGS/$pkg.log
-}
-
-# Log broken packages.
-broken() {
-	if ! grep -q "^$pkg$" $broken; then
-		echo "$pkg" >> $broken
-	fi
 }
 
 # Be sure package exists in wok.
@@ -132,12 +119,6 @@ receipt_quality() {
 				fi ;;
 		esac
 	done
-}
-
-# Executed before sourcing a receipt.
-unset_receipt() {
-	unset DEPENDS BUILD_DEPENDS WANTED EXTRAVERSION WGET_URL PROVIDE TARBALL
-	unset HOST_ARCH CROSS_BUGS
 }
 
 # Paths used in receipt and by cook itself.
