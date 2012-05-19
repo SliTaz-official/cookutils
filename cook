@@ -6,10 +6,7 @@
 # Copyright (C) SliTaz GNU/Linux - GNU gpl v3
 # Author: Christophe Lincoln <pankso@slitaz.org>
 #
-. /lib/libtaz.sh
-
-[ -f "/etc/slitaz/cook.conf" ] && . /etc/slitaz/cook.conf
-[ -f "cook.conf" ] && . ./cook.conf
+. /usr/lib/slitaz/libcook.sh
 
 # Share DB and status with the Cooker.
 activity="$CACHE/activity"

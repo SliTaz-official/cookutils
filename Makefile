@@ -6,7 +6,12 @@ DESTDIR?=
 
 all:
 
-install:
+install: install-cook install-libcook install-cross
+uninstall: uninstall-cook uninstall-libcook uninstall-cross
+
+# Cook
+
+install-cook:
 	install -m 0755 -d $(DESTDIR)/etc/slitaz
 	install -m 0755 -d $(DESTDIR)/etc/init.d
 	install -m 0755 -d $(DESTDIR)$(PREFIX)/bin
@@ -29,12 +34,21 @@ install:
 	install -m 0755 init.d/cooker $(DESTDIR)/etc/init.d
 	chmod 0755 $(DESTDIR)/var/www/cgi-bin/cooker/*.cgi
 
-uninstall:
+uninstall-cook:
 	rm -rf \
 		$(DESTDIR)$(PREFIX)/bin/cook \
 		$(DESTDIR)$(PREFIX)/bin/cooker \
 		$(DESTDIR)/etc/slitaz/cook.* \
 		$(DESTDIR)/var/www/cooker
+
+# Libcook
+
+install-libcook:
+	install -m 0755 -d $(DESTDIR)$(PREFIX)/lib/slitaz
+	install -m 0755 lib/libcook.sh $(DESTDIR)$(PREFIX)/lib/slitaz
+
+uninstall-libcook:
+	rm -f $(DESTDIR)$(PREFIX)/lib/slitaz/libcook.sh
 
 # Cross
 
