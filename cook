@@ -450,7 +450,7 @@ cookit() {
 			# or SYSROOT when it will be support by cross (the final goal is
 			# to use only the sysroot method).
 			root=$CROSS_PREFIX
-			arch=-${ARCH} ;;
+			arch="-${ARCH}" ;;
 	esac
 
 	[ "$QA" ] && receipt_quality
@@ -647,10 +647,10 @@ packit() {
 
 	# Handle cross compilation
 	case "$ARCH" in
-		arm|x86_64) VERSION="$VERSION-$ARCH" ;;
+		arm|x86_64) arch="-$ARCH" ;;
 	esac
 
-	echo "Pack: $PACKAGE $VERSION"
+	echo "Pack: $PACKAGE ${VERSION}${arch}"
 	separator
 
 	if grep -q ^genpkg_rules $receipt; then
@@ -727,7 +727,7 @@ packit() {
 	# Compress.
 	gettext "Creating full cpio archive... "
 	find . -print | cpio -o -H newc --quiet > \
-		../$PACKAGE-${VERSION}${EXTRAVERSION}.tazpkg
+		../$PACKAGE-${VERSION}${EXTRAVERSION}${arch}.tazpkg
 	status
 	gettext "Restoring original package tree... "
 	unlzma -c fs.cpio.lzma | cpio -idm --quiet
@@ -777,6 +777,38 @@ tac() {
 	sed '1!G;h;$!d' $1
 }
 
+# Install package on --install or update the chroot.
+install_package() {
+	case "$ARCH" in
+		arm|x86_64)
+			arch="-${ARCH}"
+			root=$CROSS_PREFIX ;;
+	esac
+	# Install package if requested but skip install if target host doesn't
+	# match build system or it will break the build chroot.
+	build=$(echo $BUILD_SYSTEM | cut -d "-" -f 1)
+	if [ "$inst" ] && [ "$build" == "$ARCH" ]; then
+		if [ -f "$PKGS/$PACKAGE-${VERSION}${EXTRAVERSION}.tazpkg" ]; then
+			cd $PKGS && tazpkg install \
+				$PACKAGE-${VERSION}${EXTRAVERSION}.tazpkg --forced
+		else
+			gettext -e "Unable to install package, build has failed.\n\n"
+			exit 1
+		fi
+	fi
+
+	# Install package if part of the chroot to keep env up-to-date.
+	if [ -d "${root}$INSTALLED/$pkg" ]; then
+		. /etc/slitaz/cook.conf
+		. $WOK/$pkg/taz/$pkg-*/receipt
+		echo "Updating $ARCH chroot environment..."
+		echo "Updating chroot: $pkg (${VERSION}${EXTRAVERSION}${arch})" | log
+		cd $PKGS && tazpkg install \
+			$pkg-${VERSION}${EXTRAVERSION}${arch}.tazpkg \
+			--forced --root=$root
+	fi
+}
+
 # Launch the cook command into a chroot jail protected by aufs.
 # The current filesystems are used read-only and updates are
 # stored in a separate branch.
@@ -818,29 +850,8 @@ try_aufs_chroot() {
 	rm -rf ${base}rw
 	umount ${base}root
 	rmdir $base*
-
-	# Install package if requested
-	if [ "$inst" ]; then
-		if [ -f "$PKGS/$PACKAGE-${VERSION}${EXTRAVERSION}.tazpkg" ]; then
-			cd $PKGS && tazpkg install \
-				$PACKAGE-${VERSION}${EXTRAVERSION}.tazpkg --forced
-		else
-			gettext -e "Unable to install package, build has failed.\n\n"
-			exit 1
-		fi
-	fi
-
-	# Skip install if target host doesn't match build system.
-	build=$(echo $BUILD_SYSTEM | cut -d "-" -f 1)
-	# Install package if part of the chroot to keep env up-to-date.
-	if [ -d "$INSTALLED/$pkg" ] && [ "$build" == "$ARCH" ]; then
-		. /etc/slitaz/cook.conf
-		. $WOK/$pkg/taz/$pkg-*/receipt
-		echo "Updating $ARCH chroot environment..."
-		echo "Updating chroot: $pkg (${VERSION}${EXTRAVERSION})" | log
-		cd $PKGS && tazpkg install \
-			$pkg-${VERSION}${EXTRAVERSION}.tazpkg --forced
-	fi
+	# Dont install pkg twice... it's done after
+	#install_package
 	exit $status
 }
 
@@ -1312,31 +1323,11 @@ EOT
 		summary | tee -a $LOGS/$pkg.log
 		newline
 
-		# Install package if requested
-		if [ "$inst" ]; then
-			if [ -f "$PKGS/$PACKAGE-${VERSION}${EXTRAVERSION}.tazpkg" ]; then
-				cd $PKGS && tazpkg install \
-					$PACKAGE-${VERSION}${EXTRAVERSION}.tazpkg --forced
-			else
-				gettext -e "Unable to install package, build has failed.\n\n"
-				exit 1
-			fi
-		fi
-
-		# Skip install if target host dont match build system.
-		build=$(echo $BUILD_SYSTEM | cut -d "-" -f 1)
-		# Install package if part of the chroot to keep env up-to-date.
-		if [ -d "$INSTALLED/$PACKAGE" ] && [ -z "$AUFS_MOUNTS" ] && \
-			[ "$build" == "$ARCH" ]; then
-			echo "Updating chroot environment..."
-			echo "Updating chroot: $PACKAGE (${VERSION}${EXTRAVERSION})" | log
-			cd $PKGS && tazpkg install \
-				$PACKAGE-${VERSION}${EXTRAVERSION}.tazpkg --forced
-		fi
+		# We may want to install/update.
+		install_package
 
 		# Finally we DONT WANT to build the *-dev or packages with WANTED="$pkg"
 		# You want automation: use the Cooker Build Bot.
-		#[ -d "$WOK/$pkg-dev" ] && cook $pkg-dev
 		rm -f $command ;;
 esac
 
