@@ -947,7 +947,7 @@ case "$1" in
 		# Setup for cross compiling.
 		arch=${1%-setup}
 		check_root
-		echo "Cook: setup $ARCH cross environment" | log
+		echo "Cook: setup $arch cross environment" | log
 		newline
 		boldify $(gettext "Setting up your cross environment")
 		separator
