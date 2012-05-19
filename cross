@@ -230,6 +230,7 @@ glibc() {
 		--host=$TARGET \
 		--with-headers=$PREFIX/usr/include \
 		--with-binutils=$PREFIX/bin \
+		--enable-kernel=2.6.32 \
 		$GLIBC_ARGS
 	make || exit 1
 	make install
