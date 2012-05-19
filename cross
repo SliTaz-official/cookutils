@@ -83,7 +83,6 @@ download_src() {
 	[ -f "$GLIBC_TARBALL" ] || wget $GLIBC_WGET
 	[ -f "$GCC_TARBALL" ] || wget $GCC_WGET
 	[ -f "$BUSYBOX_TARBALL" ] || wget $BUSYBOX_WGET
-	[ -f "$PKGCONFIG_TARBALL" ] || wget $PKGCONFIG_WGET
 }
 
 # Use sysroot or not ?

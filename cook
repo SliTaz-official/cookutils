@@ -535,12 +535,17 @@ cookit() {
 		echo "ERROR: missing dep $nb" && exit 1
 	fi
 
+	# Set root path when cross compiling. ARM tested but not x86_64
+	case "$ARCH" in
+		arm) root=$CROSS_PREFIX ;;
+	esac
+
 	# Install local packages.
 	cd $PKGS
 	for i in $(uniq $CACHE/installed.local)
 	do
 		gettext "Installing dep (pkg/local):"; echo " $i"
-		tazpkg install $i >/dev/null
+		tazpkg install $i --root=$root >/dev/null
 	done
 
 	# Install web or cached packages (if mirror is set to $PKGS we only
@@ -548,7 +553,7 @@ cookit() {
 	for i in $(uniq $CACHE/installed.web)
 	do
 		gettext "Installing dep (web/cache):"; echo " $i"
-		tazpkg get-install $i >/dev/null
+		tazpkg get-install $i --root=$root >/dev/null
 	done
 
 	# If a cook failed deps are removed.
