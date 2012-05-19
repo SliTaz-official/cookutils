@@ -17,9 +17,6 @@ command="$CACHE/command"
 broken="$CACHE/broken"
 blocked="$CACHE/blocked"
 
-# Old style compatibility
-SOURCES_REPOSITORY=$SRC
-
 #
 # Functions
 #
@@ -319,8 +316,7 @@ debug_info() {
 
 # Copy all generic files (locale, pixmaps, .desktop). We use standard paths,
 # so some packages need to copy these files with the receipt and genpkg_rules.
-copy_generic_files()
-{
+copy_generic_files() {
 	# $LOCALE is set in cook.conf
 	if [ "$LOCALE" ]; then
 		if [ -d "$install/usr/share/locale" ]; then
@@ -373,8 +369,7 @@ copy_generic_files()
 # Find and strip : --strip-all (-s) or --strip-debug on static libs as well
 # as removing uneeded files like in Python packages. Cross compiled binaries
 # must be stripped with cross-tools aka $ARCH-slitaz-*-strip
-strip_package()
-{
+strip_package() {
 	case "$ARCH" in
 		arm|x86_64) export STRIP=${HOST_SYSTEM}-strip ;;
 		*) export STRIP=strip ;;
@@ -442,9 +437,9 @@ cookit() {
 				echo "cook: $ARCH sysroot: $SYSROOT"
 			else
 				echo "cook: adding /usr/cross/$ARCH/bin to PATH"
-				export PATH=$PATH:/usr/cross/$ARCH/bin
+				export PATH=$PATH:$CROSS_PREFIX/bin
 			fi
-			export CROSS_COMPILE=$HOST_SYSTEM-
+			export CROSS_COMPILE=${HOST_SYSTEM}-
 			echo "cook: using cross-tools: $CROSS_COMPILE"
 			export CC=${HOST_SYSTEM}-gcc
 			export CXX=${HOST_SYSTEM}-g++
@@ -452,9 +447,7 @@ cookit() {
 			export AS=${HOST_SYSTEM}-as
 			export RANLIB=${HOST_SYSTEM}-ranlib
 			export LD=${HOST_SYSTEM}-ld
-			export STRIP=${HOST_SYSTEM}-strip
-			#export PKGCONFIG=${HOST_SYSTEM}-pkg-config
-			;;
+			export STRIP=${HOST_SYSTEM}-strip ;;
 	esac
 
 	[ "$QA" ] && receipt_quality
@@ -775,8 +768,7 @@ packit_quality() {
 	fi
 }
 
-tac()
-{
+tac() {
 	sed '1!G;h;$!d' $1
 }
 
@@ -895,7 +887,7 @@ case "$1" in
 		# Use setup pkgs from cross.conf or cook.conf. When cross compiling
 		# ARCH-setup or 'cross check-env' should be used before: cook setup
 		case "$ARCH" in
-			arm)
+			arm|x86_64)
 				if [ ! -x "/usr/bin/cross" ]; then
 					gettext "ERROR: cross is not installed"; echo
 					exit 1
@@ -905,7 +897,7 @@ case "$1" in
 		esac
 		for pkg in $SETUP_PKGS; do
 			if [ "$forced" ]; then
-				tazpkg get-install $pkg --forced
+				tazpkg -gi $pkg --forced
 			else
 				[ -d "$INSTALLED/$pkg" ] || tazpkg get-install $pkg
 			fi
@@ -938,7 +930,7 @@ case "$1" in
 		arch=${1%-setup}
 		check_root
 		echo ""
-		gettext "Setting up your cross environment"; echo
+		boldify $(gettext "Setting up your cross environment")
 		separator
 		init_db_files
 		sed -i \
@@ -959,22 +951,22 @@ case "$1" in
 					/etc/slitaz/cook.conf ;;
 		esac
 		. /etc/slitaz/cook.conf
-		echo "Target arch   : $ARCH"
-		echo "Configure args: $CONFIGURE_ARGS"
+		echo "Target arch     : $ARCH"
+		echo "Configure args  : $CONFIGURE_ARGS"
 		if [ "$SYSROOT" ]; then
-			echo "Arch sysroot: $SYSROOT"
+			echo "Arch sysroot    : $SYSROOT"
 			CC=/usr/bin/${HOST_SYSTEM}-gcc
 		else
-			echo "Path: /usr/cross/$ARCH/bin"
+			echo "Additional path : /usr/cross/$ARCH/bin"
 			CC=/usr/cross/$ARCH/bin/${HOST_SYSTEM}-gcc
 		fi
 		if [ -x $CC ]; then
-			echo "Cross compiler: ${HOST_SYSTEM}-gcc"
+			echo "Cross compiler  : ${HOST_SYSTEM}-gcc"
 		else
-			echo "WARNING: C compiler is missing: ${HOST_SYSTEM}-gcc"
+			colorize "C compiler is missing: ${HOST_SYSTEM}-gcc" 36
 			echo "Run 'cross compile' to cook a toolchain"
 		fi
-		echo "" ;;
+		separator && echo "" ;;
 	test)
 		# Test a cook environment.
 		echo "Cook test: testing the cook environment" | log

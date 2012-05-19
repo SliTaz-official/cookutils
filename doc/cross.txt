@@ -12,7 +12,6 @@ COMMANDS
 
 OPTIONS
 	--log      clean: Will also clean log files
-	--install  check-env: Install needed packages
 	--config=  Use specified configuration file
 
 HOWTO:
@@ -37,12 +36,13 @@ HOWTO:
 	# cd cookutils
 	# make install-cross
 
-	Setup the build environment and compile a cross toolchain
-	-------------------------------------------------------------
+	Setup the build environment, get source and compile a cross toolchain
+	---------------------------------------------------------------------
 	# cook arm-setup
 	# cook setup
 	(vi/nano /etc/slitaz/cross.conf)
-	# cross check-env --install
+	# cross check
+	# cross download
 	# cross compile
 
 	Test the cross toolchain

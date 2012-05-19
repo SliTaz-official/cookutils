@@ -26,12 +26,12 @@ Commands:
   howto           Man alike and howto
   info            Display cross-tools info
   testsuite       Execute a small testsuite
-  check-env       Check build host tools
+  check           Check build host environment
   download        Download necessary sources
   show-log        Show a compile log
   binutils        Compile Binutils
-  gcc-static      Compile GCC static
   linux-headers   Install Kernel headers
+  gcc-static      Compile GCC static
   glibc           Compile GNU Glibc
   gcc-final       Compile final GCC
   busybox         Cross compile Busybox
@@ -78,11 +78,12 @@ init_compile() {
 # Get source if not yet in $SRC.
 download_src() {
 	mkdir -p $SRC && cd $SRC
-	[ -f "binutils-$BINUTILS_VERSION.tar.bz2" ] || wget $BINUTILS_WGET
-	[ -f "linux-$LINUX_VERSION.tar.bz2" ] || wget $LINUX_WGET
-	[ -f "glibc-$GLIBC_VERSION.tar.bz2" ] || wget $GLIBC_WGET
-	[ -f "gcc-$GCC_VERSION.tar.bz2" ] || wget $GCC_WGET
-	[ -f "busybox-$BUSYBOX_VERSION.tar.bz2" ] || wget $BUSYBOX_WGET
+	[ -f "$BINUTILS_TARBALL" ] || wget $BINUTILS_WGET
+	[ -f "$LINUX_TARBALL" ] || wget $LINUX_WGET
+	[ -f "$GLIBC_TARBALL" ] || wget $GLIBC_WGET
+	[ -f "$GCC_TARBALL" ] || wget $GCC_WGET
+	[ -f "$BUSYBOX_TARBALL" ] || wget $BUSYBOX_WGET
+	[ -f "$PKGCONFIG_TARBALL" ] || wget $PKGCONFIG_WGET
 }
 
 # Use sysroot or not ?
@@ -91,9 +92,41 @@ check_sysroot() {
 		PREFIX=/usr
 		HDR_PATH=$SYSROOT/usr
 		sysroot="--with-sysroot=$SYSROOT"
-		echo "Configure : $sysroot"
+		echo "Configure: $sysroot"
 	else
-		HDR_PATH=$PREFIX
+		HDR_PATH=$PREFIX/usr
+	fi
+}
+
+# Work around to fix GCC include search path
+#
+# GCC include search path is: $PREFIX/$TARGET/include, so make sure it
+# is a symlink to default: $PREFIX/usr/include
+#
+# Glibc install headers in: $PREFIX/include, move them to usr/include
+# if needed. After when we cross compile packages with cook we have
+# to install build dependencies using --root=$CROSS_PREFIX and so
+# default include dir is: $PREFIX/usr/include ($PREFIX is the root
+# of our cross environment.
+#
+check_include() {
+	cd $PREFIX
+	echo "Checking: $PREFIX"
+	if ! readlink include >/dev/null; then
+		echo "Creating symlink: usr/include include"
+		cp -a include usr && rm -rf include
+		ln -s usr/include include
+	fi
+	cd $PREFIX/$TARGET
+	echo "Checking: $PREFIX/$TARGET"
+	if ! readlink include >/dev/null; then
+		echo "Creating symlink: ../usr/include include"
+		cp -a include ../usr && rm -rf include
+		ln -s ../usr/include include
+	fi
+	if ! readlink lib >/dev/null; then
+		echo "Creating symlink: ../lib lib"
+		rm -rf lib && ln -s ../lib lib
 	fi
 }
 
@@ -101,10 +134,10 @@ check_sysroot() {
 binutils() {
 	init_compile
 	rm -rf binutils-$BINUTILS_VERSION
-	echo "Extracting: binutils-$BINUTILS_VERSION.tar.bz2"
-	tar xjf $SRC/binutils-$BINUTILS_VERSION.tar.bz2
+	echo "Extracting: $BINUTILS_TARBALL"
+	tar xjf $SRC/$BINUTILS_TARBALL
 	: ${BINUTILS_ARGS=--enable-shared}
-	echo "Configure : $BINUTILS_ARGS"
+	echo "Configure: $BINUTILS_ARGS"
 	check_sysroot
 	cd binutils-$BINUTILS_VERSION
 	./configure \
@@ -114,15 +147,28 @@ binutils() {
 		$BINUTILS_ARGS $sysroot
 	make || exit 1
 	make install
-	#echo "cross: binutils compiled on: $(date)"
+	echo "cross: binutils compiled on: $(date)"
 }
 
-# 2. GCC static (first pass)
+# 2. Kernel headers could use CROSS_COMPILE but gcc is not yet build.
+# NOTE: Compile GCC static first then linux-headers ?
+linux_headers() {
+	init_compile
+	echo "Extracting: $LINUX_TARBALL"
+	tar xjf $SRC/$LINUX_TARBALL
+	check_sysroot
+	cd linux-$LINUX_VERSION
+	make mrproper
+	make ARCH=$ARCH headers_check
+	make ARCH=$ARCH headers_install INSTALL_HDR_PATH=$HDR_PATH
+}
+
+# 3. GCC static (first pass)
 gcc_static() {
 	init_compile
-	echo "Extracting: gcc-$GCC_VERSION.tar.bz2"
-	tar xjf $SRC/gcc-$GCC_VERSION.tar.bz2
-	echo "Configure : $GCC_STATIC_ARGS"
+	echo "Extracting: $GCC_TARBALL"
+	tar xjf $SRC/$GCC_TARBALL
+	echo "Configure: $GCC_STATIC_ARGS"
 	check_sysroot
 	# Arch fixes and work around
 	case "$ARCH" in
@@ -147,28 +193,17 @@ gcc_static() {
 	make install-gcc install-target-libgcc
 	cd $PREFIX/lib/gcc/$TARGET/$GCC_VERSION
 	echo "Creating symlink for static libgcc: libgcc_eh.a"
-	rm -f libgcc_eh.a && ln -s libgcc.a libgcc_eh.a
-}
-
-# 3. Kernel headers use static GCC
-linux_headers() {
-	init_compile
-	echo "Extracting: linux-$LINUX_VERSION.tar.bz2"
-	tar xjf $SRC/linux-$LINUX_VERSION.tar.bz2
-	check_sysroot
-	cd linux-$LINUX_VERSION
-	make mrproper
-	make ARCH=$ARCH headers_check
-	make ARCH=$ARCH headers_install \
-		INSTALL_HDR_PATH=$HDR_PATH
+	rm -f libgcc_eh.a
+	ln -s libgcc.a libgcc_eh.a
+	echo "cross: gcc-static compiled on: $(date)"
 }
 
 # 4. GNU Glibc
 glibc() {
 	init_compile
-	echo "Extracting: glibc-$GLIBC_VERSION.tar.bz2"
-	tar xjf $SRC/glibc-$GLIBC_VERSION.tar.bz2
-	echo "Configure : $GLIBC_ARGS"
+	echo "Extracting: $GLIBC_TARBALL"
+	tar xjf $SRC/$GLIBC_TARBALL
+	echo "Configure: $GLIBC_ARGS"
 	[ "$continue" ] || rm -rf glibc-build
 	# Some arch may need glibc-ports and custom CFLAGS
 	case "$ARCH" in
@@ -184,7 +219,7 @@ glibc() {
 		x86_64)
 			ccflags="-m64" ;;
 	esac
-	#echo "CFLAGS: $CFLAGS"
+	echo "CFLAGS: $CFLAGS"
 	mkdir -p glibc-build && cd glibc-build
 	BUILD_CC="gcc" \
 	CC="${TARGET}-gcc $ccflags" \
@@ -194,7 +229,7 @@ glibc() {
 		--prefix=$PREFIX \
 		--libexec=$PREFIX/lib/glibc \
 		--host=$TARGET \
-		--with-headers=$PREFIX/include \
+		--with-headers=$PREFIX/usr/include \
 		--with-binutils=$PREFIX/bin \
 		$GLIBC_ARGS
 	make || exit 1
@@ -204,25 +239,23 @@ glibc() {
 		cd $SYSROOT
 		ln -s usr/include sys-include
 	else
-		cd $PREFIX/$TARGET
-		rm -rf lib include
-		ln -s ../lib lib
-		ln -s ../include include
+		check_include
 	fi
-	#unset CFLAGS
+	unset CFLAGS
+	echo "cross: glibc compiled on: $(date)"
 }
 
 # 5. GCC final
 gcc_final() {
 	init_compile
 	if [ ! -d "gcc-$GCC_VERSION" ]; then
-		echo "Extracting: gcc-$GCC_VERSION.tar.bz2"
-		tar xjf $SRC/gcc-$GCC_VERSION.tar.bz2
+		echo "Extracting: $GCC_TARBALL"
+		tar xjf $SRC/$GCC_TARBALL
 	fi
-	echo "Configure : $GCC_FINAL_ARGS"
+	echo "Configure: $GCC_FINAL_ARGS"
 	check_sysroot
-	rm -rf gcc-build
-	mkdir gcc-build && cd gcc-build
+	[ "$continue" ] || rm -rf gcc-build
+	mkdir -p gcc-build && cd gcc-build
 	../gcc-$GCC_VERSION/configure \
 		--prefix=$PREFIX \
 		--libexec=$PREFIX/lib \
@@ -234,15 +267,16 @@ gcc_final() {
 		--with-pkgversion="SliTaz" \
 		$GCC_FINAL_ARGS $sysroot
 	make || exit 1
-	make install
+	make install &&
+	echo "cross: GCC final compiled on: $(date)"
 }
 
 # Build Busybox to we can create prebuilt tiny rootfs image and boot
 # from NFS ?
 cross_busybox() {
 	init_compile
-	echo "Extracting: busybox-$BUSYBOX_VERSION.tar.bz2"
-	tar xjf $SRC/busybox-$BUSYBOX_VERSION.tar.bz2
+	echo "Extracting: $BUSYBOX_TARBALL"
+	tar xjf $SRC/$BUSYBOX_TARBALL
 	cd busybox-$BUSYBOX_VERSION
 	# CROSS_COMPILE is exported via init_compile.
 	make defconfig
@@ -250,7 +284,8 @@ cross_busybox() {
 	make install
 	chmod 4755 _install/bin/busybox
 	readelf -h _install/bin/busybox
-	echo "Busybox install path: $(pwd)/_install"
+	echo "cross: busybox install path: $(pwd)/_install"
+	echo "cross: busybox compiled on: $(date)"
 }
 
 #
@@ -297,14 +332,26 @@ EOT
 		fi
 		echo -e "\n[CHECKING] readelf -h test.out" | tee -a $logdir/testsuite.log
 		readelf -h test.out | tee -a $logdir/testsuite.log ;;
-	check-env)
-		for pkg in mpfr mpfr-dev gmp gmp-dev mpc-library gawk autoconf
-		do
+	check)
+		echo "Checking: build system packages"
+		for pkg in slitaz-toolchain mpfr mpfr-dev gmp gmp-dev mpc-library \
+			gawk autoconf; do
 			if [ ! -d "/var/lib/tazpkg/installed/$pkg" ]; then
 				echo "Missing packages: $pkg"
-				[ "$install" ] && tazpkg -gi $pkg
+				if [ -x /usr/sbin/spk-add ]; then
+					spk-add $pkg
+				else
+					tazpkg -gi $pkg
+				fi
 			fi
-		done ;;
+		done
+		# See: check_include()
+		if [ "$SYSROOT" ]; then
+			echo "Using: --with-sysroot=$SYSROOT"
+			echo "WARNING: not well tested and buggy"
+			exit 0
+		fi
+		check_include ;;
 	download)
 		download_src ;;
 	show-log)

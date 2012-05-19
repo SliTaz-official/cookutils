@@ -295,13 +295,10 @@ case "$1" in
 		[ "$2" ] || hours=2
 		if [ ! -f "$crontabs" ]; then
 			mkdir -p /var/spool/cron/crontabs
-			echo "# Run SliTaz Cooker every $hours hours" > $crontabs
-			echo "0 */$hours * * *  /usr/bin/cooker" >> $crontabs
-			/etc/init.d/crond start
 		fi
 		if ! fgrep -q /usr/bin/cooker $crontabs; then
 			echo "# Run SliTaz Cooker every $hours hours" > $crontabs
-			echo "0 */$hours * * *  /usr/bin/cooker" >> $crontabs
+			echo "0 */$hours * * *  /usr/bin/cooker --output=html" >> $crontabs
 			killall crond 2>/dev/null && /etc/init.d/crond start
 		fi ;;
 	check-cron)
