@@ -207,7 +207,7 @@ glibc() {
 	# Some arch may need glibc-ports and custom CFLAGS
 	case "$ARCH" in
 		arm)
-			#export CFLAGS="-march=armv6 -mtune=generic -g -O2"
+			export CFLAGS="-march=armv6 -O2"
 			[ -f "$SRC/glibc-ports-$GLIBC_VERSION.tar.bz2" ] || wget \
 				http://ftp.gnu.org/gnu/libc/glibc-ports-$GLIBC_VERSION.tar.bz2 \
 				-O $SRC/glibc-ports-$GLIBC_VERSION.tar.bz2 || exit 1
