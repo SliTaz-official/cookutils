@@ -419,8 +419,13 @@ cookit() {
 			fi
 			export CROSS_COMPILE=${HOST_SYSTEM}-
 			echo "Using cross-tools: $CROSS_COMPILE"
-			export CC=${HOST_SYSTEM}-gcc
-			export CXX=${HOST_SYSTEM}-g++
+			if [ "$ARCH" == "x86_64" ]; then
+				export CC="${HOST_SYSTEM}-gcc -m64"
+				export CXX="${HOST_SYSTEM}-g++ -m64"
+			else
+				export CC=${HOST_SYSTEM}-gcc
+				export CXX=${HOST_SYSTEM}-g++
+			fi
 			export AR=${HOST_SYSTEM}-ar
 			export AS=${HOST_SYSTEM}-as
 			export RANLIB=${HOST_SYSTEM}-ranlib
