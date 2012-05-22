@@ -469,6 +469,11 @@ cookit() {
 				# libboost-dev exists but not libboost, so check if we got vers.
 				unset vers
 				vers=$(. $WOK/$i/receipt 2>/dev/null ; echo $VERSION)
+				# We may have a local package.
+				if [ ! "$vers" ]; then
+					vers=$(grep "^$i |" $PKGS/packages.desc | awk '{print $3}')
+				fi
+				debug "bdep: $i version: $vers"
 				if [ -f "$PKGS/$i-${vers}${arch}.tazpkg" ]; then
 					echo $i-${vers}${arch}.tazpkg >> $CACHE/installed.local
 				else
@@ -483,7 +488,7 @@ cookit() {
 							echo $i >> $CACHE/missing.dep
 						fi
 					else
-						# Package is not in wok but may be in repo.
+						# Package is not in wok but may be in online repo.
 						if fgrep -q $i-${vers}${arch} ${root}$DB/packages.list; then
 							echo $i >> $CACHE/installed.web
 						else
