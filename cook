@@ -981,7 +981,7 @@ case "$1" in
 		if [ ! -f "${root}$INSTALLED/glibc-base/receipt" ]; then
 			. /etc/slitaz/cross.conf
 			if [ ! -f "$PKGS/glibc-base-$GLIBC_VERSION-$ARCH.tazpkg" ]; then
-				echo "WARNING: cook glibc-base for $ARCH then run again:"
+				echo -n "WARNING: cook glibc-base for $ARCH then run again:"
 				echo "$(basename $0) $ARCH-setup"
 			else
 				echo "Installing      : glibc-base-$GLIBC_VERSION-$ARCH.tazpkg"
@@ -994,7 +994,7 @@ case "$1" in
 		if [ -x $CC ]; then
 			echo "Cross compiler  : ${HOST_SYSTEM}-gcc"
 		else
-			colorize "C compiler is missing: ${HOST_SYSTEM}-gcc" 36
+			colorize 36 "C compiler is missing: ${HOST_SYSTEM}-gcc"
 			echo "Run 'cross compile' to cook a toolchain"
 		fi
 		separator && newline ;;
