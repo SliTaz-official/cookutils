@@ -266,7 +266,7 @@ case "${QUERY_STRING}" in
 		# use 'cooker arch' to manually create arch.$ARCH files.
 		# We may have arm only packages, use arch.i486 ?
 		case "$ARCH" in
-			arm) inwok=$(ls $WOK/*/arch.$ARCH | wc -l) ;;
+			arm|x86_64) inwok=$(ls $WOK/*/arch.$ARCH | wc -l) ;;
 			*) inwok=$(ls $WOK | wc -l) ;;
 		esac
 		cooked=$(ls $PKGS/*.tazpkg | wc -l)
