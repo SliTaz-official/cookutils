@@ -156,6 +156,9 @@ case "${QUERY_STRING}" in
 				if [ -f $PKGS/$PACKAGE-$VERSION$EXTRAVERSION.tazpkg ]; then
 					echo "<a href='cooker.cgi?download=$PACKAGE-$VERSION$EXTRAVERSION.tazpkg'>download</a>"
 				fi
+				if [ -f $PKGS/$PACKAGE-$VERSION$EXTRAVERSION-$ARCH.tazpkg ]; then
+					echo "<a href='cooker.cgi?download=$PACKAGE-$VERSION$EXTRAVERSION-$ARCH.tazpkg'>download</a>"
+				fi
 			fi
 		else
 			echo "No package named: $pkg"
