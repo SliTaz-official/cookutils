@@ -34,7 +34,6 @@ Commands:
   gcc-static      Compile GCC static
   glibc           Compile GNU Glibc
   gcc-final       Compile final GCC
-  busybox         Cross compile Busybox
   compile         Compile everything at once
   clean           Clean-up build environment
   clean-tools     Clean: $PREFIX
@@ -135,13 +134,14 @@ binutils() {
 	rm -rf binutils-$BINUTILS_VERSION
 	echo "Extracting: $BINUTILS_TARBALL"
 	tar xjf $SRC/$BINUTILS_TARBALL
-	: ${BINUTILS_ARGS=--enable-shared}
 	echo "Configure: $BINUTILS_ARGS"
 	check_sysroot
 	cd binutils-$BINUTILS_VERSION
 	./configure \
 		--prefix=$PREFIX \
 		--target=$TARGET \
+		--enable-plugins \
+		--enable-threads \
 		--enable-targets=$BUILD_SYSTEM \
 		$BINUTILS_ARGS $sysroot
 	make || exit 1
@@ -264,28 +264,16 @@ gcc_final() {
 		--enable-c99 \
 		--enable-long-long \
 		--enable-__cxa_atexit \
+		--with-system-zlib \
+		--enable-plugin \
+		--disable-multilib \
+		--disable-libssp \
 		--with-pkgversion="SliTaz" \
+		--with-bugurl="https://bugs.slitaz.org/" \
 		$GCC_FINAL_ARGS $sysroot
 	make || exit 1
 	make install &&
 	echo "cross: GCC final compiled on: $(date)"
-}
-
-# Build Busybox to we can create prebuilt tiny rootfs image and boot
-# from NFS ?
-cross_busybox() {
-	init_compile
-	echo "Extracting: $BUSYBOX_TARBALL"
-	tar xjf $SRC/$BUSYBOX_TARBALL
-	cd busybox-$BUSYBOX_VERSION
-	# CROSS_COMPILE is exported via init_compile.
-	make defconfig
-	make || exit 1
-	make install
-	chmod 4755 _install/bin/busybox
-	readelf -h _install/bin/busybox
-	echo "cross: busybox install path: $(pwd)/_install"
-	echo "cross: busybox compiled on: $(date)"
 }
 
 #
@@ -372,8 +360,6 @@ EOT
 		glibc 2>&1 | tee $logdir/glibc.log ;;
 	gcc-final)
 		gcc_final 2>&1 | tee $logdir/gcc-final.log ;;
-	busybox)
-		cross_busybox 2>&1 | tee $logdir/busybox.log ;;
 	compile)
 		# Compile the full toolchain.
 		time=$(date +%s)
@@ -402,12 +388,11 @@ EOT
 		# Remove crap :-)
 		init_compile
 		echo "Cleaning   : $PREFIX ($(du -sh $PREFIX | awk '{print $1}'))"
-		for dir in info man locale
+		for file in share/info share/man lib/*-gdb.py
 		do
-			echo -n "Removing   : $dir"
-			rm -rf $PREFIX/share/$dir && status
+			echo -n "Removing   : $file"
+			rm -rf $PREFIX/$file && status
 		done
-		rm -f $PREFIX/lib/*-gdb.py
 		echo -n "Stripping  : shared libs and binaries"
 		${TARGET}-strip -s $PREFIX/lib/*.so* 2>/dev/null
 		${TARGET}-strip -s $PREFIX/bin/* 2>/dev/null
