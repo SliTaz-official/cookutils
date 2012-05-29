@@ -253,6 +253,18 @@ EOT
 		$EGLIBC_ARGS &&
 	make || exit 1
 	make install_root=$sysroot install
+	# The rpc headers (RPC is no longer in eglibc <2.13
+	#
+	#if [ "$EGLIBC_VERSION" -gt "2.13" ]; then
+		#rpcsvc = "bootparam_prot.x nlm_prot.x rstat.x \
+		#yppasswd.x klm_prot.x rex.x sm_inter.x mount.x \
+		#rusers.x spray.x nfs_prot.x rquota.x key_prot.x"
+		#cd sunrpc/rpcsvc
+		#for r in ${rpcsvc}; do
+			#h=`echo $r|sed -e's,\.x$,.h,'`
+			#rpcgen -h $r -o $h || oewarn "unable to generate header for $r"
+		#done
+	#fi
 }
 
 # 5. GCC final
