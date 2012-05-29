@@ -102,7 +102,7 @@ binutils() {
 		--enable-threads \
 		--enable-targets=$BUILD_SYSTEM \
 		--with-sysroot=$sysroot \
-		$BINUTILS_ARGS
+		$BINUTILS_ARGS &&
 	make || exit 1
 	make install
 	echo "cross: binutils compiled on: $(date)"
@@ -149,7 +149,7 @@ gcc_static() {
 		--without-headers \
 		--with-newlib \
 		--with-sysroot=$sysroot \
-		$GCC_STATIC_ARGS
+		$GCC_STATIC_ARGS &&
 	make all-gcc all-target-libgcc || exit 1
 	make install-gcc install-target-libgcc
 	echo "cross: gcc-static compiled on: $(date)"
@@ -196,7 +196,7 @@ glibc() {
 		--with-headers=$sysroot/usr/include \
 		--with-binutils=$tools/bin \
 		--enable-kernel=2.6.32 \
-		$GLIBC_ARGS
+		$GLIBC_ARGS &&
 	make || exit 1
 	make install_root=$sysroot install
 	# Work around to let GCC find Glibc headers.
@@ -250,7 +250,7 @@ EOT
 		--without-gd \
 		--without-cvs \
 		--cache-file=config.cache \
-		$EGLIBC_ARGS
+		$EGLIBC_ARGS &&
 	make || exit 1
 	make install_root=$sysroot install
 }
@@ -282,7 +282,8 @@ gcc_final() {
 		--disable-werror \
 		--with-pkgversion="SliTaz" \
 		--with-bugurl="https://bugs.slitaz.org/" \
-		$GCC_FINAL_ARGS $sysroot
+		--with-sysroot=$sysroot \
+		$GCC_FINAL_ARGS &&
 	make AS_FOR_TARGET="${TARGET}-as" \
 		LD_FOR_TARGET="${TARGET}-ld" || exit 1
 	make install
