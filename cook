@@ -420,6 +420,7 @@ cookit() {
 			echo "$ARCH sysroot: $sysroot"
 			echo "Adding $tools/bin to PATH"
 			export PATH=$PATH:$tools/bin
+			export PKG_CONFIG_PATH=$sysroot/usr/lib/pkgconfig
 			export CROSS_COMPILE=${HOST_SYSTEM}-
 			echo "Using cross-tools: $CROSS_COMPILE"
 			if [ "$ARCH" == "x86_64" ]; then
