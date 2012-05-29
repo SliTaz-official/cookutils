@@ -410,13 +410,16 @@ cookit() {
 	case "$ARCH" in
 		arm|x86_64)
 			# CROSS_COMPILE is used by at least Busybox and the kernel to set
-			# the cross-tools prefix but first check if sysroot is used.
-			if [ "$SYSROOT" ]; then
-				echo "$ARCH sysroot: $SYSROOT"
-			else
-				echo "Adding /usr/cross/$ARCH/bin to PATH"
-				export PATH=$PATH:$CROSS_PREFIX/bin
-			fi
+			# the cross-tools prefix. Sysroot the the root of our target arch
+			sysroot=$CROSS_TREE/sysroot
+			tools=$CROSS_TREE/tools
+			# Set root path when cross compiling. ARM tested but not x86_64
+			# When cross compiling we must install build deps in $sysroot.
+			arch="-${ARCH}"
+			root=$sysroot
+			echo "$ARCH sysroot: $sysroot"
+			echo "Adding $tools/bin to PATH"
+			export PATH=$PATH:$tools/bin
 			export CROSS_COMPILE=${HOST_SYSTEM}-
 			echo "Using cross-tools: $CROSS_COMPILE"
 			if [ "$ARCH" == "x86_64" ]; then
@@ -430,13 +433,7 @@ cookit() {
 			export AS=${HOST_SYSTEM}-as
 			export RANLIB=${HOST_SYSTEM}-ranlib
 			export LD=${HOST_SYSTEM}-ld
-			export STRIP=${HOST_SYSTEM}-strip
-			# Set root path when cross compiling. ARM tested but not x86_64
-			# When cross compiling we must install build deps in CROSS_PREFIX
-			# or SYSROOT when it will be support by cross (the final goal is
-			# to use only the sysroot method).
-			root=$CROSS_PREFIX
-			arch="-${ARCH}" ;;
+			export STRIP=${HOST_SYSTEM}-strip ;;
 	esac
 
 	[ "$QA" ] && receipt_quality
@@ -773,7 +770,7 @@ install_package() {
 	case "$ARCH" in
 		arm|x86_64)
 			arch="-${ARCH}"
-			root=$CROSS_PREFIX ;;
+			root=$CROSS_TREE/sysroot ;;
 	esac
 	# Install package if requested but skip install if target host doesn't
 	# match build system or it will break the build chroot.
@@ -940,17 +937,18 @@ case "$1" in
 		check_root
 		echo "Cook: setup $arch cross environment" | log
 		newline
-		boldify $(gettext "Setting up your cross environment")
+		boldify $(gettext "Setting up your $arch cross environment")
 		separator
 		init_db_files
 		sed -i \
 			-e s"/ARCH=.*/ARCH=\"$arch\"/" \
+			-e s"/CROSS_TREE=.*/CROSS_TREE=\"\/cross\/$arch\"/" \
 			-e s'/BUILD_SYSTEM=.*/BUILD_SYSTEM=i486-slitaz-linux/' \
 			/etc/slitaz/cook.conf
 		case "$arch" in
 			arm)
 				sed -i \
-					-e s'/CFLAGS=.*/CFLAGS="-march=armv6"/' \
+					-e s'/CFLAGS=.*/CFLAGS="-march=armv6 -O2"/' \
 					-e s'/HOST_SYSTEM=.*/HOST_SYSTEM=$ARCH-slitaz-linux-gnueabi/' \
 					-e s'/xorg-dev/""/' \
 					/etc/slitaz/cook.conf ;;
@@ -961,17 +959,14 @@ case "$1" in
 					/etc/slitaz/cook.conf ;;
 		esac
 		. /etc/slitaz/cook.conf
+		sysroot=$CROSS_TREE/sysroot
+		tools=/cross/$arch/tools
+		root=$sysroot
+		CC=$tools/bin/${HOST_SYSTEM}-gcc
 		echo "Target arch     : $ARCH"
 		echo "Configure args  : $CONFIGURE_ARGS"
-		if [ "$SYSROOT" ]; then
-			echo "Arch sysroot    : $SYSROOT"
-			CC=/usr/bin/${HOST_SYSTEM}-gcc
-			root=$SYSROOT
-		else
-			echo "Additional path : $CROSS_PREFIX/bin"
-			CC=$CROSS_PREFIX/bin/${HOST_SYSTEM}-gcc
-			root=$CROSS_PREFIX
-		fi
+		echo "Arch sysroot    : $sysroot"
+		echo "Tools prefix    : $tools/bin"
 		# Tell the packages manager wher to find packages.
 		echo "Packages DB     : ${root}$DB"
 		mkdir -p ${root}$INSTALLED
@@ -984,16 +979,7 @@ case "$1" in
 		# i486 package will be used as dep by tazpkg and then break the
 		# cross environment
 		if [ ! -f "${root}$INSTALLED/glibc-base/receipt" ]; then
-			. /etc/slitaz/cross.conf
-			if [ ! -f "$PKGS/glibc-base-$GLIBC_VERSION-$ARCH.tazpkg" ]; then
-				echo -n "WARNING: cook glibc-base for $ARCH then run again:"
-				echo "$(basename $0) $ARCH-setup"
-			else
-				echo "Installing      : glibc-base-$GLIBC_VERSION-$ARCH.tazpkg"
-				tazpkg install \
-					$PKGS/glibc-base-$GLIBC_VERSION-$ARCH.tazpkg \
-					--root=$root >/dev/null
-			fi
+			colorize 36 "WARNING: (e)glibc-base is not installed in sysroot"
 		fi
 		# Show GCC version or warn if not yet compiled.
 		if [ -x $CC ]; then

@@ -397,28 +397,30 @@ EOT
 		# Remove crap :-)
 		init_compile
 		echo "Cleaning   : $tools ($(du -sh $tools | awk '{print $1}'))"
-		for file in share/info share/man share/local lib/*-gdb.py
+		for file in share/info share/man share/local
 		do
 			echo -n "Removing   : $file"
 			rm -rf $tools/$file && status
 		done
 		echo -n "Stripping  : shared libs and binaries"
-		${TARGET}-strip -s $sysroot/lib/*.so* 2>/dev/null
-		strip -s $tools/bin/* 2>/dev/null
+		find $tools/bin -type f -exec strip -s '{}' 2>/dev/null \;
+		find $tools/lib -name cc1* -exec strip -s '{}' 2>/dev/null \;
+		find $tools/lib -name lto* -exec strip -s '{}' 2>/dev/null \;
+		#find $sysroot -name "*.so*" -exec ${TARGET}-strip -s '{}' 2>/dev/null \;
 		sleep 1 && status
 		echo -n "Tools size : " && du -sh $tools | awk '{print $1}' ;;
 	gen-prebuilt)
 		# Create a prebuilt cross toolchain tarball.
 		init_compile
 		date=$(date "+%Y%m%d")
-		package="slitaz-cross-$ARCH-toolchain-$date"
+		package="slitaz-$ARCH-toolchain-$date"
 		tarball="$package.tar.bz2"
 		cd /cross
-		mkdir $package || exit 1
+		mkdir -p $package/$ARCH || exit 1
 		echo ""
 		echo -n "Copying $ARCH to: $package"
-		cp -a $ARCH $package
-		rm -rf $package/source $package/log
+		cp -a $ARCH/tools $package/$ARCH
+		cp -a $ARCH/sysroot $package/$ARCH
 		status
 		prebuilt_readme
 		echo -n "Creating prebuilt $ARCH toolchain tarball..."
