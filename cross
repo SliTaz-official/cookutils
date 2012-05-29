@@ -13,8 +13,9 @@
 # Handle --config=/path/to/cross.conf
 [ "$config" ] && . $config
 source=$WORK/source
+tools=$WORK/tools
+sysroot=$WORK/sysroot
 logdir=$WORK/log
-install=$WORK/install
 
 # Help and usage.
 usage() {
@@ -36,7 +37,7 @@ Commands:
   gcc-final       Compile final GCC
   compile         Compile everything at once
   clean           Clean-up build environment
-  clean-tools     Clean: $PREFIX
+  clean-tools     Clean: $tools
   gen-prebuilt    Create an prebuilt toolchain archive
 
 EOT
@@ -52,8 +53,8 @@ SliTaz Prebuilt $ARCH cross toolchain
 Move this $ARCH cross compilation toolchain to /usr/cross then add tools
 to your PATH environment and test the toolchain:
 
-	# mv $ARCH /usr/cross
-	# export PATH=\$PATH:/usr/cross/$ARCH/bin
+	# mv $ARCH /cross
+	# export PATH=\$PATH:/cross/$ARCH/tools/bin
 
 	# echo 'int main() { return 0; }' > test.c
 	# $TARGET-gcc -v -o test.out test.c
@@ -67,10 +68,13 @@ EOT
 
 # Make sure we have all directories.
 init_compile() {
+	unset CFLAGS CXXFLAGS
 	export LC_ALL=POSIX LANG=POSIX
-	[ "$SYSROOT" ] || export PATH=$PATH:$PREFIX/bin
+	export PATH=$PATH:$tools/bin
 	export CROSS_COMPILE=${TARGET}-
-	mkdir -p $source $logdir $install
+	mkdir -p $source $logdir $sysroot $tools
+	echo "Tools prefix   : --prefix=$tools "
+	echo "Target sysroot : --with-sysroot=$sysroot"
 	cd $source
 }
 
@@ -81,51 +85,6 @@ download_src() {
 	[ -f "$LINUX_TARBALL" ] || wget $LINUX_WGET
 	[ -f "$GLIBC_TARBALL" ] || wget $GLIBC_WGET
 	[ -f "$GCC_TARBALL" ] || wget $GCC_WGET
-	[ -f "$BUSYBOX_TARBALL" ] || wget $BUSYBOX_WGET
-}
-
-# Use sysroot or not ?
-check_sysroot() {
-	if [ "$SYSROOT" ]; then
-		PREFIX=/usr
-		HDR_PATH=$SYSROOT/usr
-		sysroot="--with-sysroot=$SYSROOT"
-		echo "Configure: $sysroot"
-	else
-		HDR_PATH=$PREFIX/usr
-	fi
-}
-
-# Work around to fix GCC include search path
-#
-# GCC include search path is: $PREFIX/$TARGET/include, so make sure it
-# is a symlink to default: $PREFIX/usr/include
-#
-# Glibc install headers in: $PREFIX/include, move them to usr/include
-# if needed. After when we cross compile packages with cook we have
-# to install build dependencies using --root=$CROSS_PREFIX and so
-# default include dir is: $PREFIX/usr/include ($PREFIX is the root
-# of our cross environment.
-#
-check_include() {
-	cd $PREFIX
-	echo "Checking: $PREFIX"
-	if ! readlink include >/dev/null; then
-		echo "Creating symlink: usr/include include"
-		cp -a include usr && rm -rf include
-		ln -s usr/include include
-	fi
-	cd $PREFIX/$TARGET
-	echo "Checking: $PREFIX/$TARGET"
-	if ! readlink include >/dev/null; then
-		echo "Creating symlink: ../usr/include include"
-		cp -a include ../usr && rm -rf include
-		ln -s ../usr/include include
-	fi
-	if ! readlink lib >/dev/null; then
-		echo "Creating symlink: ../lib lib"
-		rm -rf lib && ln -s ../lib lib
-	fi
 }
 
 # 1. Binutils
@@ -135,31 +94,29 @@ binutils() {
 	echo "Extracting: $BINUTILS_TARBALL"
 	tar xjf $SRC/$BINUTILS_TARBALL
 	echo "Configure: $BINUTILS_ARGS"
-	check_sysroot
 	cd binutils-$BINUTILS_VERSION
 	./configure \
-		--prefix=$PREFIX \
+		--prefix=$tools \
 		--target=$TARGET \
 		--enable-plugins \
 		--enable-threads \
 		--enable-targets=$BUILD_SYSTEM \
-		$BINUTILS_ARGS $sysroot
+		--with-sysroot=$sysroot \
+		$BINUTILS_ARGS
 	make || exit 1
 	make install
 	echo "cross: binutils compiled on: $(date)"
 }
 
 # 2. Kernel headers could use CROSS_COMPILE but gcc is not yet build.
-# NOTE: Compile GCC static first then linux-headers ?
 linux_headers() {
 	init_compile
 	echo "Extracting: $LINUX_TARBALL"
 	tar xjf $SRC/$LINUX_TARBALL
-	check_sysroot
 	cd linux-$LINUX_VERSION
 	make mrproper
 	make ARCH=$ARCH headers_check
-	make ARCH=$ARCH headers_install INSTALL_HDR_PATH=$HDR_PATH
+	make ARCH=$ARCH headers_install INSTALL_HDR_PATH=$sysroot/usr
 }
 
 # 3. GCC static (first pass)
@@ -168,32 +125,33 @@ gcc_static() {
 	echo "Extracting: $GCC_TARBALL"
 	tar xjf $SRC/$GCC_TARBALL
 	echo "Configure: $GCC_STATIC_ARGS"
-	check_sysroot
 	# Arch fixes and work around
 	case "$ARCH" in
 		x86_64)
 			# GCC wants Glib headers in cross environment (not tested
 			# with sysroot) Should we install glibc-headers before ?
-			[ "$SYSROOT" ] || \
-				ln -s /usr/include $PREFIX/$TARGET/include ;;
+			echo "Try with eglibc or install glibc-headers first"
+			#rm -f $tools/$TARGET/include
+			#ln -s /usr/include $tools/$TARGET/include
+			;;
 	esac
 	rm -rf gcc-static
 	mkdir gcc-static && cd gcc-static
 	../gcc-$GCC_VERSION/configure \
-		--prefix=$PREFIX \
-		--libexec=$PREFIX/lib \
+		--prefix=$tools \
+		--libexec=$tools/lib \
 		--target=$TARGET \
 		--disable-shared \
 		--disable-threads \
+		--disable-libgomp \
+		--disable-libmudflap \
+		--disable-libssp \
 		--without-headers \
 		--with-newlib \
-		$GCC_STATIC_ARGS $sysroot
+		--with-sysroot=$sysroot \
+		$GCC_STATIC_ARGS
 	make all-gcc all-target-libgcc || exit 1
 	make install-gcc install-target-libgcc
-	cd $PREFIX/lib/gcc/$TARGET/$GCC_VERSION
-	echo "Creating symlink for static libgcc: libgcc_eh.a"
-	rm -f libgcc_eh.a
-	ln -s libgcc.a libgcc_eh.a
 	echo "cross: gcc-static compiled on: $(date)"
 }
 
@@ -203,7 +161,6 @@ glibc() {
 	echo "Extracting: $GLIBC_TARBALL"
 	tar xjf $SRC/$GLIBC_TARBALL
 	echo "Configure: $GLIBC_ARGS"
-	[ "$continue" ] || rm -rf glibc-build
 	# Some arch may need glibc-ports and custom CFLAGS
 	case "$ARCH" in
 		arm)
@@ -218,31 +175,84 @@ glibc() {
 		x86_64)
 			ccflags="-m64" ;;
 	esac
+	# Disable linking to libgcc_eh
+	cd glibc-$GLIBC_VERSION
+	cp Makeconfig Makeconfig.orig
+	sed -e 's/-lgcc_eh//g' Makeconfig.orig > Makeconfig
+	cd ..
 	echo "CFLAGS: $CFLAGS"
+	rm -rf glibc-build
 	mkdir -p glibc-build && cd glibc-build
 	BUILD_CC="gcc" \
 	CC="${TARGET}-gcc $ccflags" \
+	AR="${TARGET}-ar" \
+	RANLIB="${TARGET}-ranlib" \
 	libc_cv_forced_unwind=yes \
 	libc_cv_c_cleanup=yes \
 	../glibc-$GLIBC_VERSION/configure \
-		--prefix=$PREFIX \
-		--libexec=$PREFIX/lib/glibc \
+		--prefix=/usr \
+		--libexec=/usr/lib/glibc \
 		--host=$TARGET \
-		--with-headers=$PREFIX/usr/include \
-		--with-binutils=$PREFIX/bin \
+		--with-headers=$sysroot/usr/include \
+		--with-binutils=$tools/bin \
 		--enable-kernel=2.6.32 \
 		$GLIBC_ARGS
 	make || exit 1
-	make install
+	make install_root=$sysroot install
 	# Work around to let GCC find Glibc headers.
-	if [ "$SYSROOT" ]; then
-		cd $SYSROOT
-		ln -s usr/include sys-include
-	else
-		check_include
-	fi
-	unset CFLAGS
+	#cd $sysroot
+	#ln -s usr/include sys-include
 	echo "cross: glibc compiled on: $(date)"
+}
+
+# 4. Eglibc: always use --prefix=/usr
+eglibc() {
+	init_compile
+	rm -rf eglibc-build eglibc-$EGLIBC_VERSION
+	echo "Extracting: $EGLIBC_TARBALL"
+	tar xjf $SRC/$EGLIBC_TARBALL
+	# Some arch may need glibc-ports and custom CFLAGS
+	case "$ARCH" in
+		arm)
+			export CFLAGS="-march=armv6 -O2"
+			if [ ! -d "$source/eglibc-ports-$EGLIBC_VERSION" ]; then
+				echo "Cloning $EGLIBC_WGET/ports"
+				svn co $EGLIBC_WGET/ports eglibc-ports-$EGLIBC_VERSION >/dev/null
+			fi
+			cp -a eglibc-ports-$EGLIBC_VERSION eglibc-$EGLIBC_VERSION/ports ;;
+		x86_64)
+			ccflags="-m64" ;;
+	esac
+	# Disable linking to libgcc_eh
+	cd eglibc-$EGLIBC_VERSION
+	cp Makeconfig Makeconfig.orig
+	sed -e 's/-lgcc_eh//g' Makeconfig.orig > Makeconfig
+	cd ..
+	mkdir -p eglibc-build && cd eglibc-build
+	# config.cache
+	cat > config.cache << EOT
+libc_cv_forced_unwind=yes
+libc_cv_c_cleanup=yes
+libc_cv_gnu89_inline=yes
+EOT
+	BUILD_CC="gcc" \
+	CC="${TARGET}-gcc $ccflags" \
+	AR="${TARGET}-ar" \
+	RANLIB="${TARGET}-ranlib" \
+	../eglibc-$EGLIBC_VERSION/configure \
+		--prefix=/usr \
+		--libexec=/usr/lib/eglibc \
+		--host=$TARGET \
+		--with-headers=$sysroot/usr/include \
+		--with-binutils=$tools/bin \
+		--enable-kernel=2.6.32 \
+		--with-__thread \
+		--without-gd \
+		--without-cvs \
+		--cache-file=config.cache \
+		$EGLIBC_ARGS
+	make || exit 1
+	make install_root=$sysroot install
 }
 
 # 5. GCC final
@@ -253,12 +263,12 @@ gcc_final() {
 		tar xjf $SRC/$GCC_TARBALL
 	fi
 	echo "Configure: $GCC_FINAL_ARGS"
-	check_sysroot
-	[ "$continue" ] || rm -rf gcc-build
+	rm -rf gcc-build
 	mkdir -p gcc-build && cd gcc-build
+	AR=ar \
 	../gcc-$GCC_VERSION/configure \
-		--prefix=$PREFIX \
-		--libexec=$PREFIX/lib \
+		--prefix=$tools \
+		--libexec=$tools/lib \
 		--target=$TARGET \
 		--enable-shared \
 		--enable-c99 \
@@ -268,11 +278,14 @@ gcc_final() {
 		--enable-plugin \
 		--disable-multilib \
 		--disable-libssp \
+		--disable-checking \
+		--disable-werror \
 		--with-pkgversion="SliTaz" \
 		--with-bugurl="https://bugs.slitaz.org/" \
 		$GCC_FINAL_ARGS $sysroot
-	make || exit 1
-	make install &&
+	make AS_FOR_TARGET="${TARGET}-as" \
+		LD_FOR_TARGET="${TARGET}-ld" || exit 1
+	make install
 	echo "cross: GCC final compiled on: $(date)"
 }
 
@@ -293,19 +306,16 @@ case "$1" in
 Target arch     : $ARCH
 C Compiler      : $CC
 Build directory : $WORK
+Tools prefix    : $tools/bin
+Arch sysroot    : $sysroot
 EOT
-		if [ "$SYSROOT" ]; then
-			PREFIX=/usr
-			echo "Arch sysroot    : $SYSROOT"
-		else
-			echo "Additional path : $PREFIX/bin"
-		fi
 		separator && echo ""
 		echo "GCC version" && separator
-		if [ -x "$PREFIX/bin/$CC" ]; then
+		if [ -x "$tools/bin/$CC" ]; then
 			$CC -v
 		else
 			echo "No C compiler. To build a toolchain run: cross compile"
+			echo "Missing: $tools/bin/$CC"
 		fi
 		separator && echo "" ;;
 	testsuite)
@@ -333,13 +343,7 @@ EOT
 				fi
 			fi
 		done
-		# See: check_include()
-		if [ "$SYSROOT" ]; then
-			echo "Using: --with-sysroot=$SYSROOT"
-			echo "WARNING: not well tested and buggy"
-			exit 0
-		fi
-		check_include ;;
+		echo "Using: --with-sysroot=$sysroot" ;;
 	download)
 		download_src ;;
 	show-log)
@@ -358,6 +362,8 @@ EOT
 		linux_headers 2>&1 | tee $logdir/linux-headers.log ;;
 	glibc)
 		glibc 2>&1 | tee $logdir/glibc.log ;;
+	eglibc)
+		eglibc 2>&1 | tee $logdir/eglibc.log ;;
 	gcc-final)
 		gcc_final 2>&1 | tee $logdir/gcc-final.log ;;
 	compile)
@@ -369,7 +375,10 @@ EOT
 		binutils 2>&1 | tee $logdir/binutils.log
 		gcc_static 2>&1 | tee $logdir/gcc-static.log
 		linux_headers 2>&1 | tee $logdir/linux-headers.log
-		glibc 2>&1 | tee $logdir/glibc.log
+		case "$ARCH" in
+			arm) eglibc 2>&1 | tee $logdir/eglibc.log ;;
+			x86_64) glibc 2>&1 | tee $logdir/glibc.log ;;
+		esac
 		gcc_final 2>&1 | tee $logdir/gcc-final.log
 		echo ""
 		echo "Compile end  : $(date)" | tee -a $logdir/compile.log
@@ -381,50 +390,42 @@ EOT
 		echo "" ;;
 	clean)
 		echo -n "Removing all source files..."
-		rm -rf $WORK/source/* && status
-		[ "$log" ] && rm -f $WORK/log/*.log
-		echo "To clean chroot: rm -rf $PREFIX" ;;
+		rm -rf $WORK/source && status
+		[ "$log" ] && rm -f $WORK/log/*.log ;;
 	clean-tools)
 		# Remove crap :-)
 		init_compile
-		echo "Cleaning   : $PREFIX ($(du -sh $PREFIX | awk '{print $1}'))"
-		for file in share/info share/man lib/*-gdb.py
+		echo "Cleaning   : $tools ($(du -sh $tools | awk '{print $1}'))"
+		for file in share/info share/man share/local lib/*-gdb.py
 		do
 			echo -n "Removing   : $file"
-			rm -rf $PREFIX/$file && status
+			rm -rf $tools/$file && status
 		done
 		echo -n "Stripping  : shared libs and binaries"
-		${TARGET}-strip -s $PREFIX/lib/*.so* 2>/dev/null
-		${TARGET}-strip -s $PREFIX/bin/* 2>/dev/null
-		${TARGET}-strip -s $PREFIX/${TARGET}/bin/* 2>/dev/null
-		${TARGET}-strip -s $PREFIX/$TARGET/lib/gcc/$TARGET/*/cc1*
-		${TARGET}-strip -s $PREFIX/$TARGET/lib/gcc/$TARGET/*/lto*
+		${TARGET}-strip -s $sysroot/lib/*.so* 2>/dev/null
+		strip -s $tools/bin/* 2>/dev/null
 		sleep 1 && status
-		echo -n "Tools size : " && du -sh $PREFIX | awk '{print $1}' ;;
-	gen-rootfs)
-		echo "Use arm packages: basefile, boot-scripts, busybox and glibc-base"
-		echo "Install them in a rootfs: tazpkg *-arm.tazpkg --root=/my/rootfs" ;;
+		echo -n "Tools size : " && du -sh $tools | awk '{print $1}' ;;
 	gen-prebuilt)
 		# Create a prebuilt cross toolchain tarball.
 		init_compile
 		date=$(date "+%Y%m%d")
 		package="slitaz-cross-$ARCH-toolchain-$date"
 		tarball="$package.tar.bz2"
-		cd /usr/cross
+		cd /cross
 		mkdir $package || exit 1
 		echo ""
 		echo -n "Copying $ARCH to: $package"
 		cp -a $ARCH $package
-		rm -rf $package/share $package/etc
+		rm -rf $package/source $package/log
 		status
 		prebuilt_readme
 		echo -n "Creating prebuilt $ARCH toolchain tarball..."
 		tar cjf $tarball $package
 		status
-		mv -f $tarball $WORK
 		rm -rf $package
-		size=$(du -sh $WORK/$tarball | awk '{print $1}')
-		echo "Tarball path: $WORK/$tarball"
+		size=$(du -sh $tarball | awk '{print $1}')
+		echo "Tarball path: $(pwd)/$tarball"
 		echo "Tarball size: $size"
 		echo "" ;;
 	*)
