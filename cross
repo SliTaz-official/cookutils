@@ -192,9 +192,12 @@ glibc() {
 			echo "Extracting: glibc-ports-$GLIBC_VERSION.tar.bz2"
 			rm -rf glibc-$GLIBC_VERSION/ports
 			tar xjf $SRC/glibc-ports-$GLIBC_VERSION.tar.bz2
-			mv glibc-ports-$GLIBC_VERSION glibc-$GLIBC_VERSION/ports ;;
+			mv glibc-ports-$GLIBC_VERSION glibc-$GLIBC_VERSION/ports
+			libexec=/usr/lib/glibc ;;
 		x86_64)
-			ccflags="-m64" ;;
+			#export CFLAGS="-march=nocona -O2 -pipe"
+			ccflags="-m64"
+			libexec=/usr/lib64/glibc ;;
 	esac
 	# Disable linking to libgcc_eh
 	cd glibc-$GLIBC_VERSION
@@ -212,7 +215,7 @@ glibc() {
 	libc_cv_c_cleanup=yes \
 	../glibc-$GLIBC_VERSION/configure \
 		--prefix=/usr \
-		--libexec=/usr/lib/glibc \
+		--libexec=$libexec \
 		--host=$TARGET \
 		--with-headers=$sysroot/usr/include \
 		--with-binutils=$tools/bin \
@@ -240,9 +243,12 @@ eglibc() {
 				echo "Cloning $EGLIBC_WGET/ports"
 				svn co $EGLIBC_WGET/ports eglibc-ports-$EGLIBC_VERSION >/dev/null
 			fi
-			cp -a eglibc-ports-$EGLIBC_VERSION eglibc-$EGLIBC_VERSION/ports ;;
+			cp -a eglibc-ports-$EGLIBC_VERSION eglibc-$EGLIBC_VERSION/ports
+			libexec=/usr/lib/eglibc ;;
 		x86_64)
-			ccflags="-m64" ;;
+			#export CFLAGS="-march=nocona -O2 -pipe"
+			ccflags="-m64"
+			libexec=/usr/lib64/eglibc ;;
 	esac
 	# Disable linking to libgcc_eh
 	cd eglibc-$EGLIBC_VERSION
@@ -262,7 +268,7 @@ EOT
 	RANLIB="${TARGET}-ranlib" \
 	../eglibc-$EGLIBC_VERSION/configure \
 		--prefix=/usr \
-		--libexec=/usr/lib/eglibc \
+		--libexec=$libexec \
 		--host=$TARGET \
 		--with-headers=$sysroot/usr/include \
 		--with-binutils=$tools/bin \
@@ -274,7 +280,7 @@ EOT
 		$EGLIBC_ARGS &&
 	make || exit 1
 	make install_root=$sysroot install
-	# The rpc headers (RPC is no longer in eglibc <2.13
+	# The rpc headers (RPC is no longer in eglibc <2.13)
 	#
 	#if [ "$EGLIBC_VERSION" -gt "2.13" ]; then
 		#rpcsvc = "bootparam_prot.x nlm_prot.x rstat.x \
@@ -282,8 +288,8 @@ EOT
 		#rusers.x spray.x nfs_prot.x rquota.x key_prot.x"
 		#cd sunrpc/rpcsvc
 		#for r in ${rpcsvc}; do
-			#h=`echo $r|sed -e's,\.x$,.h,'`
-			#rpcgen -h $r -o $h || oewarn "unable to generate header for $r"
+			#h=$(echo $r|sed -e's,\.x$,.h,')
+			#rpcgen -h $r -o $h || echo "unable to generate header for $r"
 		#done
 	#fi
 }
