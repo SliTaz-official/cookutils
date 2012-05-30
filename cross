@@ -119,6 +119,23 @@ linux_headers() {
 	make ARCH=$ARCH headers_install INSTALL_HDR_PATH=$sysroot/usr
 }
 
+# 2.1 Glibc headers needed to compile x86_64 gcc-static.
+glibc_headers() {
+	init_compile
+	echo "Extracting: $GLIBC_TARBALL"
+	tar xjf $SRC/$GLIBC_TARBALL
+	rm -rf glibc-headers
+	mkdir glibc-headers && cd glibc-headers
+	../glibc-$GLIBC_VERSION/configure \
+		--prefix=/usr \
+		--host=$TARGET \
+		--with-headers=$sysroot/usr/include \
+		--without-cvs \
+		--disable-sanity-checks \
+		--enable-kernel=2.6.32 &&
+	make -k install-headers install_root=$sysroot
+}
+
 # 3. GCC static (first pass)
 gcc_static() {
 	init_compile
@@ -369,10 +386,12 @@ EOT
 	binutils)
 		rm -f $logdir/binutils.log
 		binutils 2>&1 | tee $logdir/binutils.log ;;
-	gcc-static)
-		gcc_static 2>&1 | tee $logdir/gcc-static.log ;;
 	linux-headers)
 		linux_headers 2>&1 | tee $logdir/linux-headers.log ;;
+	glibc-headers)
+		glibc_headers 2>&1 | tee $logdir/glibc-headers.log ;;
+	gcc-static)
+		gcc_static 2>&1 | tee $logdir/gcc-static.log ;;
 	glibc)
 		glibc 2>&1 | tee $logdir/glibc.log ;;
 	eglibc)
@@ -386,6 +405,9 @@ EOT
 		echo "Compile start: $(date)" | tee $logdir/compile.log
 		download_src
 		binutils 2>&1 | tee $logdir/binutils.log
+		case "$ARCH" in
+			x86_64) glibc_headers 2>&1 | tee $logdir/glibc-headers.log ;;
+		esac
 		gcc_static 2>&1 | tee $logdir/gcc-static.log
 		linux_headers 2>&1 | tee $logdir/linux-headers.log
 		case "$ARCH" in
