@@ -116,7 +116,10 @@ linux_headers() {
 	cd linux-$LINUX_VERSION
 	make mrproper
 	make ARCH=$ARCH headers_check
-	make ARCH=$ARCH headers_install INSTALL_HDR_PATH=$sysroot/usr
+	make ARCH=$ARCH headers_install \
+		INSTALL_HDR_PATH=$source/linux-headers
+	echo "Copying headers to: $sysroot/usr"
+	cp -a $source/linux-headers/* $sysroot/usr
 }
 
 # 2.1 Glibc headers needed to compile x86_64 gcc-static.
@@ -126,6 +129,8 @@ glibc_headers() {
 	tar xjf $SRC/$GLIBC_TARBALL
 	rm -rf glibc-headers
 	mkdir glibc-headers && cd glibc-headers
+	libc_cv_forced_unwind=yes \
+	libc_cv_c_cleanup=yes \
 	../glibc-$GLIBC_VERSION/configure \
 		--prefix=/usr \
 		--host=$TARGET \
