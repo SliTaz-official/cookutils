@@ -121,7 +121,7 @@ linux_headers() {
 	make ARCH=$ARCH headers_check
 	make ARCH=$ARCH headers_install \
 		INSTALL_HDR_PATH=$source/linux-headers
-	rm  $source/linux-headers/.*install*
+	rm  $source/linux-headers/include/.*install*
 	echo "Copying headers to: $sysroot/usr"
 	cp -a $source/linux-headers/* $sysroot/usr
 }
