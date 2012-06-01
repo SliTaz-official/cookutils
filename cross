@@ -155,16 +155,6 @@ gcc_static() {
 	echo "Extracting: $GCC_TARBALL"
 	tar xjf $SRC/$GCC_TARBALL
 	echo "Configure: $GCC_STATIC_ARGS"
-	# Arch fixes and work around
-	case "$ARCH" in
-		x86_64)
-			# GCC wants Glib headers in cross environment (not tested
-			# with sysroot) Should we install glibc-headers before ?
-			echo "Try with eglibc or install glibc-headers first"
-			#rm -f $tools/$TARGET/include
-			#ln -s /usr/include $tools/$TARGET/include
-			;;
-	esac
 	rm -rf gcc-static
 	mkdir gcc-static && cd gcc-static
 	../gcc-$GCC_VERSION/configure \
@@ -232,9 +222,13 @@ glibc() {
 		$GLIBC_ARGS &&
 	make || exit 1
 	make install_root=$sysroot install
-	# Work around to let GCC find Glibc headers.
-	#cd $sysroot
-	#ln -s usr/include sys-include
+	# Symlink lib64 to lib
+	case "$ARCH" in
+		x86_64)
+			rm -f $sysroot/lib $sysroot/usr/lib
+			cd $sysroot && ln -s lib64 lib
+			cd usr && ln -s lib64 lib ;;
+	esac
 	echo "cross: glibc compiled on: $(date)"
 }
 
