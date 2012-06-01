@@ -38,7 +38,7 @@ Commands:
   compile         Compile everything at once
   clean           Clean-up build environment
   clean-tools     Clean: $tools
-  gen-prebuilt    Create an prebuilt toolchain archive
+  gen-prebuilt    Create a prebuilt toolchain archive
 
 EOT
 }
@@ -108,7 +108,7 @@ binutils() {
 	echo "cross: binutils compiled on: $(date)"
 }
 
-# 2. Kernel headers could use CROSS_COMPILE but gcc is not yet build.
+# 2. Kernel headers could use CROSS_COMPILE but gcc is not yet built.
 linux_headers() {
 	init_compile
 	if [ ! -d "linux-$LINUX_VERSION" ]; then
