@@ -136,6 +136,9 @@ set_paths() {
 		install=$WOK/$wanted/install
 		wanted_stuff=$WOK/$wanted/stuff
 	fi
+	if [ "$SOURCE" ]; then
+		source_stuff=$WOK/$SOURCE/stuff
+	fi
 	# Kernel version is set from linux-api-headers since it is part of toolchain.
 	if [ -f "$INSTALLED/linux-api-headers/receipt" ]; then
 		kvers=$(grep ^VERSION= $INSTALLED/linux-api-headers/receipt | cut -d '"' -f 2)
