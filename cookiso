@@ -5,25 +5,16 @@
 # can run on its own and automate official SliTaz ISO creation.
 #
 
-[ -f "/etc/slitaz/cook.conf" ] && . /etc/slitaz/cook.conf
-[ -f "cook.conf" ] && . ./cook.conf
-
 # --> cook.conf
 # SSH/RSA configuration to upload on a server.
+# Assign this before cook.conf so it can be
+# reassign in cook.conf.
 SSH_CMD="dbclient -i /root/.ssh/id_rsa.dropbear"
 SSH_ISO="/var/www/slitaz/mirror/iso"
 SSH_HOST="slitaz@mirror.slitaz.org"
 #BWLIMIT="--bwlimit=40"
 
-# Cookiso DB files.
-cache="$CACHE/cookiso"
-repo="$SLITAZ/flavors"
-iso="$SLITAZ/iso"
-activity="$cache/activity"
-command="$cache/command"
-rollog="$cache/rolling.log"
-synclog="$cache/rsync.log"
-commits="$cache/commits"
+. /usr/lib/slitaz/libcook.sh
 
 # Parse cmdline options.
 for opt in "$@"

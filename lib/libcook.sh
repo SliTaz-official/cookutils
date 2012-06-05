@@ -16,15 +16,26 @@
 
 # Shared DB between Cook, the Cooker and Cookiso.
 # In cookiso: repo= --> flavors
+if [ "$(basename $0)" = "cookiso" ]; then
+	cache="$CACHE/cookiso"
+	#cookiso variables
+	repo="$SLITAZ/flavors"
+	iso="$SLITAZ/iso"
+	rollog="$cache/rolling.log"
+	synclog="$cache/rsync.log"
+else
+	cache="$CACHE"
+fi
+
 flavors="$SLITAZ/flavors"
-activity="$CACHE/activity"
-commits="$CACHE/commits"
-cooklist="$CACHE/cooklist"
-cookorder="$CACHE/cookorder"
-command="$CACHE/command"
-blocked="$CACHE/blocked"
-broken="$CACHE/broken"
-cooknotes="$CACHE/cooknotes"
+activity="$cache/activity"
+commits="$cache/commits"
+cooklist="$cache/cooklist"
+cookorder="$cache/cookorder"
+command="$cache/command"
+blocked="$cache/blocked"
+broken="$cache/broken"
+cooknotes="$cache/cooknotes"
 crontabs="/var/spool/cron/crontabs/root"
 
 # Lograte activity.
