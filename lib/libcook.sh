@@ -38,6 +38,12 @@ broken="$cache/broken"
 cooknotes="$cache/cooknotes"
 crontabs="/var/spool/cron/crontabs/root"
 
+wan_db="$INCOMING/wanted.txt"
+dep_db="$INCOMING/depends.txt"
+lib_db="$INCOMING/libraries.txt"
+# full cookorder
+fullco="$PKGS/fullco.txt"
+
 # Lograte activity.
 [ -s "$activity" ] && tail -n 60 $activity > /tmp/tail-$$ && \
 	mv -f /tmp/tail-$$ $activity
