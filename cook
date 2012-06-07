@@ -236,7 +236,7 @@ get_source() {
 extract_source() {
 	if [ ! -s "$SRC/$TARBALL" ]; then
 		local url
-		url="http://mirror.slitaz.org/sources/packages"
+		url="$MIRROR_URL/sources/packages"
 		url=$url/${TARBALL:0:1}/$TARBALL
 		gettext "Getting source from mirror:"; echo " $url"
 		busybox wget -c -P $SRC $url || echo -e "ERROR: wget $url"
