@@ -117,9 +117,16 @@ receipt_quality() {
 				# Break also if we're not online. Here error is not fatal.
 				if_empty_value
 				[ -z "$online" ] || break
-				if ! busybox wget -T 12 -s $value 2>/dev/null; then
-					gettext "QA: Unable to reach:"; echo -e " $value"
-				fi ;;
+				case $value in
+						https://*)
+								if ! wget -T $TIMEOUT --spider --no-check-certificate $value 2>/dev/null; then
+									gettext "QA: Unable to reach:"; echo -e " $value"
+								fi ;;
+						http://*|ftp://*)
+								if ! busybox wget -T $TIMEOUT -s $value 2>/dev/null; then
+									gettext "QA: Unable to reach:"; echo -e " $value"
+								fi ;;
+				esac
 		esac
 	done
 }
