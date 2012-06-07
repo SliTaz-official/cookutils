@@ -134,24 +134,39 @@ receipt_quality() {
 # Paths used in receipt and by cook itself.
 set_paths() {
 	pkgdir=$WOK/$PACKAGE
-	src=$pkgdir/source/$PACKAGE-$VERSION
+	basesrc=$pkgdir/source
+	tmpsrc=$basesrc/tmp
+	src=$basesrc/$PACKAGE-$VERSION
 	taz=$pkgdir/taz
 	pack=$taz/$PACKAGE-${VERSION}${EXTRAVERSION}
 	fs=$pack/fs
 	stuff=$pkgdir/stuff
 	install=$pkgdir/install
+	pkgsrc="${SOURCE:-$PACKAGE}-${KBASEVER:-$VERSION}"
+	if [ "$PATCH" ]; then
+		[ "${PTARBALL}" ] || PTARBALL="$(basename $PATCH)"
+	fi
 	if [ "$WANTED" ]; then
-		wanted=${WANTED%% *}
-		src=$WOK/$wanted/source/$wanted-$VERSION
-		install=$WOK/$wanted/install
-		wanted_stuff=$WOK/$wanted/stuff
+		basesrc=$WOK/$WANTED/source
+		src=$basesrc/$WANTED-$VERSION
+		install=$WOK/$WANTED/install
+		wanted_stuff=$WOK/$WANTED/stuff
 	fi
 	if [ "$SOURCE" ]; then
 		source_stuff=$WOK/$SOURCE/stuff
 	fi
-	# Kernel version is set from linux-api-headers since it is part of toolchain.
-	if [ -f "$INSTALLED/linux-api-headers/receipt" ]; then
-		kvers=$(grep ^VERSION= $INSTALLED/linux-api-headers/receipt | cut -d '"' -f 2)
+	# Kernel version is set from linux
+	if [ -f "$WOK/linux/receipt" ]; then
+		kvers=$(grep ^VERSION= $WOK/linux/receipt | cut -d '"' -f 2)
+		kbasevers=${kvers:0:3}
+	fi
+	# Python version 
+	if [ -f "$WOK/python/receipt" ]; then
+		pyvers=$(grep ^VERSION= $WOK/python/receipt | cut -d '"' -f 2)
+	fi
+	# perl version for some packages needed it
+	if [ -f "$WOK/perl/receipt" ]; then
+		perlvers=$(grep ^VERSION= $WOK/perl/receipt | cut -d '"' -f 2)
 	fi
 	# Old way compatibility.
 	_pkg=$install
