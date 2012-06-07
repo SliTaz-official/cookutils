@@ -174,13 +174,18 @@ set_paths() {
 
 # Create source tarball when URL is a SCM.
 create_tarball() {
+	local tarball
+	tarball=$pkgsrc.tar.bz2
+	[ "$LZMA_SRC" ] && tarball=$lzma_tarball
 	gettext "Creating tarball: "; echo "$tarball"
 	if [ "$LZMA_SRC" ]; then
-		tar -c $pkgsrc | lzma e $SRC/$tarball -si || exit 1
+		tar -c $pkgsrc | lzma e $SRC/$tarball -si $LZMA_SET_DIR || exit 1
+		LZMA_SRC=""
 	else
 		tar cjf $tarball $pkgsrc || exit 1
 		mv $tarball $SRC && rm -rf $pkgsrc
 	fi
+	TARBALL=$tarball
 }
 
 # Get package source. For SCM we are in cache so clone here and create a
