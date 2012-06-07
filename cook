@@ -143,6 +143,7 @@ set_paths() {
 	stuff=$pkgdir/stuff
 	install=$pkgdir/install
 	pkgsrc="${SOURCE:-$PACKAGE}-${KBASEVER:-$VERSION}"
+	lzma_tarball="$pkgsrc.tar.lzma"
 	if [ "$PATCH" ]; then
 		[ "${PTARBALL}" ] || PTARBALL="$(basename $PATCH)"
 	fi
@@ -192,74 +193,78 @@ create_tarball() {
 # tarball here.
 get_source() {
 	pwd=$(pwd)
-	pkgsrc=${SOURCE:-$PACKAGE}-$VERSION
-	tarball=$pkgsrc.tar.bz2
-	[ "$LZMA_SRC" ] && tarball=$pkgsrc.tar.lzma
-	case "$WGET_URL" in
-		http://*|ftp://*)
-			# Busybox Wget is better!
-			busybox wget -T 60 -c -O $SRC/$TARBALL $WGET_URL || \
-				(echo -e "ERROR: wget $WGET_URL" && exit 1) ;;
-		https://*)
-			wget -c --no-check-certificate -O $SRC/$TARBALL $WGET_URL || \
-				(echo -e "ERROR: wget $WGET_URL" && exit 1) ;;
-		hg*|mercurial*)
-			if $(echo "$WGET_URL" | fgrep -q "hg|"); then
-				url=${WGET_URL#hg|}
-			else
-				url=${WGET_URL#mercurial|}
-			fi
-			gettext -e "Getting source from Hg...\n"
-			echo "URL: $url"
-			gettext "Cloning to: "; echo "$pwd/$pkgsrc"
-			if [ "$BRANCH" ]; then
-				echo "Hg branch: $BRANCH"
-				hg clone $url --rev $BRANCH $pkgsrc || \
-					(echo "ERROR: hg clone $url --rev $BRANCH" && exit 1)
-			else
-				hg clone $url $pkgsrc || (echo "ERROR: hg clone $url" && exit 1)
-			fi
-			rm -rf $pkgsrc/.hg
-			create_tarball ;;
-		git*)
-			url=${WGET_URL#git|}
-			gettext -e "Getting source from Git...\n"
-			echo "URL: $url"
-			git clone $url $pkgsrc || (echo "ERROR: git clone $url" && exit 1)
-			if [ "$BRANCH" ]; then
-				echo "Git branch: $BRANCH"
-				cd $pkgsrc && git checkout $BRANCH && cd ..
-			fi
-			create_tarball ;;
-		cvs*)
-			url=${WGET_URL#cvs|}
-			mod=$PACKAGE
-			[ "$CVS_MODULE" ] && mod=$CVS_MODULE
-			gettext -e "Getting source from CVS...\n"
-			echo "URL: $url"
-			[ "$CVS_MODULE" ] && echo "CVS module: $mod"
-			gettext "Cloning to: "; echo "$pwd/$mod"
-			cvs -d:$url co $mod && mv $mod $pkgsrc
-			create_tarball ;;
-		svn*|subversion*)
-			if $(echo "$WGET_URL" | fgrep -q "svn|"); then
-				url=${WGET_URL#svn|}
-			else
-				url=${WGET_URL#subversion|}
-			fi
-			gettext -e "Getting source from SVN...\n"
-			echo "URL: $url"
-			if [ "$BRANCH" ]; then
-				echo t | svn co $url -r $BRANCH $pkgsrc
-			else
-				echo t | svn co $url $pkgsrc
-			fi
-			create_tarball ;;
-		*)
-			gettext -e "\nERROR: Unable to handle:"; echo -e " $WGET_URL \n" | \
-				tee -a $LOGS/$PACKAGE.log
-			exit 1 ;;
-	esac
+	for file in $@; do
+		gettext "Getting source from url:"; echo " ${file#*|}"
+		if [ "$file" = "$PATCH" -o "$file" = "$orig_url_patch" ]; then
+			SAVE_FILE="$SRC/$PTARBALL"
+		else
+			SAVE_FILE="$SRC/$TARBALL"
+		fi
+		case "$file" in
+			http://*|ftp://*)
+				# Busybox Wget is better!
+				busybox wget $WGET_OPTIONS -T $TIMEOUT -c -O $SAVE_FILE $file || \
+					(echo -e "ERROR: wget $file" && exit 1) ;;
+			https://*)
+				wget $WGET_OPTIONS -T $TIMEOUT -c --no-check-certificate -O $SAVE_FILE $file || \
+					(echo -e "ERROR: wget $file" && exit 1) ;;
+			hg*|mercurial*)
+				if $(echo "$file" | fgrep -q "hg|"); then
+					url=${file#hg|}
+				else
+					url=${file#mercurial|}
+				fi
+				gettext -e "Getting source from Hg...\n"
+				echo "URL: $url"
+				gettext "Cloning to: "; echo "$pwd/$pkgsrc"
+				if [ "$BRANCH" ]; then
+					echo "Hg branch: $BRANCH"
+					hg clone $url --rev $BRANCH $pkgsrc || \
+						(echo "ERROR: hg clone $url --rev $BRANCH" && exit 1)
+				else
+					hg clone $url $pkgsrc || (echo "ERROR: hg clone $url" && exit 1)
+				fi
+				create_tarball ;;
+			git*)
+				url=${file#git|}
+				gettext -e "Getting source from Git...\n"
+				echo "URL: $url"
+				git clone $url $pkgsrc || (echo "ERROR: git clone $url" && exit 1)
+				if [ "$BRANCH" ]; then
+					echo "Git branch: $BRANCH"
+					cd $pkgsrc && git checkout $BRANCH && cd ..
+				fi
+				create_tarball ;;
+			cvs*)
+				url=${file#cvs|}
+				mod=$PACKAGE
+				[ "$CVS_MODULE" ] && mod=$CVS_MODULE
+				gettext -e "Getting source from CVS...\n"
+				echo "URL: $url"
+				[ "$CVS_MODULE" ] && echo "CVS module: $mod"
+				gettext "Cloning to: "; echo "$pwd/$mod"
+				cvs -d:$url co $mod && mv $mod $pkgsrc
+				create_tarball ;;
+			svn*|subversion*)
+				if $(echo "$WGET_URL" | fgrep -q "svn|"); then
+					url=${file#svn|}
+				else
+					url=${file#subversion|}
+				fi
+				gettext -e "Getting source from SVN...\n"
+				echo "URL: $url"
+				if [ "$BRANCH" ]; then
+					echo t | svn co $url -r $BRANCH $pkgsrc
+				else
+					echo t | svn co $url $pkgsrc
+				fi
+				create_tarball ;;
+			*)
+				gettext -e "\nERROR: Unable to handle:"; echo -e " $file \n" | \
+					tee -a $LOGS/$PACKAGE.log
+				exit 1 ;;
+		esac
+	done
 }
 
 # Extract source package.
