@@ -1033,6 +1033,9 @@ case "$1" in
 				# Maintainer.
 				echo -n "Maintainer    : " ; read anser
 				sed -i s/'MAINTAINER=\"\"'/"MAINTAINER=\"$anser\""/ receipt
+				# License.
+				echo -n "License       : " ; read anser
+				sed -i s/'LICENSE=\"\"'/"LICENSE=\"$anser\""/ receipt
 				# Web site.
 				echo -n "Web site      : " ; read anser
 				sed -i s#'WEB_SITE=\"\"'#"WEB_SITE=\"$anser\""# receipt
