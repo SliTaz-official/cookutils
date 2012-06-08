@@ -246,7 +246,7 @@ get_source() {
 				cvs -d:$url co $mod && mv $mod $pkgsrc
 				create_tarball ;;
 			svn*|subversion*)
-				if $(echo "$WGET_URL" | fgrep -q "svn|"); then
+				if $(echo "$file" | fgrep -q "svn|"); then
 					url=${file#svn|}
 				else
 					url=${file#subversion|}
@@ -289,6 +289,7 @@ extract_source() {
 		*.run) /bin/sh $SRC/$TARBALL $RUN_OPTS ;;
 		*) cp $SRC/$TARBALL $(pwd) ;;
 	esac
+	chown -R 0.0 $(pwd)
 }
 
 # Display cooked package summary.
@@ -940,14 +941,15 @@ case "$1" in
 				gettext "Using config file: /etc/slitaz/cross.conf"; echo
 				. /etc/slitaz/cross.conf ;;
 		esac
-		for pkg in $SETUP_PKGS; do
+		for pkg in $INSTALL_PKGS; do
 			if [ "$forced" ]; then
 				tazpkg -gi $pkg --forced
 			else
-				[ -d "$INSTALLED/$pkg" ] || tazpkg get-install $pkg
+				[ -f "$INSTALLED/$pkg/receipt" ] || tazpkg get-install $pkg
 			fi
 		done
-
+		# chroot list
+		ls -1 "$INSTALLED" > $CACHE/chroot-pkgs
 		# Handle --options
 		case "$2" in
 			--wok)
@@ -1286,7 +1288,9 @@ EOT
 			gettext -e "Blocked package:"; echo -e " $pkg\n" && exit 0
 		fi
 
-		try_aufs_chroot "$@"
+		if [ "$AUFS_MODE" ]; then
+			try_aufs_chroot "$@"
+		fi
 
 		# Log and source receipt.
 		echo "Cook started for: <a href='cooker.cgi?pkg=$pkg'>$pkg</a>" | log
