@@ -1,0 +1,5 @@
+*/source
+*/taz
+*/install
+*/md5
+*/slitaz
