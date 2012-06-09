@@ -288,7 +288,8 @@ debug_info() {
 	echo "Cook date: $(date '+%Y-%m-%d %H:%M')"
 	for error in \
 		ERROR "No package" "cp: can't" "can't open" "can't cd" \
-		"error:" "fatal error:"
+		"error:" "fatal error:" "undefined reference to" \
+		"Unable to connect to" "link: cannot find the library"
 	do
 		fgrep "$error" $LOGS/$pkg.log
 	done
