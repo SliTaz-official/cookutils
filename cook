@@ -105,9 +105,7 @@ receipt_quality() {
 				if_empty_value ;;
 			CATEGORY)
 				[ -z "$value" ] && value="empty"
-				valid="base-system x-window utilities network graphics \
-					multimedia office development system-tools security games \
-					misc meta non-free"
+				valid="$PKGS_CATEGORIES"
 				if ! echo "$valid" | grep -q -w "$value"; then
 					gettext "QA: unknown category:"; echo -e " $value\n"
 					exit 1
@@ -267,15 +265,114 @@ get_source() {
 	done
 }
 
+getsrc() {
+	gettext "Getting source for:"; echo " $pkg"
+	set_paths
+	[ -f "$SRC/$lzma_tarball" ] && \
+		TARBALL="$lzma_tarball"
+	
+	# Get source tarball and make sure we have source dir named:
+	# $PACKAGE-$VERSION to be standard in receipts. Here we use tar.lzma
+	# tarball if it exists.
+	if [ ! "$WANTED" ] && [ "$TARBALL" ]; then
+		[ -d $tmpsrc ] && rm -rf $tmpsrc
+		mkdir -p $tmpsrc && cd $tmpsrc
+	fi
+	
+	if [ "$WGET_URL" ] && [ -f "$SRC/$TARBALL" ]; then
+		if [ "$1" = "--extract" ]; then
+			[ -d $basesrc ] && rm -rf $basesrc
+			mkdir -p $tmpsrc && cd $tmpsrc
+			extract_source
+			extract_path
+		fi
+		[ "$TARBALL" = "$lzma_tarball" ] && LZMA_SRC=""
+	else
+		separator && download
+	fi
+	
+	# This is to make sure if PATCH equals something it will be downloaded
+	# checks are done in download functions
+	if [ "$PATCH" ]; then
+		if [ ! -f "$SRC/$PTARBALL" ]; then
+			separator && download
+		fi
+	fi
+	
+	look_for_cookopt !repack_src && LZMA_SRC=""
+	if [ "$LZMA_SRC" ]; then
+		echo -e "Repacking source."
+		set_paths
+		mkdir -p $tmpsrc && cd $tmpsrc
+		extract_source || exit 1
+		repack_source || exit 1
+		if [ "$1" = "--extract" ]; then
+			extract_path
+		fi
+		if [ -f $SRC/$TARBALL ]; then
+			[ -d $tmpsrc ] && rm -rf $tmpsrc
+		fi
+	fi
+	
+	echo -e "Tarball: $SRC/$TARBALL"
+	[ "$PATCH" ] && echo -e "Patch: $SRC/$PTARBALL"
+}
+
+download_base() {
+	local URLS url alt_url orig_url orig_url_patch
+	url="$ONLINE_SRC_REPOSITORY"
+	if [ "$SOURCE" ]; then
+		alt_url="${url}${SOURCE:0:1}/$SOURCE-${KBASEVER:-$VERSION}.tar.lzma"
+	else
+		alt_url="${url}${PACKAGE:0:1}/$PACKAGE-${KBASEVER:-$VERSION}.tar.lzma"
+	fi
+	orig_url="${url}${TARBALL:0:1}/$TARBALL"
+	[ "$PATCH" ] && orig_url_patch="${url}${PTARBALL:0:1}/$PTARBALL"
+	URLS="$@ $alt_url $orig_url $orig_url_patch"
+	[ "$LAN_MIRROR" ] && URLS="$alt_url $orig_url $orig_url_patch $@"
+	if [ "$WGET_URL" = "$orig_url" ]; then
+		[ "$TARBALL" = "$lzma_tarball" ] && LZMA_SRC=""
+		get_source $@
+	elif [ "$WGET_URL" = "$alt_url" ]; then
+		LZMA_SRC=""
+		get_source $@
+	else
+		for i in $URLS; do
+			if [ "$1" = "$PATCH" ]; then
+				[ ! -f "$SRC/$PTARBALL" ] || continue
+			else
+				[ ! -f "$SRC/$TARBALL" ] || continue
+			fi
+			case $i in 
+				${url}*)
+					[ "$i" = "$alt_url" ] && TARBALL="$(basename $alt_url)"
+					[ "$i" = "$alt_url" ] && LZMA_SRC=""
+					get_source $i 
+					;;
+				*)
+					get_source $i ;;
+			esac
+		done
+	fi
+}
+
+# Get source from multible urls
+download() {
+	if [ ! -s "$SRC/$TARBALL" ]; then
+		download_base $WGET_URL
+		[ -f "$SRC/$TARBALL" ] || broken
+	fi
+	
+	if [ "$PATCH" ]; then
+		if [ ! -s "$SRC/$PTARBALL" ]; then
+			download_base $PATCH
+			[ -f "$SRC/$PTARBALL" ] || broken
+		fi
+	fi
+}
+
 # Extract source package.
 extract_source() {
-	if [ ! -s "$SRC/$TARBALL" ]; then
-		local url
-		url="$MIRROR_URL/sources/packages"
-		url=$url/${TARBALL:0:1}/$TARBALL
-		gettext "Getting source from mirror:"; echo " $url"
-		busybox wget -c -P $SRC $url || echo -e "ERROR: wget $url"
-	fi
 	gettext "Extracting:"; echo " $TARBALL"
 	case "$TARBALL" in
 		*.tar.gz|*.tgz) tar xzf $SRC/$TARBALL 2>/dev/null ;;
@@ -286,33 +383,74 @@ extract_source() {
 		*.xz) unxz -c $SRC/$TARBALL | tar xf - ;;
 		*.Z) uncompress -c $SRC/$TARBALL | tar xf - ;;
 		*.rpm) rpm2cpio $SRC/$TARBALL | cpio -idm --quiet ;;
+		*.deb) ar vx $SRC/$TARBALL
+				[ ! -d $tmpsrc/$PACKAGE-$VERSION ] && mkdir -p $tmpsrc/$PACKAGE-$VERSION
+				cd $tmpsrc/$PACKAGE-$VERSION
+				tar -xvzf $tmpsrc/data.tar.gz 
+				[ -f $tmpsrc/data.tar.gz ] && rm -f $tmpsrc/data.tar.gz 
+				[ -f $tmpsrc/control.tar.gz ] && rm -f $tmpsrc/control.tar.gz
+				[ -f $tmpsrc/debian-binary ] && rm -f $tmpsrc/debian-binary ;;
 		*.run) /bin/sh $SRC/$TARBALL $RUN_OPTS ;;
+		*.7z) 7zr x $SRC/$TARBALL ;;
 		*) cp $SRC/$TARBALL $(pwd) ;;
 	esac
 	chown -R 0.0 $(pwd)
 }
 
+repack_source() {
+	
+	# Some archives are not well done and don't extract to one dir (ex lzma).
+	files=$(ls | wc -l)
+	[ "$files" == 1 ] && [ -d "$(ls)" ] && [ ! -d "$pkgsrc" ] && mv * $tmpsrc/$pkgsrc
+	if [ ! -d "$tmpsrc/$pkgsrc" ]; then
+		cd $basesrc
+		if [ "$(ls -A tmp | wc -l)" -gt 1 ] || [ -f "$(echo tmp/*)" ]; then
+			mv tmp tmp-1 && mkdir tmp
+			mv tmp-1 tmp/$pkgsrc
+		fi
+	fi
+	ORIG_TARBALL=$TARBALL
+	if [ -d "$tmpsrc/$pkgsrc" ]; then
+		gettext "Repacking source is enabled:"; echo " LZMA_SRC"
+		TARBALL=$lzma_tarball
+		cd $tmpsrc
+		if [ -x /usr/bin/optipng ]; then
+			[ "$SHRINKPNG" ] && find -name "*.png" -type f | xargs -i optipng "{}"
+		fi
+		tar -c * | lzma e $SRC/$TARBALL -si $LZMA_SET_DIR
+		if [ $REMOVE_ORIG_TARBALL ]; then
+			if [ -f $SRC/$TARBALL ]; then
+				[ -f $SRC/$ORIG_TARBALL ] && rm -f $SRC/$ORIG_TARBALL
+			fi
+		fi
+	fi
+}
+
 # Display cooked package summary.
 summary() {
 	cd $WOK/$pkg
-	[ -d install ] && prod=$(du -sh install | awk '{print $1}' 2>/dev/null)
-	fs=$(du -sh taz/* | awk '{print $1}')
-	size=$(du -sh $PKGS/$pkg-${VERSION}*.tazpkg | awk '{print $1}')
-	files=$(cat taz/$pkg-*/files.list | wc -l)
+	[ -d $WOK/$pkg/install ] && prod=$(du -sh $WOK/$pkg/install | awk '{print $1}' 2>/dev/null)
+	fs=$(du -sh $WOK/$pkg/taz/* | awk '{print $1}')
+	size=$(du -sh $INCOMING/$pkg-${VERSION}*.tazpkg | awk '{print $1}')
+	files=$(cat $WOK/$pkg/taz/$pkg-*/files.list | wc -l)
+	[ "$TARBALL" ] && srcsize=$(du -sh $SRC/$TARBALL | awk '{print $1}')
 	cookdate=$(date "+%Y-%m-%d %H:%M")
 	sec=$time
 	div=$(( ($time + 30) / 60))
 	[ "$div" != 0 ] && min="~ ${div}m"
 	gettext "Summary for:"; echo " $PACKAGE $VERSION"
 	separator
+	[ "$srcdir" ] && echo "Source dir  : $srcdir"
+	[ "$TARBALL" ] && echo "Src file    : $TARBALL"
+	[ "$srcsize" ] && echo "Src size    : $srcsize"
 	[ "$prod" ] && echo "Produced   : $prod"
 	cat << EOT
-Packed     : $fs
-Compressed : $size
-Files      : $files
-Cook time  : ${sec}s $min
-Cook date  : $cookdate
-Host arch  : $ARCH
+Packed      : $fs
+Compressed  : $size
+Files       : $files
+Cook time   : ${sec}s $min
+Cook date   : $cookdate
+Host arch   : $ARCH
 $(separator)
 EOT
 }
@@ -1046,7 +1184,7 @@ case "$1" in
 			echo -e "\n" && exit 1
 		fi
 		gettext "Creating"; echo -n " $WOK/$pkg"
-		mkdir $WOK/$pkg && cd $WOK/$pkg && status
+		mkdir -p $WOK/$pkg && cd $WOK/$pkg && status
 		gettext "Preparing the package receipt..."
 		cp $DATA/receipt .
 		sed -i s"/^PACKAGE=.*/PACKAGE=\"$pkg\"/" receipt
@@ -1086,7 +1224,7 @@ case "$1" in
 				echo -n "Do you need a stuff directory ? (y/N) : " ; read anser
 				if [ "$anser" = "y" ]; then
 					echo -n "Creating the stuff directory..."
-					mkdir $WOK/$pkg/stuff && status
+					mkdir -p $WOK/$pkg/stuff && status
 				fi
 				# Ask for a description file.
 				echo -n "Are you going to write a description ? (y/N) : " ; read anser
