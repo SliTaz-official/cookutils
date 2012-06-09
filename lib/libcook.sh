@@ -63,3 +63,16 @@ broken() {
 		echo "$pkg" >> $broken
 	fi
 }
+
+# Remove blocked (faster this way than grepping before).
+strip_blocked() {
+	local pkg
+	for pkg in $(cat $blocked)
+	do
+		sed -i /^${pkg}$/d $cooklist
+		PACKAGE="$pkg"
+		for i in $(look_for_rwanted); do
+			sed -i /^${i}$/d $cooklist
+		done
+	done && sed -i /^$/d $cooklist
+}
