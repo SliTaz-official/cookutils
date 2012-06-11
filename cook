@@ -6,19 +6,8 @@
 # Copyright (C) SliTaz GNU/Linux - GNU gpl v3
 # Author: Christophe Lincoln <pankso@slitaz.org>
 #
-. /lib/libtaz.sh
-
-# SliTaz working directory
-[ -f "/etc/slitaz/slitaz.conf" ] && . /etc/slitaz/slitaz.conf
-[ -f "slitaz.conf" ] && . ./slitaz.conf
-[ -f "/lib/libtaz.sh" ] && . /lib/libtaz.sh
-[ -f "/etc/slitaz/cook.conf" ] && . /etc/slitaz/cook.conf
-[ -f "cook.conf" ] && . ./cook.conf
-[ -f "$DATA/libcook" ] && . $DATA/libcook
-[ -f "$DATA/libcookorder" ] && . $DATA/libcookorder
-
-[ "$wan_db" ] && touch $wan_db
-[ "$dep_db" ] && touch $dep_db
+. /usr/lib/slitaz/libcook.sh
+. /usr/lib/slitaz/libcookorder.sh
 
 COMMAND="$1"
 
