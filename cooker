@@ -251,7 +251,7 @@ case "$1" in
 		hg clone $WOK_URL ${wok}-hg || exit 1
 		[ -d "$flavors" ] || hg clone $FLAVORS_URL flavors
 		cp -a ${wok}-hg $wok
-		separator && echo "" ;;
+		separator && newline ;;
 	arch-db)
 		# Manually create arch packages DB.
 		arch_db ;;
@@ -267,6 +267,8 @@ case "$1" in
 			killall crond 2>/dev/null && /etc/init.d/crond start
 		fi ;;
 	check-cron)
+		[ -f "$crontabs" ] || \
+			echo "There is no $crontabs here. Use setup-cron option." && exit 1
 		fgrep /usr/bin/cooker $crontabs ;;
 	note|-n)
 		# Blocked a pkg and want others to know why ? Post a note!
@@ -278,7 +280,7 @@ case "$1" in
 		echo -e "\nCooknotes"
 		separator
 		cat $cooknotes
-		separator && echo "" ;;
+		separator && newline ;;
 	block|-b)
 		# Block a package.
 		[ "$pkg" ] && cook $pkg --block ;;
@@ -359,7 +361,7 @@ case "$1" in
 		# Try to build all unbuilt packages except blocked's.
 		echo "cooker:all" > $command
 		rm -f $cooklist && touch $cooklist
-		echo "" && cd $wok
+		newline && cd $wok
 		echo "Cooker cooklist"
 		separator
 
@@ -396,7 +398,7 @@ case "$1" in
 
 		# Start and get a PID file.
 		rm -f $LOGS/commits.log
-		echo ""
+		newline
 		echo "Checking for commits" | log_commits
 		separator | tee -a $LOGS/commits.log
 
@@ -430,7 +432,7 @@ case "$1" in
 		else
 			echo "No revision changes: $cur vs $new" | log
 			separator | log_commits
-			clean_exit && echo "" && exit 0
+			clean_exit && newline && exit 0
 		fi
 
 		# Get and display modifications.
@@ -490,7 +492,7 @@ case "$1" in
 		echo "Packages to cook: $pkgs" | log
 		echo "Packages to cook : $pkgs" | log_commits
 		separator | log_commits
-		echo ""
+		newline
 		strip_blocked
 		cook_order | tee $LOGS/cookorder.log
 		cook_commits
