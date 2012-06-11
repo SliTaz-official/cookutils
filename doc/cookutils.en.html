@@ -173,6 +173,22 @@
 # cook search busybox
 </pre>
 
+<h3>Unbuild</h3>
+<p>
+	Unbuild is to provide a list of packages you don't have build based on
+	fullco.txt file. It will echo a list of packages that you have not build:
+	(Note: This also makes a unbuild file in your cache folder.)
+</p>
+<pre>
+# cook unbuild
+</pre>
+<p>
+	If you want a more full list with wanted packages use this option:
+</p>
+<pre>
+# cook unbuild --full
+</pre>
+
 <h3>Packages DB list</h3>
 <p>
 	Cook can list packages in the wok and also create a suitable packages list
@@ -191,6 +207,25 @@ $ cook list-wok
 </p>
 <pre>
 # cook pkgdb
+</pre>
+<p>
+	To update DB for incoming or packages do this:
+</p>
+<pre>
+# cook pkgdb incoming
+# cook pkgdb packages
+</pre>
+
+<p>
+	For the most part pkgdb rebuilds wanted.txt, depends.txt, and libraries.txt. 
+	But to build or update fullco.txt in packages you need to do this:
+</p>
+<p>
+	NOTE: fullco.txt is the full cookorder to help rebuild slitaz from scratch 
+	and slitaz source dvd.
+</p>
+<pre>
+# cook gen-wok-db
 </pre>
 
 <a name="cooker"></a>
