@@ -7,13 +7,14 @@
 # at least understand basic English.
 #
 . /usr/lib/slitaz/libcook.sh
+. /usr/lib/slitaz/libcookorder.sh
 
 # Set pkg name and use same wok as cook.
 pkg="$2"
-wok="$WOK"
 
 # PID file.
 pidfile='/var/run/cooker.pid'
+COMMAND="$1"
 
 #
 # Functions
@@ -25,20 +26,20 @@ usage() {
 Usage: cooker [command] [pkg|list|note|hours]
 
 Options:
-  usage|-u        Display this short usage.
-  setup|-s        Setup the Cooker environment.
-  setup-cron      Setup a cron job for the Cooker.
-  arch-db         Create host arch packages DB.
-  note|-n         Add a note to the cooknotes.
-  notes|-ns       Display all the cooknotes.
-  block|-b        Block a package so cook will skip it.
-  unblock|-ub     Unblock a blocked package.
-  pkg|-p          Same as 'cook pkg' but with cooker log.
-  flavor|-f       Cook all packages of a flavor.
-  list|-l         Cook all packages in the given list.
-  cat|-c          Cook all packages of a category.
-  rev|-r          Cook packages of a specific revision.
-  all|-a          Find and cook all unbuilt packages.
+  usage|-u        $(gettext "Display this short usage.")
+  setup|-s        $(gettext "Setup the Cooker environment.")
+  setup-cron      $(gettext "Setup a cron job for the Cooker.")
+  arch-db         $(gettext "Create host arch packages DB.")
+  note|-n         $(gettext "Add a note to the cooknotes.")
+  notes|-ns       $(gettext "Display all the cooknotes.")
+  block|-b        $(gettext "Block a package so cook will skip it.")
+  unblock|-ub     $(gettext "Unblock a blocked package.")
+  pkg|-p          $(gettext "Same as 'cook pkg' but with cooker log.")
+  flavor|-f       $(gettext "Cook all packages of a flavor.")
+  list|-l         $(gettext "Cook all packages in the given list.")
+  cat|-c          $(gettext "Cook all packages of a category.")
+  rev|-r          $(gettext "Cook packages of a specific revision.")
+  all|-a          $(gettext "Find and cook all unbuilt packages.")
 
 EOT
 	exit 0
@@ -75,11 +76,17 @@ cook_order_scan() {
 	touch $cookorder
 	for pkg in $(cat $cooklist)
 	do
-		unset WANTED BUILD_DEPENDS
-		. $wok/$pkg/receipt
+		unset WANTED BUILD_DEPENDS BDEPS
+		. $WOK/$pkg/receipt
 		# The :: is for web interface color.
-		[ "$WANTED$BUILD_DEPENDS" ] && echo "$pkg :: $WANTED $BUILD_DEPENDS"
-		for dep in $WANTED $BUILD_DEPENDS
+		if [ "$AUTO_DEP" -a ! "$WANTED" ]; then
+			BDEPS=$(scan $PACKAGE --look_for=bdep --with_dev | \
+				grep -v $(for i in $(look_for_rwanted) $PACKAGE; do echo " -e ^$i$"; done))
+		else
+			BDEPS="$BUILD_DEPENDS"
+		fi
+		[ "$WANTED$BDEPS" ] && echo "$pkg :: $WANTED $BDEPS"
+		for dep in $BDEPS
 		do
 			if grep -q "^$dep$" $cooklist; then
 				if ! grep -q "^$dep$" $cookorder; then
@@ -108,6 +115,15 @@ cook_order() {
 	echo "cookorder" > $command
 	echo -e "\nInitial Cooker order scan"
 	separator
+	
+	if [ "$COMMAND" = "pkg" ]; then
+		if ! grep -q "^$pkg$" $cooklist; then
+			if [ -f "$WOK/$pkg/receipt" ]; then
+				echo "$pkg" > $cooklist
+			fi
+		fi
+	fi
+	
 	cook_order_scan
 
 	# Diff between the cooklist and new ordered list ? So copy the last
@@ -126,6 +142,15 @@ cook_order() {
 		fi
 	done
 
+	if [ "$COOK_WANTED" ]; then
+		PACKAGE=$pkg
+		for i in $PACKAGE $(look_for_rwanted); do
+			if ! grep -q "^${i}$" $cooklist; then
+				echo $i >> $cooklist
+			fi
+		done
+	fi
+
 	# Keep a diff between submited cooklist and the ordered.
 	diff $cooklist.0 $cooklist > $cooklist.diff
 	rm -f $cookorder $cookorder.diff $cooklist.0
@@ -137,15 +162,14 @@ cook_order() {
 	for pkg in $(cat $cooklist)
 	do
 		unset WANTED
-		. $wok/$pkg/receipt
-		for wanted in $WANTED
-		do
-			echo "$pkg :: $wanted"
-			if grep -q ^${wanted}$ $cooklist; then
+		. $WOK/$pkg/receipt
+		if [ "$WANTED" ]; then
+			echo "$pkg :: $WANTED"
+			if grep -q ^${WANTED}$ $cooklist; then
 				sed -i -e "/^$pkg$/"d  \
-					-e "/^$wanted$/ a $pkg" $cooklist
+					-e "/^$WANTED$/ a $pkg" $cooklist
 			fi
-		done
+		fi
 	done
 
 	# Show ordered cooklist
@@ -165,14 +189,6 @@ EOT
 	separator && rm -f $command
 }
 
-# Remove blocked (faster this way than grepping before).
-strip_blocked() {
-	for pkg in $(cat $blocked)
-	do
-		sed -i /^${pkg}$/d $cooklist
-	done && sed -i /^$/d $cooklist
-}
-
 # Use in default mode and with all cmd.
 cook_commits() {
 	if [ -s "$commits" ]; then
@@ -181,6 +197,16 @@ cook_commits() {
 			echo "cook:$pkg" > $command
 			cook $pkg || broken
 			sed -i /^${pkg}$/d $commits
+			if [ "$COOK_WANTED" ]; then
+				PACKAGE=$pkg
+				for pkg in $(look_for_rwanted); do
+					if ! grep -q "^$pkg$" $commits; then
+						[ -f "$WOK/$pkg/receipt" ] || continue
+						echo "cook:$pkg" > $command
+						cook $pkg
+					fi
+				done
+			fi
 		done
 	fi
 }
@@ -191,7 +217,44 @@ cook_list() {
 	do
 		cook $pkg || broken
 		sed -i /^${pkg}$/d $cooklist
+		if [ "$COOK_WANTED" ]; then
+			PACKAGE=$pkg
+			for wpkg in $(look_for_rwanted); do
+				if ! grep -q "^$wpkg$" $cooklist; then
+					if [ -f "$WOK/$wpkg/receipt" ]; then
+						cook $wpkg
+						sed -i /^${wpkg}$/d $cooklist
+					fi
+				fi
+			done
+		fi
+		if [ "$1" = "--list" ]; then
+			pkgdb incoming
+		fi
 	done
+}
+
+# reverse pkg build when doing a big update to 
+# rebuild all packages that depends on it
+reverse_cook_list() {
+	local pkg="$1"
+	[ ! -f "$WOK/$pkg/receipt" ] && echo -e "\nNo package $pkg found.\n" && exit 0
+	cp -a $cooklist $cooklist.bak
+	rm -f $cooklist && touch $cooklist
+	echo -e "\nReverse cooklist for: $pkg"
+	separator && cd $WOK
+	for rev in *
+	do
+		[ -f $WOK/$rev/receipt ] || continue
+		unset DEPENDS BUILD_DEPENDS && . $WOK/$rev/receipt
+		if echo "$DEPENDS $BUILD_DEPENDS" | fgrep -q $pkg; then
+			echo "$rev" | tee -a $cooklist
+		fi
+	done && separator
+	echo -e "Reverse dependencies found: $(cat $cooklist | wc -l)\n"
+	strip_blocked
+	cook_order | tee $LOGS/cookorder.log
+	cook_list
 }
 
 # Create a arch.$ARCH file for each package cooked for the target host
@@ -221,37 +284,38 @@ arch_db() {
 	echo "Packages for $ARCH : $count"
 }
 
+
 #
 # Commands
 #
-case "$1" in
+case "$COMMAND" in
 	usage|help|-u|-h)
 		usage ;;
 	setup|-s)
 		# Setup the Cooker environment.
 		echo -e "\nSetting up the Cooker"
-		mkdir -p $CACHE
 		echo "Cooker setup using: $SLITAZ" | log
 		separator
-		for pkg in $SETUP_PKGS mercurial rsync tazlito
+		echo "$PKGS" > $LOCALSTATE/mirror
+		mkdir -p $LOCALSTATE/undigest/incoming
+		echo "$INCOMING" > $LOCALSTATE/undigest/incoming/mirror
+		echo "incoming" > $LOCALSTATE/priority
+		tazpkg recharge
+		for pkg in $INSTALL_PKGS
 		do
-			[ ! -d "$INSTALLED/$pkg" ] && tazpkg get-install $pkg
+			[ ! -f "$INSTALLED/$pkg/receipt" ] && tazpkg get-install $pkg
 		done
+		ls -1 "$INSTALLED" > $CACHE/chroot-pkgs
 		mkdir -p $SLITAZ && cd $SLITAZ
-		[ -d "${wok}-hg" ] && echo -e "Hg wok already exists.\n" && exit 1
-		[ -d "$wok" ] && echo -e "Build wok already exists.\n" && exit 1
-
-		# Directories and files
-		echo "mkdir's and touch files in: $SLITAZ"
-		mkdir -p $PKGS $LOGS $FEEDS $CACHE $SRC
-		for f in $activity $blocked $broken $commits $cooklist $command
-		do
-			touch $f
-		done
-		hg clone $WOK_URL ${wok}-hg || exit 1
-		[ -d "$flavors" ] || hg clone $FLAVORS_URL flavors
-		cp -a ${wok}-hg $wok
-		separator && echo "" ;;
+		[ -d "$WOKHG" ] || hg clone $WOK_URL $WOKHG
+		rsync_wok
+		init_db_files
+		cook gen-wok-db
+		echo "Make unbuild list"
+		cook unbuild --full
+		[ "$AUTO_PURGE_SRC" ] && cook gen-src $SRC
+		#[ -d "$FLAVORS" ] || hg clone $FLAVORS_URL flavors
+		separator && newline ;;
 	arch-db)
 		# Manually create arch packages DB.
 		arch_db ;;
@@ -267,6 +331,8 @@ case "$1" in
 			killall crond 2>/dev/null && /etc/init.d/crond start
 		fi ;;
 	check-cron)
+		[ -f "$crontabs" ] || \
+			echo "There is no $crontabs here. Use setup-cron option." && exit 1
 		fgrep /usr/bin/cooker $crontabs ;;
 	note|-n)
 		# Blocked a pkg and want others to know why ? Post a note!
@@ -278,7 +344,7 @@ case "$1" in
 		echo -e "\nCooknotes"
 		separator
 		cat $cooknotes
-		separator && echo "" ;;
+		separator && newline ;;
 	block|-b)
 		# Block a package.
 		[ "$pkg" ] && cook $pkg --block ;;
@@ -291,29 +357,67 @@ case "$1" in
 		#
 		# Use hg commit ? Ex: hg commit -m "Message bla bla | cooker:reverse"
 		#
-		[ ! -d "$wok/$pkg" ] && echo -e "\nNo package $2 found.\n" && exit 0
-		rm -f $cooklist && touch $cooklist && cd $wok
-		echo -e "\nReverse cooklist for: $pkg"
-		separator && cd $wok
-		for rev in *
+		reverse_cook_list $pkg ;;
+	chroot)
+		[ -d $SLITAZ/chroot ] || tazdev gen-chroot $2
+		[ -d $SLITAZ/chroot ] && tazdev chroot $2
+		;;
+	toolchain)
+		toolchain=$CACHE/toolchain
+		[ -f $PKGS/fullco.txt ] || cook gen-wok-db
+		cook gen-cooklist toolchain > $toolchain
+		newline > $cooklist
+		echo "cooker:toolchain" > $command
+		echo "First build slitaz-toolchain"
+		[ -f $blocked ] && rm -f $blocked
+		touch $blocked
+		cook slitaz-toolchain
+		SKIP="glibc gcc binutils linux-api-headers slitaz-toolchain cookutils"
+		for i in $SKIP; do
+			echo "$i" >> $blocked
+		done
+		for pkg in $(cat $blocked)
 		do
-			unset WANTED DEPENDS BUILD_DEPENDS && . $wok/$rev/receipt
-			if echo "$WANTED $DEPENDS $BUILD_DEPENDS" | fgrep -q $pkg; then
-				echo "$rev" | tee -a $cooklist
+			sed -i /^${pkg}$/d $toolchain
+		done && sed -i /^$/d $toolchain
+		for pkg in $(cat $toolchain)
+		do
+			[ -f "$WOK/$pkg/receipt" ] || continue
+			cook $pkg
+			sed -i /^${pkg}$/d $toolchain
+			if [ "$COOK_WANTED" ]; then
+				PACKAGE=$pkg
+				for pkg in $(look_for_rwanted); do
+					if ! grep -q "^$pkg$" $toolchain; then
+						[ -f "$WOK/$pkg/receipt" ] || continue
+						cook $pkg
+					fi
+				done
 			fi
-		done && separator
-		echo -e "Reverse dependencies found: $(cat $cooklist | wc -l)\n"
-		strip_blocked
-		cook_order | tee $LOGS/cookorder.log
-		cook_list ;;
+			cook pkgdb incoming
+		done
+		[ -f $toolchain ] && rm -f $toolchain
+		clean_exit ;;
 	pkg|-p)
 		# Same as 'cook pkg' but with log for web interface.
-		cook $pkg || broken
+		[ ! -f "$WOK/$pkg/receipt" ] && echo "$pkg doesn't exist in wok" && exit 1
+		if [ "$COOK_WANTED" ]; then
+			PACKAGE=$pkg
+			strip_blocked
+			cook_order | tee $LOGS/cookorder.log
+			cook_list
+			if [ "$AUTO_UPDATE_DB" ]; then
+				cook pkgdb $INCOMING
+			fi
+		else
+			cook $pkg
+		fi
 		clean_exit ;;
 	cat|-c)
 		# Cook all packages of a category.
 		cat="$2"
-		rm -f $cooklist && touch $cooklist && cd $wok
+		cp -a $cooklist $cooklist.bak
+		rm -f $cooklist && touch $cooklist && cd $WOK
 		for pkg in *
 		do
 			unset CATEGORY && . $pkg/receipt
@@ -321,32 +425,41 @@ case "$1" in
 		done
 		strip_blocked
 		cook_order | tee $LOGS/cookorder.log
-		cook_list ;;
+		cook_list --list ;;
 	flavor|-f)
 		# Cook all packages of a flavor.
 		name="$2"
-		[ ! -d "$flavors/$name" ] && \
+		[ ! -d "$FLAVORS/$name" ] && \
 			echo -e "\nSpecified flavor does not exist: $name\n" && exit 1
-		[ -d "$flavors/.hg" ] && cd $flavors && hg pull -u
-		list=$flavors/$name/packages.list
+		[ -d "$FLAVORS/.hg" ] && cd $FLAVORS && hg pull -u
+		list=$FLAVORS/$name/packages.list
 		cp -a $list $cooklist
 		strip_blocked
 		cook_order | tee $LOGS/cookorder.log
 		cook_list ;;
 	list|-l)
 		# Cook a list of packages given in argument.
-		list="$2"
-		[ ! -f "$list" ] && \
-			echo -e "\nSpecified list does not exist: $list\n" && exit 1
-		cp -a $list $cooklist
+		list="$cooklist"
+		[ "$2" ] && list="$2"
+		[ -f "$list" ] || $(gettext -e "$list doesn't exist." && exit 1)
+		if [ "$list" != "$cooklist" ]; then
+			cp -a $list $cooklist
+		fi
+		unset pkg
 		strip_blocked
-		cook_order | tee $LOGS/cookorder.log
-		cook_list ;;
+		if [ "$UPCOOKLIST" ]; then
+			gen_cook_list
+		else
+			cook_order | tee $LOGS/cookorder.log
+		fi
+		cook_list --list
+		cook pkgdb $INCOMING ;;
 	rev|-r)
 		# Cook or recook a specific Hg revision.
 		rev="$2"
 		[ "$rev" ] || exit 0
-		cd $wok
+		cd $WOK
+		cp -a $cooklist $cooklist.bak
 		rm -f $cooklist && touch $cooklist
 		for pkg in $(hg log --rev=$rev --template "{files}")
 		do
@@ -358,35 +471,25 @@ case "$1" in
 	all|-a)
 		# Try to build all unbuilt packages except blocked's.
 		echo "cooker:all" > $command
+		cp -a $cooklist $cooklist.bak
 		rm -f $cooklist && touch $cooklist
-		echo "" && cd $wok
+		newline && cd $WOK
 		echo "Cooker cooklist"
 		separator
-
-		# Find all unbuilt packages. Get EXTRAVERSION from packed receipt
-		# if it exists since extra version is added when packing the package.
-		echo "Searching for all unbuilt packages" | log
-		for pkg in *
-		do
-			unset EXTRAVERSION
-			. $pkg/receipt
-			[ -f "$pkg/taz/$PACKAGE-$VERSION/receipt" ] && \
-				. $pkg/taz/$PACKAGE-$VERSION/receipt
-			if [ ! -f "$PKGS/$PACKAGE-${VERSION}${EXTRAVERSION}.tazpkg" ]
-			then
-				echo $pkg && echo $pkg >> $cooklist
-			fi
-		done
+		
+		cook unbuild
+		cp -a $unbuild $cooklist
 		strip_blocked
-		cook_order | tee $LOGS/cookorder.log
 		echo "Packages to cook: $(cat $cooklist | wc -l)" | log
 		cook_list ;;
+	new|pkgdb|get-src|check-incoming|gen-wok-db|upwok)
+		cook "$COMMAND" "$2" "$3" "$4" "$5" ;;
 	*)
 		# Default is to cook all commits if not yet running.
-		[ "$1" ] && usage
-		cooklist=$CACHE/commits
+		[ "$COMMAND" ] && usage
+		cooklist=$commits
 		if [ -f "$pidfile" ]; then
-			pid=$(cat /var/run/cooker.pid)
+			pid=$(cat $pidfile)
 			if [ -s /proc/$pid/status ]; then
 				gettext -e "\nStill cooking latest commits with pid:"
 				echo -e " $pid\n" && exit 0
@@ -396,7 +499,7 @@ case "$1" in
 
 		# Start and get a PID file.
 		rm -f $LOGS/commits.log
-		echo ""
+		newline
 		echo "Checking for commits" | log_commits
 		separator | tee -a $LOGS/commits.log
 
@@ -409,32 +512,33 @@ case "$1" in
 
 		# Get revisions. Here we have 2 echoes since we want a msg on screen,
 		# in commits log and activity DB without a space before.
-		cd $wok || exit 1
-		cur=$(hg head --template '{rev}\n')
-		echo "Updating wok : ${wok}-hg (rev $cur)" | log_commits
-		echo "Updating wok: ${wok}-hg" | log
+		cd $WOK || exit 1
+		branch=$(cat /etc/slitaz-release)
+		cur=$(hg head $branch --template '{rev}\n')
+		echo "Updating wok : $WOKHG (rev $cur)" | log_commits
+		echo "Updating wok: $WOKHG" | log
 		echo "hg:pull" > $command
-		cd ${wok}-hg && hg pull -u | log_commits
-		new=$(hg head --template '{rev}\n')
+		cd $WOKHG && hg pull -u | log_commits
+		new=$(hg head $branch --template '{rev}\n')
 		# Store last rev to be used by CGI so it doesn't need to call hg head
 		# on each load.
-		echo "$new" > $CACHE/wokrev
+		echo "$new" > $wokrev
 
 		# Sync build wok with rsync so we don't take care about removing old
 		# files as before.
 		if [ "$new" -gt "$cur" ]; then
 			echo "Changes found from: $cur to $new" | log
 			echo "Syncing build wok with Hg wok..." | log_commits
-			rsync -r -t -c -l -u -v -D -E ${wok}-hg/ $wok/ | \
+			rsync -r -t -c -l -u -v -D -E $WOKHG/ $WOK/ | \
 				sed '/^$/'d | log_commits
 		else
 			echo "No revision changes: $cur vs $new" | log
 			separator | log_commits
-			clean_exit && echo "" && exit 0
+			clean_exit && newline && exit 0
 		fi
 
 		# Get and display modifications.
-		cd ${wok}-hg
+		cd $WOKHG
 		commits_summary | log_commits
 		cur=$(($cur + 1))
 		rm -f $commits.tmp && touch $commits.tmp
@@ -444,21 +548,27 @@ case "$1" in
 			do
 				pkg=$(echo $file | cut -d "/" -f 1)
 				desc=$(hg log --rev=$rev --template "{desc}" $file)
-				echo "Committed package : $pkg - $desc" | log_commits
+				echo "Commited package : $pkg - $desc" | log_commits
 				echo $pkg >> $commits.tmp
 			done
 		done
 
 		# We may have deleted packages and files in stuff/. Remove it and
 		# clean DB as well as log file.
-		cd $wok
+		cd $WOK
 		for pkg in *
 		do
-			if [ ! -d "${wok}-hg/$pkg" ]; then
+			if [ ! -d "$WOKHG/$pkg" ]; then
 				echo "Removing package: $pkg" | log_commits
-				. $wok/$pkg/receipt
-				rm -rf $PKGS/$PACKAGE-$VERSION* $wok/$pkg $LOGS/$pkg.log
-				sed -i "/^${pkg}$/"d $CACHE/blocked $CACHE/broken $commits.tmp
+				. $WOK/$pkg/receipt
+				if [ -f "$INCOMING/$PACKAGE-$VERSION*" ]; then
+					rm -rf $INCOMING/$PACKAGE-$VERSION*
+				fi
+				if [ -f "$PKGS/$PACKAGE-$VERSION*" ]; then
+					rm -rf $PKGS/$PACKAGE-$VERSION*
+				fi
+				rm -rf $WOK/$pkg $LOGS/$pkg.log
+				sed -i "/^${pkg}$/"d $blocked $broken $commits.tmp
 			fi
 		done
 
@@ -490,10 +600,11 @@ case "$1" in
 		echo "Packages to cook: $pkgs" | log
 		echo "Packages to cook : $pkgs" | log_commits
 		separator | log_commits
-		echo ""
+		newline
 		strip_blocked
 		cook_order | tee $LOGS/cookorder.log
 		cook_commits
+		pkgdb $INCOMING
 		clean_exit ;;
 esac
 
