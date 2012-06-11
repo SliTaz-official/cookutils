@@ -35,6 +35,7 @@ cookorder="$cache/cookorder"
 command="$cache/command"
 blocked="$cache/blocked"
 broken="$cache/broken"
+wokrev="$cache/wokrev"
 cooknotes="$cache/cooknotes"
 crontabs="/var/spool/cron/crontabs/root"
 
