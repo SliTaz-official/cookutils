@@ -3,22 +3,7 @@
 # SliTaz Cooker CGI/web interface.
 #
 
-[ -f "/etc/slitaz/cook.conf" ] && . /etc/slitaz/cook.conf
-[ -f "cook.conf" ] && . ./cook.conf
-
-# The same wok as cook.
-wok="$WOK"
-
-# Cooker DB files.
-activity="$CACHE/activity"
-commits="$CACHE/commits"
-cooklist="$CACHE/cooklist"
-cookorder="$CACHE/cookorder"
-command="$CACHE/command"
-blocked="$CACHE/blocked"
-broken="$CACHE/broken"
-cooknotes="$CACHE/cooknotes"
-wokrev="$CACHE/wokrev"
+. /usr/lib/slitaz/libcook.sh
 
 # We're not logged and want time zone to display correct server date.
 export TZ=$(cat /etc/TZ)
@@ -106,11 +91,21 @@ list_packages() {
 	done
 }
 
+list_incoming() {
+	cd $INCOMING
+	ls -1t *.tazpkg | head -20 | \
+	while read file
+	do
+		echo -n $(stat -c '%y' $INCOMING/$file | cut -d . -f 1 | sed s/:[0-9]*$//)
+		echo " : $file"
+	done
+}
+
 # xHTML header. Pages can be customized with a separated html.header file.
 if [ -f "header.html" ]; then
 	cat header.html
 else
-	cat << EOT
+cat << EOT
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
@@ -123,6 +118,13 @@ else
 
 <div id="header">
 	<div id="logo"></div>
+	<div id="network">
+			<a href="http://pkgs.slitaz.org/cooking/">Database</a>
+			<a href="http://tank.slitaz.org/graphs.php#cpu">Cpu</a>
+			<a href="http://hg.slitaz.org/wok/">Hg</a>
+			<a href="packages/">Packages</a>
+			<a href="incoming/">Incoming</a>
+	</div>
 	<h1><a href="cooker.cgi">SliTaz Cooker</a></h1>
 </div>
 
@@ -143,25 +145,37 @@ case "${QUERY_STRING}" in
 
 		# Package info.
 		echo '<div id="info">'
-		if [ -f "$wok/$pkg/receipt" ]; then
+		if [ -f "$WOK/$pkg/receipt" ]; then
 			echo "<a href='cooker.cgi?receipt=$pkg'>receipt</a>"
 			unset WEB_SITE
-			. $wok/$pkg/receipt
-			[ -n "$WEB_SITE" ] && # busybox wget -s $WEB_SITE &&
+			. $WOK/$pkg/receipt
+			[ -n "$WEB_SITE" ] && busybox wget -s $WEB_SITE &&
 			echo "<a href='$WEB_SITE'>home</a>"
-			if [ -f "$wok/$pkg/taz/$PACKAGE-$VERSION/receipt" ]; then
+			if [ -f "$WOK/$pkg/taz/$PACKAGE-$VERSION/receipt" ]; then
 				echo "<a href='cooker.cgi?files=$pkg'>files</a>"
 				unset EXTRAVERSION
-				. $wok/$pkg/taz/$PACKAGE-$VERSION/receipt
-				if [ -f $PKGS/$PACKAGE-$VERSION$EXTRAVERSION.tazpkg ]; then
-					echo "<a href='cooker.cgi?download=$PACKAGE-$VERSION$EXTRAVERSION.tazpkg'>download</a>"
-				fi
+				. $WOK/$pkg/taz/$PACKAGE-$VERSION/receipt
 				if [ -f $PKGS/$PACKAGE-$VERSION$EXTRAVERSION-$ARCH.tazpkg ]; then
 					echo "<a href='cooker.cgi?download=$PACKAGE-$VERSION$EXTRAVERSION-$ARCH.tazpkg'>download</a>"
+				elif [ -f $PKGS/$PACKAGE-$VERSION$EXTRAVERSION.tazpkg ]; then
+					echo "<a href='cooker.cgi?download=$PACKAGE-$VERSION$EXTRAVERSION.tazpkg'>download</a>"
+				fi
+				
+				if [ -f $SRC/$TARBALL ]; then
+					echo "<a href='cooker.cgi?download=$TARBALL'>src tarball</a>"
+				elif [ -f $SRC/$SOURCE-${KBASEVER:-$VERSION}.tar.lzma ]; then
+					echo "<a href='cooker.cgi?download=$SOURCE-${KBASEVER:-$VERSION}.tar.lzma'>src tarball</a>"
+				elif [ -f $SRC/$PACKAGE-${KBASEVER:-$VERSION}.tar.lzma ]; then
+					echo "<a href='cooker.cgi?download=$PACKAGE-${KBASEVER:-$VERSION}.tar.lzma'>src tarball</a>"
 				fi
 			fi
 		else
 			echo "No package named: $pkg"
+		fi
+		if [ -f $WOK/$pkg/taz/*/library.list ]; then
+			echo "<a href='cooker.cgi?library=$pkg'>library</a>"
+		else
+			echo "No library: $pkg"
 		fi
 		echo '</div>'
 
@@ -173,7 +187,7 @@ case "${QUERY_STRING}" in
 			if fgrep -q "Summary for:" $LOGS/$pkg.log; then
 				echo "<h3>Cook summary</h3>"
 				echo '<pre>'
-				grep -A 9 "^Summary for:" $LOGS/$pkg.log | sed /^$/d | \
+				grep -A 10 "^Summary for:" $LOGS/$pkg.log | sed /^$/d | \
 					syntax_highlighter log
 				echo '</pre>'
 			fi
@@ -209,6 +223,14 @@ case "${QUERY_STRING}" in
 				cat $CACHE/$file | sort | \
 					sed s"#^[^']*#<a href='cooker.cgi?pkg=\0'>\0</a>#"g
 				echo '</pre>' ;;
+			unbuild)
+				# Main page with summary.
+				nb=$(cat $unbuild | wc -l)
+				echo "<h2>DB: unbuild - Packages: $nb</h2>"
+				echo '<pre>'
+				cat $CACHE/$file | sort | \
+					sed s"#^[^']*#<a href='cooker.cgi?pkg=\0'>\0</a>#"g
+				echo '</pre>' ;;
 			*.diff)
 				diff=$CACHE/$file
 				echo "<h2>Diff for: ${file%.diff}</h2>"
@@ -239,9 +261,9 @@ case "${QUERY_STRING}" in
 	receipt=*)
 		pkg=${QUERY_STRING#receipt=}
 		echo "<h2>Receipt for: $pkg</h2>"
-		if [ -f "$wok/$pkg/receipt" ]; then
+		if [ -f "$WOK/$pkg/receipt" ]; then
 			echo '<pre>'
-			cat $wok/$pkg/receipt | syntax_highlighter receipt
+			cat $WOK/$pkg/receipt | syntax_highlighter receipt
 			echo '</pre>'
 		else
 			echo "<pre>No receipt for: $pkg</pre>"
@@ -258,6 +280,14 @@ case "${QUERY_STRING}" in
 		else
 			echo "<pre>No files list for: $pkg</pre>"
 		fi ;;
+	library=*)
+		pkg=${QUERY_STRING#library=}
+		echo "<h2>Library for: $pkg</h2>"
+		if [ -f $WOK/$pkg/taz/*/library.list ]; then
+			echo '<pre>'
+			cat $WOK/$pkg/taz/*/library.list | sed "s|$pkg	||g" | sed 's| |\n|g' | sed '/^$/d'
+			echo '</pre>'
+		fi ;;
 	*)
 		# We may have a toolchain.cgi script for cross cooker's
 		if [ -f "toolchain.cgi" ]; then
@@ -272,10 +302,14 @@ case "${QUERY_STRING}" in
 			arm|x86_64) inwok=$(ls $WOK/*/arch.$ARCH | wc -l) ;;
 			*) inwok=$(ls $WOK | wc -l) ;;
 		esac
-		cooked=$(ls $PKGS/*.tazpkg | wc -l)
-		unbuilt=$(($inwok - $cooked))
-		pct=0
-		[ $inwok -gt 0 ] && pct=$(( ($cooked * 100) / $inwok ))
+		pkg_cooked=$(ls $PKGS/*.tazpkg | wc -l)
+		incoming_cooked=$(ls $INCOMING/*.tazpkg | wc -l)
+		pkg_unbuilt=$(($inwok - $pkg_cooked))
+		incoming_unbuilt=$(($inwok -$incoming_cooked))
+		pkg_pct=0
+		[ $inwok -gt 0 ] && pkg_pct=$(( ($pkg_cooked * 100) / $inwok ))
+		incoming_pct=0
+		[ $inwok -gt 0 ] && incoming_pct=$(( ($incoming_cooked * 100) / $inwok ))
 		cat << EOT
 <div style="float: right;">
 	<form method="get" action="$SCRIPT_NAME">
@@ -293,14 +327,21 @@ Commits to cook  : $(cat $commits | wc -l)
 Current cooklist : $(cat $cooklist | wc -l)
 Broken packages  : $(cat $broken | wc -l)
 Blocked packages : $(cat $blocked | wc -l)
+Unbuild packages : $(cat $unbuild | wc -l)
 </pre>
 
-<p class="info">
-	Packages: $inwok in the wok - $cooked cooked - $unbuilt unbuilt -
-	Server date: $(date '+%Y-%m-%d %H:%M')
+<p>
+	Packages: $inwok in the wok - Server date: $(date '+%Y-%m-%d %H:%M')
 </p>
+
+	$pkg_cooked packages cooked - $pkg_unbuilt unbuilt
 <div class="pctbar">
-	<div class="pct" style="width: ${pct}%;">${pct}%</div>
+	<div class="pct" style="width: ${pkg_pct}%;">${pkg_pct}%</div>
+</div>
+
+	$incoming_cooked incoming packages cooked - $incoming_unbuilt unbuilt
+<div class="pctbar">
+	<div class="pct" style="width: ${incoming_pct}%;">${incoming_pct}%</div>
 </div>
 
 <p>
@@ -315,7 +356,7 @@ Blocked packages : $(cat $blocked | wc -l)
 <a name="activity"></a>
 <h2>Activity</h2>
 <pre>
-$(tac $CACHE/activity | head -n 12 | syntax_highlighter activity)
+$(tac $activity | head -n 12 | syntax_highlighter activity)
 </pre>
 <a class="button" href="cooker.cgi?file=activity">More activity</a>
 
@@ -352,8 +393,20 @@ $(cat $broken | head -n 20 | sed s"#^[^']*#<a href='cooker.cgi?pkg=\0'>\0</a>#"g
 $(cat $blocked | sed s"#^[^']*#<a href='cooker.cgi?pkg=\0'>\0</a>#"g)
 </pre>
 
+<a name="unbuild"></a>
+<h2>Unbuild</h2>
+<pre>
+$(cat $unbuild | head -n 20)
+</pre>
+<a class="button" href="cooker.cgi?file=unbuild">Unbuild</a>
+
 <a name="lastcook"></a>
 <h2>Latest cook</h2>
+<pre>
+$(list_incoming | sed s"#^\([^']*\).* : #<span class='log-date'>\0</span>#"g)
+</pre>
+
+<h2>Latest packages for mirror</h2>
 <pre>
 $(list_packages | sed s"#^\([^']*\).* : #<span class='log-date'>\0</span>#"g)
 </pre>
@@ -361,6 +414,9 @@ EOT
 	;;
 esac
 
+if [ -f "footer.html" ]; then
+	cat footer.html
+else
 # Close xHTML page
 cat << EOT
 </div>
@@ -375,5 +431,6 @@ cat << EOT
 </body>
 </html>
 EOT
+fi
 
 exit 0
