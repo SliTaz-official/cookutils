@@ -386,7 +386,7 @@ case "$1" in
 	*)
 		# Default is to cook all commits if not yet running.
 		[ "$1" ] && usage
-		cooklist=$CACHE/commits
+		cooklist=$commits
 		if [ -f "$pidfile" ]; then
 			pid=$(cat $pidfile)
 			if [ -s /proc/$pid/status ]; then
@@ -460,7 +460,7 @@ case "$1" in
 				echo "Removing package: $pkg" | log_commits
 				. $wok/$pkg/receipt
 				rm -rf $PKGS/$PACKAGE-$VERSION* $wok/$pkg $LOGS/$pkg.log
-				sed -i "/^${pkg}$/"d $CACHE/blocked $CACHE/broken $commits.tmp
+				sed -i "/^${pkg}$/"d $blocked $broken $commits.tmp
 			fi
 		done
 
