@@ -154,7 +154,7 @@ case "${QUERY_STRING}" in
 				unset EXTRAVERSION
 				. $wok/$pkg/taz/$PACKAGE-$VERSION/receipt
 				if [ -f $wok/$pkg/taz/$PACKAGE-$VERSION/description.txt ]; then
-					echo "<a href='cooker.cgi?description=$pkg'>files</a>"
+					echo "<a href='cooker.cgi?description=$pkg'>description</a>"
 				fi
 				if [ -f $PKGS/$PACKAGE-$VERSION$EXTRAVERSION.tazpkg ]; then
 					echo "<a href='cooker.cgi?download=$PACKAGE-$VERSION$EXTRAVERSION.tazpkg'>download</a>"
