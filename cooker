@@ -388,7 +388,7 @@ case "$1" in
 		[ "$1" ] && usage
 		cooklist=$CACHE/commits
 		if [ -f "$pidfile" ]; then
-			pid=$(cat /var/run/cooker.pid)
+			pid=$(cat $pidfile)
 			if [ -s /proc/$pid/status ]; then
 				gettext -e "\nStill cooking latest commits with pid:"
 				echo -e " $pid\n" && exit 0
@@ -420,7 +420,7 @@ case "$1" in
 		new=$(hg head --template '{rev}\n')
 		# Store last rev to be used by CGI so it doesn't need to call hg head
 		# on each load.
-		echo "$new" > $CACHE/wokrev
+		echo "$new" > $wokrev
 
 		# Sync build wok with rsync so we don't take care about removing old
 		# files as before.
