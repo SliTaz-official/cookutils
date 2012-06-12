@@ -153,6 +153,9 @@ case "${QUERY_STRING}" in
 				echo "<a href='cooker.cgi?files=$pkg'>files</a>"
 				unset EXTRAVERSION
 				. $wok/$pkg/taz/$PACKAGE-$VERSION/receipt
+				if [ -f $wok/$pkg/taz/$PACKAGE-$VERSION/description.txt ]; then
+					echo "<a href='cooker.cgi?description=$pkg'>files</a>"
+				fi
 				if [ -f $PKGS/$PACKAGE-$VERSION$EXTRAVERSION.tazpkg ]; then
 					echo "<a href='cooker.cgi?download=$PACKAGE-$VERSION$EXTRAVERSION.tazpkg'>download</a>"
 				fi
@@ -257,6 +260,17 @@ case "${QUERY_STRING}" in
 			echo '</pre>'
 		else
 			echo "<pre>No files list for: $pkg</pre>"
+		fi ;;
+	description=*)
+		pkg=${QUERY_STRING#description=}
+		echo "<h2>Description of $pkg</h2>"
+		dir=$(ls -d $WOK/$pkg/taz/$pkg-*)
+		if [ -d "$dir/description.txt" ]; then
+			echo '<pre>'
+			cat $dir/description.txt
+			echo '</pre>'
+		else
+			echo "<pre>No description for: $pkg</pre>"
 		fi ;;
 	*)
 		# We may have a toolchain.cgi script for cross cooker's
