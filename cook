@@ -166,6 +166,7 @@ set_paths() {
 # Create source tarball when URL is a SCM.
 create_tarball() {
 	gettext "Creating tarball: "; echo "$tarball"
+	TARBALL=$tarball
 	if [ "$LZMA_SRC" ]; then
 		tar -c $pkgsrc | lzma e $SRC/$tarball -si || exit 1
 	else
