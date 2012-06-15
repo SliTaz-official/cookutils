@@ -265,7 +265,7 @@ case "${QUERY_STRING}" in
 		pkg=${QUERY_STRING#description=}
 		echo "<h2>Description of $pkg</h2>"
 		dir=$(ls -d $WOK/$pkg/taz/$pkg-*)
-		if [ -d "$dir/description.txt" ]; then
+		if [ -s "$dir/description.txt" ]; then
 			echo '<pre>'
 			cat $dir/description.txt
 			echo '</pre>'
