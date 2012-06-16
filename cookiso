@@ -8,7 +8,7 @@
 # --> cook.conf
 # SSH/RSA configuration to upload on a server.
 # Assign this before cook.conf so it can be
-# reassign in cook.conf.
+# reassigned in cook.conf.
 SSH_CMD="dbclient -i /root/.ssh/id_rsa.dropbear"
 SSH_ISO="/var/www/slitaz/mirror/iso"
 SSH_HOST="slitaz@mirror.slitaz.org"

@@ -3,7 +3,7 @@
 # SliTaz Build Bot. The Cooker is a tool to automate and test SliTaz package
 # building. Please read the Cookbook documentation for more information
 # and discuss with the AUTHORS before adding anything here. PS: no translations
-# here since it's not an end user tool and it's not useful, all devs should
+# here since it's not an end user tool and it's not useful. All devs should
 # at least understand basic English.
 #
 . /usr/lib/slitaz/libcook.sh

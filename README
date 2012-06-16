@@ -126,7 +126,7 @@ to build ARM binaries from a standard i486 machine. Cookutils provides helpers
 for the ARM platform, but the first thing to do is compile a cross toolchain and
 modify the main cook.conf variables to use a correct ARCH, CFLAGS and BUILD_SYSTEM
 
-Cook handles HOST_ARCH and CROSS_* receipt variables. Some packages don't build or
+Cook handles HOST_ARCH and CROSS_* receipt variables. Some packages won't build or
 are not packaged for an architecture and so cross compiling will fail if the
 package receipt has not been reviewed and includes HOST_ARCH. Here is an example
 and a list of cross variables:
