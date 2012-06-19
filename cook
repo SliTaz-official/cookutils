@@ -48,12 +48,6 @@ EOT
 	exit 0
 }
 
-# Log activities, we want first letter capitalized.
-log() {
-	grep ^[A-Z] | \
-		sed s"#^[A-Z]\([^']*\)#$(date '+%Y-%m-%d %H:%M') : \0#" >> $activity
-}
-
 # We don't want these escapes in web interface.
 clean_log() {
 	sed -i -e s'|\[70G\[ \[1;32m| |' \
