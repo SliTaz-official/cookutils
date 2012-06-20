@@ -1311,7 +1311,16 @@ EOT
 				gettext "Unblocking:"; echo -n " $pkg"
 				sed -i "/^${pkg}$/"d $blocked
 				status && newline && exit 0 ;;
-
+			--pack)
+				if [ -d $WOK/$pkg/taz ]; then
+					rm -rf $WOK/$pkg/taz
+					[ -f $LOGS/$pkg-pack.log ] && rm -rf $LOGS/$pkg-pack.log
+					packit 2>&1 | tee -a $LOGS/$pkg-pack.log
+					clean_log
+				else
+					gettext "Need to build $pkg." && exit 0
+				fi
+				exit 0 ;;
 		esac
 
 		# Check if wanted is built now so we have separate log files.
