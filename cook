@@ -269,24 +269,29 @@ extract_source() {
 # Display cooked package summary.
 summary() {
 	cd $WOK/$pkg
-	[ -d install ] && prod=$(du -sh install | awk '{print $1}' 2>/dev/null)
-	fs=$(du -sh taz/* | awk '{print $1}')
+	[ -d $WOK/$pkg/install ] && prod=$(du -sh $WOK/$pkg/install | awk '{print $1}' 2>/dev/null)
+	[ -d $WOK/$pkg/source ] && srcdir=$(du -sh $WOK/$pkg/source | awk '{print $1}' 2>/dev/null)
+	fs=$(du -sh $WOK/$pkg/taz/* | awk '{print $1}')
 	size=$(du -sh $PKGS/$pkg-${VERSION}*.tazpkg | awk '{print $1}')
-	files=$(cat taz/$pkg-*/files.list | wc -l)
+	files=$(cat $WOK/$pkg/taz/$pkg-*/files.list | wc -l)
+	[ "$TARBALL" ] && srcsize=$(du -sh $SRC/$TARBALL | awk '{print $1}')
 	cookdate=$(date "+%Y-%m-%d %H:%M")
 	sec=$time
 	div=$(( ($time + 30) / 60))
 	[ "$div" != 0 ] && min="~ ${div}m"
 	gettext "Summary for:"; echo " $PACKAGE $VERSION"
 	separator
-	[ "$prod" ] && echo "Produced   : $prod"
+	[ "$srcdir" ] && echo "Source dir  : $srcdir"
+	[ "$TARBALL" ] && echo "Src file    : $TARBALL"
+	[ "$srcsize" ] && echo "Src size    : $srcsize"
+	[ "$prod" ] && echo "Produced    : $prod"
 	cat << EOT
-Packed     : $fs
-Compressed : $size
-Files      : $files
-Cook time  : ${sec}s $min
-Cook date  : $cookdate
-Host arch  : $ARCH
+Packed      : $fs
+Compressed  : $size
+Files       : $files
+Cook time   : ${sec}s $min
+Cook date   : $cookdate
+Host arch   : $ARCH
 $(separator)
 EOT
 }
