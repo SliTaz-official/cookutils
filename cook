@@ -465,6 +465,8 @@ debug_info() {
 	for error in \
 		ERROR "No package" "cp: can't" "can't open" "can't cd" \
 		"error:" "fatal error:" "rm: can't remove" "cp: can't stat"
+		"undefined reference to" "Unable to connect to" \
+		"link: cannot find the library"
 	do
 		fgrep "$error" $LOGS/$pkg.log
 	done

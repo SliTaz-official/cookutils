@@ -24,7 +24,7 @@ usage() {
 Usage: $(basename $0) command --option
 
 Commands:
-  howto           Man alike and howto
+  howto           Man[like] page and howto
   info            Display cross-tools info
   testsuite       Execute a small testsuite
   check           Check build host environment

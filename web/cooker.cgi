@@ -288,6 +288,17 @@ case "${QUERY_STRING}" in
 			cat $WOK/$pkg/taz/*/library.list | sed "s|$pkg	||g" | sed 's| |\n|g' | sed '/^$/d'
 			echo '</pre>'
 		fi ;;
+	description=*)
+		pkg=${QUERY_STRING#description=}
+		echo "<h2>Description of $pkg</h2>"
+		dir=$(ls -d $WOK/$pkg/taz/$pkg-*)
+		if [ -s "$dir/description.txt" ]; then
+			echo '<pre>'
+			cat $dir/description.txt
+			echo '</pre>'
+		else
+			echo "<pre>No description for: $pkg</pre>"
+		fi ;;
 	*)
 		# We may have a toolchain.cgi script for cross cooker's
 		if [ -f "toolchain.cgi" ]; then
