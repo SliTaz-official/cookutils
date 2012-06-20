@@ -313,9 +313,10 @@ debug_info() {
 
 # Copy all generic files (locale, pixmaps, .desktop). We use standard paths,
 # so some packages need to copy these files with the receipt and genpkg_rules.
-copy_generic_files() {
+copy_generic_files()
+{
 	# $LOCALE is set in cook.conf
-	if [ "$LOCALE" ]; then
+	if [ "$LOCALE" -a "$WANTED" = "" ]; then
 		if [ -d "$install/usr/share/locale" ]; then
 			mkdir -p $fs/usr/share/locale
 			for i in $LOCALE
@@ -331,10 +332,13 @@ copy_generic_files() {
 	if [ "$GENERIC_PIXMAPS" != "no" ]; then
 		if [ -d "$install/usr/share/pixmaps" ]; then
 			mkdir -p $fs/usr/share/pixmaps
-			cp -a $install/usr/share/pixmaps/$PACKAGE.png \
-				$fs/usr/share/pixmaps 2>/dev/null || continue
-			cp -a $install/usr/share/pixmaps/$PACKAGE.xpm \
-				$fs/usr/share/pixmaps 2>/dev/null || continue
+			if [ -f "$install/usr/share/pixmaps/$PACKAGE.png" ]; then
+				cp -a $install/usr/share/pixmaps/$PACKAGE.png \
+					$fs/usr/share/pixmaps
+			elif [ -f "$install/usr/share/pixmaps/$PACKAGE.xpm" ]; then
+				cp -a $install/usr/share/pixmaps/$PACKAGE.xpm \
+					$fs/usr/share/pixmaps
+			fi
 		fi
 
 		# Custom or homemade PNG pixmap can be in stuff.
@@ -348,6 +352,7 @@ copy_generic_files() {
 	# Generic desktop entry copy can be disabled with GENERIC_MENUS="no"
 	if [ "$GENERIC_MENUS" != "no" ]; then
 		if [ -d "$install/usr/share/applications" ] && [ "$WANTED" == "" ]; then
+			mkdir -p $fs/usr/share
 			cp -a $install/usr/share/applications $fs/usr/share
 		fi
 	fi
@@ -360,6 +365,12 @@ copy_generic_files() {
 	if [ -f "$stuff/$PACKAGE.desktop" ]; then
 		mkdir -p $fs/usr/share/applications
 		cp -a $stuff/$PACKAGE.desktop $fs/usr/share/applications
+	fi
+	
+	# Add custom licenses
+	if [ -d "$stuff/licenses" ]; then
+		mkdir -p $fs/usr/share/licenses
+		cp -a $stuff/licenses $fs/usr/share/licenses/$PACKAGE
 	fi
 }
 
