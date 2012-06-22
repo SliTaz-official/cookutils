@@ -90,12 +90,6 @@ flavors_list() {
 	fi
 }
 
-# Log activities, we want first letter capitalized.
-log() {
-	grep ^[A-Z] | \
-		sed s"#^[A-Z]\([^']*\)#$(date '+%Y-%m-%d %H:%M') : \0#" >> $activity
-}
-
 log_bot() {
 	sed '/^.\//'d | sed '/^.hg/'d | tee -a $rollog
 }
@@ -156,15 +150,15 @@ case "$1" in
 		if [ ! -d "flavors" ]; then
 			case $version in
 				cooking|rolling)
-					hg clone http://hg.slitaz.org/flavors ;;
+					hg clone $FLAVORS_URL ;;
 				stable)
-					hg clone http://hg.slitaz.org/flavors-stable flavors ;;
+					hg clone $FLAVORS_URL-stable flavors ;;
 			esac
 		fi
 		# Needed packages
 		for pkg in mercurial tazlito rsync dropbear
 		do
-			[ -d "/var/lib/tazpkg/installed/$pkg" ] || tazpkg -gi $pkg
+			[ -d "$INSTALLED/$pkg" ] || tazpkg -gi $pkg
 		done
 		echo "Creating directories and files..."
 		mkdir -p $cache $iso
