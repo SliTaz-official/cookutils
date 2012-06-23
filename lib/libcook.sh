@@ -58,13 +58,6 @@ log() {
 		sed s"#^[A-Z]\([^']*\)#$(date '+%Y-%m-%d %H:%M') : \0#" >> $activity
 }
 
-# Log broken packages.
-broken() {
-	if ! grep -q "^$pkg$" $broken; then
-		echo "$pkg" >> $broken
-	fi
-}
-
 # Remove blocked (faster this way than grepping before).
 strip_blocked() {
 	local pkg
