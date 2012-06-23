@@ -46,10 +46,11 @@ uninstall-cook:
 install-libcook:
 	install -m 0755 -d $(DESTDIR)$(PREFIX)/lib/slitaz
 	install -m 0755 lib/libcook.sh $(DESTDIR)$(PREFIX)/lib/slitaz
+	install -m 0755 lib/libcookorder.sh $(DESTDIR)$(PREFIX)/lib/slitaz
 
 uninstall-libcook:
 	rm -f $(DESTDIR)$(PREFIX)/lib/slitaz/libcook.sh
-
+	rm -f $(DESTDIR)$(PREFIX)/lib/slitaz/libcookorder.sh
 # Cross
 
 install-cross:
