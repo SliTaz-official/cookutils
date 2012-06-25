@@ -144,6 +144,7 @@ set_paths() {
 	install=$pkgdir/install
 	pkgsrc="${SOURCE:-$PACKAGE}-${KBASEVER:-$VERSION}"
 	lzma_tarball="$pkgsrc.tar.lzma"
+	orig_tarball="$TARBALL"
 	if [ "$PATCH" ]; then
 		[ "${PTARBALL}" ] || PTARBALL="$(basename $PATCH)"
 	fi
@@ -276,43 +277,37 @@ getsrc() {
 	# Get source tarball and make sure we have source dir named:
 	# $PACKAGE-$VERSION to be standard in receipts. Here we use tar.lzma
 	# tarball if it exists.
-	if [ ! "$WANTED" ] && [ "$TARBALL" ]; then
+	look_for_cookopt !unpack && unpack="no"
+	look_for_cookopt !repack_src && LZMA_SRC=""
+	if [ ! "$WANTED" ] && [ "$TARBALL" ] && [ ! "$unpack" ] && [ ! "$cook_code" ]; then
 		[ -d $tmpsrc ] && rm -rf $tmpsrc
 		mkdir -p $tmpsrc && cd $tmpsrc
 	fi
 	
-	if [ "$WGET_URL" ] && [ -f "$SRC/$TARBALL" ]; then
-		if [ "$1" = "--extract" ]; then
-			[ -d $basesrc ] && rm -rf $basesrc
-			mkdir -p $tmpsrc && cd $tmpsrc
-			extract_source
-			extract_path
-		fi
-		[ "$TARBALL" = "$lzma_tarball" ] && LZMA_SRC=""
-	else
+	if [ "$WGET_URL" ] && [ ! -f "$SRC/$TARBALL" ]; then
 		separator && download
+	fi
+	
+	if [ "$WGET_URL" ] && [ -f "$SRC/$TARBALL" ] && [ ! "$unpack" ] && [ ! "$cook_code" ]; then
+		[ "$TARBALL" = "$lzma_tarball" ] && LZMA_SRC=""
+		if [ "$1" = "--extract" ]; then
+			extract_source || exit 1
+			if [ ! -f "$SRC/$lzma_tarball" ] && [ "$LZMA_SRC" ]; then
+				echo -e "Repacking source."
+				repack_source || exit 1
+			fi
+			extract_path || exit 1
+			if [ -f $SRC/$TARBALL ]; then
+				[ -d $tmpsrc ] && rm -rf $tmpsrc
+			fi
+		fi		
 	fi
 	
 	# This is to make sure if PATCH equals something it will be downloaded
 	# checks are done in download functions
-	if [ "$PATCH" ]; then
+	if [ "$PATCH" ] && [ ! "$cook_code" ]; then
 		if [ ! -f "$SRC/$PTARBALL" ]; then
 			separator && download
-		fi
-	fi
-	
-	look_for_cookopt !repack_src && LZMA_SRC=""
-	if [ "$LZMA_SRC" ]; then
-		echo -e "Repacking source."
-		set_paths
-		mkdir -p $tmpsrc && cd $tmpsrc
-		extract_source || exit 1
-		repack_source || exit 1
-		if [ "$1" = "--extract" ]; then
-			extract_path
-		fi
-		if [ -f $SRC/$TARBALL ]; then
-			[ -d $tmpsrc ] && rm -rf $tmpsrc
 		fi
 	fi
 	
@@ -411,7 +406,6 @@ repack_source() {
 			mv tmp-1 tmp/$pkgsrc
 		fi
 	fi
-	ORIG_TARBALL=$TARBALL
 	if [ -d "$tmpsrc/$pkgsrc" ]; then
 		gettext "Repacking source is enabled:"; echo " LZMA_SRC"
 		TARBALL=$lzma_tarball
@@ -422,7 +416,7 @@ repack_source() {
 		tar -c * | lzma e $SRC/$TARBALL -si $LZMA_SET_DIR
 		if [ $REMOVE_ORIG_TARBALL ]; then
 			if [ -f $SRC/$TARBALL ]; then
-				[ -f $SRC/$ORIG_TARBALL ] && rm -f $SRC/$ORIG_TARBALL
+				[ -f $SRC/$orig_tarball ] && rm -f $SRC/$orig_tarball
 			fi
 		fi
 	fi
@@ -782,16 +776,6 @@ cookit() {
 	[ ! -s "$CACHE/installed.cook.diff" ] && \
 		busybox diff $CACHE/installed.list $CACHE/installed.cook > $CACHE/installed.cook.diff
 	deps=$(cat $CACHE/installed.cook.diff | grep ^+[a-zA-Z0-9] | wc -l)
-	
-	if [ ! "$WANTED" ] && [ "$TARBALL" ] && [ ! -d "$src" ]; then
-		look_for_cookopt !unpack && unpack="no"
-		if [ ! "$unpack" ] && [ "$cook_code" = "" ]; then
-			extract_source || exit 1
-			look_for_cookopt !repack_src && LZMA_SRC=""
-			[ "$LZMA_SRC" ] && repack_source
-			extract_path
-		fi
-	fi
 
 	# Execute receipt rules.
 	if [ $(grep ^compile_rules $receipt) ] && [ "$cook_code" = "" ]; then
