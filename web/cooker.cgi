@@ -79,8 +79,8 @@ syntax_highlighter() {
 				-e s"#^Executing:\([^']*\).#<span class='sh-val'>\0</span>#"g \
 				-e s"#^====\([^']*\).#<span class='span-line'>\0</span>#"g \
 				-e s"#^[a-zA-Z0-9]\([^']*\) :: #<span class='span-sky'>\0</span>#"g \
-				-e s"#ftp://\([^']*\).*#<a href='\0'>\0</a>#"g	\
-				-e s"#http://\([^']*\).*#<a href='\0'>\0</a>#"g ;;
+				-e s"#ftp://[^ '\"]*#<a href='\0'>\0</a>#"g	\
+				-e s"#http://[^ '\"]*#<a href='\0'>\0</a>#"g ;;
 		receipt)
 			sed -e s'|&|\&amp;|g' -e 's|<|\&lt;|g' -e 's|>|\&gt;|'g \
 				-e s"#^\#\([^']*\)#<span class='sh-comment'>\0</span>#"g \
