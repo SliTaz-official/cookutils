@@ -304,7 +304,8 @@ debug_info() {
 	for error in \
 		ERROR "No package" "cp: can't" "can't open" "can't cd" \
 		"error:" "fatal error:" "undefined reference to" \
-		"Unable to connect to" "link: cannot find the library"
+		"Unable to connect to" "link: cannot find the library" \
+		"CMake Error"
 	do
 		fgrep "$error" $LOGS/$pkg.log
 	done
