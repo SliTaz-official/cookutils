@@ -104,7 +104,7 @@ log_bot() {
 gen_flavors() {
 	cd $SLITAZ/flavors && hg pull -u
 	mkdir -p $cache && cd $cache
-	rm -rf *.flavor *.list *.conf
+	rm -rf *.flavor *.list *.conf *.sh
 	for flavor in $flavors
 	do
 		if [ "$flavor" != "core-4in1" ]; then
