@@ -239,10 +239,20 @@ case "${QUERY_STRING}" in
 					echo "<pre>No log file: $log</pre>"
 				fi ;;
 		esac ;;
+	stuff=*)
+		file=${QUERY_STRING#stuff=}
+		echo "<h2>$file</h2>"
+		echo '<pre>'
+		cat $wok/$file
+		echo '</pre>' ;;
 	receipt=*)
 		pkg=${QUERY_STRING#receipt=}
 		echo "<h2>Receipt for: $pkg</h2>"
 		if [ -f "$wok/$pkg/receipt" ]; then
+			( cd $wok/$pkg ; find stuff -type f 2> /dev/null ) | \
+			while read file ; do
+				echo "<a href=\"?stuff=$pkg/$file\">$file</a>"
+			done
 			echo '<pre>'
 			cat $wok/$pkg/receipt | syntax_highlighter receipt
 			echo '</pre>'
