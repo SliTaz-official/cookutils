@@ -571,7 +571,6 @@ remove_deps() {
 		# Keep the last diff for debug and info.
 		mv -f $CACHE/installed.cook.diff $CACHE/installed.diff
 	fi
-	clean_chroot
 }
 
 extract_path()
@@ -666,7 +665,7 @@ cookit() {
 		BDEPS="$BUILD_DEPENDS"
 	fi
 	[ "$BDEPS" ] && gettext -e "Checking build dependencies...\n"
-	[ "$root" ] && echo "Using packages DB: ${root}$DB"
+	[ "$root" != "/" ] && echo "Using packages DB: ${root}$DB"
 	for dep in $BDEPS
 	do
 		for i in $dep
@@ -710,7 +709,7 @@ cookit() {
 	done
 
 	# Get the list of installed packages
-	ls -l ${root}$INSTALLED > $CACHE/installed.list
+	ls -1 ${root}$INSTALLED > $CACHE/installed.list
 
 	# Have we a missing build dep to cook ?
 	if [ -s "$CACHE/missing.dep" ] && [ "$AUTO_COOK" ]; then
