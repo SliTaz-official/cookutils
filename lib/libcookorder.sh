@@ -37,6 +37,26 @@ run_on_kill()
 	run_on_exit
 }
 
+# List packages providing a virtual package.
+whoprovide()
+{
+	local i;
+	for i in $(fgrep -l PROVIDE $WOK/*/receipt); do
+		. $i
+		case " $PROVIDE " in
+		*\ $1\ *|*\ $1:*) echo $(basename $(dirname $i));;
+		esac
+	done
+}
+
+# Be sure package exists in wok.
+check_pkg_in_wok() {
+	[ -f $receipt ] && return
+	[ -f $WOK/$(whoprovide $PACKAGE)/receipt ] && return 1
+	gettext -e "\nUnable to find package in the wok:"
+	echo -e " $pkg\n" && exit 1
+}
+
 rsync_wok() {
 	if [ -d "$WOKHG" ]; then
 		echo "Updating build wok"
