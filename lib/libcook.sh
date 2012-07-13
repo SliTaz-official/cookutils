@@ -70,3 +70,17 @@ strip_blocked() {
 		done
 	done && sed -i /^$/d $cooklist
 }
+
+# Initialize files used in $CACHE
+init_db_files() {
+	gettext "Creating directories structure in:"; echo " $SLITAZ"
+	mkdir -p $INCOMING $PKGS $SRC $FEEDS $CACHE $LOGS
+	gettext "Creating DB files in:"; echo " $CACHE"
+	for f in $activity $command $broken $blocked $commits $cookorder $cooklist $command $wan_db $dep_db $fullco $lib_db $unbuild
+	do
+		touch $f
+	done
+	if [ -f $PKGS/libraries.txt ]; then
+		cp -a $PKGS/libraries.txt $lib_db
+	fi
+}

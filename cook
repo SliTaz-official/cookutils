@@ -77,20 +77,6 @@ if_empty_value() {
 	fi
 }
 
-# Initialize files used in $CACHE
-init_db_files() {
-	gettext "Creating directories structure in:"; echo " $SLITAZ"
-	mkdir -p $INCOMING $PKGS $SRC $FEEDS $CACHE $LOGS
-	gettext "Creating DB files in:"; echo " $CACHE"
-	for f in $activity $command $broken $blocked $commits $cookorder $cooklist $command $wan_db $dep_db $fullco $lib_db $unbuild
-	do
-		touch $f
-	done
-	if [ -f $PKGS/libraries.txt ]; then
-		cp -a $PKGS/libraries.txt $lib_db
-	fi
-}
-
 # QA: check a receipt consistency before building.
 receipt_quality() {
 	gettext -e "QA: checking package receipt...\n"
@@ -458,9 +444,9 @@ debug_info() {
 	echo "Cook date: $(date '+%Y-%m-%d %H:%M')"
 	for error in \
 		ERROR "No package" "cp: can't" "can't open" "can't cd" \
-		"error:" "fatal error:" "rm: can't remove" "cp: can't stat"
+		"error:" "fatal error:" "rm: can't remove" "cp: can't stat" \
 		"undefined reference to" "Unable to connect to" \
-		"link: cannot find the library"
+		"link: cannot find the library" "CMake Error"
 	do
 		fgrep "$error" $LOGS/$pkg.log
 	done
