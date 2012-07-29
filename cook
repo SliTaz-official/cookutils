@@ -222,6 +222,16 @@ get_source() {
 					cd $pkgsrc && git checkout $BRANCH && cd ..
 				fi
 				create_tarball ;;
+			bzr*|bazaar*)
+				if $(echo "$file" | fgrep -q "bzr|"); then
+					url=${file#bzr|}
+				else
+					url=${file#bazaar|}
+				fi
+				gettext -e "Getting source from BZR...\n"
+				echo "URL: $url"
+				bzr branch $url $pkgsrc
+				create_tarball ;;
 			cvs*)
 				url=${file#cvs|}
 				mod=$PACKAGE
