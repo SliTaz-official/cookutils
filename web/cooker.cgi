@@ -64,8 +64,8 @@ syntax_highlighter() {
 				-e s"#^Executing:\([^']*\).#<span class='sh-val'>\0</span>#"g \
 				-e s"#^====\([^']*\).#<span class='span-line'>\0</span>#"g \
 				-e s"#^[a-zA-Z0-9]\([^']*\) :: #<span class='span-sky'>\0</span>#"g \
-				-e s"#ftp://\([^']*\).*#<a href='\0'>\0</a>#"g	\
-				-e s"#http://\([^']*\).*#<a href='\0'>\0</a>#"g ;;
+				-e s"#ftp://[^ '\"]*#<a href='\0'>\0</a>#"g	\
+				-e s"#http://[^ '\"]*#<a href='\0'>\0</a>#"g ;;
 		receipt)
 			sed -e s'|&|\&amp;|g' -e 's|<|\&lt;|g' -e 's|>|\&gt;|'g \
 				-e s"#^\#\([^']*\)#<span class='sh-comment'>\0</span>#"g \
@@ -258,10 +258,20 @@ case "${QUERY_STRING}" in
 					echo "<pre>No log file: $log</pre>"
 				fi ;;
 		esac ;;
+	stuff=*)
+		file=${QUERY_STRING#stuff=}
+		echo "<h2>$file</h2>"
+		echo '<pre>'
+		cat $wok/$file
+		echo '</pre>' ;;
 	receipt=*)
 		pkg=${QUERY_STRING#receipt=}
 		echo "<h2>Receipt for: $pkg</h2>"
 		if [ -f "$WOK/$pkg/receipt" ]; then
+			( cd $wok/$pkg ; find stuff -type f 2> /dev/null ) | \
+			while read file ; do
+				echo "<a href=\"?stuff=$pkg/$file\">$file</a>"
+			done
 			echo '<pre>'
 			cat $WOK/$pkg/receipt | syntax_highlighter receipt
 			echo '</pre>'
