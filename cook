@@ -1057,10 +1057,10 @@ try_aufs_chroot() {
 	for mnt in $(echo $AUFS_MOUNTS | sort | uniq); do
 		mount --bind $mnt ${base}root$mnt
 		if [ $mnt == / ] && ! mount -t aufs -o br=${base}rw:/ none ${base}root; then
-	    		echo "Aufs mountage failure"
-	    		umount ${base}root
-	    		rmdir ${base}*
-	    		return
+			echo "Aufs mountage failure"
+			umount ${base}root
+			rmdir ${base}*
+			return
 		fi
 		echo "umount ${base}root$mnt" >> ${base}rw/aufs-umount.sh
 	done
