@@ -34,7 +34,7 @@ done
 # Default to rolling, or: cookiso [cmd] --version=stable
 case "$version" in
 	stable)
-		string=$(cat /etc/slitaz-release) ;;
+		string=stable ;;
 	cooking)
 		string=cooking ;;
 	*)
@@ -156,15 +156,15 @@ case "$1" in
 		if [ ! -d "flavors" ]; then
 			case $version in
 				cooking|rolling)
-					hg clone http://hg.slitaz.org/flavors ;;
+					hg clone $FLAVORS_URL ;;
 				stable)
-					hg clone http://hg.slitaz.org/flavors-stable flavors ;;
+					hg clone $FLAVORS_URL-stable flavors ;;
 			esac
 		fi
 		# Needed packages
 		for pkg in mercurial tazlito rsync dropbear
 		do
-			[ -d "/var/lib/tazpkg/installed/$pkg" ] || tazpkg -gi $pkg
+			[ -d "$INSTALLED/$pkg" ] || tazpkg -gi $pkg
 		done
 		echo "Creating directories and files..."
 		mkdir -p $cache $iso
