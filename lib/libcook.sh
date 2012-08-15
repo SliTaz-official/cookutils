@@ -38,6 +38,7 @@ broken="$cache/broken"
 unbuild="$cache/unbuild"
 wokrev="$cache/wokrev"
 cooknotes="$cache/cooknotes"
+live="$SLITAZ/live"
 crontabs="/var/spool/cron/crontabs/root"
 
 wan_db="$INCOMING/wanted.txt"
