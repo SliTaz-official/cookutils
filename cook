@@ -1482,6 +1482,40 @@ case "$COMMAND" in
 		# as well as flavors files for TazLiTo. We dont need logs since we do it
 		# manually to ensure everything is fine before syncing the mirror.
 		pkgdb "$2"
+		if [ "$3" == "--flavors" ]; then
+			cook flavors
+		fi
+		exit 0 ;;
+	flavors)
+		[ -d "$flavors" ] && echo -e "Missing flavors: $flavors\n" && exit 1
+		[ -d "$live" ] && || mkdir -p $live
+		gettext "Creating flavors files in:"; echo " $live"
+		echo "Cook pkgdb: Creating all flavors" | log
+		separator
+		gettext -e "Recharging lists to use latest packages...\n"
+		tazpkg recharge >/dev/null 2>/dev/null
+		
+		if [ ! -f "$live/tazlito.conf" ]; then
+			echo "Creating configuration file: tazlito.conf"
+			cp /etc/tazlito/tazlito.conf $live
+			sed -i "s|WORK_DIR=.*|WORK_DIR="$SLITAZ"|g" $live/tazlito.conf
+		fi
+		
+		#[ -d "$flavors/.hg" ] && $flavors && hg pull -u
+		
+		cd $live
+		echo "Starting to generate flavors..."
+		rm -f flavors.list *.flavor
+		for i in $flavors/*
+		do
+			fl=$(basename $i)
+			echo "Packing flavor: $(basename $i)"
+			tazlito pack-flavor $fl >/dev/null || exit 1
+			tazlito show-flavor $fl --brief --noheader 2> \
+				/dev/null >> flavors.list
+		done
+		cp -f $live/*.flavor $live/flavors.list $PKGS
+		separator && gettext "Flavors size: "; du -sh $live | awk '{print $1}'
 		exit 0 ;;
 	clean-chroot)
 		clean_chroot ;;
