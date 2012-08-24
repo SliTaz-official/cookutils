@@ -14,7 +14,9 @@ SSH_ISO="/var/www/slitaz/mirror/iso"
 SSH_HOST="slitaz@mirror.slitaz.org"
 #BWLIMIT="--bwlimit=40"
 
-. /usr/lib/slitaz/libcook.sh
+. /usr/lib/slitaz/libcookiso.sh
+
+check_root
 
 # Parse cmdline options.
 for opt in "$@"
@@ -34,7 +36,7 @@ done
 # Default to rolling, or: cookiso [cmd] --version=stable
 case "$version" in
 	stable)
-		string=$(cat /etc/slitaz-release) ;;
+		string=stable ;;
 	cooking)
 		string=cooking ;;
 	*)
@@ -114,13 +116,13 @@ gen_flavors() {
 		tazlito get-flavor $flavor | tee -a $log
 		# BUG: script sometimes screws up conspy on Tank
 		#script -c "yes '' | tazlito gen-distro" -a $log
-		yes '' | tazlito gen-distro 2>&1 | tee -a $log
+		tazlito gen-distro 2>&1 | tee -a $log
 		# Rename ISO and md5
 		echo "Moving ISO to: $iso/$name.iso" | tee -a $log
 		mv -f $SLITAZ/distro/slitaz-$flavor.iso $iso/$name.iso
 		cd $iso && md5sum $name.iso > $name.md5
 		echo "Cookiso ended: $(date '+%Y-%m-%d %H:%M')" | tee -a $log
-	done && echo ""
+	done && newline
 	# Push ISO to mirror if requested.
 	[ "$push" ] && push_iso
 }
@@ -156,20 +158,20 @@ case "$1" in
 			esac
 		fi
 		# Needed packages
-		for pkg in mercurial tazlito rsync dropbear
+		for pkg in mercurial tazlito rsync dropbear squashfs
 		do
 			[ -d "$INSTALLED/$pkg" ] || tazpkg -gi $pkg
 		done
 		echo "Creating directories and files..."
 		mkdir -p $cache $iso
 		touch $activity
-		sed -i s'/^WORK_DIR=.*/WORK_DIR="\/home\/slitaz"/' \
+		sed -i "s|WORK_DIR=.*|WORK_DIR="$SLITAZ"|g" \
 			/etc/tazlito/tazlito.conf
-		echo ""
+		newline
 		echo "Flavors files : $SLITAZ/flavors"
 		echo "Cache files   : $cache"
 		echo "ISO images    : $iso"
-		echo "" ;;
+		newline ;;
 	push)
 		# Manually upload an ISO to a server.
 		flavors_list
@@ -218,7 +220,7 @@ case "$1" in
 			done
 		else
 			echo "No changes found in packages MD5 sum" | log_bot
-			echo "" > $commits.tmp
+			newline > $commits.tmp
 		fi
 		cp -f $pkgs $cache
 		
