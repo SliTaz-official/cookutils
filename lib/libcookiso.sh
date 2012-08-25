@@ -678,7 +678,7 @@ gen_distro()
 	for pkg in $(cat $DISTRO/list-packages)
 	do
 		echo -n "Installing package: $pkg"
-		yes y | tazpkg install $pkg --root=$ROOTFS 2>&1 >> $log || exit 1
+		yes y | tazpkg install $pkg --root=$ROOTFS 2>/dev/null >> $log || exit 1
 		status
 	done
 	rm -f $ROOTFS/$DB/packages.*
@@ -742,7 +742,7 @@ gen_distro()
 				mkdir ${ROOTFS}0$n
 				cd $PACKAGES_REPOSITORY
 				yes y | tazpkg install-list \
-					$DISTRO/list-packages0$n --root=${ROOTFS}0$n
+					$DISTRO/list-packages0$n --root=${ROOTFS}0$n 2>/dev/null
 				rm -rf ${ROOTFS}0$n/boot ${ROOTFS}0$n/$DB/packages.*
 				status
 				cd $DISTRO
@@ -781,7 +781,8 @@ EOT
 }
 
 # tazlito gen-flavor
-gen_flavor(
+gen_flavor()
+{
 	# Generate a new flavor from the last iso image generated.
 	FLAVOR=${1%.flavor}
 	newline
@@ -844,7 +845,7 @@ gen_flavor(
 get_flavor()
 {
 	# Get a flavor's files and prepare for gen-distro.
-	FLAVOR=${2%.flavor}
+	FLAVOR=${1%.flavor}
 	echo -e "\n\033[1mPreparing $FLAVOR distro flavor\033[0m"
 	separator
 	if [ -f $FLAVOR.flavor ] || download $FLAVOR.flavor; then
