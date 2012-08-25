@@ -119,8 +119,12 @@ gen_flavors() {
 		gen_distro 2>&1 | tee -a $log
 		# Rename ISO and md5
 		echo "Moving ISO to: $iso/$name.iso" | tee -a $log
-		mv -f $SLITAZ/distro/slitaz-$flavor.iso $iso/$name.iso
-		cd $iso && md5sum $name.iso > $name.md5
+		if [ -f $DISTRO/slitaz-$flavor.iso ]; then
+			mv -f $DISTRO/slitaz-$flavor.iso $iso/$name.iso
+		elif [ -f $DISTRO/$ISO_NAME.iso ]; then
+			mv -f $DISTRO/$ISO_NAME.iso $iso/$name.iso
+		fi
+		cd $iso && $CHECKSUM $name.iso > $name.$SUM
 		echo "Cookiso ended: $(date '+%Y-%m-%d %H:%M')" | tee -a $log
 	done && newline
 	# Push ISO to mirror if requested.
