@@ -112,11 +112,11 @@ gen_flavors() {
 		rm -f $log && touch $log
 		echo "Building $string <a href='?distro=$string-$flavor'>$flavor</a>" | log
 		echo "Cookiso started: $(date '+%Y-%m-%d %H:%M')" | tee -a $log
-		tazlito pack-flavor $flavor | tee -a $log
-		tazlito get-flavor $flavor | tee -a $log
+		pack_flavor $flavor | tee -a $log
+		get_flavor $flavor | tee -a $log
 		# BUG: script sometimes screws up conspy on Tank
 		#script -c "yes '' | tazlito gen-distro" -a $log
-		tazlito gen-distro 2>&1 | tee -a $log
+		gen_distro 2>&1 | tee -a $log
 		# Rename ISO and md5
 		echo "Moving ISO to: $iso/$name.iso" | tee -a $log
 		mv -f $SLITAZ/distro/slitaz-$flavor.iso $iso/$name.iso
@@ -160,13 +160,13 @@ case "$1" in
 		# Needed packages
 		for pkg in mercurial tazlito rsync dropbear squashfs
 		do
-			[ -d "$INSTALLED/$pkg" ] || tazpkg -gi $pkg
+			[ -f "$INSTALLED/$pkg/receipt" ] || tazpkg -gi $pkg
 		done
 		echo "Creating directories and files..."
 		mkdir -p $cache $iso
 		touch $activity
 		sed -i "s|WORK_DIR=.*|WORK_DIR="$SLITAZ"|g" \
-			/etc/tazlito/tazlito.conf
+			/etc/slitaz/cookiso.conf
 		newline
 		echo "Flavors files : $SLITAZ/flavors"
 		echo "Cache files   : $cache"
