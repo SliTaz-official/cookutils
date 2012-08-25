@@ -8,6 +8,7 @@
 #
 . /usr/lib/slitaz/libcook.sh
 . /usr/lib/slitaz/libcookorder.sh
+. /usr/lib/slitaz/libcookiso.sh
 
 COMMAND="$1"
 
@@ -1487,18 +1488,18 @@ case "$COMMAND" in
 		fi
 		exit 0 ;;
 	flavors)
-		[ -d "$flavors" ] && echo -e "Missing flavors: $flavors\n" && exit 1
-		[ -d "$live" ] && || mkdir -p $live
+		[ -d "$flavors" ] || $(echo -e "Missing flavors: $flavors\n" && exit 1)
+		[ -d "$live" ] || mkdir -p $live
 		gettext "Creating flavors files in:"; echo " $live"
 		echo "Cook pkgdb: Creating all flavors" | log
 		separator
 		gettext -e "Recharging lists to use latest packages...\n"
 		tazpkg recharge >/dev/null 2>/dev/null
 		
-		if [ ! -f "$live/tazlito.conf" ]; then
+		if [ ! -f "$live/cookiso.conf" ]; then
 			echo "Creating configuration file: tazlito.conf"
-			cp /etc/tazlito/tazlito.conf $live
-			sed -i "s|WORK_DIR=.*|WORK_DIR="$SLITAZ"|g" $live/tazlito.conf
+			cp /etc/slitaz/cookiso.conf $live
+			sed -i "s|WORK_DIR=.*|WORK_DIR="$SLITAZ"|g" $live/cookiso.conf
 		fi
 		
 		#[ -d "$flavors/.hg" ] && $flavors && hg pull -u
@@ -1510,8 +1511,8 @@ case "$COMMAND" in
 		do
 			fl=$(basename $i)
 			echo "Packing flavor: $(basename $i)"
-			tazlito pack-flavor $fl >/dev/null || exit 1
-			tazlito show-flavor $fl --brief --noheader 2> \
+			pack_flavor $fl >/dev/null || exit 1
+			show_flavor $fl --brief --noheader 2> \
 				/dev/null >> flavors.list
 		done
 		cp -f $live/*.flavor $live/flavors.list $PKGS
