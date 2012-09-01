@@ -3,6 +3,7 @@
 # libcookiso functions
 
 . /usr/lib/slitaz/libcook.sh
+. /usr/lib/slitaz/libmodular.sh
 
 TOP_DIR="$(pwd)"
 TMP_DIR=/tmp/cookiso-$$-$RANDOM
@@ -38,10 +39,6 @@ if test $(id -u) = 0 ; then
 	fi
 fi
 
-# Set the rootfs and rootcd path with $DISTRO
-# configuration variable.
-ROOTFS=$DISTRO/rootfs
-ROOTCD=$DISTRO/rootcd
 
 yesorno()
 {
@@ -328,13 +325,21 @@ gen_initramfs()
 
 	# Use lzma if installed. Display rootfs size in realtime.
 	rm -f /tmp/rootfs
-	pack_rootfs . $DISTRO/$(basename $1).gz &
+	if [ "$MODULAR" ]; then
+		pack_rootfs . $DISTRO/$INITRAMFS &
+	else
+		pack_rootfs . $DISTRO/$(basename $1).gz &
+	fi
 	sleep 2
 	echo -en "\nFilesystem size:"
 	while [ ! -f /tmp/rootfs ]
 	do
 		sleep 1
-		echo -en "\\033[18G`du -sh $DISTRO/$(basename $1).gz | awk '{print $1}'`    "
+		if [ "$MODULAR" ]; then
+			echo -en "\\033[18G`du -sh $DISTRO/$INITRAMFS.gz | awk '{print $1}'`    "
+		else
+			echo -en "\\033[18G`du -sh $DISTRO/$(basename $1).gz | awk '{print $1}'`    "
+		fi
 	done
 	echo -e "\n"
 	cd $DISTRO
@@ -699,7 +704,11 @@ gen_distro()
 	# The boot dir goes directly on the CD.
 	if [ -d "$ROOTFS/boot" ] ; then
 		echo -n "Moving the boot directory..."
-		mv $ROOTFS/boot $ROOTCD
+		if [ "$MODULAR" ]; then
+			mv $INIT/boot $ROOTCD
+		else
+			mv $ROOTFS/boot $ROOTCD
+		fi
 		cd $ROOTCD/boot
 		ln vmlinuz-* bzImage
 		status
