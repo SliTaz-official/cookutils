@@ -71,6 +71,7 @@ syntax_highlighter() {
 	case $1 in
 		log)
 			sed -e 's#OK$#<span class="span-ok">OK</span>#g' \
+				-e 's#Done$#<span class="span-ok">Done</span>#g' \
 				-e 's#yes$#<span class="span-ok">yes</span>#g' \
 				-e 's#no$#<span class="span-no">no</span>#g' \
 				-e 's#error$#<span class="span-red">error</span>#g' \

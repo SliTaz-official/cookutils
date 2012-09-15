@@ -1232,7 +1232,8 @@ EOT
 		done
 		cp -f $live/*.flavor $live/flavors.list $PKGS
 		separator && gettext "Flavors size: "; du -sh $live | awk '{print $1}'
-		newline && rm -f $command ;;
+		newline && rm -f $command
+		separator && gettext "Cook pkgdb end: "; date "+%Y-%m-%d %H:%M";;
 	*)
 		# Just cook and generate a package.
 		check_root
