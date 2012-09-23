@@ -9,6 +9,10 @@ MODULES_DIR=$ROOTFS/modules
 CDNAME="slitaz"
 SGNFILE=$ROOTCD/${CDNAME}/livecd.sgn
 KEY_FILES="init liblinuxlive linuxrc"
+EXT="xz"
+COMPRESSION="xz -Xbcj x86"
+MKOPTION="-b 512k"
+#NCPU="-processors 3"
 
 error () { echo -e "\033[1;31;40m!!! \033[1;37;40m$@\033[1;0m"; }
 warn ()  { echo -e "\033[1;33;40m*** \033[1;37;40m$@\033[1;0m"; }
@@ -139,4 +143,46 @@ union () {
 	info "Removing unionfs .wh. files."
 	find ${MODULES_DIR} -type f -name ".wh.*" -exec rm {} \;
 	find ${MODULES_DIR} -type d -name ".wh.*" -exec rm -rf {} \;
+}
+
+# _mksquash dirname
+_mksquash () {
+    if [ ! -d "$1" ]; then
+        error "Error: '$1' is not a directory"
+        return 1
+    fi
+
+    if [ ! -d "$2" ]; then
+        error "Error: '$2' is not a directory"
+        return 1
+    fi
+
+    if [ ! -d "${1}${3}" ]; then
+        error "Error: '${1}${3}' is not a directory"
+        return 1
+    fi
+
+    time_dir="${3}"
+    sqimg="${2}/$(basename ${1}).${EXT}"
+    info "====> Generating SquashFS image for '${1}'"
+    if [ -e "${sqimg}" ]; then
+        dirhaschanged=$(find ${1}${time_dir} -newer ${sqimg})
+        if [ "${dirhaschanged}" != "" ]; then
+            info "SquashFS image '${sqimg}' is not up to date, rebuilding..."
+            rm "${sqimg}"
+        else
+            info "SquashFS image '${sqimg}' is up to date, skipping."
+            return
+        fi
+    fi
+
+    info "Creating SquashFS image. This may take some time..."
+    start=$(date +%s)
+    if [ "${QUIET}" = "y" ]; then
+        mksquashfs "${1}" "${sqimg}" ${NCPU} -noappend ${MKOPTION} -comp ${COMPRESSION} >/dev/null
+    else
+        mksquashfs "${1}" "${sqimg}" ${NCPU} -noappend ${MKOPTION} -comp ${COMPRESSION}
+    fi
+    minutes=$(echo $start $(date +%s) | awk '{ printf "%0.2f",($2-$1)/60 }')
+    info "Image creation done in $minutes minutes."
 }
