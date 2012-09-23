@@ -714,7 +714,11 @@ gen_distro()
 	fi
 
 	cd $DISTRO
-	cp $DISTRO_LIST $ROOTFS/etc/slitaz
+	if [ "$MODULAR" ]; then
+		cp $DISTRO_LIST $INIT/etc/slitaz
+	else
+		cp $DISTRO_LIST $ROOTFS/etc/slitaz
+	fi
 	# Copy all files from $ADDFILES/rootfs to the rootfs.
 	if [ -d "$ADDFILES/rootfs" ] ; then
 		echo -n "Copying addfiles content to the rootfs... "
