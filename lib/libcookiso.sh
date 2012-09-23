@@ -370,7 +370,7 @@ distro_sizes()
 		PKGS_NUM=$(ls -1 $ROOTFS/modules/*$INSTALLED/*/receipt | wc -l)
 	else
 		PKGS_NUM=$(ls -1 $ROOTFS*$INSTALLED/*/receipt | wc -l)
-	done
+	fi
 	
 echo "Build date       : $(date +%Y%m%d)"
 if [ "$MODULAR" ]; then
@@ -386,8 +386,6 @@ echo "Initramfs size   : $(du -csh $ROOTCD/boot/rootfs*.gz | awk '{ s=$1 } END {
 echo "ISO image size   : $(du -sh $ISO_NAME.iso | awk '{ print $1 }')"
 echo "================================================================================"
 echo "Image is ready: $ISO_NAME.iso"
-
-EOT
 }
 
 # Print ISO and rootfs size.
