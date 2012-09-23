@@ -6,7 +6,8 @@ FLAVOR_MOD="justx gtkonly core"
 UNION=$ROOTFS/union
 LASTBR=$INIT
 MODULES_DIR=$ROOTFS/modules
-SGNFILE=$ROOTC/${CDNAME}/livecd.sgn
+CDNAME="slitaz"
+SGNFILE=$ROOTCD/${CDNAME}/livecd.sgn
 KEY_FILES="init liblinuxlive linuxrc"
 
 error () { echo -e "\033[1;31;40m!!! \033[1;37;40m$@\033[1;0m"; }
@@ -16,7 +17,7 @@ info () { echo -e "\033[1;32;40m>>> \033[1;37;40m$@\033[1;0m"; }
 initramfs () {
 
 	FLAVOR=${1%.flavor}
-	if [ -s "$FLAVORS_REPOSITORY/$FLAVOR/receipt" ]; then
+	if [ ! -f "$FLAVORS_REPOSITORY/$FLAVOR/receipt" ]; then
 		error "error: $FLAVORS_REPOSITORY/$FLAVOR/receipt doesn't exist, aborting."
 		exit 1
 	fi
@@ -33,7 +34,7 @@ initramfs () {
 	[ -f $LOG/initramfs.log ] && rm -f $LOG/initramfs.log
 	cat "$FLAVORS_REPOSITORY/$FLAVOR/packages.list" | grep -v "^#" | while read pkgname; do
 		if [ ! -f ${INIT}${INSTALLED}/${pkgname}/files.list ]; then
-			tazpkg get-install $pkgname --root=$INIT 2>&1 | tee -a $LOG/initramfs.log
+			tazpkg get-install $pkgname --root=$INIT 2>/dev/null | tee -a $LOG/initramfs.log
 			sleep 1
 		else
 			info "${pkgname} installed" | tee -a $LOG/initramfs.log
@@ -63,7 +64,7 @@ slitaz_union () {
 			[ -f ${LOG}/${mod}-current.log ] && rm -f ${LOG}/${mod}-current.log
 			cat "$FLAVORS_REPOSITORY/${mod}/packages.list" | grep -v "^#" | while read pkgname; do
 				if [ ! -f ${UNION}${INSTALLED}/${pkgname}/files.list ]; then
-					tazpkg get-install $pkgname --root=${UNION} 2>&1 | tee -a ${LOG}/${mod}-current.log
+					tazpkg get-install $pkgname --root=${UNION} | tee -a ${LOG}/${mod}-current.log
 					sleep 1
 				else
 					info "${pkgname} installed" | tee -a ${LOG}/${mod}-current.log
@@ -98,7 +99,7 @@ union () {
 		error "Error loading Union filesystem module. (aufs)"
 		exit 1
 	fi
-	
+
 	# $INIT is now $LASTBR
 	# This will be copyed to /mnt/memory/changes on boot
 	initramfs init-modular

@@ -120,7 +120,7 @@ installed_package_name()
 	while true; do
 		VERSION=""
 		eval $(grep -s ^VERSION= $INSTALLED/$i/receipt)
-		EXTRAVERSION=""
+		unset EXTRAVERSION
 		eval $(grep -s ^EXTRAVERSION= $INSTALLED/$i/receipt)
 		if [ "$i-$VERSION$EXTRAVERSION" = "$tazpkg" ]; then
 			echo $i
@@ -289,6 +289,7 @@ write_initramfs()
 	echo 1 > /tmp/rootfs
 }
 
+
 # Deduplicate files (MUST be on the same filesystem).
 deduplicate()
 {
@@ -326,7 +327,7 @@ gen_initramfs()
 	# Use lzma if installed. Display rootfs size in realtime.
 	rm -f /tmp/rootfs
 	if [ "$MODULAR" ]; then
-		pack_rootfs . $DISTRO/$INITRAMFS &
+		pack_rootfs $INIT $DISTRO/$INITRAMFS &
 	else
 		pack_rootfs . $DISTRO/$(basename $1).gz &
 	fi
@@ -336,14 +337,24 @@ gen_initramfs()
 	do
 		sleep 1
 		if [ "$MODULAR" ]; then
-			echo -en "\\033[18G`du -sh $DISTRO/$INITRAMFS.gz | awk '{print $1}'`    "
+			echo -en "\\033[18G`du -sh $DISTRO/$INITRAMFS | awk '{print $1}'`    "
 		else
 			echo -en "\\033[18G`du -sh $DISTRO/$(basename $1).gz | awk '{print $1}'`    "
 		fi
 	done
 	echo -e "\n"
 	cd $DISTRO
-	mv $(basename $1).gz $ROOTCD/boot
+	if [ $MODULAR ]; then
+		mv $INITRAMFS $ROOTCD/boot
+	else
+		mv $(basename $1).gz $ROOTCD/boot
+	fi
+	if [ $MODULAR ]; then
+		if [ $(mount | grep "tmpfs on $ROOTFS" 2>/dev/null) ]; then
+			umount $ROOTFS
+		fi
+	fi
+	
 }
 
 distro_sizes()
@@ -355,14 +366,26 @@ distro_sizes()
 		[ "$div" != 0 ] && min="~ ${div}m"
 		echo "Build time      : ${sec}s $min"
 	fi
-	cat << EOT
-Build date      : $(date +%Y%m%d)
-Packages        : $(ls -1 $ROOTFS*$INSTALLED/*/receipt | wc -l)
-Rootfs size     : $(du -csh $ROOTFS*/ | awk '{ s=$1 } END { print s }')
-Initramfs size  : $(du -csh $ROOTCD/boot/rootfs*.gz | awk '{ s=$1 } END { print s }')
-ISO image size  : $(du -sh $ISO_NAME.iso | awk '{ print $1 }')
-================================================================================
-Image is ready: $ISO_NAME.iso
+	if [ "$MODULAR" ]; then
+		PKGS_NUM=$(ls -1 $ROOTFS/modules/*$INSTALLED/*/receipt | wc -l)
+	else
+		PKGS_NUM=$(ls -1 $ROOTFS*$INSTALLED/*/receipt | wc -l)
+	done
+	
+echo "Build date       : $(date +%Y%m%d)"
+if [ "$MODULAR" ]; then
+	echo "Modular Packages : $PKGS_NUM"
+	echo "Init Packages    : $(ls -1 $INIT*$INSTALLED/*/receipt | wc -l)"
+	echo "Rootfs size      : $(du -csh $ROOTFS*/ | awk '{ s=$1 } END { print s }')"
+else
+	echo "Packages         : $PKGS_NUM"
+	echo "Rootfs size      : $(du -csh $ROOTFS*/ | awk '{ s=$1 } END { print s }')"
+fi
+
+echo "Initramfs size   : $(du -csh $ROOTCD/boot/rootfs*.gz | awk '{ s=$1 } END { print s }')"
+echo "ISO image size   : $(du -sh $ISO_NAME.iso | awk '{ print $1 }')"
+echo "================================================================================"
+echo "Image is ready: $ISO_NAME.iso"
 
 EOT
 }
@@ -678,15 +701,20 @@ gen_distro()
 			done
 	fi
 	cp $LIST_NAME $DISTRO/$DISTRO_LIST
-	sed 's/\(.*\)/\1.tazpkg/' < $DISTRO/$DISTRO_LIST > $DISTRO/list-packages
-	cd $PACKAGES_REPOSITORY
-	for pkg in $(cat $DISTRO/list-packages)
-	do
-		echo -n "Installing package: $pkg"
-		yes y | tazpkg install $pkg --root=$ROOTFS 2>/dev/null >> $log || exit 1
-		status
-	done
-	rm -f $ROOTFS/$DB/packages.*
+	if [ "$MODULAR" ]; then
+		union
+	else
+		sed 's/\(.*\)/\1.tazpkg/' < $DISTRO/$DISTRO_LIST > $DISTRO/list-packages
+		cd $PACKAGES_REPOSITORY
+		for pkg in $(cat $DISTRO/list-packages)
+		do
+			echo -n "Installing package: $pkg"
+			yes y | tazpkg install $pkg --root=$ROOTFS 2>/dev/null >> $log || exit 1
+			status
+		done
+		rm -f $ROOTFS/$DB/packages.*
+	fi
+
 	cd $DISTRO
 	cp $DISTRO_LIST $ROOTFS/etc/slitaz
 	# Copy all files from $ADDFILES/rootfs to the rootfs.
@@ -702,16 +730,20 @@ gen_distro()
 	status
 	# Move the boot dir with the Linux kernel from rootfs.
 	# The boot dir goes directly on the CD.
-	if [ -d "$ROOTFS/boot" ] ; then
-		echo -n "Moving the boot directory..."
-		if [ "$MODULAR" ]; then
+	if [ $MODULAR ]; then
+		if [ -d "$INIT/boot" ]; then
+			echo -n "Moving the boot directory..."
 			mv $INIT/boot $ROOTCD
-		else
+			cd $ROOTCD/boot
+			ln vmlinuz-* bzImage
+			status
+		elif [ -d "$ROOTFS/boot" ] ; then
+			echo -n "Moving the boot directory..."
 			mv $ROOTFS/boot $ROOTCD
+			cd $ROOTCD/boot
+			ln vmlinuz-* bzImage
+			status
 		fi
-		cd $ROOTCD/boot
-		ln vmlinuz-* bzImage
-		status
 	fi
 	cd $DISTRO
 	# Copy all files from $ADDFILES/rootcd to the rootcd.
@@ -1510,7 +1542,7 @@ frugal_install()
 		status
 		echo -n "Installing the Kernel and rootfs..."
 		cp -a /tmp/iso/boot/bzImage /boot/frugal
-		if [ -f $DISTRO/rootcd/boot/rootfs1.gz ]; then
+		if [ -f $ROOTCD/boot/rootfs1.gz ]; then
 			cd /tmp/iso/boot
 			cat $(ls -r rootfs*.gz) > /boot/frugal/$INITRAMFS
 		else
@@ -1522,12 +1554,12 @@ frugal_install()
 		echo -n "Using distro: $DISTRO"
 		cd $DISTRO && status
 		echo -n "Installing the Kernel and rootfs..."
-		cp -a $DISTRO/rootcd/boot/bzImage /boot/frugal
-		if [ -f $DISTRO/rootcd/boot/rootfs1.gz ]; then
-			cd $DISTRO/rootcd/boot
+		cp -a $ROOTCD/boot/bzImage /boot/frugal
+		if [ -f $ROOTCD/boot/rootfs1.gz ]; then
+			cd $ROOTCD/boot
 			cat $(ls -r rootfs*.gz) > /boot/frugal/$INITRAMFS
 		else
-			cp -a $DISTRO/rootcd/boot/$INITRAMFS /boot/frugal
+			cp -a $ROOTCD/boot/$INITRAMFS /boot/frugal
 		fi
 		status
 	fi
@@ -1538,11 +1570,429 @@ frugal_install()
 title SliTaz GNU/Linux (frugal)
 root (hd0,0)
 kernel /boot/frugal/bzImage root=/dev/null
-initrd /boot/frugal/rootfs.gz
+initrd /boot/frugal/\$INITRAMFS
 EOT
 	else
 		echo -n "GRUB menu list is up-to-date..."
 	fi
 	status
 	newline
+}
+
+# Check iso for loram transformation
+check_iso_for_loram()
+{
+	[ -s $TMP_DIR/iso/boot/$INITRAMFS ] ||
+	[ -s $TMP_DIR/iso/boot/rootfs1.gz ]
+}
+
+# Build initial rootfs for loram ISO ram/cdrom/http
+build_initfs()
+{
+	urliso="mirror.slitaz.org mirror.switch.ch/ftp/mirror/slitaz \
+download.tuxfamily.org/slitaz slitaz.c3sl.ufpr.br"
+	version=$(ls $TMP_DIR/iso/boot/vmlinuz-* | sed 's/.*vmlinuz-//')
+	if [ -z "$version" ]; then
+		cat <<EOT
+Can't find the kernel version.
+No file /boot/vmlinuz-<version> in ISO image.
+Abort.
+EOT
+		exit 1
+	fi
+	[ -s /usr/share/boot/busybox-static ] || install_package busybox-static
+	need_lib=false
+	mkdir -p $TMP_DIR/initfs/bin $TMP_DIR/initfs/dev $TMP_DIR/initfs/lib \
+		 $TMP_DIR/initfs/mnt $TMP_DIR/initfs/proc $TMP_DIR/initfs/tmp \
+		 $TMP_DIR/initfs/sys
+	while [ ! -f /lib/modules/$version/kernel/fs/aufs/aufs.ko.gz ]; do
+		install_package aufs $version || return 1
+	done
+	# bootfloppybox will need floppy.ko.gz, /dev/fd0, /dev/tty0
+	cp /lib/modules/$version/kernel/drivers/block/floppy.ko.gz \
+		$TMP_DIR/initfs/lib 2> /dev/null
+	cp -a /dev/tty0 /dev/fd0 $TMP_DIR/initfs/dev 2> /dev/null
+	cp /lib/modules/$version/kernel/fs/aufs/aufs.ko.gz \
+		$TMP_DIR/initfs/lib
+	if [ -f /bin/cromfs-driver ]; then
+		cp /bin/cromfs-driver $TMP_DIR/initfs/bin
+		ls /bin/unmkcromfs | \
+			cpio -o -H newc > $TMP_DIR/initfs/extractfs.cpio
+	else
+		[ ! -f /usr/sbin/mksquashfs ] && ! install_package squashfs && return 1
+		while [ ! -f /lib/modules/$version/kernel/fs/squashfs/squashfs.ko.gz ]; do
+			install_package linux-squashfs $version || return 1
+		done
+		cp /lib/modules/$version/kernel/fs/squashfs/squashfs.ko.gz \
+			 $TMP_DIR/initfs/lib
+		ls /sbin/unsquashfs /usr/lib/liblzma.so* $INSTALLED/squashfs/* | \
+			cpio -o -H newc > $TMP_DIR/initfs/extractfs.cpio
+	fi
+	if [ "$1" == "cdrom" ]; then
+		for i in $(ls /dev/[hs]d[a-f]*); do
+			cp -a $i $TMP_DIR/initfs/dev
+		done
+	fi
+	if [ "$1" == "http" ]; then
+		mkdir $TMP_DIR/initfs/etc
+		ln -s /proc/mounts $TMP_DIR/initfs/etc/mtab
+		cp /usr/share/udhcpc/default.script $TMP_DIR/initfs/lib/udhcpc
+		sed -i 's|/sbin/||' $TMP_DIR/initfs/lib/udhcpc
+		cp -a /dev/fuse $TMP_DIR/initfs/dev
+		if ! $need_lib && [ -x /usr/share/boot/fusermount-static ]; then
+			cp /usr/share/boot/fusermount-static $TMP_DIR/initfs/bin/httpfs
+		else
+			cp /usr/bin/fusermount $TMP_DIR/initfs/bin
+			need_lib=true
+		fi
+		if ! $need_lib && [ -x /usr/share/boot/httpfs-static ]; then
+			cp /usr/share/boot/httpfs-static $TMP_DIR/initfs/bin/httpfs
+		else
+			[ ! -f /usr/bin/httpfs ] && ! install_package httpfs-fuse && return 1
+			cp /usr/bin/httpfs $TMP_DIR/initfs/bin
+			cp -a /lib/librt* $TMP_DIR/initfs/lib
+			cp -a /lib/libdl* $TMP_DIR/initfs/lib
+			cp -a /lib/libpthread* $TMP_DIR/initfs/lib
+			cp -a /usr/lib/libfuse* $TMP_DIR/initfs/lib
+			cp -a /lib/libresolv* $TMP_DIR/initfs/lib
+			cp -a /lib/libnss_dns* $TMP_DIR/initfs/lib
+			need_lib=true
+		fi
+		cd $TMP_DIR/initfs
+		echo "Getting slitaz-release..."
+		for i in $TMP_DIR/iso/boot/rootfs*.gz; do
+			( zcat $i 2> /dev/null || unlzma -c $i) | \
+			cpio -idmu etc/slitaz-release > /dev/null
+		done
+		cd - > /dev/null
+		echo "Default urls for /iso/$(cat $TMP_DIR/initfs/etc/slitaz-release)/flavors/slitaz-loram-cdrom.iso /iso/$(cat $TMP_DIR/initfs/etc/slitaz-release)/flavors/slitaz-$(cat $TMP_DIR/initfs/etc/slitaz-release)-loram-cdrom.iso: $urliso"
+		echo -n "List of urls to insert: "
+		read -t 30 urliso2
+		urliso="$urliso2 $urliso"
+	fi
+	if ! $need_lib && [ -x /usr/share/boot/busybox-static ]; then
+		cp /usr/share/boot/busybox-static $TMP_DIR/initfs/bin/busybox
+	else
+		cp /bin/busybox $TMP_DIR/initfs/bin
+		need_lib=true
+	fi
+	for i in $($TMP_DIR/initfs/bin/busybox | awk \
+	  '{ if (s) printf "%s",$0 } /Currently/ { s=1 }' | sed 's/,//g'); do
+		ln $TMP_DIR/initfs/bin/busybox $TMP_DIR/initfs/bin/$i
+	done
+	for i in /dev/console /dev/loop* /dev/null /dev/tty /dev/zero \
+		 /dev/kmem /dev/mem /dev/random /dev/urandom; do
+		cp -a $i $TMP_DIR/initfs/dev
+	done
+	$need_lib && for i in /lib/ld-* /lib/lib[cm].so* /lib/lib[cm]-* ; do
+		cp -a $i $TMP_DIR/initfs/lib
+	done
+	cat > $TMP_DIR/initfs/init <<EOTEOT
+#!/bin/sh
+
+getarg()
+{
+	grep -q " \$1=" /proc/cmdline || return 1
+	eval \$2=\$(sed "s/.* \$1=\\\\([^ ]*\\\\).*/\\\\1/" < /proc/cmdline)
+	return 0
+}
+
+copy_rootfs()
+{
+	total=\$(grep MemTotal /proc/meminfo | sed 's/[^0-9]//g')
+	need=\$(du -c \${path}rootfs* | tail -n 1 | cut -f1)
+	[ \$(( \$total / \$need )) -gt 1 ] || return 1
+	if ! grep -q " keep-loram" /proc/cmdline && cp \${path}rootfs* /mnt; then
+		path=/mnt/
+		return 0
+	else
+		rm -f /mnt/rootfs*
+		return 1
+	fi
+}
+
+echo "Switching / to tmpfs..."
+mount -t proc proc /proc
+size="\$(grep rootfssize= < /proc/cmdline | \\
+	sed 's/.*rootfssize=\\([0-9]*[kmg%]\\).*/-o size=\\1/')"
+[ -n "\$size" ] || size="-o size=90%"
+
+if [ -x /bin/httpfs ]; then	# loram-http
+
+while read var default; do
+	eval \$var=\$default
+	getarg \$var \$var
+done <<EOT
+eth	eth0
+dns	208.67.222.222,208.67.220.220
+netmask	255.255.255.0
+gw
+ip
+EOT
+if [ -n "\$ip" ]; then
+	ifconfig \$eth \$ip netmask \$netmask up
+	route add default gateway \$gw
+	for i in \$(echo \$dns | sed 's/,/ /g'); do
+		echo "nameserver \$i" >> /etc/resolv.conf
+	done
+else
+	udhcpc -f -q -s /lib/udhcpc -i \$eth
+fi
+for i in $urliso ; do
+	[ -n "\$URLISO" ] && URLISO="\$URLISO,"
+	URLISO="\${URLISO}http://\$i/iso/\$(cat /etc/slitaz-release)/flavors/slitaz-loram-cdrom.iso,http://\$i/iso/\$(cat /etc/slitaz-release)/flavors/slitaz-\$(cat /etc/slitaz-release)-loram-cdrom.iso"
+done
+getarg urliso URLISO
+DIR=fs
+if getarg loram DIR; then
+	DEVICE=\${DIR%,*}
+	DIR=/\${DIR#*,}
+fi
+mount -t tmpfs \$size tmpfs /mnt
+path2=/mnt/.httpfs/
+path=/mnt/.cdrom/
+mkdir -p /mnt/.rw \$path \$path2
+while [ ! -d \$path/boot ]; do
+	for i in \$(echo \$URLISO | sed 's/,/ /g'); do
+		httpfs \$i \$path2 && break
+	done
+	mount -o loop,ro -t iso9660 \$path2/*.iso \$path
+done
+#copy_rootfs && umount -d \$path && umount -d \$path2
+
+elif [ -f \$(echo /rootfs*.gz | cut -f1 -d' ') ]; then	# loram-ram
+
+total=\$(grep MemTotal /proc/meminfo | sed 's/[^0-9]//g')
+free=\$(grep MemFree /proc/meminfo | sed 's/[^0-9]//g')
+if [ \$(( \$total/\$free )) -gt 1 ] || ! mount -t tmpfs \$size tmpfs /mnt; then
+	echo "No tmpfs for /mnt"
+	mkdir -p /mnt/.rw
+	mount -t tmpfs tmpfs /mnt/.rw
+	mkdir -p /mnt/.rw/mnt/.rw
+	path=/
+else
+	mkdir -p /mnt/.rw
+	path=/mnt/.
+	for i in rootfs* ; do
+		mv /\$i \$path\$i
+	done
+fi
+
+else				# loram-cdrom
+
+getarg cdrom DRIVE_NAME ||
+DRIVE_NAME=\$(grep "drive name" < /proc/sys/dev/cdrom/info | cut -f 3)
+DEVICE=/dev/\$DRIVE_NAME
+DIR=fs
+if getarg loram DIR; then
+	DEVICE=\${DIR%,*}
+	DIR=/\${DIR#*,}
+fi
+mount -t tmpfs \$size tmpfs /mnt
+mkdir -p /mnt/.rw /mnt/.cdrom /mnt/mnt/.cdrom
+i=0
+while [ \$i -lt 5 ] && ! mount -r \$DEVICE /mnt/.cdrom; do
+	case "\$DEVICE" in
+	/dev/sd*|UUID=*|LABEL=*)
+		mount -t sysfs sysfs /sys
+		USBDELAY=\$(cat /sys/module/usb_storage/parameters/delay_use)
+		umount /sys
+		sleep \$((1+\$USBDELAY)) ;;
+	esac
+	i=\$((i+1))
+done
+path=/mnt/.cdrom/
+copy_rootfs && umount -d /mnt/.cdrom
+
+fi
+
+memfree=\$(grep MemFree /proc/meminfo | sed 's/[^0-9]//g')
+umount /proc
+branch=br=/mnt/.rw:/mnt/.cdrom/\$DIR
+if [ ! -d /mnt/.cdrom/\$DIR/etc ]; then
+branch=br=/mnt/.rw
+for i in \${path}rootfs* ; do
+	fs=\${i#*root}
+	branch=\$branch:/mnt/.\$fs
+	mkdir -p /mnt/.rw/mnt/.\$fs /mnt/.\$fs /mnt/.rw/mnt/.cdrom
+	if [ -f /bin/cromfs-driver ]; then
+		cromfs-driver \${path}root\$fs /mnt/.\$fs -o ro,dev,suid,allow_other
+	else
+		insmod /lib/squashfs.ko.gz 2> /dev/null
+		mount -o loop,ro -t squashfs \${path}root\$fs /mnt/.\$fs
+	fi
+done
+else
+mkdir -p /mnt/.rw/mnt/.httpfs
+fi
+insmod /lib/aufs.ko.gz
+mount -t aufs -o \$branch none /mnt
+[ -x /bin/httpfs ] && sed -i 's/DHCP="yes"/DHCP="no"/' /mnt/etc/network.conf
+[ \$memfree -lt 30000 ] && sed -i 's/ slim//' /mnt/etc/rcS.conf
+[ -x /mnt/sbin/init ] && exec /bin/switch_root mnt /sbin/init || sh
+EOTEOT
+	chmod +x $TMP_DIR/initfs/init
+	( cd $TMP_DIR/initfs ; find | busybox cpio -o -H newc 2> /dev/null) | \
+	lzma e $TMP_DIR/initfs.gz -si
+	lzma_set_size $TMP_DIR/initfs.gz
+	rm -rf $TMP_DIR/initfs
+	rem=$(( $(stat -c "%s" $TMP_DIR/initfs.gz) % 4 ))
+	[ $rem -ne 0 ] &&
+	dd if=/dev/zero bs=1 count=$(( 4 - $rem )) >> $TMP_DIR/initfs.gz 2> /dev/null
+	return 0
+}
+
+# Move each initramfs to squashfs (or cromfs)
+build_loram_rootfs_cdrom()
+{
+	mkdir -p $TMP_DIR/fs
+	cd $TMP_DIR/fs
+	for i in $(ls -r $TMP_DIR/iso/boot/rootfs*.gz); do
+		( zcat $i 2> /dev/null || unlzma -c $i) | cpio -idmu
+	done
+	rootfs=$TMP_DIR/$INITRAMFS
+	if [ -x /usr/bin/mkcromfs ]; then
+		/usr/bin/mkcromfs -qq -f 262144 -b 16384 $TMP_DIR/fs $rootfs
+	else
+		/usr/sbin/mksquashfs $TMP_DIR/fs $rootfs -comp xz -Xbcj x86
+	fi
+	rm -rf $TMP_DIR/fs
+	cd - > /dev/null
+}
+
+# Move meta boot configuration files to basic configuration files
+# because meta loram flavor is useless when rootfs is not loaded in ram
+unmeta_boot()
+{
+	local root=${1:-$TMP_DIR/loramiso}
+	if [ -f $root/boot/isolinux/noram.cfg ]; then
+		# We keep enough information to do unloram...
+		[ -s $root/boot/isolinux/common.cfg ] &&
+		sed -i 's/label slitaz/label orgslitaz/' \
+			$root/boot/isolinux/common.cfg
+		set -- $(grep 'append ifmem [0-9]' $root/boot/isolinux/isolinux.cfg)
+		shift
+		sed -i '/ifmem/{NNNNNNNNd};/^LABEL/{N;/LABEL SliTaz [^L]/{NNNd}}' \
+			$root/boot/isolinux/isolinux.cfg
+		[ -n "$3" ] || set -- $(grep 'append [0-9]' $root/boot/isolinux/common.cfg)
+		sed -i "s/label $3\$/label slitaz/;s|=/boot/rootfs\(.*\).gz |=/boot/rootfs.gz |" \
+			$root/boot/isolinux/*.cfg
+	fi
+}
+
+# Move each initramfs to squashfs (or cromfs)
+build_loram_rootfs()
+{
+	rootfs_sizes=""
+	for i in $TMP_DIR/iso/boot/rootfs*.gz; do
+		mkdir -p $TMP_DIR/fs
+		cd $TMP_DIR/fs
+		( zcat $i 2> /dev/null || unlzma -c $i) | cpio -idm
+		cd - > /dev/null
+		rootfs=$TMP_DIR/$(basename $i)
+		if [ -x /usr/bin/mkcromfs ]; then
+			/usr/bin/mkcromfs -qq -f 262144 -b 16384 $TMP_DIR/fs $rootfs
+		else
+			/usr/sbin/mksquashfs $TMP_DIR/fs $rootfs -comp xz -Xbcj x86
+		fi
+		cd $TMP_DIR
+		rootfs_sizes="$rootfs_sizes $(( $(du -s $TMP_DIR/fs | cut -f1) - $(du -s $rootfs | cut -f1) ))"
+		( cd $(dirname $rootfs); echo $(basename $rootfs) | \
+			  cpio -o -H newc ) > $rootfs.cpio
+		rm -f $rootfs
+		mv $rootfs.cpio $rootfs
+		cd - > /dev/null
+		rm -rf $TMP_DIR/fs
+	done
+}
+
+# Move rootfs to squashfs filesystem(s) to the cdrom writeable with aufs.
+# These squashfs may be loaded in ram a boot time.
+# Rootfs are also copied to cdrom for tiny ramsize systems.
+# Meta flavors are converted to normal flavors.
+build_loram_cdrom()
+{
+	build_initfs cdrom || return 1
+	build_loram_rootfs_cdrom
+	cp -a $TMP_DIR/iso $TMP_DIR/loramiso
+	if [ "$1" == "small" ]; then
+		rm -f $TMP_DIR/loramiso/boot/root*
+	else
+		mkdir $TMP_DIR/loramiso/fs
+		cd $TMP_DIR/loramiso/fs
+		for i in $( ls ../boot/root* | sort -r ) ; do
+			( zcat $i 2> /dev/null || unlzma -c $i ) | cpio -idmu
+			rm -f $i
+		done
+		mkdir -p $TMP_DIR/loramiso/fs/mnt/.cdrom
+		cd - > /dev/null
+	fi
+	mv $TMP_DIR/initfs.gz $TMP_DIR/loramiso/boot/$INITRAMFS
+	mv $TMP_DIR/rootfs*.gz $TMP_DIR/loramiso
+	unmeta_boot
+	VOLUM_NAME="SliTaz_LoRAM_CDROM"
+	sed -i "s/root=/loram=LABEL=$VOLUM_NAME,fs &/" \
+		$TMP_DIR/loramiso/boot/isolinux/*.cfg
+	create_iso $OUTPUT $TMP_DIR/loramiso
+}
+
+# Create http bootstrap to load and remove loram_cdrom
+# Meta flavors are converted to normal flavors.
+build_loram_http()
+{
+	build_initfs http || return 1
+	cp -a $TMP_DIR/iso $TMP_DIR/loramiso
+	rm -f $TMP_DIR/loramiso/boot/rootfs*
+	mv $TMP_DIR/initfs.gz $TMP_DIR/loramiso/boot/$INITRAMFS
+	unmeta_boot
+	create_iso $OUTPUT $TMP_DIR/loramiso
+}
+
+# Update meta flavor selection sizes.
+# Reduce sizes with rootfs gains.
+update_metaiso_sizes()
+{
+	for cfg in $(grep -El '(append|ifmem) [0-9]' $TMP_DIR/loramiso/boot/isolinux/*.cfg)
+	do
+		local append="$(grep -E '(append|ifmem) [0-9]' $cfg)"
+		local sizes="$rootfs_sizes"
+		local new
+		set -- $append
+		shift
+		[ "$1" == "ifmem" ] && shift
+		new=""
+		while [ -n "$2" ]; do
+			local s
+			case "$1" in
+			*G) s=$(( ${1%G} * 1024 * 1024 ));;
+			*M) s=$(( ${1%M} * 1024 ));;
+			*)  s=${1%K};;
+			esac
+			sizes=${sizes#* }
+			for i in $sizes ; do
+				s=$(( $s - $i ))
+			done
+			new="$new $s $2"
+			shift 2
+		done
+		sed -i -e "/append [0-9]/s/append .*/append$new $1/" -e \
+			"/append ifmem [0-9]/s/append .*/append ifmem$new $1/" $cfg
+	done
+}
+
+# Move rootfs to a squashfs filesystem into the initramfs writeable with aufs.
+# Meta flavor selection sizes are updated.
+build_loram_ram()
+{
+	build_initfs ram || return 1
+	build_loram_rootfs
+	cp -a $TMP_DIR/iso $TMP_DIR/loramiso
+	rm -f $TMP_DIR/loramiso/boot/bzImage
+	ln $TMP_DIR/loramiso/boot/vmlinuz* $TMP_DIR/loramiso/boot/bzImage
+	rootfs=$(ls $TMP_DIR/rootfs* | sort | tail -n 1)
+	cat $rootfs >> $TMP_DIR/initfs.gz
+	mv $TMP_DIR/initfs.gz $rootfs
+	cp $TMP_DIR/rootfs* $TMP_DIR/loramiso/boot
+	update_metaiso_sizes
+	create_iso $OUTPUT $TMP_DIR/loramiso
 }
