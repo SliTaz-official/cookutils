@@ -694,10 +694,14 @@ check_for_incoming()
 	for PACKAGE in $incoming_pkgs; do
 			prev_VERSION=$(get_pkg_version $PKGS)
 			VERSION=$(get_pkg_version $INCOMING)
-			remove_previous_package $PKGS
-			echo "Moving $PACKAGE..."
-			mv -f $INCOMING/$PACKAGE-${VERSION}${EXTRAVERSION}.tazpkg $PKGS
-			touch $PKGS/$PACKAGE-${VERSION}${EXTRAVERSION}.tazpkg
+			if [ -f $INCOMING/$PACKAGE-${VERSION}${EXTRAVERSION}.tazpkg ]; then
+				remove_previous_package $PKGS
+				echo "Moving $PACKAGE..."
+				mv -f $INCOMING/$PACKAGE-${VERSION}${EXTRAVERSION}.tazpkg $PKGS
+				touch $PKGS/$PACKAGE-${VERSION}${EXTRAVERSION}.tazpkg
+			else
+				echo "$PACKAGE doesn't exist"
+			fi
 			if [ "$AUTO_PURGE_SRC" ]; then
 				previous_tarball=$(grep ^$PACKAGE:main $SRC/sources.list | cut -f2)
 				sed -e "/^$PACKAGE:main/d" \
