@@ -95,6 +95,7 @@ genisohooks()
 	cd $here
 }
 
+# clean up TMP_MNT folder
 cleanup()
 {
 	if [ -d $TMP_MNT ]; then
@@ -532,6 +533,7 @@ mergefs()
 	status
 }
 
+# cleanup merge
 cleanup_merge()
 {
 	rm -rf $TMP_DIR
