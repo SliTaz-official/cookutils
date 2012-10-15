@@ -9,6 +9,7 @@ MODULES_DIR=$ROOTFS/modules
 CDNAME="slitaz"
 SGNFILE=$ROOTCD/${CDNAME}/livecd.sgn
 KEY_FILES="init liblinuxlive linuxrc"
+LOG=$DISTRO/log
 EXT="xz"
 COMPRESSION="xz -Xbcj x86"
 MKOPTION="-b 512k"
@@ -32,6 +33,14 @@ initramfs () {
 
 	if [ ! -d ${INIT} ]; then
 		mkdir -p $INIT
+	fi
+
+	if [ -d ${LOG} ]; then
+		rm -Rf $LOG
+	fi
+
+	if [ ! -d ${LOG} ]; then
+		mkdir -p $LOG
 	fi
 
 	info "Making bootable image"
