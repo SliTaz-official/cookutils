@@ -39,7 +39,7 @@ if test $(id -u) = 0 ; then
 	fi
 fi
 
-
+# yes or no cmdline option
 yesorno()
 {
 	echo -n "$1"
@@ -50,11 +50,13 @@ yesorno()
 	esac
 }
 
+# help print .desc files
 field()
 {
 	grep "^$1" "$2" | sed 's/.*: \([0-9KMG\.]*\).*/\1/'
 }
 
+# todo message
 todomsg()
 {
 	echo -e "\\033[70G[ \\033[1;31mTODO\\033[0;39m ]"
@@ -154,6 +156,9 @@ verify_rootcd()
 	fi
 }
 
+# create iso
+# $1 = iso name
+# $2 = rootcd path
 create_iso()
 {
 	cd $2
@@ -182,10 +187,10 @@ create_iso()
 		/usr/bin/isohybrid $1 -entry 2 2> /dev/null
 		status
 	fi
-	if [ -s /etc/slitaz/info ]; then
-		if [ $(stat -c %s /etc/slitaz/info) -lt $(( 31*1024 )) ]; then
+	if [ -s /tmp/info ]; then
+		if [ $(stat -c %s /tmp/info) -lt $(( 31*1024 )) ]; then
 			echo -n "Storing ISO info..."
-			dd if=/etc/slitaz/info bs=1k seek=1 of=$1 \
+			dd if=/tmp/info bs=1k seek=1 of=$1 \
 				conv=notrunc 2> /dev/null
 			status
 		fi
@@ -890,6 +895,7 @@ gen_flavor()
 }
 
 # tazlito get-flavor
+# $1 = flavor file
 get_flavor()
 {
 	# Get a flavor's files and prepare for gen-distro.
@@ -949,7 +955,7 @@ get_flavor()
 		sed -i "s/ISO_NAME=.*/ISO_NAME=\"slitaz-$FLAVOR\"/" cookiso.conf
 		status
 		( cd $TMP_DIR ; echo -e $infos | cpio -o -H newc ) | \
-			gzip -9 > /etc/slitaz/info
+			gzip -9 > /tmp/info
 		rm -Rf $TMP_DIR
 	fi
 	separator
@@ -987,6 +993,7 @@ clean_distro()
 }
 
 # tazlito pack-flavor
+# $1 = flavor file
 pack_flavor()
 {
 	# Create a flavor from $FLAVORS_REPOSITORY.
@@ -1094,6 +1101,7 @@ EOT
 }
 
 # tazlito extract-flavor
+# $1 = flavor file
 extract_flavor()
 {
 	# Extract a flavor into $FLAVORS_REPOSITORY.
@@ -1155,6 +1163,7 @@ extract_flavor()
 }
 
 # tazlito show-flavor
+# $1 = flavor file
 show_flavor()
 {
 	# Show flavor description.
@@ -1196,6 +1205,8 @@ list_flavors()
 }
 
 # tazlito extract-distro
+# $1 = iso image name
+# $2 = target folder of distro
 extract_distro()
 {
 	# Extract an ISO image to a directory and rebuild the LiveCD tree.
@@ -1379,13 +1390,15 @@ check_distro()
 }
 
 # tazlito writeiso
+# $1 = compression type
+# $2 = iso name
 writeiso()
 {
 	# Writefs to ISO image including /home unlike gen-distro we dont use
 	# packages to generate a rootfs, we build a compressed rootfs with all
 	# the current filesystem similar to 'tazusb writefs'.
 	#
-	DISTRO="/home/slitaz/$SLITAZ_VERSION/distro"
+	DISTRO="$SLITAZ/distro"
 	ROOTCD="$DISTRO/rootcd"
 	if [ -z $1 ]; then
 		COMPRESSION=none
