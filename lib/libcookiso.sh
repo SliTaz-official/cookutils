@@ -241,6 +241,7 @@ lzma_switches()
 	local proc=$(grep -s '^processor' < /proc/cpuinfo | wc -l)
 	echo "-d$(lzma_history_bits $1) -mt${proc:-1}"
 }
+
 lzma_set_size()
 {
 	# Update size field for lzma'd file packed using -si switch
@@ -357,6 +358,7 @@ gen_initramfs()
 	
 }
 
+# find out the distro size and number of packages
 distro_sizes()
 {
 	if [ "$time" ]; then
@@ -471,6 +473,7 @@ else
 fi
 }
 
+# get size based on package list
 get_size()
 {
 cat $LOCALSTATE/packages.list $TMP_DIR/packages.list 2>/dev/null | awk "{ \
