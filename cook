@@ -265,6 +265,8 @@ get_source() {
 	done
 }
 
+# get source tarball
+# $1 = --extract
 getsrc() {
 	gettext "Getting source for:"; echo " $pkg"
 	set_paths
@@ -312,6 +314,9 @@ getsrc() {
 	[ "$PATCH" ] && echo -e "Patch: $SRC/$PTARBALL"
 }
 
+# the base function to download sources when offline
+# This is to make sure source can be download when local-mirror 
+# script is in use.
 download_base() {
 	local URLS url alt_url orig_url orig_url_patch
 	url="$ONLINE_SRC_REPOSITORY"
@@ -391,6 +396,9 @@ extract_source() {
 	chown -R 0.0 $(pwd)
 }
 
+# Repack source tarball as .tar.lzma
+# The source tarball is extracted as $tmpsrc/$pkgsrc path
+# This way the source has a clean path when building
 repack_source() {
 	
 	# Some archives are not well done and don't extract to one dir (ex lzma).
@@ -584,6 +592,8 @@ remove_deps() {
 	fi
 }
 
+# extract path of source tarball
+# This is for the getsrc --extract option
 extract_path()
 {
 	# Some archives are not well done and don't extract to one dir (ex lzma).
@@ -1007,6 +1017,7 @@ tac()
 	sed '1!G;h;$!d' $1
 }
 
+# this function is to build the unbuild list
 unbuild()
 {
 	check_root
