@@ -12,7 +12,7 @@ INITRAMFS=rootfs.gz
 MIRROR=$DB/mirror
 [ -f "/etc/slitaz/cookiso.conf" ] && CONFIG_FILE="/etc/slitaz/cookiso.conf"
 [ -f "$TOP_DIR/cookiso.conf" ] && CONFIG_FILE="$TOP_DIR/cookiso.conf"
-DEFAULT_MIRROR="$MIRROR_URL/packages/$SLITAZ_VERSION/"
+DEFAULT_MIRROR="$MIRROR_URL/packages/$SLITAZ_RELEASE/"
 
 log=/var/log/cookiso.log
 if check_root; then
