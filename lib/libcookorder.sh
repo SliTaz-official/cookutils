@@ -446,6 +446,7 @@ scan()
 	fi
 }
 
+# update wanted.txt database
 update_wan_db()
 {
 	local PACKAGE=$PACKAGE
@@ -517,6 +518,8 @@ sort_db()
 	tac $tmp/fullco >> $fullco
 }
 
+# check for missing $PACKAGE in wok
+# used in scan function only
 check_for_missing()
 {
 	local PACKAGE=$PACKAGE
@@ -537,6 +540,8 @@ check_for_missing()
 	done
 }
 
+# look to see if package is missing in 
+# $INCOMING/packages.txt and $PKGS/packages.txt
 look_for_missing_pkg()
 {
 	for pkg in $(cat $1); do
@@ -847,6 +852,7 @@ check_so_files()
    	fi
 }
 
+# check recook reverse depends
 check_recook_rdeps()
 {
 	# Recook of reverse-depends if package was broken.
@@ -865,6 +871,7 @@ check_recook_rdeps()
 	sed "/^$PACKAGE$/d" -i $cooklist
 }
 
+# remove source folder
 remove_src()
 {
 	[ "$WANTED" ] && return
@@ -884,6 +891,7 @@ because $i uses \$src in its receipt.\n" && return
 	[ -d $WOK/$PACKAGE/source ] && rm -rf $WOK/$PACKAGE/source
 }
 
+# check for varable modification
 check_for_var_modification()
 {
 	for var in $@; do
@@ -897,6 +905,7 @@ check_for_var_modification()
 	echo -n ""
 }
 
+# clean $WOK/$PACKAGE folder
 clean()
 {
 	cd $WOK/$PACKAGE
@@ -920,6 +929,7 @@ clean()
 	done
 }
 
+# put $PACKAGE in $broken file if not already there
 set_pkg_broken()
 {
 	grep -q ^$PACKAGE$ $broken || echo $PACKAGE >> $broken
@@ -943,6 +953,7 @@ broken() {
 	cook_code=1
 }
 
+# start package database
 packages_db_start()
 {
 	if [ ! -s packages.txt ]; then
@@ -966,6 +977,7 @@ packages_db_start()
 	fi
 }
 
+# erase previous package info
 erase_package_info()
 {
 	cd $pkg_repository
@@ -982,6 +994,7 @@ erase_package_info()
 	$erase_package_info_extracmd
 }
 
+# make the end of the package database
 packages_db_end()
 {
 	cd $pkg_repository
@@ -1005,6 +1018,7 @@ packages_db_end()
 	[ -f packages.equiv ] || touch packages.equiv
 }
 
+# get packages info
 get_packages_info()
 {
 	# If there's no taz folder in the wok, extract info from the
@@ -1061,6 +1075,7 @@ BEGIN { name="" } { if (name == "") name=$0; else printf("%s: %s\n",name,$0); }'
 	$get_packages_info_extracmd
 }
 
+# gen packages database
 gen_packages_db()
 {
 	[ "$pkg_repository" ] || pkg_repository=$PKGS
@@ -1091,6 +1106,7 @@ gen_packages_db()
 	packages_db_end
 }
 
+# update package database
 update_packages_db()
 {
 	[ "$pkg_repository" ] || pkg_repository=$PKGS
@@ -1161,6 +1177,8 @@ $PACKAGE $pkg"
 	packages_db_end
 }
 
+# make package database
+# $1 = incoming/packages or the folder of the package repo
 pkgdb()
 {
 	case "$1" in
@@ -1212,6 +1230,7 @@ pkgdb()
 	echo "" && rm -f $command
 }
 
+# clean chroot
 clean_chroot()
 {
 	# Remove packages which was not in the chroot at creation time.
@@ -1237,6 +1256,7 @@ clean_chroot()
 	fi
 }
 
+# update library database file
 update_lib_db()
 {
 	# Update lib_db
@@ -1272,6 +1292,7 @@ check_for_list()
 	fi
 }
 
+# get $PACKAGE wanted and depends info into wanted.txt and depends.txt files
 get_packages_info_main()
 {
 	erase_package_info_main
@@ -1279,6 +1300,7 @@ get_packages_info_main()
 	echo -e "$PACKAGE\t "$DEPENDS" \t "$BUILD_DEPENDS" " >> depends.txt
 }
 
+# erase $PACKAGE line in wanted.txt and depends.txt
 erase_package_info_main()
 {
 	for i in wanted.txt depends.txt; do
