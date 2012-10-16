@@ -57,6 +57,7 @@ check_pkg_in_wok() {
 	echo -e " $pkg\n" && exit 1
 }
 
+# rsync wok-hg with wok
 rsync_wok() {
 	if [ -d "$WOKHG" ]; then
 		echo "Updating build wok"
@@ -97,6 +98,7 @@ get_options()
 	done
 }
 
+# gen_wan_db is to make the wanted.txt
 gen_wan_db()
 {
 	local receipt
@@ -113,6 +115,7 @@ gen_wan_db()
 	fi
 }
 
+# gen_dep_db is to make the depends.txt
 gen_dep_db()
 {
 	local pkg receipt
@@ -130,6 +133,8 @@ gen_dep_db()
 	fi
 }
 
+# gen_wok_db is to create the wok cooklist database
+# This helps create the wanted.txt, depends.txt and fullco.txt
 gen_wok_db()
 {
 	echo "Generating wok database"
@@ -145,39 +150,46 @@ gen_wok_db()
 	sort_db
 }
 
+# look for $PACKAGE in $dep_db
 look_for_dep()
 {
 	grep -m1 ^$PACKAGE$'\t' $dep_db | \
 		cut -f 2
 }
 
+# look for all $PACKAGE depends and build depends in $dep_db
 look_for_all()
 {
 	grep -m1 ^$PACKAGE$'\t' $dep_db | \
 			cut -f 2,3 | sed 's/ 	 / /'
 }
 
+# same as look_for_all function
 look_for_bdep()
 {
 	look_for_all
 }
 
+# reverse depend look up
 look_for_rdep()
 {
 	fgrep ' '$PACKAGE' ' $dep_db | cut -f 1
 }
 
+# reverse build depend look up
 look_for_rbdep()
 {
 	fgrep ' '$PACKAGE' ' $dep_db | \
 		cut -f 1,3 | fgrep ' '$PACKAGE' ' | cut -f 1
 }
 
+# look for wanted $PACKAGE in wanted.txt
 look_for_wanted()
 {
 	grep -m1 ^$PACKAGE$'\t' $wan_db | cut -f 2
 }
 
+# look for reverse wanted $PACKAGE in wanted.txt
 look_for_rwanted()
 {
 	for rwanted in $(grep $'\t'$PACKAGE$ $wan_db | cut -f 1); do
@@ -187,6 +199,7 @@ look_for_rwanted()
 	done
 }
 
+# look for -dev $WANTED packages in wanted.txt
 look_for_dev()
 {
 	WANTED=$(look_for_wanted)
@@ -196,6 +209,7 @@ look_for_dev()
 	[ -f "$WOK/$PACKAGE-dev/receipt" ] && echo $PACKAGE-dev
 }
 
+# make list with $PACKAGE and $PACKAGE-dev
 with_dev()
 {
 	for PACKAGE in $(cat); do
@@ -204,6 +218,7 @@ with_dev()
 	done
 }
 
+# make list with $PACKAGE and all its wanted receipt
 with_wanted()
 {
 	for PACKAGE in $(cat); do
@@ -253,6 +268,7 @@ check_for_commit_using_md5sum()
 	fi
 }
 
+# add changed md5sum receipts to $commits
 set_commited()
 {
 	grep -q ^$PACKAGE$ $commits || echo $PACKAGE >> $commits
@@ -260,6 +276,7 @@ set_commited()
 	update_dep_db
 }
 
+# gen md5 files for receipt and stuff files
 gen_cookmd5()
 {
 	# md5sum of cooking stuff make tazwok able to check for changes
@@ -448,12 +465,14 @@ update_wan_db()
 	unset wanted_list
 }
 
+# update depends.txt file
 update_dep_db()
 {
 	sed "/^$PACKAGE\t/d" -i $dep_db
 	echo -e $PACKAGE"\t "$DEPENDS" \t "$BUILD_DEPENDS' ' >> $dep_db
 }
 
+# create sorted fullco.txt file
 sort_db()
 {
 	#echo "Generating full cookorder (fullco)"
@@ -535,6 +554,7 @@ get_pkg_version()
 	grep -m1 -A1 -sh ^$PACKAGE$ $1/packages.txt | tail -1 | sed 's/ *//'
 }
 
+# remove previous package
 remove_previous_package()
 {
 	if [ "$prev_VERSION" ] && [ "$VERSION$EXTRAVERSION" != "$prev_VERSION" ]; then
@@ -543,6 +563,7 @@ remove_previous_package()
 	return 0
 }
 
+# create cook list
 gen_cook_list()
 {
 	#echo "Scanning wok"
@@ -577,6 +598,7 @@ gen_cook_list()
 	sort_cooklist
 }
 
+# sort cooklist
 sort_cooklist()
 {
 	if [ "$(sed 1!d $fullco)" = "#PlanSort" ]; then
@@ -652,6 +674,7 @@ look_for_cookopt()
 	return 1
 }
 
+# check $INCOMING packages into $PKGS
 check_for_incoming()
 {
 	echo "Checking that all packages were cooked OK"
@@ -757,6 +780,7 @@ gen_sources_list()
 	done
 }
 
+# get package files for building libraries.txt, files.list.lzma, and packages.desc
 get_pkg_files()
 {
 	pkg_files_dir=/tmp/cook/$(basename ${1%.tazpkg})
@@ -767,6 +791,7 @@ get_pkg_files()
 		cpio --quiet -idm library.list < $1 2>/dev/null
 }
 
+# check .so files
 check_so_files()
 {
 	pwd=$(pwd)

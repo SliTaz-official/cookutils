@@ -71,6 +71,7 @@ clean_log() {
 		-e s'|\[0;39m \]||' $LOGS/$pkg.log
 }
 
+# check if $value is empty
 if_empty_value() {
 	if [ -z "$value" ]; then
 		gettext "QA: empty variable:"; echo -e " ${var}=\"\"\n"
