@@ -19,6 +19,8 @@ error () { echo -e "\033[1;31;40m!!! \033[1;37;40m$@\033[1;0m"; }
 warn ()  { echo -e "\033[1;33;40m*** \033[1;37;40m$@\033[1;0m"; }
 info () { echo -e "\033[1;32;40m>>> \033[1;37;40m$@\033[1;0m"; }
 
+# build initramfs based one flavor
+# $1 = flavor file
 initramfs () {
 
 	FLAVOR=${1%.flavor}
@@ -68,6 +70,7 @@ initramfs () {
 
 }
 
+# build slitaz union
 slitaz_union () {
 
 	if [ -d ${MODULES_DIR}/${mod}${INSTALLED} ]; then
@@ -87,6 +90,7 @@ slitaz_union () {
 	fi
 }
 
+# build aufs union
 union () {
 	if [ "$FLAVOR_MOD" ]; then
 		UNION_MODULES="$FLAVOR_MOD"
