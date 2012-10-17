@@ -1012,6 +1012,9 @@ packages_db_end()
 	$CHECKSUM packages.$SUM | cut -f1 -d' ' > ID
 	[ -s ID ] || echo null > ID
 	
+	# sort and uniq files.list so it will be smaller
+	cat files.list | sort | uniq > files.list.sort
+	cp -a files.list.sort files.list
 	# Dont log this because lzma always output errors.
 	lzma e files.list files.list.lzma
 	rm -f files.list
