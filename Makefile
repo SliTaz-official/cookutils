@@ -29,6 +29,7 @@ install-cook:
 	install -m 0644 data/*.desktop $(DESTDIR)$(PREFIX)/share/applications
 	install -m 0644 data/cooklist $(DESTDIR)$(PREFIX)/share/cook
 	install -m 0644 data/receipt $(DESTDIR)$(PREFIX)/share/cook
+	install -m 0644 data/exclude.txt $(DESTDIR)$(PREFIX)/share/cook
 	install -m 0644 data/cooktest/* $(DESTDIR)$(PREFIX)/share/cook/cooktest
 	install -m 0644 doc/* $(DESTDIR)$(PREFIX)/share/doc/cookutils
 	install -m 0644 README $(DESTDIR)$(PREFIX)/share/doc/cookutils
@@ -40,6 +41,7 @@ uninstall-cook:
 		$(DESTDIR)$(PREFIX)/bin/cook \
 		$(DESTDIR)$(PREFIX)/bin/cooker \
 		$(DESTDIR)/etc/slitaz/cook* \
+		$(DESTDIR)$(PREFIX)/share/cook \
 		$(DESTDIR)/var/www/cooker
 
 # Libcook
