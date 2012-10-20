@@ -23,6 +23,7 @@ install-cook:
 	install -m 0755 cooker $(DESTDIR)$(PREFIX)/bin
 	install -m 0755 cookiso $(DESTDIR)$(PREFIX)/bin
 	install -m 0644 cook.conf $(DESTDIR)/etc/slitaz
+	install -m 0644 cookiso.conf $(DESTDIR)/etc/slitaz
 	install -m 0644 cook.site $(DESTDIR)/etc/slitaz
 	install -m 0644 web/* $(DESTDIR)/var/www/cgi-bin/cooker
 	install -m 0644 data/*.desktop $(DESTDIR)$(PREFIX)/share/applications
@@ -38,7 +39,7 @@ uninstall-cook:
 	rm -rf \
 		$(DESTDIR)$(PREFIX)/bin/cook \
 		$(DESTDIR)$(PREFIX)/bin/cooker \
-		$(DESTDIR)/etc/slitaz/cook.* \
+		$(DESTDIR)/etc/slitaz/cook* \
 		$(DESTDIR)/var/www/cooker
 
 # Libcook
@@ -47,10 +48,14 @@ install-libcook:
 	install -m 0755 -d $(DESTDIR)$(PREFIX)/lib/slitaz
 	install -m 0755 lib/libcook.sh $(DESTDIR)$(PREFIX)/lib/slitaz
 	install -m 0755 lib/libcookorder.sh $(DESTDIR)$(PREFIX)/lib/slitaz
+	install -m 0755 lib/libcookiso.sh $(DESTDIR)$(PREFIX)/lib/slitaz
+	install -m 0755 lib/libmodular.sh $(DESTDIR)$(PREFIX)/lib/slitaz
 
 uninstall-libcook:
 	rm -f $(DESTDIR)$(PREFIX)/lib/slitaz/libcook.sh
 	rm -f $(DESTDIR)$(PREFIX)/lib/slitaz/libcookorder.sh
+	rm -f $(DESTDIR)$(PREFIX)/lib/slitaz/libcookiso.sh
+	rm -f $(DESTDIR)$(PREFIX)/lib/slitaz/libmodular.sh
 # Cross
 
 install-cross:
