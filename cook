@@ -215,6 +215,7 @@ get_source() {
 				fi
 				create_tarball ;;
 			git*)
+				[ -f $INSTALLED/git/receipt ] || tazpkg get-install git
 				url=${file#git|}
 				gettext -e "Getting source from Git...\n"
 				echo "URL: $url"
@@ -225,6 +226,7 @@ get_source() {
 				fi
 				create_tarball ;;
 			bzr*|bazaar*)
+				[ -f $INSTALLED/bazaar/receipt ] || tazpkg get-install bazaar
 				if $(echo "$file" | fgrep -q "bzr|"); then
 					url=${file#bzr|}
 				else
@@ -235,6 +237,7 @@ get_source() {
 				bzr branch $url $pkgsrc
 				create_tarball ;;
 			cvs*)
+				[ -f $INSTALLED/cvs/receipt ] || tazpkg get-install cvs
 				url=${file#cvs|}
 				mod=$PACKAGE
 				[ "$CVS_MODULE" ] && mod=$CVS_MODULE
@@ -245,6 +248,7 @@ get_source() {
 				cvs -d:$url co $mod && mv $mod $pkgsrc
 				create_tarball ;;
 			svn*|subversion*)
+				[ -f $INSTALLED/subversion/receipt ] || tazpkg get-install subversion
 				if $(echo "$file" | fgrep -q "svn|"); then
 					url=${file#svn|}
 				else
