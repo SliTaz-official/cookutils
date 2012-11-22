@@ -1,0 +1,358 @@
+#!/bin/sh
+#
+# Tazdev - SliTaz developers and build host tool. System wide config
+# file is located at: /etc/slitaz/tazdev.conf. Keep the code clear and
+# well commented please, also: configuration variables are $UPPERCASE
+# and variables initialized by tazdev itself are $lowerspace
+#
+# (c) 2011 SliTaz GNU/Linux - GNU gpl v3
+#
+# AUTHORS
+#     Christophe Lincoln <pankso@slitaz.org>
+#     Pascal Bellard <bellard@slitaz.org>
+#
+. /lib/libtaz.sh
+
+[ -f /etc/slitaz/tazdev.conf ] && . /etc/slitaz/tazdev.conf
+[ -f tazdev.conf ] && . ./tazdev.conf
+
+if [ -z "$SLITAZ" ]; then
+	echo -e "\nNo config file found\n" && exit 1
+fi
+
+usage()
+{
+	echo -e "\nSliTaz developers and build host tool\n
+\033[1mUsage: \033[0m `basename $0` [command] [user] [stable|cooking|undigest|path]
+\033[1mCommands: \033[0m\n
+ usage               Print this short usage and command list
+ projects-stats|-ps  Display statistics about your projects
+ chroot|-c           Mount virtual fs if needed and chroot into the build env
+ gen-chroot|-gc      Generate a chroot using the last cooking base rootfs
+ umount-chroot|-uc   Unmount chroot specified on cmdline (--forced to force)
+ clean-chroot        Clean a chroot environment (skip root/ and home/)
+ purge               Remove obsolete packages and obsolete source tarballs
+ dry-purge           Show obsolete packages and obsolete source tarballs
+ push|-p             Upload new packages to the main mirror.
+ dry-push|-dp        Show what will be uploaded to the mirror. Does nothing
+ pull                Download new packages from the main mirror.
+ dry-pull            Show what will be downloaded from the mirror. Does nothing
+ pack-flavors        Pack all SliTaz Live flavors at once
+ relpkg|-rp          Archive and upload new package/project version
+ reliso|-ri          Create all main flavors (not loram)\n"
+}
+
+get_version()
+{
+	if [ "$2" = "stable" ]; then
+		version=stable
+		slitaz=$STABLE
+	elif [ -n "$2" ]; then
+		# Undigest - custom ?
+		version=$2
+		slitaz=$SLITAZ/$2
+	else
+		version=cooking
+		slitaz=$COOKING
+	fi
+	rootfs=$slitaz/chroot
+	wok=$slitaz/wok
+	SRC=$slitaz/src
+}
+
+check_mirror()
+{
+	# ping -c 1 $MIRROR
+	if [ -n "$2" ]; then
+		user=$2
+	else
+		user=$user
+	fi
+	if [ "$2" = "stable" ] || [ "$3" = "stable" ]; then
+		remote=$MIRROR_PKGS/stable/
+		local=$STABLE/packages/
+	elif [ "$2" = "undigest" ] || [ "$3" = "undigest" ]; then
+		remote=$MIRROR_PKGS/undigest/
+		local=$UNDIGEST/packages/
+	else
+		remote=$MIRROR_PKGS/cooking/
+		local=$COOKING/packages/
+	fi
+}
+
+# Bind a directory into the chroot
+bind_chroot_dir()
+{
+	mkdir -p $1 $2
+	mount -o bind $1 $2
+}
+
+# Mount virtual Kernel file systems and chroot but check that nobody
+# else has done mounts
+mount_chroot()
+{
+	if [ ! -d $rootfs/proc/1 ]; then
+		echo -ne "\nMounting virtual filesystems..."
+		mount -t proc proc $rootfs/proc
+		mount -t sysfs sysfs $rootfs/sys
+		mount -t devpts devpts $rootfs/dev/pts
+		mount -t tmpfs shm $rootfs/dev/shm
+		status
+	fi
+	# Mount source so they can be shared between cooking/stable/undigest.
+	# But do it only if it's a slitaz developement chroot.
+	fs=${rootfs}${slitaz}
+	if [ -d "$slitaz" ]; then
+		for i in src flavors xml wok-hg wok packages incoming cache log live iso; do
+			if [ "$AUFS_MODE" ]; then
+				bind_chroot_dir $slitaz/$i $fs/$i
+			else
+				mkdir -p $slitaz/$i $fs/$i
+				mount -o bind $slitaz/$i $fs/$i
+			fi
+		done
+		[ ! -d ${rootfs}${SLITAZ}/src ] && ln -sf $slitaz/src ${rootfs}${SLITAZ}/src
+		mkdir -p $rootfs/$DB/undigest/incoming
+		echo "$slitaz/packages" > $rootfs/$DB/mirror
+		echo "$slitaz/incoming" > $rootfs/$DB/undigest/incoming/mirror
+		echo "incoming" > $rootfs/$DB/priority
+	fi
+}
+
+# Unmount virtual Kernel file systems on exit and ensure we are the last
+# user before unmounting !
+umount_chroot()
+{
+	[ "$1" ] && rootfs=$1
+	fs=${rootfs}${slitaz}
+	echo -ne "\nUnmounting virtual filesystems..."
+	for i in /proc /sys /dev/pts /dev/shm; do
+		umount ${rootfs}$i
+	done
+	for i in src flavors xml wok-hg wok packages incoming cache log live iso; do
+		umount $fs/$i
+	done
+	status && echo ""
+}
+
+# Get the last cooking base rootfs, extract and configure.
+gen_new_chroot()
+{
+	echo -e "\nGenerating new chroot in : $rootfs"
+	separator	
+	mkdir -p $rootfs
+	for pkg in $CHROOT_PKGS
+	do
+		tazpkg get-install $pkg --root=$rootfs
+	done
+	echo -n "Creating resolv.conf..."
+	cat /etc/resolv.conf > $rootfs/etc/resolv.conf
+	echo -n "Copying hosts..."
+	cat /etc/hosts > $rootfs/etc/hosts
+	status
+	separator
+	echo -e "Ready to chroot. Use 'tazdev chroot [version|path]'"
+	echo -e "Example: tazdev chroot $rootfs\n"
+}
+
+# Remove obsolate slitaz packages
+purge_packages()
+{
+	arg=$1
+	tmp=/tmp/tazdev.$$
+	ls $wok | while read pkg; do
+		[ -f $wok/$pkg/taz/*/receipt ] || continue
+		unset EXTRAVERSION PACKAGE VERSION
+		. $wok/$pkg/taz/*/receipt
+		echo $pkg-${VERSION}${EXTRAVERSION}.tazpkg
+	done > $tmp
+	ls $slitaz/packages | while read pkg; do
+		case "$pkg" in
+			*.tazpkg)
+				grep -q ^$pkg$ $tmp && continue
+				echo "Remove pkg: $pkg"
+				if [ "$arg" == "purge" ]; then
+					[ -f $slitaz/packages/$pkg ] && rm -f $slitaz/packages/$pkg 
+				fi ;;
+		esac
+	done
+	rm -f $tmp
+}
+
+# Remove obsolete source tarballs
+purge_sources()
+{
+	arg=$1
+	tmp=/tmp/tazdev.$$
+	ls $wok | while read pkg; do
+		[ -f $wok/$pkg/receipt ] || continue
+		unset TARBALL
+		. $wok/$pkg/receipt
+		[ -n "$TARBALL" ] && echo $TARBALL
+		[ -n "$PATCH" ] && echo $(basename $PATCH)
+		[ -f $SRC/${SOURCE:-$PACKAGE}-${KBASEVER:-$VERSION}.tar.lzma ] && \
+			echo "${SOURCE:-$PACKAGE}-${KBASEVER:-$VERSION}.tar.lzma"
+		grep SOURCES_REPOSITORY/ $wok/$pkg/receipt | sed \
+		-e 's|.*SOURCES_REPOSITORY/\([^ ]*\)\( .*\)$|\1|' \
+		-e 's|.*SOURCES_REPOSITORY/\([^ ]*\)$|\1|' | sort | uniq | \
+		sed "s|['\"/]||g" | while read file ; do
+			eval echo $file 2> /dev/null
+		done
+	done > $tmp
+	ls $slitaz/src | while read pkg; do
+		grep -q ^$pkg$ $tmp && continue
+		echo "Remove src: $pkg"
+		if [ "$arg" == "purge" ]; then
+			[ -f $slitaz/src/$pkg ] && rm -f $slitaz/src/$pkg
+		fi
+	done
+	rm -f $tmp
+}
+
+case "$1" in
+	projects-stats|-ps)
+		echo -e "\nStatistics for: $PROJECTS\n"
+		echo -n "Project" && echo -ne "\033[24G Size" && echo -ne "\033[38G Revision"
+		echo -ne "\033[48G Version" && echo -e "\033[64G Files"
+		separator
+		cd $PROJECTS
+		for proj in *
+		do
+			rev=""
+			echo -n "$proj"
+			size=`du -sh $proj | awk '{ print $1 }'`
+			echo -ne "\033[24G $size"
+			if [ -d $proj/.hg ]; then
+				cd $proj
+				rev=`hg head --template '{rev}\n'`
+				vers=`hg tags | head -n 2 | tail -n 1 | cut -d " " -f 1`
+				echo -ne "\033[38G $rev"
+				echo -ne "\033[48G $vers" && cd ..
+			fi
+			files=`find $proj -type f | wc -l`
+			echo -e "\033[64G $files"
+		done
+		separator
+		echo "" ;;
+	chroot)
+		# Chroot into a build env. Default to cooking configured in tazdev.conf
+		check_root
+		get_version $@
+		[ -d "$2" ] && rootfs=$2
+		mount_chroot
+		echo -e "Chrooting to: $rootfs\n"
+		chroot $rootfs /bin/sh --login
+		umount_chroot ;;
+	umount-chroot|-uc)
+		check_root
+		get_version $@
+		[ "$2" ] && rootfs=$2
+		umount_chroot $rootfs ;;
+	gen-chroot|-gc)
+		check_root
+		# We can use: --rootfs=/path/to/chroot
+		if [ "$rootfs" ]; then
+			continue
+		else
+			get_version $@
+		fi
+		# Dont break another env.
+		if [ -d $rootfs/bin ]; then
+			echo -e "\nA chroot environment already exists in : $rootfs\n"
+			exit 1
+		fi
+		gen_new_chroot ;;
+	clean-chroot)
+		# Keep root/ and /home they may have a build wok, custom scripts, etc.
+		check_root
+		if [ -z "$2" ]; then
+			echo -e "\nPlease specify the path to the chroot environment to clean.\n"
+			exit 0
+		else
+			rootfs=$2
+			if [ ! -d "$rootfs" ]; then
+				echo -e "\nWarning : $rootfs doesn't exist!\n"
+				exit 1
+			fi
+		fi
+		if [ -d $rootfs/proc/1 ]; then
+			echo -e "\nWarning : $rootfs/proc mounted!\n"
+			exit 1
+		fi
+		cd $rootfs || exit 1
+		echo ""
+		boldify "Cleaning chroot: $rootfs"
+		separator
+		for i in bin dev etc init lib media mnt proc sbin sys tmp usr var run
+		do
+			echo -n "Removing: $i ($(du -sh $i | awk '{ print $1 }'))... "
+			rm -rf $i
+			status
+		done
+		separator && echo "" ;;
+	push|-p)
+		check_mirror $@
+		rsync -r -t -O -l -v -z --delete \
+			$local -e ssh $user@$MIRROR:$remote ;;
+	dry-push|-dp)
+		check_mirror $@
+		rsync -r -t -O -l -v -z --delete --dry-run \
+			$local -e ssh $user@$MIRROR:$remote ;;
+	pull)
+		check_mirror $@
+		rsync -r -t -l -v -z --delete \
+			-e ssh $user@$MIRROR:$remote $local ;;
+	dry-pull)
+		check_mirror $@
+		rsync -r -t -l -v -z --delete --dry-run \
+			-e ssh $user@$MIRROR:$remote $local ;;
+	purge|dry-purge)
+		check_root
+		get_version $@
+		purge_packages $1
+		purge_sources $1 ;;
+	relpkg|-rp)
+		# Release a slitaz sub-project and upload tarball to mirror
+		[ -z "$MIRROR_SOURCES" ] && MIRROR_SOURCES="/var/www/slitaz/mirror/sources"
+		if [ -z $2 ] || [ -z $3 ]; then
+			echo -e "\nUsage: $0 relpkg package version\n"
+			exit 0
+		fi
+		pkg=$2
+		version=$3
+		echo "" && cd $PROJECTS/$pkg
+		
+		# Sanity check
+		if ! grep -q $version$ .hgtags; then
+			echo "Missing Hg tag for version: $version"
+			echo -e "You may want to: hg tag $version && hg push\n"
+			exit 0
+		fi
+		
+		# Archive
+		echo -n "Creating tarball and md5sum for: $pkg-$version... "
+		hg archive -t tgz $pkg-$version.tar.gz
+		md5sum $pkg-$version.tar.gz > $pkg-$version.md5
+		echo "Done"
+		
+		# Upload
+		echo -n "Do you wish to upload tarball to the mirror [N/y] ? "
+		read upload
+		if [ "$upload" = "y" ]; then
+			echo "Uploading to: $MIRROR/sources/${pkg#slitaz-}"
+			scp $pkg-$version.tar.gz $pkg-$version.md5 \
+				$user@$MIRROR:$MIRROR_SOURCES/${pkg#slitaz-}
+		fi
+		
+		# Update pkg in wok
+		echo -n "Do you wish to update $pkg in wok [N/y] ? "
+		read update
+		if [ "$update" = "y" ]; then
+			cd $PROJECTS/wok
+			sed -i s"/VERSION=.*/VERSION=\"$version\"/" $pkg*/receipt
+		fi ;;
+	usage|*)
+		usage ;;
+esac
+
+exit 0
