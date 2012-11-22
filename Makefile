@@ -20,7 +20,7 @@ install-cook:
 	install -m 0755 -d $(DESTDIR)$(PREFIX)/share/cook/cooktest
 	install -m 0755 -d $(DESTDIR)$(PREFIX)/share/doc/cookutils
 	install -m 0755 tazdev/tazdev $(DESTDIR)$(PREFIX)/bin
-	install -m 0755 tazdev/tazdev.conf $(DESTDIR)/etc/slitaz
+	install -m 0644 tazdev/tazdev.conf $(DESTDIR)/etc/slitaz
 	install -m 0755 cook $(DESTDIR)$(PREFIX)/bin
 	install -m 0755 cooker $(DESTDIR)$(PREFIX)/bin
 	install -m 0755 cookiso $(DESTDIR)$(PREFIX)/bin
