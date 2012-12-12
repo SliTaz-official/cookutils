@@ -72,7 +72,7 @@ if_empty_value() {
 # Initialize files used in $CACHE
 init_db_files() {
 	gettext "Creating directories structure in:"; echo " $SLITAZ"
-	mkdir -p $WOK $PKGS $SRC $CACHE $LOGS
+	mkdir -p $WOK $PKGS $SRC $CACHE $LOGS $FEEDS
 	gettext "Creating DB files in:"; echo " $CACHE"
 	for f in $activity $command $broken $blocked
 	do
