@@ -285,7 +285,8 @@ case "${QUERY_STRING}" in
 		if [ -d "$dir/fs" ]; then
 			echo '<pre>'
 			find $dir/fs -not -type d | xargs ls -ld | \
-				sed "s|$dir/fs||" | syntax_highlighter log
+				sed "s|\(.*\) /.*\(${dir#*wok}/fs\)\(.*\)|\1 <a href=\"?download=../wok\2\3\">\3</a>|;s|\(<a.* -> .*\)\">\(.*\)</a>|\2|" | \
+				syntax_highlighter log
 			echo '</pre>'
 		else
 			echo "<pre>No files list for: $pkg</pre>"
