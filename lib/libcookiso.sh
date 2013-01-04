@@ -19,10 +19,10 @@ if check_root; then
 	newline > $log
 fi
 
-if [ ! "$CONFIG_FILE" = "" ] ; then
+if [ ! "$CONFIG_FILE" = "" ]; then
 	. $CONFIG_FILE
 else
-	if [ "$COMMAND" = "gen-config" ] ; then
+	if [ "$COMMAND" = "gen-config" ]; then
 		continue
 	else
 		echo "Unable to find any configuration file. Please read the docs"
@@ -121,7 +121,7 @@ installed_package_name()
 	package=${tazpkg%-*}
 	i=$package
 	while true; do
-		VERSION=""
+		unset VERSION
 		eval $(grep -s ^VERSION= $INSTALLED/$i/receipt)
 		unset EXTRAVERSION
 		eval $(grep -s ^EXTRAVERSION= $INSTALLED/$i/receipt)
@@ -141,7 +141,7 @@ installed_package_name()
 # Check for the rootfs tree.
 check_rootfs()
 {
-	if [ ! -d "$ROOTFS/etc" ] ; then
+	if [ ! -d "$ROOTFS/etc" ]; then
 		echo -e "\nUnable to find a distro rootfs...\n"
 		exit 0
 	fi
@@ -150,7 +150,7 @@ check_rootfs()
 # Check for the boot dir into the root CD tree.
 verify_rootcd()
 {
-	if [ ! -d "$ROOTCD/boot" ] ; then
+	if [ ! -d "$ROOTCD/boot" ]; then
 		echo -e "\nUnable to find the rootcd boot directory...\n"
 		exit 0
 	fi
@@ -301,20 +301,20 @@ write_initramfs()
 deduplicate()
 {
 	find "$@" -type f -size +0c -exec stat -c '%s-%a-%u-%g %i %h %n' {} \; | \
-	   sort | ( save=0; old_attr=""; old_inode=""; old_link=""; old_file=""
-	   while read attr inode link file; do
-	   	   [ -L "$file" ] && continue
-		   if [ "$attr" = "$old_attr" -a "$inode" != "$old_inode" ]; then
-			   if cmp "$file" "$old_file" >/dev/null 2>&1 ; then
-				   rm -f "$file"
-				   ln "$old_file" "$file"
-				   inode="$old_inode"
-				   [ "$link" = "1" ] && save="$(expr $save + ${attr%%-*})"
-			   fi
-		   fi
-		   old_attr="$attr" ; old_inode="$inode" ; old_file="$file"
-	   done
-	   echo "$save bytes saved in duplicate files."
+		sort | ( save=0; old_attr=""; old_inode=""; old_link=""; old_file=""
+		while read attr inode link file; do
+			[ -L "$file" ] && continue
+			if [ "$attr" = "$old_attr" -a "$inode" != "$old_inode" ]; then
+				if cmp "$file" "$old_file" >/dev/null 2>&1 ; then
+					rm -f "$file"
+					ln "$old_file" "$file"
+					inode="$old_inode"
+					[ "$link" = "1" ] && save="$(expr $save + ${attr%%-*})"
+				fi
+			fi
+			old_attr="$attr" ; old_inode="$inode" ; old_file="$file"
+		done
+		echo "$save bytes saved in duplicate files."
 	)
 }
 
@@ -566,7 +566,7 @@ gen_distro()
 		--force)
 			DELETE_ROOTFS="true"
 			;;
-		*)	if [ ! -f "$1" ] ; then
+		*)	if [ ! -f "$1" ]; then
 				echo -e "\nUnable to find the specified packages list."
 				echo -e "List name : $1\n"
 				exit 1
@@ -577,7 +577,7 @@ gen_distro()
 		shift
 	done
 
-	if [ -d $ROOTFS ] ; then
+	if [ -d $ROOTFS ]; then
 		# Delete $ROOTFS if --force is set on command line
 		if [ ! -z $DELETE_ROOTFS ]; then
 			rm -rf $ROOTFS
@@ -588,11 +588,15 @@ gen_distro()
 			exit 0
 		fi
 	fi
-	if [ ! -f "$LIST_NAME" -a -d $INSTALLED ] ; then
+	if [ ! -f "$LIST_NAME" -a -d $INSTALLED ]; then
 		# Build list with installed packages
 		for i in $(ls $INSTALLED); do
-			eval $(grep ^VERSION= $INSTALLED/$i/receipt)
-			EXTRAVERSION=""
+			if [ $(grep -q ^_realver $INSTALLED/$i/receipt) ]; then
+				VERSION=$(. $INSTALLED/$i/receipt 2>/dev/null ; echo $VERSION)
+			else
+				eval $(grep ^VERSION= $INSTALLED/$i/receipt)
+			fi
+			unset EXTRAVERSION
 			eval $(grep ^EXTRAVERSION= $INSTALLED/$i/receipt)
 			echo "$i-$VERSION$EXTRAVERSION" >> $LIST_NAME
 		done
@@ -647,7 +651,7 @@ gen_distro()
 		mkdir $TMP_MNT
 		if mount -r $CDROM $TMP_MNT 2> /dev/null; then
 			ln -s $TMP_MNT/boot /
-			if [ ! -d "$ADDFILES/rootcd" ] ; then
+			if [ ! -d "$ADDFILES/rootcd" ]; then
 				mkdir -p $ADDFILES/rootcd
 				for i in $(ls $TMP_MNT); do
 					[ "$i" = "boot" ] && continue
@@ -730,7 +734,7 @@ gen_distro()
 		cp $DISTRO_LIST $ROOTFS/etc/slitaz
 	fi
 	# Copy all files from $ADDFILES/rootfs to the rootfs.
-	if [ -d "$ADDFILES/rootfs" ] ; then
+	if [ -d "$ADDFILES/rootfs" ]; then
 		echo -n "Copying addfiles content to the rootfs... "
 		cp -a $ADDFILES/rootfs/* $ROOTFS
 		status
@@ -749,7 +753,7 @@ gen_distro()
 			cd $ROOTCD/boot
 			ln vmlinuz-* bzImage
 			status
-		elif [ -d "$ROOTFS/boot" ] ; then
+		elif [ -d "$ROOTFS/boot" ]; then
 			echo -n "Moving the boot directory..."
 			mv $ROOTFS/boot $ROOTCD
 			cd $ROOTCD/boot
@@ -759,7 +763,7 @@ gen_distro()
 	fi
 	cd $DISTRO
 	# Copy all files from $ADDFILES/rootcd to the rootcd.
-	if [ -d "$ADDFILES/rootcd" ] ; then
+	if [ -d "$ADDFILES/rootcd" ]; then
 		echo -n "Copying addfiles content to the rootcd... "
 		cp -a $ADDFILES/rootcd/* $ROOTCD
 		status
@@ -850,7 +854,7 @@ gen_flavor()
 	FILES="$FLAVOR.pkglist"
 	echo -n "Creating file $FLAVOR.flavor..."
 	for i in rootcd rootfs; do
-		if [ -d "$ADDFILES/$i" ] ; then
+		if [ -d "$ADDFILES/$i" ]; then
 			FILES="$FILES\n$FLAVOR.$i"
 			( cd "$ADDFILES/$i"; find . | \
 			  cpio -o -H newc 2> /dev/null | gzip -9 ) > $FLAVOR.$i
@@ -869,8 +873,12 @@ gen_flavor()
 	( cd $DISTRO; distro_sizes) >> $FLAVOR.desc
 	\rm -f $FLAVOR.pkglist $FLAVOR.nonfree 2> /dev/null
 	for i in $(ls $ROOTFS$INSTALLED); do
-		eval $(grep ^VERSION= $ROOTFS$INSTALLED/$i/receipt)
-		EXTRAVERSION=""
+		if [ $(grep -q ^_realver $ROOTFS$INSTALLED/$i/receipt) ]; then
+			eval $(. $ROOTFS$INSTALLED/$i/receipt 2>/dev/null ; echo $VERSION)
+		else
+			eval $(grep ^VERSION= $ROOTFS$INSTALLED/$i/receipt)
+		fi
+		unset EXTRAVERSION
 		eval $(grep ^EXTRAVERSION= $ROOTFS$INSTALLED/$i/receipt)
 		eval $(grep ^CATEGORY= $ROOTFS$INSTALLED/$i/receipt)
 		if [ "$CATEGORY" = "non-free" -a "${i%%-*}" != "get" ]
@@ -934,7 +942,7 @@ get_flavor()
 			fi
 		done
 		if [ -s $TMP_DIR/$FLAVOR.mirrors ]; then
-			n=""
+			unset n
 			while read line; do
 				mkdir -p $LOCALSTATE/undigest/$FLAVOR$n
 				echo "$line" > $LOCALSTATE/undigest/$FLAVOR$n/mirror
@@ -971,14 +979,14 @@ clean_distro()
 	newline
 	boldify "Cleaning : $DISTRO"
 	separator
-	if [ -d "$DISTRO" ] ; then
-		if [ -d "$ROOTFS" ] ; then
+	if [ -d "$DISTRO" ]; then
+		if [ -d "$ROOTFS" ]; then
 			echo -n "Removing the rootfs..."
 			rm -f $DISTRO/$INITRAMFS
 			rm -rf $ROOTFS
 			status
 		fi
-		if [ -d "$ROOTCD" ] ; then
+		if [ -d "$ROOTCD" ]; then
 			echo -n "Removing the rootcd..."
 			rm -rf $ROOTCD
 			status
@@ -1058,9 +1066,7 @@ pack_flavor()
 			iso_size=$(($iso_size \
 				+ $(zcat $TMP_DIR/$FLAVOR.rootcd | wc -c ) / 100 ))
 		fi
-		VERSION=""
-		MAINTAINER=""
-		ROOTFS_SELECTION=""
+		unset VERSION MAINTAINER ROOTFS_SELECTION
 		ROOTFS_SIZE="$(cent2human $unpacked_size) (estimated)"
 		INITRAMFS_SIZE="$(cent2human $packed_size) (estimated)"
 		ISO_SIZE="$(cent2human $iso_size) (estimated)"
@@ -1213,19 +1219,19 @@ extract_distro()
 	#
 	check_root
 	ISO_IMAGE=$1
-	if [ -z "$ISO_IMAGE" ] ; then
+	if [ -z "$ISO_IMAGE" ]; then
 		echo -e "\nPlease specify the path to the ISO image."
 		echo -e "Example : `basename $0` image.iso /path/target\n"
 		exit 0
 	fi
 	# Set the distro path by checking for $3 on cmdline.
-	if [ -n "$2" ] ; then
+	if [ -n "$2" ]; then
 		TARGET=$2
 	else
 		TARGET=$DISTRO
 	fi
 	# Exit if existing distro is found.
-	if [ -d "$TARGET/rootfs" ] ; then
+	if [ -d "$TARGET/rootfs" ]; then
 		echo -e "\nA rootfs exists in : $TARGET"
 		echo -e "Please clean the distro tree or change directory path.\n"
 		exit 0
@@ -1378,7 +1384,7 @@ check_distro()
 		status
 	fi
 	# Isolinux msg
-	if grep -q "cooking-XXXXXXXX" /$ROOTCD/boot/isolinux/isolinux.*g; then
+	if grep -q "cooking-XXXXXXXX" $ROOTCD/boot/isolinux/isolinux.*g; then
 		echo -n "Isolinux msg : Missing cooking date XXXXXXXX (ex `date +%Y%m%d`)"
 		todomsg
 	else
@@ -1903,7 +1909,7 @@ unmeta_boot()
 # Move each initramfs to squashfs (or cromfs)
 build_loram_rootfs()
 {
-	rootfs_sizes=""
+	unset rootfs_sizes
 	for i in $TMP_DIR/iso/boot/rootfs*.gz; do
 		mkdir -p $TMP_DIR/fs
 		cd $TMP_DIR/fs
@@ -1980,7 +1986,7 @@ update_metaiso_sizes()
 		set -- $append
 		shift
 		[ "$1" == "ifmem" ] && shift
-		new=""
+		unset new
 		while [ -n "$2" ]; do
 			local s
 			case "$1" in
