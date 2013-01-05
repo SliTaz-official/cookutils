@@ -654,7 +654,7 @@ cookit_quality() {
 		echo -e "ERROR: cook failed" | tee -a $LOGS/$pkg.log
 	fi
 	# ERROR can be echoed any time in cookit()
-	if grep -eq '(ERROR:|make: ***|undefined reference to)' $LOGS/$pkg.log; then
+	if grep -Eq '(ERROR:|undefined reference to)' $LOGS/$pkg.log; then
 		debug_info | tee -a $LOGS/$pkg.log
 		rm -f $command && exit 1
 	fi
