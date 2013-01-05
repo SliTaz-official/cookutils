@@ -654,7 +654,7 @@ cookit_quality() {
 		echo -e "ERROR: cook failed" | tee -a $LOGS/$pkg.log
 	fi
 	# ERROR can be echoed any time in cookit()
-	if fgrep -q ERROR: $LOGS/$pkg.log; then
+	if grep -eq '(ERROR:|make: ***|undefined reference to)' $LOGS/$pkg.log; then
 		debug_info | tee -a $LOGS/$pkg.log
 		rm -f $command && exit 1
 	fi
@@ -1348,7 +1348,7 @@ EOT
 		clean_log
 
 		# Exit if any error in packing.
-		if grep -q ^ERROR $LOGS/$pkg.log; then
+		if grep -Eq '(^ERROR|No such file or directory)' $LOGS/$pkg.log; then
 			debug_info | tee -a $LOGS/$pkg.log
 			rm -f $command && exit 1
 		fi
