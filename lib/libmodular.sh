@@ -156,6 +156,10 @@ union () {
 	info "Removing unionfs .wh. files."
 	find ${MODULES_DIR} -type f -name ".wh.*" -exec rm {} \;
 	find ${MODULES_DIR} -type d -name ".wh.*" -exec rm -rf {} \;
+	
+	for mod1 in $UNION_MODULES; do
+		_mksquash $MODULES_DIR/$mod1 $ROOTCD/$CDNAME/base $INSTALLED
+	done
 }
 
 # _mksquash dirname
