@@ -202,6 +202,7 @@ gen_livecd_isolinux()
 {
 	# Some packages may want to alter iso
 	genisohooks iso
+	[ -f $ROOTFS/boot/isolinux ] && cp -a $ROOTFS/boot/isolinux $ROOTCD/boot
 	if [ ! -f "$ROOTCD/boot/isolinux/isolinux.bin" ]; then
 		echo -e "\nUnable to find isolinux binary.\n"
 		cleanup
@@ -351,6 +352,7 @@ gen_initramfs()
 	done
 	echo -e "\n"
 	cd $DISTRO
+	[ -d $ROOTCD/boot ] || mkdir -p $ROOTCD/boot
 	if [ $MODULAR ]; then
 		mv $INITRAMFS $ROOTCD/boot
 	else
@@ -372,7 +374,7 @@ distro_sizes()
 		sec=$time
 		div=$(( ($time + 30) / 60))
 		[ "$div" != 0 ] && min="~ ${div}m"
-		echo "Build time      : ${sec}s $min"
+		echo "Build time       : ${sec}s $min"
 	fi
 	if [ "$MODULAR" ]; then
 		PKGS_NUM=$(ls -1 $ROOTFS/modules/*$INSTALLED/*/receipt | wc -l)
@@ -760,6 +762,12 @@ gen_distro()
 			ln vmlinuz-* bzImage
 			status
 		fi
+	elif [ -d "$ROOTFS/boot" ]; then
+		echo -n "Moving the boot directory..."
+		cp -a $ROOTFS/boot $ROOTCD
+		cd $ROOTCD/boot
+		ln vmlinuz-* bzImage
+		status
 	fi
 	cd $DISTRO
 	# Copy all files from $ADDFILES/rootcd to the rootcd.
