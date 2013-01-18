@@ -1,3 +1,4 @@
+.hg/
 */source
 */taz
 */install
