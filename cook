@@ -174,6 +174,7 @@ create_tarball() {
 # Get package source. For SCM we are in cache so clone here and create a
 # tarball here.
 get_source() {
+	set_paths
 	pwd=$(pwd)
 	case "$WGET_URL" in
 		http://*|ftp://*)
