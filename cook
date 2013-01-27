@@ -1343,10 +1343,10 @@ EOT
 		done
 
 		# Cook and pack or exit on error and log everything.
-		cookit $@ 2>&1 | tee $LOGS/$pkg.log
+		cookit $@ 2>&1 | dd bs=1024k count=50 | tee $LOGS/$pkg.log
 		remove_deps | tee -a $LOGS/$pkg.log
 		cookit_quality
-		packit 2>&1 | tee -a $LOGS/$pkg.log
+		packit 2>&1 | dd bs=1024k count=5 |tee -a $LOGS/$pkg.log
 		clean_log
 
 		# Exit if any error in packing.
