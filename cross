@@ -2,7 +2,7 @@
 #
 # Cross - Help build a cross toolchain on SliTaz.
 #
-# Copyright 2012 (C) SliTaz GNU/Linux - BSD License
+# Copyright 2012-2013 (C) SliTaz GNU/Linux - BSD License
 # Author: Christophe Lincoln <pankso@slitaz.org>
 #
 . /lib/libtaz.sh
