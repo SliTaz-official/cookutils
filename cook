@@ -894,7 +894,7 @@ EOT
 # Truncate stdout log file to $1 Mb. 
 loglimit()
 {
-	tee /dev/stderr | dd bs=1024k count=${1:-50} 2> /dev/null
+	tee /dev/stderr | dd bs=1024k count=${1:-50} conv=noerror 2> /dev/null
 }
 
 #
