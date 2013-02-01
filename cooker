@@ -40,6 +40,14 @@ Options:
   cat|-c          $(gettext "Cook all packages of a category.")
   rev|-r          $(gettext "Cook packages of a specific revision.")
   all|-a          $(gettext "Find and cook all unbuilt packages.")
+  cook commands:
+  upwok           $(gettext "Update wok.")
+  new             $(gettext "Create a new package with a receipt.")
+  gen-wok-db      $(gettext "Build cook order files.")
+  gen-src         $(gettext "Build source list.")
+  check-incoming  $(gettext "Move incoming packages to packages folder.")
+  pkgdb           $(gettext "Create packages DB lists and flavors.")
+  
 
 EOT
 	exit 0
