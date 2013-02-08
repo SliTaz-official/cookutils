@@ -1110,7 +1110,12 @@ gen_rss() {
 EOT
 }
 
-
+# Truncate stdout log file to $1 Mb
+loglimit()
+{
+	[ -n "$DEFAULT_LOG_LIMIT" ] || return
+	tee /dev/stderr | dd bs=1024k count=${1:-$DEFAULT_LOG_LIMIT} 2> /dev/null
+}
 
 #
 # Commands
@@ -1665,13 +1670,13 @@ case "$COMMAND" in
 		fi
 		
 		# Cook and pack or exit on error and log everything.
-		cookit $@ 2>&1 | tee $LOGS/$pkg.log
+		cookit $@ 2>&1 | loglimit 50 > $LOGS/$pkg.log
 		remove_deps | tee -a $LOGS/$pkg.log
 		if [ "$CLEAN_CHROOT" ]; then
 			clean_chroot | tee -a $LOGS/$pkg.log
 		fi
 		cookit_quality
-		packit 2>&1 | tee -a $LOGS/$pkg.log
+		packit 2>&1 | loglimit 5 >> $LOGS/$pkg.log
 		clean_log
 
 		# Exit if any error in packing.
