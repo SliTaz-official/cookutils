@@ -190,7 +190,7 @@ case "${QUERY_STRING}" in
 			fi
 			echo "<h3>Cook log</h3>"
 			echo '<pre>'
-			cat $log | syntax_highlighter log
+			cat $log | sed 's/&/\&amp;/g;s/</&lt;/g;s/>/&gt;/g' | syntax_highlighter log
 			echo '</pre>'
 		else
 			echo "<pre>No log: $pkg</pre>"
