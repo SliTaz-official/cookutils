@@ -70,7 +70,8 @@ fi
 syntax_highlighter() {
 	case $1 in
 		log)
-			sed -e 's#OK$#<span class="span-ok">OK</span>#g' \
+			sed -e 's/&/\&amp;/g;s/</\&lt;/g;s/>/\&gt;/g' \
+				-e 's#OK$#<span class="span-ok">OK</span>#g' \
 				-e 's#Done$#<span class="span-ok">Done</span>#g' \
 				-e 's#yes$#<span class="span-ok">yes</span>#g' \
 				-e 's#no$#<span class="span-no">no</span>#g' \
@@ -190,7 +191,7 @@ case "${QUERY_STRING}" in
 			fi
 			echo "<h3>Cook log</h3>"
 			echo '<pre>'
-			cat $log | sed 's/&/\&amp;/g;s/</&lt;/g;s/>/&gt;/g' | syntax_highlighter log
+			cat $log | syntax_highlighter log
 			echo '</pre>'
 		else
 			echo "<pre>No log: $pkg</pre>"
