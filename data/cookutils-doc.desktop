@@ -1,6 +1,7 @@
 [Desktop Entry]
+Type=Application
 Name=Cookutils Doc
+Name[ru]=Документация CookUtils
 Exec=browser file:///usr/share/doc/cookutils/cookutils.html
 Icon=text-html
-Type=Application
-Categories=Documentation;
+Categories=Documentation;System;

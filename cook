@@ -237,6 +237,24 @@ get_source() {
 				echo t | svn co $url $pkgsrc
 			fi
 			create_tarball ;;
+		bzr*)
+			url=${WGET_URL#bzr|}
+			gettext -e "Getting source from bazaar...\n"
+			cd $SRC
+			pkgsrc=${url#*:}
+			if [ "$BRANCH" ]; then
+				echo "bzr -Ossl.cert_reqs=none branch $url -r $BRANCH"
+				bzr -Ossl.cert_reqs=none branch $url -r $BRANCH
+			else
+				echo "bzr -Ossl.cert_reqs=none branch $url"
+				bzr -Ossl.cert_reqs=none branch $url
+				cd $pkgsrc && BRANCH=$(bzr revno) && cd ..
+				gettext -e "Don't forget to add to receipt:\n"
+				echo -e 'BRANCH="'$BRANCH'"'"\n\n"
+			fi
+			mv $pkgsrc $pkgsrc-$BRANCH
+			pkgsrc=$pkgsrc-$BRANCH
+			create_tarball ;;
 		*)
 			gettext -e "\nERROR: Unable to handle:"; echo -e " $WGET_URL \n" | \
 				tee -a $LOGS/$PACKAGE.log
