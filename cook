@@ -858,6 +858,7 @@ try_aufs_chroot() {
 
 	# Can we setup the chroot ? Is it already done ?
 	grep -q ^AUFS_NOT_SUPPORTED $receipt && return
+	grep -q ^AUFS_NOT_RAMFS $receipt && base=/mnt/aufsmnt$$
 	[ -n "$AUFS_MOUNTS" -a ! -f /aufs-umount.sh ] || return
 	lsmod | grep -q aufs || modprobe aufs 2> /dev/null || return
 	mkdir ${base}root ${base}rw || return
