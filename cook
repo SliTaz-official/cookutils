@@ -8,6 +8,20 @@
 #
 . /usr/lib/slitaz/libcook.sh
 
+VERSION="3.1.4"
+
+# Internationalization.
+. /usr/bin/gettext.sh
+TEXTDOMAIN='cook'
+export TEXTDOMAIN
+
+_()  echo -e "$(eval_gettext "$1")"
+_n() echo -en "$(eval_gettext "$1")"
+# to disable i18n:
+# _()  echo -e "$1"
+# _n() echo -en "$1"
+
+
 #
 # Functions
 #
@@ -15,35 +29,35 @@
 usage() {
 	cat << EOT
 
-$(echo -e "\033[1m$(gettext "Usage:")\033[0m") cook [package|command] [list|--option]
+$(_ "\033[1mUsage:\033[0m cook [package|command] [list|--option]")
 
-$(echo -e "\033[1m$(gettext "Commands:")\033[0m")
-  usage|help         $(gettext "Display this short usage.")
-  setup              $(gettext "Setup your build environment.")
-  *-setup            $(gettext "Setup a cross environment.")
-  test               $(gettext "Test environment and cook a package.")
-  list-wok           $(gettext "List packages in the wok.")
-  search             $(gettext "Simple packages search function.")
-  new                $(gettext "Create a new package with a receipt".)
-  list               $(gettext "Cook a list of packages.")
-  clean-wok          $(gettext "Clean-up all packages files.")
-  clean-src          $(gettext "Clean-up all packages sources.")
-  pkgdb              $(gettext "Create packages DB lists and flavors.")
+$(_ "\033[1mCommands:\033[0m")
+  usage|help         $(_ "Display this short usage.")
+  setup              $(_ "Setup your build environment.")
+  *-setup            $(_ "Setup a cross environment.")
+  test               $(_ "Test environment and cook a package.")
+  list-wok           $(_ "List packages in the wok.")
+  search             $(_ "Simple packages search function.")
+  new                $(_ "Create a new package with a receipt.")
+  list               $(_ "Cook a list of packages.")
+  clean-wok          $(_ "Clean-up all packages files.")
+  clean-src          $(_ "Clean-up all packages sources.")
+  pkgdb              $(_ "Create packages DB lists and flavors.")
 
-$(echo -e "\033[1m$(gettext "Options:")\033[0m")
-  --clean|-c         Cook : $(gettext "clean the package in the wok.")
-  --install|-i       Cook : $(gettext "cook and install the package.")
-  --getsrc|-gs       Cook : $(gettext "get the package source tarball.")
-  --block|-b         Cook : $(gettext "Block a package so cook will skip it.")
-  --unblock|-ub      Cook : $(gettext "Unblock a blocked package.")
-  --pack             Cook : $(gettext "repack an already built package.")
-  --interactive|-x   New  : $(gettext "create a receipt interactively.")
-  --wok              Setup: $(gettext "clone the cooking wok from Hg repo.")
-  --stable           Setup: $(gettext "clone the stable wok from Hg repo.")
-  --undigest         Setup: $(gettext "clone the undigest wok from Hg repo.")
-  --tiny             Setup: $(gettext "clone the tiny SliTaz wok from Hg repo.")
-  --forced           Setup: $(gettext "force reinstall of chroot packages.")
-  --flavors          Pkgdb: $(gettext "create up-to-date flavors files.")
+$(_ "\033[1mOptions:\033[0m")
+  --clean|-c         Cook : $(_ "clean the package in the wok.")
+  --install|-i       Cook : $(_ "cook and install the package.")
+  --getsrc|-gs       Cook : $(_ "get the package source tarball.")
+  --block|-b         Cook : $(_ "block a package so cook will skip it.")
+  --unblock|-ub      Cook : $(_ "unblock a blocked package.")
+  --pack             Cook : $(_ "repack an already built package.")
+  --interactive|-x   New  : $(_ "create a receipt interactively.")
+  --wok              Setup: $(_ "clone the cooking wok from Hg repo.")
+  --stable           Setup: $(_ "clone the stable wok from Hg repo.")
+  --undigest         Setup: $(_ "clone the undigest wok from Hg repo.")
+  --tiny             Setup: $(_ "clone the tiny SliTaz wok from Hg repo.")
+  --forced           Setup: $(_ "force reinstall of chroot packages.")
+  --flavors          Pkgdb: $(_ "create up-to-date flavors files.")
 
 EOT
 	exit 0
@@ -58,23 +72,24 @@ clean_log() {
 # Be sure package exists in wok.
 check_pkg_in_wok() {
 	if [ ! -d "$WOK/$pkg" ]; then
-		gettext -e "\nUnable to find package in the wok:"
-		echo -e " $pkg\n" && exit 1
+		newline; _ "Unable to find package in the wok: \$pkg"; newline
+		exit 1
 	fi
 }
 
 if_empty_value() {
 	if [ -z "$value" ]; then
-		gettext "QA: empty variable:"; echo -e " ${var}=\"\"\n"
+		# L10n: QA is quality assurance
+		_ "QA: empty variable: \${var}=\"\""; newline
 		exit 1
 	fi
 }
 
 # Initialize files used in $CACHE
 init_db_files() {
-	gettext "Creating directories structure in:"; echo " $SLITAZ"
+	_ "Creating directories structure in: \$SLITAZ"
 	mkdir -p $WOK $PKGS $SRC $CACHE $LOGS $FEEDS
-	gettext "Creating DB files in:"; echo " $CACHE"
+	_ "Creating DB files in: \$CACHE"
 	for f in $activity $command $broken $blocked
 	do
 		touch $f
@@ -83,7 +98,7 @@ init_db_files() {
 
 # QA: check a receipt consistency before building.
 receipt_quality() {
-	gettext -e "QA: checking package receipt...\n"
+	_ "QA: checking package receipt..."
 	unset online
 	if ifconfig | grep -q -A 1 "^[a-z]*[0-9]" | fgrep 'addr:'; then
 		online="online"
@@ -97,10 +112,11 @@ receipt_quality() {
 				if_empty_value ;;
 			CATEGORY)
 				[ -z "$value" ] && value="empty"
-				valid="$PKGS_CATEGORIES"
+				valid="$(echo $PKGS_CATEGORIES)" # avoid newlines
 				if ! echo "$valid" | grep -q -w "$value"; then
-					gettext "QA: unknown category:"; echo -e " $value\n"
-					exit 1
+					_ "QA: unknown category: \$value"
+					_ "Please, use one of: \$valid" | busybox fold -s
+					newline; exit 1
 				fi ;;
 			WEB_SITE)
 				# We don't check WGET_URL since if dl is needed it will fail.
@@ -108,7 +124,7 @@ receipt_quality() {
 				if_empty_value
 				[ -z "$online" ] || break
 				if ! busybox wget -T 12 -s $value 2>/dev/null; then
-					gettext "QA: Unable to reach:"; echo -e " $value"
+					_ "QA: unable to reach: \$value"
 				fi ;;
 		esac
 	done
@@ -161,7 +177,7 @@ create_tarball() {
 	local tarball
 	tarball=$pkgsrc.tar.bz2
 	[ "$LZMA_SRC" ] && tarball=$lzma_tarball
-	gettext "Creating tarball: "; echo "$tarball"
+	_ "Creating tarball: \$tarball"
 	if [ "$LZMA_SRC" ]; then
 		tar -c $pkgsrc | lzma e $SRC/$tarball -si $LZMA_SET_DIR || exit 1
 		LZMA_SRC=""
@@ -181,35 +197,35 @@ get_source() {
 		http://*|ftp://*)
 			# Busybox Wget is better!
 			busybox wget -T 60 -c -O $SRC/$TARBALL $WGET_URL || \
-				(echo -e "ERROR: wget $WGET_URL" && exit 1) ;;
+				(_ "ERROR: wget \$WGET_URL" && exit 1) ;;
 		https://*)
 			wget -c --no-check-certificate -O $SRC/$TARBALL $WGET_URL || \
-				(echo -e "ERROR: wget $WGET_URL" && exit 1) ;;
+				(_ "ERROR: wget \$WGET_URL" && exit 1) ;;
 		hg*|mercurial*)
 			if $(echo "$WGET_URL" | fgrep -q "hg|"); then
 				url=${WGET_URL#hg|}
 			else
 				url=${WGET_URL#mercurial|}
 			fi
-			gettext -e "Getting source from Hg...\n"
-			echo "URL: $url"
-			gettext "Cloning to: "; echo "$pwd/$pkgsrc"
+			_ "Getting source from Hg..."
+			_ "URL: \$url"
+			_ "Cloning to: \$pwd/\$pkgsrc"
 			if [ "$BRANCH" ]; then
-				echo "Hg branch: $BRANCH"
+				_ "Hg branch: \$BRANCH"
 				hg clone $url --rev $BRANCH $pkgsrc || \
-					(echo "ERROR: hg clone $url --rev $BRANCH" && exit 1)
+					(_ "ERROR: hg clone \$url --rev \$BRANCH" && exit 1)
 			else
-				hg clone $url $pkgsrc || (echo "ERROR: hg clone $url" && exit 1)
+				hg clone $url $pkgsrc || (_ "ERROR: hg clone \$url" && exit 1)
 			fi
 			rm -rf $pkgsrc/.hg
 			create_tarball ;;
 		git*)
 			url=${WGET_URL#git|}
-			gettext -e "Getting source from Git...\n"
-			echo "URL: $url"
-			git clone $url $pkgsrc || (echo "ERROR: git clone $url" && exit 1)
+			_ "Getting source from Git..."
+			_ "URL: \$url"
+			git clone $url $pkgsrc || (_ "ERROR: git clone \$url" && exit 1)
 			if [ "$BRANCH" ]; then
-				echo "Git branch: $BRANCH"
+				_ "Git branch: \$BRANCH"
 				cd $pkgsrc && git checkout $BRANCH && cd ..
 			fi
 			create_tarball ;;
@@ -217,10 +233,10 @@ get_source() {
 			url=${WGET_URL#cvs|}
 			mod=$PACKAGE
 			[ "$CVS_MODULE" ] && mod=$CVS_MODULE
-			gettext -e "Getting source from CVS...\n"
-			echo "URL: $url"
-			[ "$CVS_MODULE" ] && echo "CVS module: $mod"
-			gettext "Cloning to: "; echo "$pwd/$mod"
+			_ "Getting source from CVS..."
+			_ "URL: \$url"
+			[ "$CVS_MODULE" ] && _ "CVS module: \$mod"
+			_ "Cloning to: \$pwd/\$mod"
 			cvs -d:$url co $mod && mv $mod $pkgsrc
 			create_tarball ;;
 		svn*|subversion*)
@@ -229,8 +245,8 @@ get_source() {
 			else
 				url=${WGET_URL#subversion|}
 			fi
-			gettext -e "Getting source from SVN...\n"
-			echo "URL: $url"
+			_ "Getting source from SVN..."
+			_ "URL: \$url"
 			if [ "$BRANCH" ]; then
 				echo t | svn co $url -r $BRANCH $pkgsrc
 			else
@@ -239,7 +255,7 @@ get_source() {
 			create_tarball ;;
 		bzr*)
 			url=${WGET_URL#bzr|}
-			gettext -e "Getting source from bazaar...\n"
+			_ "Getting source from bazaar..."
 			cd $SRC
 			pkgsrc=${url#*:}
 			if [ "$BRANCH" ]; then
@@ -249,14 +265,14 @@ get_source() {
 				echo "bzr -Ossl.cert_reqs=none branch $url"
 				bzr -Ossl.cert_reqs=none branch $url
 				cd $pkgsrc && BRANCH=$(bzr revno) && cd ..
-				gettext -e "Don't forget to add to receipt:\n"
-				echo -e 'BRANCH="'$BRANCH'"'"\n\n"
+				_ "Don't forget to add to receipt:"
+				echo 'BRANCH="'$BRANCH'"'; newline
 			fi
 			mv $pkgsrc $pkgsrc-$BRANCH
 			pkgsrc=$pkgsrc-$BRANCH
 			create_tarball ;;
 		*)
-			gettext -e "\nERROR: Unable to handle:"; echo -e " $WGET_URL \n" | \
+			(newline; _ "ERROR: Unable to handle: \$WGET_URL"; newline) | \
 				tee -a $LOGS/$PACKAGE.log
 			exit 1 ;;
 	esac
@@ -268,10 +284,10 @@ extract_source() {
 		local url
 		url="$MIRROR_URL/sources/packages"
 		url=$url/${TARBALL:0:1}/$TARBALL
-		gettext "Getting source from mirror:"; echo " $url"
-		busybox wget -c -P $SRC $url || echo -e "ERROR: wget $url"
+		_ "Getting source from mirror: \$url"
+		busybox wget -c -P $SRC $url || _ "ERROR: wget \$url"
 	fi
-	gettext "Extracting:"; echo " $TARBALL"
+	_ "Extracting: \$TARBALL"
 	case "$TARBALL" in
 		*.tar.gz|*.tgz) tar xzf $SRC/$TARBALL 2>/dev/null ;;
 		*.tar.bz2|*.tbz|*.tbz2) tar xjf $SRC/$TARBALL 2>/dev/null ;;
@@ -295,41 +311,46 @@ summary() {
 	size=$(du -sh $PKGS/$pkg-${VERSION}*.tazpkg | awk '{print $1}')
 	files=$(cat $WOK/$pkg/taz/$pkg-*/files.list | wc -l)
 	[ "$TARBALL" ] && srcsize=$(du -sh $SRC/$TARBALL | awk '{print $1}')
-	cookdate=$(date "+%Y-%m-%d %H:%M")
+	cookdate=$(date "$(_ '+%Y-%m-%d %H:%M')")
 	sec=$time
 	div=$(( ($time + 30) / 60))
-	[ "$div" != 0 ] && min="~ ${div}m"
-	gettext "Summary for:"; echo " $PACKAGE $VERSION"
+	# L10n: 'm' is for minutes (approximate cooking time)
+	min=$(_n "~ \${div}m"); [ "$div" = 0 ] && min=""
+	_ "Summary for: \$PACKAGE \$VERSION"
 	separator
-	[ "$srcdir" ] && echo "Source dir  : $srcdir"
-	[ "$TARBALL" ] && echo "Src file    : $TARBALL"
-	[ "$srcsize" ] && echo "Src size    : $srcsize"
-	[ "$prod" ] && echo "Produced    : $prod"
-	cat << EOT
-Packed      : $fs
-Compressed  : $size
-Files       : $files
-Cook time   : ${sec}s $min
-Cook date   : $cookdate
-Host arch   : $ARCH
-$(separator)
-EOT
+	# L10n: keep the same width of translations to get a consistent view
+	[ "$srcdir" ]  && _ "Source dir  : \$srcdir"
+	[ "$TARBALL" ] && _ "Src file    : \$TARBALL"
+	[ "$srcsize" ] && _ "Src size    : \$srcsize"
+	[ "$prod" ]    && _ "Produced    : \$prod"
+	_ "Packed      : \$fs"
+	_ "Compressed  : \$size"
+	_ "Files       : \$files"
+	# L10n: 's' is for seconds (cooking time)
+	_ "Cook time   : \${sec}s \$min"
+	_ "Cook date   : \$cookdate"
+	_ "Host arch   : \$ARCH"
+	separator
 }
 
 # Display debugging error info.
 debug_info() {
-	echo -e "\nDebug information"
-	separator
-	echo "Cook date: $(date '+%Y-%m-%d %H:%M')"
+	newline; _ "Debug information"; separator
+	# L10n: specify your format of date and time (to help: man date)
+	# L10n: not bad one is '+%x %R'
+	datenow=$(date "$(_ '+%Y-%m-%d %H:%M')")
+	_ "Cook date: \$datenow"
+	# L10n: Please, translate all messages beginning with ERROR in a same way
+	lerror=$(_n "ERROR")
 	for error in \
-		ERROR "No package" "cp: can't" "can't open" "can't cd" \
+		ERROR $lerror "No package" "cp: can't" "can't open" "can't cd" \
 		"error:" "fatal error:" "undefined reference to" \
 		"Unable to connect to" "link: cannot find the library" \
 		"CMake Error"
 	do
 		fgrep "$error" $LOGS/$pkg.log
 	done
-	separator && newline
+	separator; newline
 }
 
 # Copy all generic files (locale, pixmaps, .desktop). We use standard paths,
@@ -395,7 +416,7 @@ copy_generic_files()
 	fi
 }
 
-# Find and strip : --strip-all (-s) or --strip-debug on static libs as well
+# Find and strip: --strip-all (-s) or --strip-debug on static libs as well
 # as removing uneeded files like in Python packages. Cross compiled binaries
 # must be stripped with cross-tools aka $ARCH-slitaz-*-strip
 strip_package() {
@@ -403,7 +424,7 @@ strip_package() {
 		arm|x86_64) export STRIP=${HOST_SYSTEM}-strip ;;
 		*) export STRIP=strip ;;
 	esac
-	gettext "Executing strip on all files..."
+	_n "Executing strip on all files..."
 	for dir in $fs/bin $fs/sbin $fs/usr/bin $fs/usr/sbin $fs/usr/games
 	do
 		if [ -d "$dir" ]; then
@@ -416,7 +437,7 @@ strip_package() {
 
 	# Remove Python .pyc and .pyo from packages.
 	if echo "$PACKAGE $DEPENDS" | fgrep -q "python"; then
-		gettext "Removing Python compiled files..."
+		_n "Removing Python compiled files..."
 		find $fs -type f -name "*.pyc" -delete 2>/dev/null
 		find $fs -type f -name "*.pyo" -delete 2>/dev/null
 		status
@@ -424,7 +445,7 @@ strip_package() {
 
 	# Remove Perl perllocal.pod and .packlist from packages.
 	if echo "$DEPENDS" | fgrep -q "perl"; then
-		gettext "Removing Perl compiled files..."
+		_n "Removing Perl compiled files..."
 		find $fs -type f -name "perllocal.pod" -delete 2>/dev/null
 		find $fs -type f -name ".packlist" -delete 2>/dev/null
 		status
@@ -438,14 +459,14 @@ remove_deps() {
 	if [ -s "$CACHE/installed.cook.diff" ]; then
 		deps=$(cat $diff | grep ^+[a-zA-Z0-9] | sed s/^+//)
 		nb=$(cat $diff | grep ^+[a-zA-Z0-9] | wc -l)
-		gettext "Build dependencies to remove:"; echo " $nb $root"
-		gettext "Removing:"
+		_n "Build dependencies to remove: "; echo $nb $root
+		_n "Removing:"
 		for dep in $deps
 		do
 			echo -n " $dep"
 			echo 'y' | tazpkg remove $dep --root=$root >/dev/null
 		done
-		echo -e "\n"
+		newline; newline
 		# Keep the last diff for debug and info.
 		mv -f $CACHE/installed.cook.diff $CACHE/installed.diff
 	fi
@@ -453,27 +474,26 @@ remove_deps() {
 
 # The main cook function.
 cookit() {
-	echo "Cook: $PACKAGE $VERSION"
-	separator
+	_ "Cook: \$PACKAGE \$VERSION"; separator
 	set_paths
 
 	# Handle cross-tools.
 	case "$ARCH" in
 		arm|x86_64)
 			# CROSS_COMPILE is used by at least Busybox and the kernel to set
-			# the cross-tools prefix. Sysroot the the root of our target arch
+			# the cross-tools prefix. Sysroot is the root of our target arch
 			sysroot=$CROSS_TREE/sysroot
 			tools=$CROSS_TREE/tools
 			# Set root path when cross compiling. ARM tested but not x86_64
 			# When cross compiling we must install build deps in $sysroot.
 			arch="-${ARCH}"
 			root=$sysroot
-			echo "$ARCH sysroot: $sysroot"
-			echo "Adding $tools/bin to PATH"
+			_ "\$ARCH sysroot: \$sysroot"
+			_ "Adding \$tools/bin to PATH"
 			export PATH=$PATH:$tools/bin
 			export PKG_CONFIG_PATH=$sysroot/usr/lib/pkgconfig
 			export CROSS_COMPILE=${HOST_SYSTEM}-
-			echo "Using cross-tools: $CROSS_COMPILE"
+			_ "Using cross-tools: \$CROSS_COMPILE"
 			if [ "$ARCH" == "x86_64" ]; then
 				export CC="${HOST_SYSTEM}-gcc -m64"
 				export CXX="${HOST_SYSTEM}-g++ -m64"
@@ -495,7 +515,7 @@ cookit() {
 	# Disable -pipe if less than 512Mb free RAM.
 	free=$(free | fgrep '/+ buffers' | tr -s ' ' | cut -f 4 -d ' ')
 	if [ "$free" -lt 524288 ] && [ "$CFLAGS" != "${CFLAGS/-pipe}" ]; then
-			gettext -e "Disabling -pipe compile flag: $free RAM\n"
+			_ "Disabling -pipe compile flag: \$free RAM"
 			CFLAGS="${CFLAGS/-pipe}" && CFLAGS=$(echo "$CFLAGS" | tr -s ' ')
 			CXXFLAGS="${CXXFLAGS/-pipe}" && \
 				CXXFLAGS=$(echo "$CXXFLAGS" | tr -s ' ')
@@ -504,6 +524,7 @@ cookit() {
 
 	# Export flags and path to be used by make and receipt.
 	DESTDIR=$pkgdir/install
+	# FIXME: L10n: Is this the right time for 'LC_ALL=C LANG=C'?
 	export DESTDIR MAKEFLAGS CFLAGS CXXFLAGS CONFIG_SITE LC_ALL=C LANG=C
 	#LDFLAGS
 
@@ -511,8 +532,8 @@ cookit() {
 	# (ex: libusb-dev :: libusb).
 	rm -f $CACHE/installed.local $CACHE/installed.web $CACHE/missing.dep
 	touch $CACHE/installed.local $CACHE/installed.web
-	[ "$BUILD_DEPENDS" ] && gettext -e "Checking build dependencies...\n"
-	[ "$root" ] && echo "Using packages DB: ${root}$DB"
+	[ "$BUILD_DEPENDS" ] && _ "Checking build dependencies..."
+	[ "$root" ] && _ "Using packages DB: \${root}\$DB"
 	for dep in $BUILD_DEPENDS
 	do
 		implicit=${dep%-dev}
@@ -538,7 +559,7 @@ cookit() {
 							echo $i >> $CACHE/installed.web
 						else
 							# So package exists in wok but not available.
-							gettext "Missing dep (wok/pkg):"; echo " $i $vers"
+							_ "Missing dep (wok/pkg): \$i \$vers"
 							echo $i >> $CACHE/missing.dep
 						fi
 					else
@@ -546,7 +567,7 @@ cookit() {
 						if fgrep -q $i-${vers}${arch} ${root}$DB/packages.list; then
 							echo $i >> $CACHE/installed.web
 						else
-							echo "ERROR: unknown dep $i" && exit 1
+							_ "ERROR: unknown dep \$i"; exit 1
 						fi
 					fi
 				fi
@@ -557,17 +578,20 @@ cookit() {
 	# Get the list of installed packages
 	cd ${root}$INSTALLED && ls -1 > $CACHE/installed.list
 
-	# Have we a missing build dep to cook ?
+	# Have we a missing build dep to cook?
 	if [ -s "$CACHE/missing.dep" ] && [ "$AUTO_COOK" ]; then
-		gettext -e "Auto cook config is set   : AUTO_COOK\n"
+		_ "Auto cook config is set: AUTO_COOK"
 		cp -f $LOGS/$PACKAGE.log $LOGS/$PACKAGE.log.$$
 		for i in $(uniq $CACHE/missing.dep)
 		do
-			(gettext "Building dep (wok/pkg)    :"; echo " $i $vers") | \
+			(_ "Building dep (wok/pkg)    : \$i \$vers") | \
 				tee -a $LOGS/$PACKAGE.log.$$
-			cook $i || (echo -e "ERROR: can't cook dep '$i'\n" && \
-				fgrep "remove: " $LOGS/$i.log && \
-				fgrep "Removing: " $LOGS/$i.log && newline) | \
+			# programmers: next two messages are exact copy from remove_deps()
+			togrep1=$(_n "Build dependencies to remove: ")
+			togrep2=$(_n "Removing:")
+			cook $i || (_ "ERROR: can't cook dep '\$i'" && newline && \
+				fgrep $togrep1 $LOGS/$i.log && \
+				fgrep $togrep2 $LOGS/$i.log && newline) | \
 				tee -a $LOGS/$PACKAGE.log.$$ && break
 		done
 		rm -f $CACHE/missing.dep
@@ -577,16 +601,17 @@ cookit() {
 	# QA: Exit on missing dep errors. We exit in both cases, if AUTO_COOK
 	# is enabled and cook fails we have ERROR in log, if no auto cook we have
 	# missing dep in cached file.
-	if fgrep -q "ERROR:" $LOGS/$pkg.log || [ -s "$CACHE/missing.dep" ]; then
+	lerror=$(_n "ERROR")
+	if fgrep -q $lerror $LOGS/$pkg.log || [ -s "$CACHE/missing.dep" ]; then
 		[ -s "$CACHE/missing.dep" ] && nb=$(cat $CACHE/missing.dep | wc -l)
-		echo "ERROR: missing dep $nb" && exit 1
+		_ "ERROR: missing dep \$nb" && exit 1
 	fi
 
 	# Install local packages: package-version${arch}
 	cd $PKGS
 	for i in $(uniq $CACHE/installed.local)
 	do
-		gettext "Installing dep (pkg/local):"; echo " $i"
+		_ "Installing dep (pkg/local): \$i"
 		tazpkg install $i --root=$root >/dev/null
 	done
 
@@ -594,7 +619,7 @@ cookit() {
 	# use local packages).
 	for i in $(uniq $CACHE/installed.web)
 	do
-		gettext "Installing dep (web/cache):"; echo " $i"
+		_ "Installing dep (web/cache): \$i"
 		tazpkg get-install $i --root=$root >/dev/null
 	done
 
@@ -644,7 +669,7 @@ cookit() {
 
 	# Execute receipt rules.
 	if grep -q ^compile_rules $receipt; then
-		echo "Executing: compile_rules"
+		_ "Executing: compile_rules"
 		echo "CFLAGS   : $CFLAGS"
 		#echo "LDFLAGS  : $LDFLAGS"
 		[ -d "$src" ] && cd $src
@@ -654,27 +679,27 @@ cookit() {
 		# QA: compile_rules success so valid.
 		mkdir -p $install
 	else
-		# QA: No compile_rules so no error, valid.
+		# QA: no compile_rules so no error, valid.
 		mkdir -p $install
 	fi
-	separator && newline
+	separator; newline
 
 	# Execute testsuite.
 	if grep -q ^testsuite $receipt; then
-		echo "Running testsuite"
-		separator
+		_ "Running testsuite"; separator
 		testsuite $@ || exit 1
-		separator && newline
+		separator; newline
 	fi
 }
 
 # Cook quality assurance.
 cookit_quality() {
 	if [ ! -d "$WOK/$pkg/install" ] && [ ! "$WANTED" ]; then
-		echo -e "ERROR: cook failed" | tee -a $LOGS/$pkg.log
+		_ "ERROR: cook failed" | tee -a $LOGS/$pkg.log
 	fi
 	# ERROR can be echoed any time in cookit()
-	if grep -Eq '(ERROR:|undefined reference to)' $LOGS/$pkg.log; then
+	lerror=$(_n "ERROR")
+	if grep -Eq "($lerror|undefined reference to)" $LOGS/$pkg.log; then
 		debug_info | tee -a $LOGS/$pkg.log
 		rm -f $command && exit 1
 	fi
@@ -690,21 +715,21 @@ packit() {
 		arm|x86_64) arch="-$ARCH" ;;
 	esac
 
-	echo "Pack: $PACKAGE ${VERSION}${arch}"
-	separator
+	_ "Pack: \$PACKAGE \${VERSION}\${arch}"; separator
 
 	if grep -q ^genpkg_rules $receipt; then
-		gettext -e "Executing: genpkg_rules\n"
+		_ "Executing: genpkg_rules"
 		set -e && cd $pkgdir && mkdir -p $fs
-		genpkg_rules || echo -e "\nERROR: genpkg_rules failed\n" >> \
+		genpkg_rules || (newline; _ "ERROR: genpkg_rules failed"; newline) >> \
 			$LOGS/$pkg.log
 	else
-		gettext "No packages rules: meta package"; echo
+		_ "No packages rules: meta package"
 		mkdir -p $fs
 	fi
 
 	# First QA check to stop now if genpkg_rules failed.
-	if fgrep -q ERROR: $LOGS/$pkg.log; then
+	lerror=$(_n "ERROR")
+	if fgrep -q $lerror $LOGS/$pkg.log; then
 		exit 1
 	fi
 
@@ -712,13 +737,14 @@ packit() {
 	for file in receipt description.txt
 	do
 		[ ! -f "../$file" ] && continue
-		gettext "Copying"; echo -n " $file..."
+		_n "Copying \$file..."
 		cp -f ../$file $pack && chown 0.0 $pack/$file && status
 	done
 	copy_generic_files
 
 	# Create files.list with redirecting find output.
-	gettext "Creating the list of files..." && cd $fs
+	_n "Creating the list of files..."
+	cd $fs
 	find . -type f -print > ../files.list
 	find . -type l -print >> ../files.list
 	cd .. && sed -i s/'^.'/''/ files.list
@@ -728,7 +754,7 @@ packit() {
 	strip_package
 
 	# Md5sum of files.
-	gettext "Creating md5sum of files..."
+	_n "Creating md5sum of files..."
 	while read file; do
 		[ -L "fs$file" ] && continue
 		[ -f "fs$file" ] || continue
@@ -743,14 +769,14 @@ packit() {
 		'{ sz=$1 } END { print sz }')
 
 	# Build cpio archives.
-	gettext "Compressing the fs... "
+	_n "Compressing the fs..."
 	find fs | cpio -o -H newc --quiet | lzma e fs.cpio.lzma -si
 	rm -rf fs
 	status
 	PACKED_SIZE=$(du -chs fs.cpio.lzma receipt files.list \
 		md5sum description.txt 2> /dev/null | awk \
 		'{ sz=$1 } END { print sz }')
-	gettext "Updating receipt sizes..."
+	_n "Updating receipt sizes..."
 	sed -i s/^PACKED_SIZE.*$// receipt
 	sed -i s/^UNPACKED_SIZE.*$// receipt
 	sed -i "s/^PACKAGE=/PACKED_SIZE=\"$PACKED_SIZE\"\nUNPACKED_SIZE=\"$UNPACKED_SIZE\"\nPACKAGE=/" receipt
@@ -758,18 +784,18 @@ packit() {
 
 	# Set extra version.
 	if [ "$EXTRAVERSION" ]; then
-		gettext "Updating receipt EXTRAVERSION: "; echo -n "$EXTRAVERSION"
+		_n "Updating receipt EXTRAVERSION: \$EXTRAVERSION"
 		sed -i s/^EXTRAVERSION.*$// receipt
 		sed -i "s/^VERSION=/EXTRAVERSION=\"$EXTRAVERSION\"\nVERSION=/" receipt
 		status
 	fi
 
 	# Compress.
-	gettext "Creating full cpio archive... "
+	_n "Creating full cpio archive..."
 	find . -print | cpio -o -H newc --quiet > \
 		../$PACKAGE-${VERSION}${EXTRAVERSION}${arch}.tazpkg
 	status
-	gettext "Restoring original package tree... "
+	_n "Restoring original package tree..."
 	unlzma -c fs.cpio.lzma | cpio -idm --quiet
 	status
 	rm fs.cpio.lzma && cd ..
@@ -777,32 +803,34 @@ packit() {
 	# QA and give info.
 	tazpkg=$(ls *.tazpkg)
 	packit_quality
-	separator && gettext "Package:"; echo -e " $tazpkg\n"
+	separator; _ "Package: \$tazpkg"; newline
 }
 
 # Verify package quality and consistency.
 packit_quality() {
-	#gettext "QA: Checking for broken link..."
+	#gettext "QA: checking for broken link..."
 	#link=$(find $fs/usr -type l -follow)
 	#[ "$link" ] && echo -e "\nERROR: broken link in filesystem"
 	#status
 
 	# Exit if any error found in log file.
-	if fgrep -q ERROR: $LOGS/$pkg.log; then
+	lerror=$(_n "ERROR")
+	if fgrep -q $lerror $LOGS/$pkg.log; then
 		rm -f $command && exit 1
 	fi
 
-	gettext "QA: Checking for empty package..."
+	_n "QA: checking for empty package..."
 	files=$(cat $WOK/$pkg/taz/$pkg-*/files.list | wc -l)
 	if [ "$files" == 0 ] && [ "$CATEGORY" != "meta" ]; then
-		echo -e "\nERROR: empty package"
+		newline; _ "ERROR: empty package"
 		rm -f $command && exit 1
 	else
 		# Ls sort by name so the first file is the one we want.
 		old=$(ls $PKGS/$pkg-*.tazpkg 2>/dev/null | head -n 1)
 		status
 		if [ -f "$old" ]; then
-			gettext "Removing old: $(basename $old)"
+			old_pkg=$(basename $old)
+			_n "Removing old: \$old_pkg"
 			rm -f $old && status
 		fi
 		mv -f $pkgdir/taz/$pkg-*.tazpkg $PKGS
@@ -832,7 +860,7 @@ install_package() {
 			cd $PKGS && tazpkg install \
 				$PACKAGE-${VERSION}${EXTRAVERSION}.tazpkg --forced
 		else
-			gettext -e "Unable to install package, build has failed.\n\n"
+			_ "Unable to install package, build has failed."; newline
 			exit 1
 		fi
 	fi
@@ -841,8 +869,8 @@ install_package() {
 	if [ -d "${root}$INSTALLED/$pkg" ]; then
 		. /etc/slitaz/cook.conf
 		. $WOK/$pkg/taz/$pkg-*/receipt
-		echo "Updating $ARCH chroot environment..."
-		echo "Updating chroot: $pkg (${VERSION}${EXTRAVERSION}${arch})" | log
+		_ "Updating \$ARCH chroot environment..."
+		_ "Updating chroot: \$pkg (\${VERSION}\${EXTRAVERSION}\${arch})" | log
 		cd $PKGS && tazpkg install \
 			$pkg-${VERSION}${EXTRAVERSION}${arch}.tazpkg \
 			--forced --root=$root
@@ -856,14 +884,14 @@ try_aufs_chroot() {
 
 	base=/dev/shm/aufsmnt$$
 
-	# Can we setup the chroot ? Is it already done ?
+	# Can we setup the chroot? Is it already done?
 	grep -q ^AUFS_NOT_SUPPORTED $receipt && return
 	grep -q ^AUFS_NOT_RAMFS $receipt && base=/mnt/aufsmnt$$
 	[ -n "$AUFS_MOUNTS" -a ! -f /aufs-umount.sh ] || return
 	lsmod | grep -q aufs || modprobe aufs 2> /dev/null || return
 	mkdir ${base}root ${base}rw || return
 
-	echo "Setup aufs chroot..."
+	_ "Setup aufs chroot..."
 
 	# Sanity check
 	for i in / /proc /sys /dev/shm /home ; do
@@ -875,7 +903,7 @@ try_aufs_chroot() {
 	for mnt in $(echo $AUFS_MOUNTS | sort | uniq); do
 		mount --bind $mnt ${base}root$mnt
 		if [ $mnt == / ] && ! mount -t aufs -o br=${base}rw:/ none ${base}root; then
-			echo "Aufs mountage failure"
+			_ "Aufs mountage failure"
 			umount ${base}root
 			rmdir ${base}*
 			return
@@ -886,7 +914,7 @@ try_aufs_chroot() {
 	chroot ${base}root $(cd $(dirname $0); pwd)/$(basename $0) "$@"
 	status=$?
 
-	echo "Leaving aufs chroot..."
+	_ "Leaving aufs chroot..."
 	tac ${base}rw/aufs-umount.sh | sh
 	rm -rf ${base}rw
 	umount ${base}root
@@ -928,40 +956,36 @@ case "$1" in
 	usage|help|-u|-h)
 		 usage ;;
 	list-wok)
-		gettext -e "\nList of packages in:"; echo " $WOK"
-		separator
+		newline; _ "List of packages in: \$WOK"; separator
 		cd $WOK && ls -1
 		separator
-		echo -n "Packages: " && ls | wc -l
-		newline ;;
+		pkg_total=$(ls | wc -l)
+		_ "Packages: \$pkg_total"; newline ;;
 	activity)
 		cat $activity ;;
 	search)
 		# Just a simple search function, we dont need more actually.
 		query="$2"
-		newline
-		gettext "Search results for:"; echo " $query"
-		separator
+		newline; _ "Search results for: \$query"; separator
 		cd $WOK && ls -1 | grep "$query"
-		separator && newline ;;
+		separator; newline ;;
 	setup)
 		# Setup a build environment
 		check_root
-		echo "Cook: setup environment" | log
-		newline
-		gettext "Setting up your environment"; newline
-		separator && cd $SLITAZ
+		_ "Cook: setup environment" | log
+		newline; _ "Setting up your environment"; separator
+		cd $SLITAZ
 		init_db_files
-		gettext "Checking for packages to install..."; echo
+		_ "Checking for packages to install..."
 		# Use setup pkgs from cross.conf or cook.conf. When cross compiling
 		# ARCH-setup or 'cross check-env' should be used before: cook setup
 		case "$ARCH" in
 			arm|x86_64)
 				if [ ! -x "/usr/bin/cross" ]; then
-					gettext "ERROR: cross is not installed"; echo
+					_ "ERROR: cross is not installed"
 					exit 1
 				fi
-				gettext "Using config file: /etc/slitaz/cross.conf"; echo
+				_ "Using config file: /etc/slitaz/cross.conf"
 				. /etc/slitaz/cross.conf ;;
 		esac
 		for pkg in $SETUP_PKGS; do
@@ -986,22 +1010,19 @@ case "$1" in
 
 		# SliTaz group and permissions
 		if ! grep -q ^slitaz /etc/group; then
-			gettext -e "Adding group: slitaz\n"
+			_ "Adding group: slitaz"
 			addgroup slitaz
 		fi
-		gettext -e "Setting permissions for slitaz group...\n"
+		_ "Setting permissions for slitaz group..."
 		find $SLITAZ -maxdepth 2 -exec chown root.slitaz {} \;
 		find $SLITAZ -maxdepth 2 -exec chmod g+w {} \;
-		separator
-		gettext -e "All done, ready to cook packages :-)\n\n" ;;
+		separator; _ "All done, ready to cook packages :-)"; newline ;;
 	*-setup)
 		# Setup for cross compiling.
 		arch=${1%-setup}
 		check_root
-		echo "Cook: setup $arch cross environment" | log
-		newline
-		boldify $(gettext "Setting up your $arch cross environment")
-		separator
+		_ "Cook: setup \$arch cross environment" | log
+		newline; boldify $(_n "Setting up your \$arch cross environment"); separator
 		init_db_files
 		sed -i \
 			-e s"/ARCH=.*/ARCH=\"$arch\"/" \
@@ -1026,12 +1047,13 @@ case "$1" in
 		tools=/cross/$arch/tools
 		root=$sysroot
 		CC=$tools/bin/${HOST_SYSTEM}-gcc
-		echo "Target arch     : $ARCH"
-		echo "Configure args  : $CONFIGURE_ARGS"
-		echo "Arch sysroot    : $sysroot"
-		echo "Tools prefix    : $tools/bin"
+		# L10n: keep the same width of translations to get a consistent view
+		_ "Target arch     : \$ARCH"
+		_ "Configure args  : \$CONFIGURE_ARGS"
+		_ "Arch sysroot    : \$sysroot"
+		_ "Tools prefix    : \$tools/bin"
 		# Tell the packages manager where to find packages.
-		echo "Packages DB     : ${root}$DB"
+		_ "Packages DB     : \${root}\$DB"
 		mkdir -p ${root}$INSTALLED
 		cd ${root}$DB && rm -f *.bak
 		for list in packages.list packages.desc packages.equiv packages.md5
@@ -1042,19 +1064,19 @@ case "$1" in
 		# i486 package will be used as dep by tazpkg and then break the
 		# cross environment
 		if [ ! -f "${root}$INSTALLED/glibc-base/receipt" ]; then
-			colorize 36 "WARNING: (e)glibc-base is not installed in sysroot"
+			colorize 36 $(_ "WARNING: (e)glibc-base is not installed in sysroot")
 		fi
 		# Show GCC version or warn if not yet compiled.
 		if [ -x $CC ]; then
-			echo "Cross compiler  : ${HOST_SYSTEM}-gcc"
+			_ "Cross compiler  : \${HOST_SYSTEM}-gcc"
 		else
-			colorize 36 "C compiler is missing: ${HOST_SYSTEM}-gcc"
-			echo "Run 'cross compile' to cook a toolchain"
+			colorize 36 $(_ "C compiler is missing: \${HOST_SYSTEM}-gcc")
+			_ "Run 'cross compile' to cook a toolchain"
 		fi
-		separator && newline ;;
+		separator; newline ;;
 	test)
 		# Test a cook environment.
-		echo "Cook test: testing the cook environment" | log
+		_ "Cook test: testing the cook environment" | log
 		[ ! -d "$WOK" ] && exit 1
 		[ ! -d "$WOK/cooktest" ] && cp -r $DATA/cooktest $WOK
 		cook cooktest ;;
@@ -1064,12 +1086,12 @@ case "$1" in
 		[ "$pkg" ] || usage
 		newline
 		if [ -d "$WOK/$pkg" ]; then
-			echo -n  "$pkg " && gettext "package already exists."
-			echo -e "\n" && exit 1
+			_ "\$pkg package already exists."
+			exit 1
 		fi
-		gettext "Creating"; echo -n " $WOK/$pkg"
+		_n "Creating \$WOK/\$pkg"
 		mkdir $WOK/$pkg && cd $WOK/$pkg && status
-		gettext "Preparing the package receipt..."
+		_n "Preparing the package receipt..."
 		cp $DATA/receipt .
 		sed -i s"/^PACKAGE=.*/PACKAGE=\"$pkg\"/" receipt
 		status && newline
@@ -1077,71 +1099,64 @@ case "$1" in
 		# Interactive mode, asking and seding.
 		case "$3" in
 			--interactive|-x)
-				gettext -e "Entering interactive mode...\n"
+				_ "Entering interactive mode..."
 				separator
-				echo "Package       : $pkg"
-				# Version.
-				echo -n "Version       : " ; read anser
-				sed -i s/'VERSION=\"\"'/"VERSION=\"$anser\""/ receipt
-				# Category.
-				echo -n "Category      : " ; read anser
-				sed -i s/'CATEGORY=\"\"'/"CATEGORY=\"$anser\""/ receipt
-				# Short description.
-				echo -n "Short desc    : " ; read anser
-				sed -i s/'SHORT_DESC=\"\"'/"SHORT_DESC=\"$anser\""/ receipt
-				# Maintainer.
-				echo -n "Maintainer    : " ; read anser
-				sed -i s/'MAINTAINER=\"\"'/"MAINTAINER=\"$anser\""/ receipt
-				# License.
-				echo -n "License       : " ; read anser
-				sed -i s/'LICENSE=\"\"'/"LICENSE=\"$anser\""/ receipt
-				# Web site.
-				echo -n "Web site      : " ; read anser
-				sed -i s#'WEB_SITE=\"\"'#"WEB_SITE=\"$anser\""# receipt
+				_ "Package       : \$pkg"
+				_n "Version       : " ; read answer
+				sed -i s/'VERSION=\"\"'/"VERSION=\"$answer\""/ receipt
+				_n "Category      : " ; read answer
+				sed -i s/'CATEGORY=\"\"'/"CATEGORY=\"$answer\""/ receipt
+				# L10n: Short description
+				_n "Short desc    : " ; read answer
+				sed -i s/'SHORT_DESC=\"\"'/"SHORT_DESC=\"$answer\""/ receipt
+				_n "Maintainer    : " ; read answer
+				sed -i s/'MAINTAINER=\"\"'/"MAINTAINER=\"$answer\""/ receipt
+				_n "License       : " ; read answer
+				sed -i s/'LICENSE=\"\"'/"LICENSE=\"$answer\""/ receipt
+				_n "Web site      : " ; read answer
+				sed -i s#'WEB_SITE=\"\"'#"WEB_SITE=\"$answer\""# receipt
 				newline
 				# Wget URL.
-				echo "Wget URL to download source tarball."
-				echo "Example  : \$GNU_MIRROR/\$PACKAGE/\$TARBALL"
-				echo -n "Wget url : " ; read anser
-				sed -i s#'WGET_URL=\"$TARBALL\"'#"WGET_URL=\"$anser\""# receipt
+				_ "Wget URL to download source tarball."
+				_n "Example  : " ; echo '$GNU_MIRROR/$PACKAGE/$TARBALL'
+				_n "Wget url : " ; read answer
+				sed -i s#'WGET_URL=\"$TARBALL\"'#"WGET_URL=\"$answer\""# receipt
 				# Ask for a stuff dir.
-				echo -n "Do you need a stuff directory ? (y/N) : " ; read anser
-				if [ "$anser" = "y" ]; then
-					echo -n "Creating the stuff directory..."
+				_n "Do you need a stuff directory? (y/N) : " ; read answer
+				if [ "$answer" = "y" ]; then
+					_n "Creating the stuff directory..."
 					mkdir $WOK/$pkg/stuff && status
 				fi
 				# Ask for a description file.
-				echo -n "Are you going to write a description ? (y/N) : " ; read anser
-				if [ "$anser" = "y" ]; then
-					echo -n "Creating the description.txt file..."
+				_n "Are you going to write a description? (y/N) : " ; read answer
+				if [ "$answer" = "y" ]; then
+					_n "Creating the description.txt file..."
 					newline > $WOK/$pkg/description.txt && status
 				fi
-				separator
-				gettext -e "Receipt is ready to use.\n"
-				newline ;;
+				separator; _ "Receipt is ready to use."; newline ;;
 		esac ;;
 	list)
 		# Cook a list of packages (better use the Cooker since it will order
 		# packages before executing cook).
 		check_root
-		[ -z "$2" ] && gettext -e "\nNo list in argument.\n\n" && exit 1
-		[ ! -f "$2" ] && gettext -e "\nNo list found:" && \
-			echo -e " $2\n" && exit 1
-		echo "Cook list starting: $2" | log
+		[ -z "$2" ] && (newline; _ "No list in argument."; newline) && exit 1
+		list2=$2
+		[ ! -f "$2" ] && (newline; _ "No list found: \$list2"; newline) && exit 1
+		_ "Cook list starting: \$list2" | log
 		for pkg in $(cat $2)
 		do
 			cook $pkg || broken
 		done ;;
 	clean-wok)
 		check_root
-		gettext -e "\nCleaning all packages files..."
+		newline; _n "Cleaning all packages files..."
 		rm -rf $WOK/*/taz $WOK/*/install $WOK/*/source
-		status && newline ;;
+		status; newline ;;
 	clean-src)
 		check_root
-		gettext -e "\nCleaning all packages sources..."
+		newline; _n "Cleaning all packages sources..."
 		rm -rf $WOK/*/source
-		status && newline ;;
+		status; newline ;;
 	pkgdb)
 		# Create suitable packages list for TazPKG and only for built packages
 		# as well as flavors files for TazLiTo. We dont need logs since we do it
@@ -1152,25 +1167,25 @@ case "$1" in
 			*)
 				[ "$2" ] && PKGS="$2"
 				[ ! -d "$PKGS" ] && \
-					gettext -e "\nPackages directory doesn't exist\n\n" && exit 1 ;;
+					newline && _ "Packages directory doesn't exist" && \
+					newline && exit 1 ;;
 		esac
 		time=$(date +%s)
 		flavors=$SLITAZ/flavors
 		live=$SLITAZ/live
 		echo "cook:pkgdb" > $command
-		echo "Cook pkgdb: Creating all packages lists" | log
-		newline
-		gettext "Creating lists for: "; echo "$PKGS"
-		separator
-		gettext "Cook pkgdb started: "; date "+%Y-%m-%d %H:%M"
+		_ "Cook pkgdb: Creating all packages lists" | log
+		newline; _ "Creating lists for: \$PKGS"; separator
+		datenow=$(date "$(_ '+%Y-%m-%d %H:%M')")
+		_ "Cook pkgdb started: \$datenow"
 		cd $PKGS
 		rm -f packages.*
-		gettext -e "Creating: packages.list\n"
+		_ "Creating: packages.list"
 		ls -1 *.tazpkg | sed s'/.tazpkg//' > $PKGS/packages.list
-		gettext -e "Creating: packages.md5\n"
+		_ "Creating: packages.md5"
 		md5sum *.tazpkg > $PKGS/packages.md5
 		md5sum packages.md5 | cut -f1 -d' ' > ID
-		gettext -e "Creating lists from: "; echo "$WOK"
+		_ "Creating lists from: \$WOK"
 		cd $WOK
 		for pkg in *
 		do
@@ -1212,12 +1227,12 @@ EOT
 		done
 
 		# Display list size.
-		gettext -e "Done: packages.desc\n"
-		gettext -e "Done: packages.txt\n"
-		gettext -e "Done: packages.equiv\n"
+		_ "Done: packages.desc"
+		_ "Done: packages.txt"
+		_ "Done: packages.equiv"
 
 		# files.list.lzma
-		gettext -e "Creating: files.list.lzma\n"
+		_ "Creating: files.list.lzma"
 		cd $PKGS && lzma e files.list files.list.lzma
 		rm -f files.list
 
@@ -1225,23 +1240,24 @@ EOT
 		separator
 		nb=$(ls $PKGS/*.tazpkg | wc -l)
 		time=$(($(date +%s) - $time))
-		echo -e "Packages: $nb - Time: ${time}s\n"
+		# L10n: 's' is for seconds (cooking time)
+		_ "Packages: \$nb - Time: \${time}s"; newline
 
 		# Create all flavors files at once. Do we really need code to monitor
-		# flavors changes ? Lets just build them with packages lists before
+		# flavors changes? Lets just build them with packages lists before
 		# syncing the mirror.
 		[ "$2" == "--flavors" ] || exit 1
-		[ ! -d "$flavors" ] && echo -e "Missing flavors: $flavors\n" && exit 1
+		[ ! -d "$flavors" ] && (_ "Missing flavors: \$flavors"; newline) && exit 1
 		[ -d "$live" ] || mkdir -p $live
-		gettext "Creating flavors files in:"; echo " $live"
-		echo "Cook pkgdb: Creating all flavors" | log
+		_ "Creating flavors files in: \$live"
+		_ "Cook pkgdb: Creating all flavors" | log
 		separator
-		gettext -e "Recharging lists to use latest packages...\n"
+		_ "Recharging lists to use latest packages..."
 		tazpkg recharge >/dev/null 2>/dev/null
 
 		# We need a custom tazlito config to set working dir to /home/slitaz.
 		if [ ! -f "$live/tazlito.conf" ]; then
-			echo "Creating configuration file: tazlito.conf"
+			_ "Creating configuration file: tazlito.conf"
 			cp /etc/tazlito/tazlito.conf $live
 			sed -i s@WORK_DIR=.*@WORK_DIR=\"/home/slitaz\"@ \
 				$live/tazlito.conf
@@ -1251,20 +1267,24 @@ EOT
 		[ -d "$flavors/.hg" ] && cd $flavors && hg pull -u
 
 		cd $live
-		echo "Starting to generate flavors..."
+		_ "Starting to generate flavors..."
 		rm -f flavors.list *.flavor
 		for i in $flavors/*
 		do
 			fl=$(basename $i)
-			echo "Packing flavor: $(basename $i)"
+			_ "Packing flavor: \$fl"
 			tazlito pack-flavor $fl >/dev/null || exit 1
 			tazlito show-flavor $fl --brief --noheader 2> \
 				/dev/null >> flavors.list
 		done
 		cp -f $live/*.flavor $live/flavors.list $PKGS
-		separator && gettext "Flavors size: "; du -sh $live | awk '{print $1}'
-		newline && rm -f $command
-		separator && gettext "Cook pkgdb end: "; date "+%Y-%m-%d %H:%M";;
+		separator
+		fl_size=$(du -sh $live | awk '{print $1}')
+		_ "Flavors size: \$fl_size"; newline
+		rm -f $command
+		separator
+		datenow=$(date "$(_ '+%Y-%m-%d %H:%M')")
+		_ "Cook pkgdb end: \$datenow" ;;
 	*)
 		# Just cook and generate a package.
 		check_root
@@ -1284,17 +1304,17 @@ EOT
 		# the cooker and build each commit in wok is not possible since
 		# we dont cook the full wok for this arch. For ARM we need a set
 		# of packages to handle a touch screen desktop, servers but not
-		# erland.
+		# erlang.
 		#
 		# The temporary solution is to build only reviewed and tested
 		# packages with HOST_ARCH set in receipt.
 		case "$ARCH" in
 			arm)
 				if [ ! "$HOST_ARCH" ]; then
-					echo "cook: HOST_ARCH is not set in $pkg receipt"
-					echo "cook: This package is not included in: $ARCH"
-					[ "$CROSS_BUGS" ] && echo "bugs: $CROSS_BUGS"
-					echo "Cook skip: $pkg is not included in: $ARCH" | log
+					_ "cook: HOST_ARCH is not set in \$pkg receipt"
+					_ "cook: This package is not included in: \$ARCH"
+					[ "$CROSS_BUGS" ] && _ "bugs: \$CROSS_BUGS"
+					_ "Cook skip: \$pkg is not included in: \$ARCH" | log
 					newline && exit 1
 				fi ;;
 		esac
@@ -1302,46 +1322,49 @@ EOT
 		# Some packages are not included in some arch or fail to cross compile.
 		: ${HOST_ARCH=i486}
 		if ! $(echo "$HOST_ARCH" | fgrep -q $ARCH); then
-			echo "cook: HOST_ARCH=$HOST_ARCH"
-			echo "cook: $pkg doesn't cook or is not included in: $ARCH"
-			[ "$CROSS_BUGS" ] && echo "bugs: $CROSS_BUGS"
-			echo "Cook skip: $pkg doesn't cook or is not included in: $ARCH" | log
+			_ "cook: HOST_ARCH=\$HOST_ARCH"
+			_ "cook: \$pkg doesn't cook or is not included in: \$ARCH"
+			[ "$CROSS_BUGS" ] && _ "bugs: \$CROSS_BUGS"
+			_ "Cook skip: \$pkg doesn't cook or is not included in: \$ARCH" | log
 			newline && exit 1
 		fi
 
 		# Skip blocked, 3 lines also for the Cooker.
 		if grep -q "^$pkg$" $blocked && [ "$2" != "--unblock" ]; then
-			gettext -e "Blocked package:"; echo -e " $pkg\n" && exit 0
+			_ "Blocked package: \$pkg"; newline
+			 exit 0
 		fi
 
 		try_aufs_chroot "$@"
 
 		# Log and source receipt.
-		echo "Cook started for: <a href='cooker.cgi?pkg=$pkg'>$pkg</a>" | log
+		_ "Cook started for: <a href='cooker.cgi?pkg=\$pkg'>\$pkg</a>" | log
 		echo "cook:$pkg" > $command
 
 		# Display and log info if cook process stopped.
-		trap 'gettext -e "\n\nCook stopped: control-C\n\n" | \
+		# FIXME: gettext not worked (in single quotes) here!
+		trap '_ "\n\nCook stopped: control-C\n\n" | \
 			tee -a $LOGS/$pkg.log' INT
 
 		# Handle --options
 		case "$2" in
 			--clean|-c)
-				gettext -e "Cleaning:"; echo -n " $pkg"
+				_n "Cleaning: \$pkg"
 				cd $WOK/$pkg && rm -rf install taz source
 				status && newline && exit 0 ;;
 			--install|-i)
 				inst='yes' ;;
 			--getsrc|-gs)
-				gettext "Getting source for:"; echo " $pkg"
-				separator && get_source
-				echo -e "Tarball: $SRC/$TARBALL\n" && exit 0 ;;
+				_ "Getting source for: \$pkg"; separator
+				get_source
+				_ "Tarball: \$SRC/\$TARBALL"; newline
+				exit 0 ;;
 			--block|-b)
-				gettext "Blocking:"; echo -n " $pkg"
+				_n "Blocking: \$pkg"
 				[ $(grep "^$pkg$" $blocked) ] || echo "$pkg" >> $blocked
 				status && newline && exit 0 ;;
 			--unblock|-ub)
-				gettext "Unblocking:"; echo -n " $pkg"
+				_n "Unblocking: \$pkg"
 				sed -i "/^${pkg}$/"d $blocked
 				status && newline && exit 0 ;;
 			--pack)
@@ -1351,7 +1374,7 @@ EOT
 					packit 2>&1 | tee -a $LOGS/$pkg-pack.log
 					clean_log
 				else
-					gettext "Need to build $pkg." && exit 0
+					_ "Need to build \$pkg." && exit 0
 				fi
 				exit 0 ;;
 		esac
@@ -1359,11 +1382,11 @@ EOT
 		# Check if wanted is built now so we have separate log files.
 		for wanted in $WANTED ; do
 			if grep -q "^$wanted$" $blocked; then
-				echo "WANTED package is blocked: $wanted" | tee $LOGS/$pkg.log
+				_ "WANTED package is blocked: \$wanted" | tee $LOGS/$pkg.log
 				newline && rm -f $command && exit 1
 			fi
 			if grep -q "^$wanted$" $broken; then
-				echo "WANTED package is broken: $wanted" | tee $LOGS/$pkg.log
+				_ "WANTED package is broken: \$wanted" | tee $LOGS/$pkg.log
 				newline && rm -f $command && exit 1
 			fi
 			if [ ! -d "$WOK/$wanted/install" ]; then
@@ -1379,7 +1402,8 @@ EOT
 		clean_log
 
 		# Exit if any error in packing.
-		if grep -Eq '(^ERROR|No such file or directory)' $LOGS/$pkg.log; then
+		lerror=$(_n "ERROR")
+		if grep -Eq "(^$lerror|No such file or directory)" $LOGS/$pkg.log; then
 			debug_info | tee -a $LOGS/$pkg.log
 			rm -f $command && exit 1
 		fi
@@ -1395,7 +1419,7 @@ EOT
 		# We may want to install/update.
 		install_package
 
-		# Finally we DONT WANT to build the *-dev or packages with WANTED="$pkg"
+		# Finally we DON'T WANT to build the *-dev or packages with WANTED="$pkg"
 		# You want automation: use the Cooker Build Bot.
 		rm -f $command ;;
 esac

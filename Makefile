@@ -3,6 +3,8 @@
 
 PREFIX?=/usr
 DESTDIR?=
+LINGUAS?=ru
+VERSION:=$(shell grep ^VERSION cook | cut -d'=' -f2)
 
 all:
 
@@ -65,3 +67,40 @@ uninstall-cross:
 		$(DESTDIR)$(PREFIX)/bin/cross \
 		$(DESTDIR)/etc/slitaz/cross.conf \
 		$(DESTDIR)$(PREFIX)/share/doc/cookutils/cross.txt
+
+# i18n
+
+pot:
+	xgettext -o po/cook.pot -k_ -k_n -L Shell -cL10n \
+		--copyright-holder="SliTaz Association" \
+		--package-name="Cook" \
+		--package-version="$(VERSION)" \
+		./cook
+
+msgmerge:
+	@for l in $(LINGUAS); do \
+		echo -n "Updating $$l po file."; \
+		msgmerge -U po/$$l.po po/cook.pot; \
+	done;
+
+msgfmt:
+	@for l in $(LINGUAS); do \
+		echo "Compiling $$l mo file..."; \
+		mkdir -p po/mo/$$l/LC_MESSAGES; \
+		msgfmt -o po/mo/$$l/LC_MESSAGES/cook.mo po/$$l.po; \
+	done;
+
+# Clean source
+
+clean:
+	rm -rf po/mo
+	rm -f po/*.mo
+	rm -f po/*.*~
+
+help:
+	@echo "make"
+	@echo "    install         | uninstall         - all"
+	@echo "    install-cook    | uninstall-cook    - cook"
+	@echo "    install-libcook | uninstall-libcook - libcook"
+	@echo "    install-cross   | uninstall-cross   - cross"
+	@echo "    pot | msgmerge | msgfmt | clean     - i18n"
