@@ -1,15 +1,16 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
 <head>
-	<title>Cookutils Documentation</title>
 	<meta charset="utf-8" />
-	<link rel="stylesheet" type="text/css" href="style.css" />
+	<title>Cookutils Documentation</title>
+	<link rel="stylesheet" type="text/css" href="../slitaz-doc.css" />
+	<script type="text/javascript" src="../slitaz-doc.js"></script>
 </head>
 <body>
-	
-<div id="header">
+
+<header>
 	<h1>Cookutils Documentation</h1>
-</div>
+</header>
 
 <!-- Start content -->
 <div id="content">
@@ -193,8 +194,7 @@ $ cook list-wok
 # cook pkgdb
 </pre>
 
-<a name="cooker"></a>
-<h3>The Cooker</h3>
+<h3 id="cooker">The Cooker</h3>
 <p>
 	The Cooker is a Build Bot, its first function is to check for commits in a wok,
 	create an ordered cooklist and cook all modified packages. It can also be
@@ -271,8 +271,7 @@ $ cook list-wok
 # cooker rev 9496
 </pre>
 
-<a name="blocked"></a>
-<h3>Blocked packages</h3>
+<h3 id="blocked">Blocked packages</h3>
 <p>
 	Cook and the Cooker handle a file with a list of blocked package so they will
 	not cook when commits happen or if a cooklist is used. This is very useful
@@ -391,10 +390,9 @@ $ cp -f cookutils/cook.conf ~/Public/cgi-bin/cooker
 <!-- End content -->
 </div>
 
-<div id="footer">
-	Copyright &copy; 2011 SliTaz contributors
-</div>
+<footer>
+	Copyright © 2013 <a href="http://www.slitaz.org/">SliTaz GNU/Linux</a>
+</footer>
 
 </body>
 </html>
-

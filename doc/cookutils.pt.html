@@ -1,16 +1,16 @@
-﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="pt" lang="pt">
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="pt">
 <head>
+	<meta charset="utf-8" />
 	<title>Documentação do Cookutils</title>
-    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
-	<link rel="stylesheet" type="text/css" href="style.css" />
+	<link rel="stylesheet" type="text/css" href="../slitaz-doc.css" />
+	<script type="text/javascript" src="../slitaz-doc.js"></script>
 </head>
 <body>
-	
-<div id="header">
+
+<header>
 	<h1>Documentação do Cookutils</h1>
-</div>
+</header>
 
 <!-- Start content -->
 <div id="content">
@@ -205,8 +205,7 @@ $ cook list-wok
 # cook pkgdb
 </pre>
 
-<a name="cooker"></a>
-<h3>O comando 'cooker'</h3>
+<h3 id="cooker">O comando 'cooker'</h3>
 <p>
     O cooker é um robô de compilação, que tem por função checar por commits
     em um wok, criar uma listagem da ordem de compilação (cooklist) e compilar
@@ -287,8 +286,7 @@ $ cook list-wok
 # cooker rev 9496
 </pre>
 
-<a name="blocked"></a>
-<h3>Pacotes bloqueados</h3>
+<h3 id="blocked">Pacotes bloqueados</h3>
 <p>
     O 'cook' e o 'cooker' utilizam uma lista de pacotes bloqueados, nos quais
     são indicados quais pacotes não compilar quando acontece algum commit ou
@@ -418,10 +416,9 @@ $ cp -f cookutils/cook.conf ~/Public/cgi-bin/cooker
 <!-- End content -->
 </div>
 
-<div id="footer">
-	Copyright &copy; 2011 SliTaz contributors
-</div>
+<footer>
+	Copyright © 2013 <a href="http://www.slitaz.org/">SliTaz GNU/Linux</a>
+</footer>
 
 </body>
 </html>
-
