@@ -1255,11 +1255,11 @@ case "$1" in
 		do
 			unset_receipt
 			. $pkg/receipt
+			# PACKED_SIZE and UNPACKED_SIZE are only in built receipt
+			if [ -s $pkg/taz/*/receipt ]; then
+				. $pkg/taz/*/receipt
+			fi
 			if [ -f "$PKGS/$PACKAGE-${VERSION}${EXTRAVERSION}.tazpkg" ]; then
-				# PACKED_SIZE and UNPACKED_SIZE are only in built receipt
-				if [ -s $pkg/taz/*/receipt ]; then
-					. $pkg/taz/*/receipt
-				fi
 				# packages.desc lets us search easily in DB
 				cat >> $PKGS/packages.desc << EOT
 $PACKAGE | ${VERSION}$EXTRAVERSION | $SHORT_DESC | $CATEGORY | $WEB_SITE
