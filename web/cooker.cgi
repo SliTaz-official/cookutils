@@ -70,7 +70,8 @@ fi
 syntax_highlighter() {
 	case $1 in
 		log)
-			sed	-e 's#OK$#<span class="span-ok">OK</span>#g' \
+			sed	-e 's/&/\&amp;/g;s/</\&lt;/g;s/>/\&gt;/g' \
+				-e 's#OK$#<span class="span-ok">OK</span>#g' \
 				-e 's#Done$#<span class="span-ok">Done</span>#g' \
 				-e 's#yes$#<span class="span-ok">yes</span>#g' \
 				-e 's#no$#<span class="span-no">no</span>#g' \
@@ -83,7 +84,8 @@ syntax_highlighter() {
 				-e s"#ftp://[^ '\"]*#<a href='\0'>\0</a>#"g	\
 				-e s"#http://[^ '\"]*#<a href='\0'>\0</a>#"g ;;
 		receipt)
-			sed -e s'|&|\&amp;|g' -e 's|<|\&lt;|g' -e 's|>|\&gt;|'g \
+			sed	-e 's/&/\&amp;/g;s/</\&lt;/g;s/>/\&gt;/g' \
+				-e s'|&|\&amp;|g' -e 's|<|\&lt;|g' -e 's|>|\&gt;|'g \
 				-e s"#^\#\([^']*\)#<span class='sh-comment'>\0</span>#"g \
 				-e s"#\"\([^']*\)\"#<span class='sh-val'>\0</span>#"g ;;
 		diff)
@@ -190,8 +192,7 @@ case "${QUERY_STRING}" in
 			fi
 			echo "<h3>Cook log</h3>"
 			echo '<pre>'
-			cat $log | sed 's/&/\&amp;/g;s/</\&lt;/g;s/>/\&gt;/g' |\
-				syntax_highlighter log
+			cat $log | syntax_highlighter log
 			echo '</pre>'
 		else
 			echo "<pre>No log: $pkg</pre>"
@@ -245,7 +246,7 @@ case "${QUERY_STRING}" in
 		file=${QUERY_STRING#stuff=}
 		echo "<h2>$file</h2>"
 		echo '<pre>'
-		cat $wok/$file
+		cat $wok/$file | sed 's/&/\&amp;/g;s/</\&lt;/g;s/>/\&gt;/g'
 		echo '</pre>' ;;
 	receipt=*)
 		pkg=${QUERY_STRING#receipt=}
@@ -256,7 +257,8 @@ case "${QUERY_STRING}" in
 				echo "<a href=\"?stuff=$pkg/$file\">$file</a>"
 			done
 			echo '<pre>'
-			cat $wok/$pkg/receipt | syntax_highlighter receipt
+			cat $wok/$pkg/receipt | \
+				syntax_highlighter receipt
 			echo '</pre>'
 		else
 			echo "<pre>No receipt for: $pkg</pre>"
@@ -280,7 +282,8 @@ case "${QUERY_STRING}" in
 		dir=$(ls -d $WOK/$pkg/taz/$pkg-*)
 		if [ -s "$dir/description.txt" ]; then
 			echo '<pre>'
-			cat $dir/description.txt
+			cat $dir/description.txt | \
+				sed 's/&/\&amp;/g;s/</\&lt;/g;s/>/\&gt;/g'
 			echo '</pre>'
 		else
 			echo "<pre>No description for: $pkg</pre>"
