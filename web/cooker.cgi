@@ -84,8 +84,7 @@ syntax_highlighter() {
 				-e s"#ftp://[^ '\"]*#<a href='\0'>\0</a>#"g	\
 				-e s"#http://[^ '\"]*#<a href='\0'>\0</a>#"g ;;
 		receipt)
-			sed	-e 's/&/\&amp;/g;s/</\&lt;/g;s/>/\&gt;/g' \
-				-e s'|&|\&amp;|g' -e 's|<|\&lt;|g' -e 's|>|\&gt;|'g \
+			sed	-e s'|&|\&amp;|g' -e 's|<|\&lt;|g' -e 's|>|\&gt;|'g \
 				-e s"#^\#\([^']*\)#<span class='sh-comment'>\0</span>#"g \
 				-e s"#\"\([^']*\)\"#<span class='sh-val'>\0</span>#"g ;;
 		diff)
