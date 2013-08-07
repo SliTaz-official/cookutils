@@ -110,7 +110,7 @@ list_packages() {
 
 # Optional full list button
 more_button() {
-	[ $(wc -l ${3:-$CACHE/$1}) -gt ${4:-12} ] &&
+	[ $(wc -l ${3:-$CACHE/$1} | awk '{ print $1 }') -gt ${4:-12} ] &&
 	echo "<a class=\"button\" href=\"cooker.cgi?file=$1\">$2</a>"
 }
 
