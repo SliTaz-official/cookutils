@@ -108,6 +108,12 @@ list_packages() {
 	done
 }
 
+# Optional full list button
+more_button() {
+	[ $(wc -l ${3:-$CACHE/$1}) -gt ${4:-12} ] &&
+	echo "<a class=\"button\" href=\"cooker.cgi?file=$1\">$2</a>"
+}
+
 # xHTML header. Pages can be customized with a separated html.header file.
 if [ -f "header.html" ]; then
 	cat header.html
@@ -345,14 +351,14 @@ Blocked packages : $(cat $blocked | wc -l)
 <pre>
 $(tac $CACHE/activity | head -n 12 | syntax_highlighter activity)
 </pre>
-<a class="button" href="cooker.cgi?file=activity">More activity</a>
+$(more_button activity "More activity" $CACHE/activity 12)
 
 <a name="cooknotes"></a>
 <h2>Cooknotes</h2>
 <pre>
 $(tac $cooknotes | head -n 12 | syntax_highlighter activity)
 </pre>
-<a class="button" href="cooker.cgi?file=cooknotes">More notes</a>
+$(more_button cooknotes "More notes" $cooknotes 12)
 
 <a name="commits"></a>
 <h2>Commits</h2>
@@ -365,14 +371,14 @@ $(cat $commits)
 <pre>
 $(cat $cooklist | head -n 20)
 </pre>
-<a class="button" href="cooker.cgi?file=cooklist">Full cooklist</a>
+$(more_button cooklist "Full cooklist" $cooklist 20)
 
 <a name="broken"></a>
 <h2>Broken</h2>
 <pre>
 $(cat $broken | head -n 20 | sed s"#^[^']*#<a href='cooker.cgi?pkg=\0'>\0</a>#"g)
 </pre>
-<a class="button" href="cooker.cgi?file=broken">All broken packages</a>
+$(more_button broken "All broken packages" $broken 20)
 
 <a name="blocked"></a>
 <h2>Blocked</h2>
