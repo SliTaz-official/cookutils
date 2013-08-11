@@ -511,7 +511,7 @@ cookit() {
 
 	[ "$QA" ] && receipt_quality
 	cd $pkgdir
-	rm -rf install taz source
+	rm -rf install taz source 2> /dev/null
 
 	# Disable -pipe if less than 512Mb free RAM.
 	free=$(free | fgrep '/+ buffers' | tr -s ' ' | cut -f 4 -d ' ')
