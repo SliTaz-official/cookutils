@@ -192,15 +192,19 @@ create_tarball() {
 # Get package source. For SCM we are in cache so clone here and create a
 # tarball here.
 get_source() {
+	local url
+	url="$MIRROR_URL/sources/packages/${TARBALL:0:1}/$TARBALL"
 	set_paths
 	pwd=$(pwd)
 	case "$WGET_URL" in
 		http://*|ftp://*)
 			# Busybox Wget is better!
 			busybox wget -T 60 -c -O $SRC/$TARBALL $WGET_URL || \
+			busybox wget -T 60 -c -O $SRC/$TARBALL $url || \
 				(_ "ERROR: wget \$WGET_URL" && exit 1) ;;
 		https://*)
 			wget -c --no-check-certificate -O $SRC/$TARBALL $WGET_URL || \
+			busybox wget -T 60 -c -O $SRC/$TARBALL $url || \
 				(_ "ERROR: wget \$WGET_URL" && exit 1) ;;
 		hg*|mercurial*)
 			if $(echo "$WGET_URL" | fgrep -q "hg|"); then
