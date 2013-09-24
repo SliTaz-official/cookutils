@@ -1495,7 +1495,8 @@ EOT
 
 		# Exit if any error in packing.
 		lerror=$(_n "ERROR")
-		if grep -Eq "(^$lerror|No such file or directory|not remade because of errors)" $LOGS/$pkg.log; then
+		if grep -Ev "(/root/.cvspass|conftest|df: /)" $LOGS/$pkg.log | \
+		   grep -Eq "(^$lerror|No such file or directory|not remade because of errors)"; then
 			debug_info | tee -a $LOGS/$pkg.log
 			rm -f $command && exit 1
 		fi
