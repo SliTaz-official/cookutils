@@ -348,10 +348,10 @@ debug_info() {
 	# L10n: Please, translate all messages beginning with ERROR in a same way
 	lerror=$(_n "ERROR")
 	for error in \
-		ERROR $lerror "No package" "cp: can't" "can't open" "can't cd" \
+		^ERROR ^$lerror "No package" "cp: can't" "can't open" "can't cd" \
 		"error:" "fatal error:" "undefined reference to" \
 		"Unable to connect to" "link: cannot find the library" \
-		"CMake Error"
+		"CMake Error" "No such file or directory"
 	do
 		fgrep "$error" $LOGS/$pkg.log
 	done
@@ -607,7 +607,7 @@ cookit() {
 	# is enabled and cook fails we have ERROR in log, if no auto cook we have
 	# missing dep in cached file.
 	lerror=$(_n "ERROR")
-	if fgrep -q $lerror $LOGS/$pkg.log || [ -s "$CACHE/missing.dep" ]; then
+	if fgrep -q ^$lerror $LOGS/$pkg.log || [ -s "$CACHE/missing.dep" ]; then
 		[ -s "$CACHE/missing.dep" ] && nb=$(cat $CACHE/missing.dep | wc -l)
 		_ "ERROR: missing dep \$nb" && exit 1
 	fi
@@ -704,7 +704,7 @@ cookit_quality() {
 	fi
 	# ERROR can be echoed any time in cookit()
 	lerror=$(_n "ERROR")
-	if grep -Eq "($lerror|undefined reference to)" $LOGS/$pkg.log; then
+	if grep -Eq "(^$lerror|undefined reference to)" $LOGS/$pkg.log; then
 		debug_info | tee -a $LOGS/$pkg.log
 		rm -f $command && exit 1
 	fi
@@ -734,7 +734,7 @@ packit() {
 
 	# First QA check to stop now if genpkg_rules failed.
 	lerror=$(_n "ERROR")
-	if fgrep -q $lerror $LOGS/$pkg.log; then
+	if fgrep -q ^$lerror $LOGS/$pkg.log; then
 		exit 1
 	fi
 
@@ -820,7 +820,7 @@ packit_quality() {
 
 	# Exit if any error found in log file.
 	lerror=$(_n "ERROR")
-	if fgrep -q $lerror $LOGS/$pkg.log; then
+	if fgrep -q ^$lerror $LOGS/$pkg.log; then
 		rm -f $command && exit 1
 	fi
 
