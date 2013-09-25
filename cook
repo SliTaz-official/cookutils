@@ -351,7 +351,7 @@ debug_info() {
 		^ERROR ^$lerror "No package" "cp: can't" "can't open" "can't cd" \
 		"error:" "fatal error:" "undefined reference to" \
 		"Unable to connect to" "link: cannot find the library" \
-		"CMake Error" "No such file or directory"
+		"CMake Error" ": No such file or directory"
 	do
 		fgrep "$error" $LOGS/$pkg.log
 	done
@@ -1495,8 +1495,8 @@ EOT
 
 		# Exit if any error in packing.
 		lerror=$(_n "ERROR")
-		if grep -Ev "(/root/.cvspass|conftest|df: /)" $LOGS/$pkg.log | \
-		   grep -Eq "(^$lerror|No such file or directory|not remade because of errors)"; then
+		if grep -Ev "(/root/.cvspass|conftest|df: /|rm: can't remove)" $LOGS/$pkg.log | \
+		   grep -Eq "(^$lerror|: No such file or directory|not remade because of errors)"; then
 			debug_info | tee -a $LOGS/$pkg.log
 			rm -f $command && exit 1
 		fi
