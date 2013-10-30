@@ -40,7 +40,7 @@ echo ""
 
 # RSS feed generator
 if [ "$QUERY_STRING" == "rss" ]; then
-	pubdate=$(date "+%a, %d %b %Y %X")
+	pubdate=$(date "+%a, %d %b %Y %X %Z")
 	cat << EOT
 <?xml version="1.0" encoding="utf-8" ?>
 <rss version="2.0">
@@ -48,8 +48,8 @@ if [ "$QUERY_STRING" == "rss" ]; then
 	<title>SliTaz Cooker</title>
 	<description>The SliTaz packages cooker feed</description>
 	<link>$COOKER_URL</link>
-	<lastBuildDate>$pubdate GMT</lastBuildDate>
-	<pubDate>$pubdate GMT</pubDate>
+	<lastBuildDate>$pubdate</lastBuildDate>
+	<pubDate>$pubdate</pubDate>
 EOT
 	for rss in $(ls -lt $FEEDS/*.xml | head -n 12)
 	do
@@ -331,7 +331,7 @@ Blocked packages : $(cat $blocked | wc -l)
 
 <p class="info">
 	Packages: $inwok in the wok - $cooked cooked - $unbuilt unbuilt -
-	Server date: $(date '+%Y-%m-%d %H:%M')
+	Server date: $(date '+%Y-%m-%d %H:%M %Z')
 </p>
 <div class="pctbar">
 	<div class="pct" style="width: ${pct}%;">${pct}%</div>

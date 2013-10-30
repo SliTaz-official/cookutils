@@ -704,7 +704,8 @@ cookit_quality() {
 	fi
 	# ERROR can be echoed any time in cookit()
 	lerror=$(_n "ERROR")
-	if grep -Eq "(^$lerror|undefined reference to)" $LOGS/$pkg.log; then
+	if grep -Ev "(conftest|configtest)" $LOGS/$pkg.log | \
+	   grep -Eq "(^$lerror|undefined reference to)" ; then
 		debug_info | tee -a $LOGS/$pkg.log
 		rm -f $command && exit 1
 	fi
