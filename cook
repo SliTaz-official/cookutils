@@ -156,11 +156,14 @@ set_paths() {
 	if [ "$SOURCE" ]; then
 		source_stuff=$WOK/$SOURCE/stuff
 	fi
-	# Kernel version is set from linux
+	# Kernel version is set from wok/linux or installed/linux-api-headers(wok-undigest)
 	if [ -f "$WOK/linux/receipt" ]; then
 		kvers=$(grep ^VERSION= $WOK/linux/receipt | cut -d '"' -f 2)
 		kbasevers=${kvers:0:3}
-	fi
+	elif [ -f "$INSTALLED/linux-api-headers/receipt" ]; then
+		kvers=$(grep ^VERSION= $INSTALLED/linux-api-headers/receipt | cut -d '"' -f 2)
+		kbasevers=${kvers:0:3}
+	fi	
 	# Python version 
 	if [ -f "$WOK/python/receipt" ]; then
 		pyvers=$(grep ^VERSION= $WOK/python/receipt | cut -d '"' -f 2)
