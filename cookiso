@@ -200,7 +200,7 @@ case "$1" in
 		pkgs=$SLITAZ/packages/packages.md5
 		last=$cache/packages.md5
 		diff=$cache/packages.diff
-		cook="preinit core-4in1"
+		cook="preinit core-4in1 core core64"
 		
 		# Log stuff
 		rm -f $rollog && touch $rollog
