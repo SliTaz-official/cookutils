@@ -357,7 +357,9 @@ debug_info() {
 		"CMake Error" ": No such file or directory"
 	do
 		fgrep "$error" $LOGS/$pkg.log
-	done
+	done > $LOGS/$pkg.log.debug_info 2>&1
+	cat $LOGS/$pkg.log.debug_info
+	rm -f $LOGS/$pkg.log.debug_info
 	separator; newline
 }
 
