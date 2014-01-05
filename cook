@@ -916,7 +916,7 @@ try_aufs_chroot() {
 		if [ $mnt == / ] && ! mount -t aufs -o br=${base}rw:/ none ${base}root; then
 			_ "Aufs mountage failure"
 			umount ${base}root
-			rmdir ${base}*
+			rm -rf ${base}r*
 			return
 		fi
 		echo "umount ${base}root$mnt" >> ${base}rw/aufs-umount.sh
