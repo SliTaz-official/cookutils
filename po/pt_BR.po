@@ -1,0 +1,935 @@
+# Portuguese translations for Cook package.
+# Copyright (C) 2014 SliTaz Association
+# This file is distributed under the same license as the Cook package.
+# Claudinei Pereira <claudinei@slitaz.org>, 2014.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Cook 3.1.4\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2013-03-29 17:02+0000\n"
+"PO-Revision-Date: 2014-01-13 19:37-0200\n"
+"Last-Translator: Claudinei Pereira <claudinei@slitaz.org>\n"
+"Language-Team: Brazilian Portuguese <i18n@slitaz.org>\n"
+"Language: pt_BR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#: cook:32
+msgid "\\033[1mUsage:\\033[0m cook [package|command] [list|--option]"
+msgstr "\\033[1mUtilização:\\033[0m cook [pacote|comando] [lista|--opções]"
+
+#: cook:34
+msgid "\\033[1mCommands:\\033[0m"
+msgstr "\\033[1mComandos:\\033[0m"
+
+#: cook:35
+msgid "Display this short usage."
+msgstr "Mostra esta utilização."
+
+#: cook:36
+msgid "Setup your build environment."
+msgstr "Configura seu ambiente de desenvolvimento."
+
+#: cook:37
+msgid "Setup a cross environment."
+msgstr "Configura seu ambiente de desenvolvimento cruzado."
+
+#: cook:38
+msgid "Test environment and cook a package."
+msgstr "Testa o ambiente e compila o pacote."
+
+#: cook:39
+msgid "List packages in the wok."
+msgstr "Lista pacotes no wok."
+
+#: cook:40
+msgid "Simple packages search function."
+msgstr "Função simples de busca de pacotes."
+
+#: cook:41
+msgid "Create a new package with a receipt."
+msgstr "Cria um novo pacote a partir de um arquivo receipt."
+
+#: cook:42
+msgid "Cook a list of packages."
+msgstr "Compila uma lista de pacotes."
+
+#: cook:43
+msgid "Clean-up all packages files."
+msgstr "Limpa todos os arquivos de pacotes."
+
+#: cook:44
+msgid "Clean-up all packages sources."
+msgstr "Limpa todos os fontes de pacotes."
+
+#: cook:45
+msgid "Create packages DB lists and flavors."
+msgstr "Cria a lista de banco de dados de pacotes e variantes."
+
+#: cook:47
+msgid "\\033[1mOptions:\\033[0m"
+msgstr "\\033[1mOpções:\\033[0m"
+
+#: cook:48
+msgid "clean the package in the wok."
+msgstr "Limpa o pacote no wok."
+
+#: cook:49
+msgid "cook and install the package."
+msgstr "Compila e instala o pacote."
+
+#: cook:50
+msgid "get the package source tarball."
+msgstr "Baixa os fontes do pacote."
+
+#: cook:51
+msgid "block a package so cook will skip it."
+msgstr "bloqueia um pacote, ignorando-o."
+
+#: cook:52
+msgid "unblock a blocked package."
+msgstr "desbloqueia um pacote."
+
+#: cook:53
+msgid "repack an already built package."
+msgstr "reempacote um pacote já compilado."
+
+#: cook:54
+msgid "create a receipt interactively."
+msgstr "Cria interativamente um arquivo receipt."
+
+#: cook:55
+msgid "clone the cooking wok from Hg repo."
+msgstr "Clona o wok cooking a partir do repositório HG."
+
+#: cook:56
+msgid "clone the stable wok from Hg repo."
+msgstr "Clona o wok stable a partir do repositório HG."
+
+#: cook:57
+msgid "clone the undigest wok from Hg repo."
+msgstr "Clona o wok undigest a partir do repositório HG."
+
+#: cook:58
+msgid "clone the tiny SliTaz wok from Hg repo."
+msgstr "Clona o wok tiny a partir do repositório HG."
+
+
+#: cook:59
+msgid "force reinstall of chroot packages."
+msgstr "Força a reinstalação de pacotes no chroot."
+
+#: cook:60
+msgid "create up-to-date flavors files."
+msgstr "Cria uma lista atualizada de variantes."
+
+#: cook:75
+#, sh-format
+msgid "Unable to find package in the wok: $pkg"
+msgstr "Impossível encontrar o pacote no wok: $pkg"
+
+#. L10n: QA is quality assurance
+#: cook:83
+#, sh-format
+msgid "QA: empty variable: ${var}=\"\""
+msgstr "QA: variável vazia: ${var}=\"\""
+
+#: cook:90
+#, sh-format
+msgid "Creating directories structure in: $SLITAZ"
+msgstr "Criando estrutura de diretórios em: $SLITAZ"
+
+#: cook:92
+#, sh-format
+msgid "Creating DB files in: $CACHE"
+msgstr "Criando arquivo de banco de dados em: $CACHE"
+
+#: cook:101
+msgid "QA: checking package receipt..."
+msgstr "QA: verificando arquivo receipt do pacote..."
+
+#: cook:117
+#, sh-format
+msgid "QA: unknown category: $value"
+msgstr "QA: categoria desconhecida: $value"
+
+#: cook:118
+#, sh-format
+msgid "Please, use one of: $valid"
+msgstr "Por favor, utilize uma de: $valid"
+
+#: cook:127
+#, sh-format
+msgid "QA: unable to reach: $value"
+msgstr "QA: não foi possível encontrar: $value"
+
+#: cook:180
+#, sh-format
+msgid "Creating tarball: $tarball"
+msgstr "Criando arquivo tar: $tarball"
+
+#: cook:200 cook:203
+#, sh-format
+msgid "ERROR: wget $WGET_URL"
+msgstr "ERRO: wget $WGET_URL"
+
+#: cook:210
+msgid "Getting source from Hg..."
+msgstr "Obtendo fonte do repositório HG..."
+
+#: cook:211 cook:225 cook:237 cook:249
+#, sh-format
+msgid "URL: $url"
+msgstr "URL: $url"
+
+#: cook:212
+#, sh-format
+msgid "Cloning to: $pwd/$pkgsrc"
+msgstr "Clonando para: $pwd/$pkgsrc"
+
+#: cook:214
+#, sh-format
+msgid "Hg branch: $BRANCH"
+msgstr "Hg branch: $BRANCH"
+
+#: cook:216
+#, sh-format
+msgid "ERROR: hg clone $url --rev $BRANCH"
+msgstr "ERRO: hg clone $url --rev $BRANCH"
+
+#: cook:218
+#, sh-format
+msgid "ERROR: hg clone $url"
+msgstr "ERRO: hg clone $url"
+
+#: cook:224
+msgid "Getting source from Git..."
+msgstr "Obtendo fonte do Git..."
+
+#: cook:226
+#, sh-format
+msgid "ERROR: git clone $url"
+msgstr "ERRO: git clone $url"
+
+#: cook:228
+#, sh-format
+msgid "Git branch: $BRANCH"
+msgstr "Git branch: $BRANCH"
+
+#: cook:236
+msgid "Getting source from CVS..."
+msgstr "Obtendo fonte do CVS..."
+
+#: cook:238
+#, sh-format
+msgid "CVS module: $mod"
+msgstr "Módulo CVS: $mod"
+
+#: cook:239
+#, sh-format
+msgid "Cloning to: $pwd/$mod"
+msgstr "Clonando para: $pwd/$mod"
+
+#: cook:248
+msgid "Getting source from SVN..."
+msgstr "Obtendo fonte do SVN..."
+
+#: cook:258
+msgid "Getting source from bazaar..."
+msgstr "Obtendo fonte do bazaar..."
+
+#: cook:268
+msgid "Don't forget to add to receipt:"
+msgstr "Não se esqueça de adicionar arquivo receipt:"
+
+#: cook:275
+#, sh-format
+msgid "ERROR: Unable to handle: $WGET_URL"
+msgstr "ERRO: não foi possível utilizar: $WGET_URL"
+
+#: cook:287
+#, sh-format
+msgid "Getting source from mirror: $url"
+msgstr "Obtendo fonte a partir do mirror: $url"
+
+#: cook:288
+#, sh-format
+msgid "ERROR: wget $url"
+msgstr "ERRO: wget $url"
+
+#: cook:290
+#, sh-format
+msgid "Extracting: $TARBALL"
+msgstr "Extraindo: $TARBALL"
+
+#. L10n: specify your format of date and time (to help: man date)
+#. L10n: not bad one is '+%x %R'
+#: cook:314 cook:341 cook:1179 cook:1286
+msgid "+%Y-%m-%d %H:%M"
+msgstr "+%d-%m-%Y %H:%M"
+
+#. L10n: 'm' is for minutes (approximate cooking time)
+#: cook:318
+#, sh-format
+msgid "~ ${div}m"
+msgstr "~ ${div}m"
+
+#: cook:319
+#, sh-format
+msgid "Summary for: $PACKAGE $VERSION"
+msgstr "Resumo para: $PACKAGE $VERSION"
+
+#. L10n: keep the same width of translations to get a consistent view
+#: cook:322
+#, sh-format
+msgid "Source dir  : $srcdir"
+msgstr "Diretório fonte : $srcdir"
+
+#: cook:323
+#, sh-format
+msgid "Src file    : $TARBALL"
+msgstr "Arquivo fonte   : $TARBALL"
+
+#: cook:324
+#, sh-format
+msgid "Src size    : $srcsize"
+msgstr "Tamanho do fonte: $srcsize"
+
+#: cook:325
+#, sh-format
+msgid "Produced    : $prod"
+msgstr "Produzido       : $prod"
+
+#: cook:326
+#, sh-format
+msgid "Packed      : $fs"
+msgstr "Empacotado      : $fs"
+
+#: cook:327
+#, sh-format
+msgid "Compressed  : $size"
+msgstr "Comprimido      : $size"
+
+#: cook:328
+#, sh-format
+msgid "Files       : $files"
+msgstr "Arquivos        : $files"
+
+#. L10n: 's' is for seconds (cooking time)
+#: cook:330
+#, sh-format
+msgid "Cook time   : ${sec}s $min"
+msgstr "Tempo utilizado : ${sec}s $min"
+
+#: cook:331
+#, sh-format
+msgid "Cook date   : $cookdate"
+msgstr "Data criação    : $cookdate"
+
+#: cook:332
+#, sh-format
+msgid "Host arch   : $ARCH"
+msgstr "Arquitetura alvo: $ARCH"
+
+#: cook:338
+msgid "Debug information"
+msgstr "Informação de debug"
+
+#: cook:342
+#, sh-format
+msgid "Cook date: $datenow"
+msgstr "Data criação: $datenow"
+
+#. L10n: Please, translate all messages beginning with ERROR in a same way
+#: cook:344 cook:604 cook:701 cook:731 cook:817 cook:1405
+msgid "ERROR"
+msgstr "ERRO"
+
+#: cook:427
+msgid "Executing strip on all files..."
+msgstr "Executando comando strip em todos os arquivos..."
+
+#: cook:440
+msgid "Removing Python compiled files..."
+msgstr "Removendo arquivos compilados do python..."
+
+#: cook:448
+msgid "Removing Perl compiled files..."
+msgstr "Removendo arquivos compilados do Perl..."
+
+#: cook:462 cook:590
+msgid "Build dependencies to remove: "
+msgstr "Dependências de compilação para remover:"
+
+#: cook:463 cook:591
+msgid "Removing:"
+msgstr "Removendo:"
+
+#: cook:477
+#, sh-format
+msgid "Cook: $PACKAGE $VERSION"
+msgstr "Cook: $PACKAGE $VERSION"
+
+#: cook:491
+#, sh-format
+msgid "$ARCH sysroot: $sysroot"
+msgstr "$ARCH sysroot: $sysroot"
+
+#: cook:492
+#, sh-format
+msgid "Adding $tools/bin to PATH"
+msgstr "Adicionando $tools/bin ao PATH"
+
+#: cook:496
+#, sh-format
+msgid "Using cross-tools: $CROSS_COMPILE"
+msgstr "Usando cross-tools: $CROSS_COMPILE"
+
+#: cook:518
+#, sh-format
+msgid "Disabling -pipe compile flag: $free RAM"
+msgstr "Desabilitando flag de compilação -pipe: $free RAM"
+
+#: cook:535
+msgid "Checking build dependencies..."
+msgstr "Verificando dependências de compilação..."
+
+#: cook:536
+#, sh-format
+msgid "Using packages DB: ${root}$DB"
+msgstr "Utilizando banco de dados de pacotes: ${root}/$DB"
+
+#: cook:562
+#, sh-format
+msgid "Missing dep (wok/pkg): $i $vers"
+msgstr "Dependência requerida (wok/pgk): $i $vers"
+
+#: cook:570
+#, sh-format
+msgid "ERROR: unknown dep $i"
+msgstr "ERRO: dependência desconhecida $i"
+
+#: cook:583
+msgid "Auto cook config is set: AUTO_COOK"
+msgstr "Configuração de auto compilação está ativa: AUTO_COOK"
+
+#: cook:587
+#, sh-format
+msgid "Building dep (wok/pkg)    : $i $vers"
+msgstr "Dependência de compilação (wok/pkg): $i $vers"
+
+#: cook:592
+#, sh-format
+msgid "ERROR: can't cook dep '$i'"
+msgstr "ERRO: impossível compilar dependência '$i'"
+
+#: cook:607
+#, sh-format
+msgid "ERROR: missing dep $nb"
+msgstr "ERRO: dependência desconhecida $nb"
+
+#: cook:614
+#, sh-format
+msgid "Installing dep (pkg/local): $i"
+msgstr "Instalando dependência (pkg/local): $i"
+
+#: cook:622
+#, sh-format
+msgid "Installing dep (web/cache): $i"
+msgstr "Instalando dependência (web/cache): $i"
+
+#: cook:672
+msgid "Executing: compile_rules"
+msgstr "Executando: compile_rules"
+
+#: cook:689
+msgid "Running testsuite"
+msgstr "Executando testsuite"
+
+#: cook:698
+msgid "ERROR: cook failed"
+msgstr "ERRO: compilação falhou"
+
+#: cook:718
+#, sh-format
+msgid "Pack: $PACKAGE ${VERSION}${arch}"
+msgstr "Pack: $PACKAGE ${VERSION}${arch}"
+
+#: cook:721
+msgid "Executing: genpkg_rules"
+msgstr "Executando: genpkg_rules"
+
+#: cook:723
+msgid "ERROR: genpkg_rules failed"
+msgstr "ERRO: genpkg_rules falhou"
+
+#: cook:726
+msgid "No packages rules: meta package"
+msgstr "Sem regras para pacote: meta pacote"
+
+#: cook:740
+#, sh-format
+msgid "Copying $file..."
+msgstr "Copiando $file..."
+
+#: cook:746
+msgid "Creating the list of files..."
+msgstr "Criando lista de arquivos..."
+
+#: cook:757
+msgid "Creating md5sum of files..."
+msgstr "Criando md5sum de arquivos..."
+
+#: cook:772
+msgid "Compressing the fs..."
+msgstr "Comprimindo sistema de arquivos..."
+
+#: cook:779
+msgid "Updating receipt sizes..."
+msgstr "Atualizando tamanho do arquivo receipt..."
+
+#: cook:787
+#, sh-format
+msgid "Updating receipt EXTRAVERSION: $EXTRAVERSION"
+msgstr "Atualizando arquivo receipt EXTRAVERSION: $EXTRAVERSION"
+
+#: cook:794
+msgid "Creating full cpio archive..."
+msgstr "Criando arquivo cpio..."
+
+#: cook:798
+msgid "Restoring original package tree..."
+msgstr "Restaurando sistema de arquivos original do pacote..."
+
+#: cook:806
+#, sh-format
+msgid "Package: $tazpkg"
+msgstr "Pacote: $tazpkg"
+
+#: cook:822
+msgid "QA: checking for empty package..."
+msgstr "QA: chegando se pacote está vazio..."
+
+#: cook:825
+msgid "ERROR: empty package"
+msgstr "ERRO: pacote vazio"
+
+#: cook:833
+#, sh-format
+msgid "Removing old: $old_pkg"
+msgstr "Removendo antigo: $old_pkg"
+
+#: cook:863
+msgid "Unable to install package, build has failed."
+msgstr "Impossível instalar pacote, compilação falhou."
+
+#: cook:872
+#, sh-format
+msgid "Updating $ARCH chroot environment..."
+msgstr "Atualizando ambiente de desenvolvimento $ARCH..."
+
+#: cook:873
+#, sh-format
+msgid "Updating chroot: $pkg (${VERSION}${EXTRAVERSION}${arch})"
+msgstr "Atualizando chroot: $pkg (${VERSION}${EXTRAVERSION}${arch})"
+
+#: cook:894
+msgid "Setup aufs chroot..."
+msgstr "Configurando aufs chroot..."
+
+#: cook:906
+msgid "Aufs mountage failure"
+msgstr "Montagem aufs falhou"
+
+#: cook:917
+msgid "Leaving aufs chroot..."
+msgstr "Deixando aufs chroot..."
+
+#: cook:959
+#, sh-format
+msgid "List of packages in: $WOK"
+msgstr "Lista de pacotes em: $WOK"
+
+#: cook:963
+#, sh-format
+msgid "Packages: $pkg_total"
+msgstr "Pacotes: $pkg_total"
+
+#: cook:969
+#, sh-format
+msgid "Search results for: $query"
+msgstr "Resultado de busca para: $query"
+
+#: cook:975
+msgid "Cook: setup environment"
+msgstr "Cook: configuração de ambiente"
+
+#: cook:976
+msgid "Setting up your environment"
+msgstr "Configurando seu ambiente"
+
+#: cook:979
+msgid "Checking for packages to install..."
+msgstr "Verificando pacotes para instalar..."
+
+#: cook:985
+msgid "ERROR: cross is not installed"
+msgstr "ERRO: cross não está instalado"
+
+#: cook:988
+msgid "Using config file: /etc/slitaz/cross.conf"
+msgstr "Usando arquivo de configuração: /etc/slitaz/cross.conf"
+
+#: cook:1013
+msgid "Adding group: slitaz"
+msgstr "Adicionando grupo: slitaz"
+
+#: cook:1016
+msgid "Setting permissions for slitaz group..."
+msgstr "Configurando permissões para o grupo slitaz..."
+
+#: cook:1019
+msgid "All done, ready to cook packages :-)"
+msgstr "Tudo pronto para compilar os pacotes :-)"
+
+#: cook:1024
+#, sh-format
+msgid "Cook: setup $arch cross environment"
+msgstr "Cook: configuração de ambiente de desenvolvimento cruzado $ARCH"
+
+#: cook:1025
+#, sh-format
+msgid "Setting up your $arch cross environment"
+msgstr "Configurando seu ambiente de desenvolvimento cruzado $arch"
+
+#. L10n: keep the same width of translations to get a consistent view
+#: cook:1051
+#, sh-format
+msgid "Target arch     : $ARCH"
+msgstr "Arquitetura alvo          : $ARCH"
+
+#: cook:1052
+#, sh-format
+msgid "Configure args  : $CONFIGURE_ARGS"
+msgstr "Argumentos de configuração: $CONFIGURE_ARGS"
+
+#: cook:1053
+#, sh-format
+msgid "Arch sysroot    : $sysroot"
+msgstr "Arch sysroot              : $sysroot"
+
+#: cook:1054
+#, sh-format
+msgid "Tools prefix    : $tools/bin"
+msgstr "Prefixo das ferramentas   : $tools/bin"
+
+#: cook:1056
+#, sh-format
+msgid "Packages DB     : ${root}$DB"
+msgstr "Bando de dados de pacotes : ${root}$DB"
+
+#: cook:1067
+msgid "WARNING: (e)glibc-base is not installed in sysroot"
+msgstr "AVISO: (e)glibc-base não está instalado em sysroot"
+
+#: cook:1071
+#, sh-format
+msgid "Cross compiler  : ${HOST_SYSTEM}-gcc"
+msgstr "Compilador cruzado         : ${HOST_SYSTEM}-gcc"
+
+#: cook:1073
+#, sh-format
+msgid "C compiler is missing: ${HOST_SYSTEM}-gcc"
+msgstr "Compilador C não enconrado : ${HOST_SYSTEM}-gcc"
+
+#: cook:1074
+msgid "Run 'cross compile' to cook a toolchain"
+msgstr "Execute 'cross compile' para compilar o toolchain"
+
+#: cook:1079
+msgid "Cook test: testing the cook environment"
+msgstr "Cook test: testando o ambiente de desenvolimento"
+
+#: cook:1089
+#, sh-format
+msgid "$pkg package already exists."
+msgstr "O pacote $pkg já existe."
+
+#: cook:1092
+#, sh-format
+msgid "Creating $WOK/$pkg"
+msgstr "Criando $WOK/$pkg"
+
+#: cook:1094
+msgid "Preparing the package receipt..."
+msgstr "Preparando arquivo receipt do pacote..."
+
+#: cook:1102
+msgid "Entering interactive mode..."
+msgstr "Entrando no modo interativo..."
+
+#: cook:1104
+#, sh-format
+msgid "Package       : $pkg"
+msgstr "Pacote       : $pkg"
+
+#: cook:1105
+msgid "Version       : "
+msgstr "Versão       : "
+
+#: cook:1107
+msgid "Category      : "
+msgstr "Categoria    : "
+
+#. L10n: Short description
+#: cook:1110
+msgid "Short desc    : "
+msgstr "Descrição    : "
+
+#: cook:1112
+msgid "Maintainer    : "
+msgstr "Mantenedor   : "
+
+#: cook:1114
+msgid "License       : "
+msgstr "Licença      : "
+
+#: cook:1116
+msgid "Web site      : "
+msgstr "Web site     : "
+
+#: cook:1120
+msgid "Wget URL to download source tarball."
+msgstr "Wget URL para baixar arquivo fonte."
+
+#: cook:1121
+msgid "Example  : "
+msgstr "Exemplo : "
+
+#: cook:1122
+msgid "Wget url : "
+msgstr "Wget url: "
+
+#: cook:1125
+msgid "Do you need a stuff directory? (y/N) : "
+msgstr "Diretório 'stuff' necessário? (y/N) : "
+
+#: cook:1127
+msgid "Creating the stuff directory..."
+msgstr "Criando diretório 'stuff'..."
+
+#: cook:1131
+msgid "Are you going to write a description? (y/N) : "
+msgstr "Adicionar descrição? (y/N) : "
+
+#: cook:1133
+msgid "Creating the description.txt file..."
+msgstr "Criando arquivo description.txt..."
+
+#: cook:1136
+msgid "Receipt is ready to use."
+msgstr "Arquivo receipt pronto para ser utilizado."
+
+#: cook:1142
+msgid "No list in argument."
+msgstr "Nenhuma lista no argumento."
+
+#: cook:1144
+#, sh-format
+msgid "No list found: $list2"
+msgstr "Nenhuma lista encontrada: $list2"
+
+#: cook:1145
+#, sh-format
+msgid "Cook list starting: $list2"
+msgstr "Iniciando lista de compilação: $list2"
+
+#: cook:1152
+msgid "Cleaning all packages files..."
+msgstr "Limpando todos os arquivos de pacote..."
+
+#: cook:1157
+msgid "Cleaning all packages sources..."
+msgstr "Limpando todos os fontes de pacote..."
+
+#: cook:1170
+msgid "Packages directory doesn't exist"
+msgstr "O diretório de pacote não existe"
+
+#: cook:1177
+msgid "Cook pkgdb: Creating all packages lists"
+msgstr "Cook pkgdb: criando todas as listas de pacote"
+
+#: cook:1178
+#, sh-format
+msgid "Creating lists for: $PKGS"
+msgstr "Criando listas para: $PKGS"
+
+#: cook:1180
+#, sh-format
+msgid "Cook pkgdb started: $datenow"
+msgstr "Cook pkgdb iniciada: $datenow"
+
+#: cook:1183
+msgid "Creating: packages.list"
+msgstr "Criando: packages.list"
+
+#: cook:1185
+msgid "Creating: packages.md5"
+msgstr "Criando: packages.md5"
+
+#: cook:1188
+#, sh-format
+msgid "Creating lists from: $WOK"
+msgstr "Criando lista de: $WOK"
+
+#: cook:1230
+msgid "Done: packages.desc"
+msgstr "Feito: packages.desc"
+
+#: cook:1231
+msgid "Done: packages.txt"
+msgstr "Feito: packages.txt"
+
+#: cook:1232
+msgid "Done: packages.equiv"
+msgstr "Feito: packages.equiv"
+
+#: cook:1235
+msgid "Creating: files.list.lzma"
+msgstr "Criando: files.list.lzma"
+
+#. L10n: 's' is for seconds (cooking time)
+#: cook:1244
+#, sh-format
+msgid "Packages: $nb - Time: ${time}s"
+msgstr "Pacotes: $nb - Tempo: ${time}s"
+
+#: cook:1250
+#, sh-format
+msgid "Missing flavors: $flavors"
+msgstr "Variante desconhecida: $flavors"
+
+#: cook:1252
+#, sh-format
+msgid "Creating flavors files in: $live"
+msgstr "Criando arquivos de variante em: $live"
+
+#: cook:1253
+msgid "Cook pkgdb: Creating all flavors"
+msgstr "Cook pkgdb: criando todas as variantes"
+
+#: cook:1255
+msgid "Recharging lists to use latest packages..."
+msgstr "Recarregando listas para usar pacotes mais recentes..."
+
+#: cook:1260
+msgid "Creating configuration file: tazlito.conf"
+msgstr "Criando arquivo de configuração: tazlito.conf"
+
+#: cook:1270
+msgid "Starting to generate flavors..."
+msgstr "Iniciando a geração de variante..."
+
+#: cook:1275
+#, sh-format
+msgid "Packing flavor: $fl"
+msgstr "Enpacotando variante: $fl"
+
+#: cook:1283
+#, sh-format
+msgid "Flavors size: $fl_size"
+msgstr "Tamanho da variante: $fl_size"
+
+#: cook:1287
+#, sh-format
+msgid "Cook pkgdb end: $datenow"
+msgstr "Cook pkgdb finalizado: $datenow"
+
+#: cook:1314
+#, sh-format
+msgid "cook: HOST_ARCH is not set in $pkg receipt"
+msgstr "cook: HOST_ARCH não definido em $pkg receipt"
+
+#: cook:1315
+#, sh-format
+msgid "cook: This package is not included in: $ARCH"
+msgstr "cook: Este pacote não está incluso em: $ARCH"
+
+#: cook:1316 cook:1327
+#, sh-format
+msgid "bugs: $CROSS_BUGS"
+msgstr "bugs: $CROSS_BUGS"
+
+#: cook:1317
+#, sh-format
+msgid "Cook skip: $pkg is not included in: $ARCH"
+msgstr "Cook skip: $pkg não está incluso em: $ARCH"
+
+#: cook:1325
+#, sh-format
+msgid "cook: HOST_ARCH=$HOST_ARCH"
+msgstr "cook: HOST_ARCH=$HOST_ARCH"
+
+#: cook:1326
+#, sh-format
+msgid "cook: $pkg doesn't cook or is not included in: $ARCH"
+msgstr "cook: $pkg não compila ou não está incluso em: $ARCH"
+
+#: cook:1328
+#, sh-format
+msgid "Cook skip: $pkg doesn't cook or is not included in: $ARCH"
+msgstr "Cook skip: $pkg não compila ou não está incluso em: $ARCH"
+
+#: cook:1334
+#, sh-format
+msgid "Blocked package: $pkg"
+msgstr "Pacote bloqueado: $pkg"
+
+#: cook:1341
+#, sh-format
+msgid "Cook started for: <a href='cooker.cgi?pkg=$pkg'>$pkg</a>"
+msgstr "Compilação iniciada para: <a href='cooker.cgi?pkg=$pkg'>$pkg</a>"
+
+#: cook:1352
+#, sh-format
+msgid "Cleaning: $pkg"
+msgstr "Limpando: $pkg"
+
+#: cook:1358
+#, sh-format
+msgid "Getting source for: $pkg"
+msgstr "Obtendo fonte para: $pkg"
+
+#: cook:1360
+#, sh-format
+msgid "Tarball: $SRC/$TARBALL"
+msgstr "Tarball: $SRC/$TARBALL"
+
+#: cook:1363
+#, sh-format
+msgid "Blocking: $pkg"
+msgstr "Bloqueando: $pkg"
+
+#: cook:1367
+#, sh-format
+msgid "Unblocking: $pkg"
+msgstr "Desbloqueando: $pkg"
+
+#: cook:1377
+#, sh-format
+msgid "Need to build $pkg."
+msgstr "Necessário compilar $pkg."
+
+#: cook:1385
+#, sh-format
+msgid "WANTED package is blocked: $wanted"
+msgstr "Pacote requerido está bloqueado: $wanted"
+
+#: cook:1389
+#, sh-format
+msgid "WANTED package is broken: $wanted"
+msgstr "Pacote requerido está quebrado: $wanted"

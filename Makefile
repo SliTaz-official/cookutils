@@ -3,7 +3,7 @@
 
 PREFIX?=/usr
 DESTDIR?=
-LINGUAS?=ru
+LINGUAS?=ru pt_BR
 VERSION:=$(shell grep ^VERSION cook | cut -d'=' -f2)
 
 all:
