@@ -19,9 +19,9 @@ pre {
 
 #header {
 	color: white;
-	background: #351a0a;
+	background: #222;
 	height: 40px;
-	border-bottom: 8px solid #d66018;
+	border-bottom: 4px solid #afafaf;
 }
 
 #header h1 {
@@ -45,7 +45,7 @@ pre {
 
 #network {
 	float: right;
-	padding: 12px 5px 0;
+	padding: 14px 5px 0;
 	font-size: 12px;
 }
 

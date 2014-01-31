@@ -26,7 +26,7 @@ HOWTO:
 	Create a chroot (use last tazdev)
 	---------------------------------
 	# tazdev gen-chroot --arch=arm
-	# tazdev chroot
+	# tazdev chroot --arch=arm
 
 	Clone cookutils to get last cook and cross
 	------------------------------------------
