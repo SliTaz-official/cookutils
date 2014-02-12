@@ -24,6 +24,7 @@ install-cook:
 	install -m 0755 cook $(DESTDIR)$(PREFIX)/bin
 	install -m 0755 cooker $(DESTDIR)$(PREFIX)/bin
 	install -m 0755 cookiso $(DESTDIR)$(PREFIX)/bin
+	install -m 0755 cooklinux $(DESTDIR)$(PREFIX)/bin
 	install -m 0644 cook.conf $(DESTDIR)/etc/slitaz
 	install -m 0644 cook.site $(DESTDIR)/etc/slitaz
 	install -m 0644 web/* $(DESTDIR)/var/www/cgi-bin/cooker
@@ -40,6 +41,9 @@ uninstall-cook:
 	rm -rf \
 		$(DESTDIR)$(PREFIX)/bin/cook \
 		$(DESTDIR)$(PREFIX)/bin/cooker \
+		$(DESTDIR)$(PREFIX)/bin/cookiso \
+		$(DESTDIR)$(PREFIX)/bin/cooklinux \
+		$(DESTDIR)$(PREFIX)/share/cook \
 		$(DESTDIR)/etc/slitaz/cook.* \
 		$(DESTDIR)/var/www/cooker
 
