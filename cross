@@ -113,7 +113,7 @@ linux_headers() {
 	init_compile
 	if [ ! -d "linux-$LINUX_VERSION" ]; then
 		echo "Extracting: $LINUX_TARBALL"
-		tar xjf $SRC/$LINUX_TARBALL
+		tar xJf $SRC/$LINUX_TARBALL
 	fi
 	rm -rf linux-headers
 	cd linux-$LINUX_VERSION
