@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 # Simple utility to compile from scratch a custom Linux kernel on SliTaz.
-# No patch, aufs and co, keep it simple. The goal is to let users build
+# No patches, aufs and co, keep it simple. The goal is to let users build
 # a custom and optimized kernel in a few commands
 #
 # Copyright (C) 2014 SliTaz GNU/Linux - BSD License
@@ -26,8 +26,8 @@ SliTaz Linux Kernel cooker
 $(boldify "Usage:") $(basename $0) [version] [--options]
 
 $(boldify "Options:")
-  --clean        Remove most generated files but keep the config
-  --mrproper     Remove all generated files + config + backup files
+  --clean        Removes most generated files but keeps the config
+  --mrproper     Removes all generated files + config + backup files
   --defconfig    New config with default from ARCH supplied defconfig
   --tazconfig    New config using current SliTaz /proc/config.gz
   --localmod     Update config removing all unloaded modules
@@ -54,7 +54,7 @@ check_pkg() {
 }
 
 #
-# Commands/help - Support 3.x 2.6 and 2.4 kernel's.
+# Commands/help - Support 3.x 2.6 and 2.4 kernels.
 #
 case "$1" in
 	3.*) wgeturl="${srcurl}/v3.0/" ;;
@@ -173,7 +173,7 @@ if [ -d "slitaz/linux-custom-$version/fs" ]; then
 	echo "Packing Linux..."
 	cd slitaz
 else
-	echo -n "Packing Linux:" && colorize 31 " not yet build"
+	echo -n "Packing Linux:" && colorize 31 " not yet built"
 	exit 0
 fi
 
