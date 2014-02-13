@@ -26,8 +26,8 @@ SliTaz Linux Kernel cooker
 $(boldify "Usage:") $(basename $0) [version] [--options]
 
 $(boldify "Options:")
-  --clean        Removes most generated files but keeps the config
-  --mrproper     Removes all generated files + config + backup files
+  --clean        Remove various generated files but keep the config
+  --mrproper     Remove all generated files + config + backup files
   --defconfig    New config with default from ARCH supplied defconfig
   --tazconfig    New config using current SliTaz /proc/config.gz
   --localmod     Update config removing all unloaded modules
