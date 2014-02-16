@@ -184,7 +184,7 @@ case "${QUERY_STRING}" in
 			if fgrep -q "Summary for:" $LOGS/$pkg.log; then
 				echo "<h3>Cook summary</h3>"
 				echo '<pre>'
-				grep -A 9 "^Summary for:" $LOGS/$pkg.log | sed /^$/d | \
+				grep -A 12 "^Summary for:" $LOGS/$pkg.log | sed /^$/d | \
 					syntax_highlighter log
 				echo '</pre>'
 			fi
