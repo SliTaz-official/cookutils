@@ -1019,9 +1019,6 @@ search_file()
 	fi
 }
 
-
-
-
 #
 # Commands
 #
@@ -1030,11 +1027,17 @@ case "$1" in
 	usage|help|-u|-h)
 		 usage ;;
 	list-wok)
-		newline; _ "List of packages in: \$WOK"; separator
-		cd $WOK && ls -1
+		newline; _ "List of \$ARCH packages in: \$WOK"; separator
+		cd $WOK
+		if [ "$ARCH" != "i486" ]; then
+			total=$(ls */arch.${ARCH} | wc -l)
+			ls */arch.${ARCH} | cut -d / -f 5 ;;
+		else
+			total=$(ls | wc -l)
+			ls -1 ;;
+		fi
 		separator
-		pkg_total=$(ls | wc -l)
-		_ "Packages: \$pkg_total"; newline ;;
+		_ "Packages: \$total"; newline ;;
 	activity)
 		cat $activity ;;
 	search)
