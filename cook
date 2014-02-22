@@ -1030,14 +1030,21 @@ case "$1" in
 		newline; _ "List of \$ARCH packages in: \$WOK"; separator
 		cd $WOK
 		if [ "$ARCH" != "i486" ]; then
-			total=$(ls */arch.${ARCH} | wc -l)
-			ls */arch.${ARCH} | cut -d / -f 5 ;;
+			count=0
+			for pkg in $(fgrep 'HOST_ARCH=' */receipt | fgrep $ARCH | cut -d : -f 1) 
+			do
+				unset HOST_ARCH
+				. $pkg
+				count=$(($count + 1))
+				colorize 34 "$PACKAGE"
+			done
 		else
-			total=$(ls | wc -l)
-			ls -1 ;;
+			count=$(ls | wc -l)
+			ls -1
 		fi
 		separator
-		_ "Packages: \$total"; newline ;;
+		_n "Packages:"; colorize 32 " $count"
+		newline ;;
 	activity)
 		cat $activity ;;
 	search)
