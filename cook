@@ -1105,6 +1105,14 @@ case "$1" in
 		# Setup for cross compiling.
 		arch=${1%-setup}
 		check_root
+		. /etc/slitaz/cook.conf
+		for pkg in $CROSS_SETUP; do
+			if [ "$forced" ]; then
+				tazpkg -gi $pkg --forced
+			else
+				[ -d "$INSTALLED/$pkg" ] || tazpkg -gi $pkg
+			fi
+		done
 		_ "Cook: setup \$arch cross environment" | log
 		newline; boldify $(_n "Setting up your \$arch cross environment"); separator
 		init_db_files
