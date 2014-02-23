@@ -1062,7 +1062,7 @@ case "$1" in
 		init_db_files
 		_ "Checking for packages to install..."
 		# Use setup pkgs from cross.conf or cook.conf. When cross compiling
-		# ARCH-setup or 'cross check-env' should be used before: cook setup
+		# ARCH-setup or 'cross check' should be used before: cook setup
 		case "$ARCH" in
 			arm|x86_64)
 				if [ ! -x "/usr/bin/cross" ]; then
