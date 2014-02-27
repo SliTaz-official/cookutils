@@ -124,7 +124,7 @@ Cross compiling
 Cookutils lets you cross compile a package for a specific architecture. Say you
 want to build ARM binaries from a standard i486 machine. Cookutils provides
 helpers for the ARM platform, but the first thing to do is compile a cross
-toolchain and modify the main cook.conf variables to use a correct ARCH, CFLAGS
+toolchain and modify the main cook.conf variables to use the correct ARCH, CFLAGS
 and BUILD_SYSTEM
 
 Cook handles HOST_ARCH and CROSS_* receipt variables. Some packages won't build

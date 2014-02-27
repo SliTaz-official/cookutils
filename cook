@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 # Cook - A tool to cook and generate SliTaz packages. Read the README
-# before adding or modifing any code in cook!
+# before adding or modifying any code in cook!
 #
 # Copyright (C) SliTaz GNU/Linux - GNU gpl v3
 # Author: Christophe Lincoln <pankso@slitaz.org>
@@ -427,7 +427,7 @@ copy_generic_files()
 }
 
 # Find and strip: --strip-all (-s) or --strip-debug on static libs as well
-# as removing uneeded files like in Python packages. Cross compiled binaries
+# as removing unneeded files like in Python packages. Cross compiled binaries
 # must be stripped with cross-tools aka $ARCH-slitaz-*-strip
 strip_package() {
 	case "$ARCH" in
@@ -1393,7 +1393,7 @@ EOT
 		# Handle cross compilation.
 		#
 		# CROSS_NOTE: Actually we are running an ARM cooker but running
-		# the cooker and build each commit in wok is not possible since
+		# the cooker and building each commit in wok is not possible since
 		# we dont cook the full wok for this arch. For ARM we need a set
 		# of packages to handle a touch screen desktop, servers but not
 		# erlang.
@@ -1434,7 +1434,7 @@ EOT
 		echo "cook:$pkg" > $command
 
 		# Display and log info if cook process stopped.
-		# FIXME: gettext not worked (in single quotes) here!
+		# FIXME: gettext not working (in single quotes) here!
 		trap '_ "\n\nCook stopped: control-C\n\n" | \
 			tee -a $LOGS/$pkg.log' INT
 
