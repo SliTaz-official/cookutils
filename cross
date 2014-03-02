@@ -312,7 +312,7 @@ gcc_final() {
 		--disable-checking \
 		--disable-werror \
 		--with-pkgversion="SliTaz" \
-		--with-bugurl="https://bugs.slitaz.org/" \
+		--with-bugurl="http://bugs.slitaz.org/" \
 		--with-sysroot=$sysroot \
 		$GCC_FINAL_ARGS &&
 	make AS_FOR_TARGET="${TARGET}-as" \

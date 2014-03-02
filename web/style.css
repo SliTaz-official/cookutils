@@ -1,5 +1,6 @@
 /* CSS style for SliTaz Cooker */
 
+html { min-height: 102%; }
 body { font: 13px sans-serif, vernada, arial; margin: 0; }
 h1 { margin: 0; padding: 8px; color: #fff; font-size: 20px; }
 h1 a { color: #fff; text-decoration: none; }
