@@ -201,7 +201,7 @@ glibc() {
 	echo "Configure: $GLIBC_ARGS"
 	# Some arch may need glibc-ports and custom CFLAGS
 	case "$ARCH" in
-		arm)
+		arm*)
 			export CFLAGS="-march=armv6 -O2"
 			[ -f "$SRC/glibc-ports-$GLIBC_VERSION.tar.bz2" ] || wget \
 				http://ftp.gnu.org/gnu/libc/glibc-ports-$GLIBC_VERSION.tar.bz2 \
@@ -258,8 +258,12 @@ eglibc() {
 	tar xjf $SRC/$eglibc_tarball || exit 1
 	# Some arch may need glibc-ports and custom CFLAGS
 	case "$ARCH" in
-		arm)
-			export CFLAGS="-march=armv6 -O2"
+		arm) export CFLAGS="-march=armv6 -O2" ;;
+		armv6hf) export CFLAGS="-O2 -march=armv6j -mfpu=vfp -mfloat-abi=hard" ;;
+		armv7) export CFLAGS="-Os -march=armv7-a -mfpu=vfpv3-d16 -mfloat-abi=softfp -pipe" ;;
+	esac
+	case "$ARCH" in
+		arm*)
 			if [ ! -d "$source/eglibc-ports-$EGLIBC_VERSION" ]; then
 				echo "Cloning $eglibc_wget/ports"
 				svn co $eglibc_wget/ports eglibc-ports-$EGLIBC_VERSION >/dev/null

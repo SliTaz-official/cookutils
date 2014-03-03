@@ -1123,17 +1123,22 @@ case "$1" in
 			/etc/slitaz/cook.conf
 		case "$arch" in
 			arm)
-				sed -i \
-					-e s'/CFLAGS=.*/CFLAGS="-march=armv6 -O2"/' \
-					-e s'/HOST_SYSTEM=.*/HOST_SYSTEM=$ARCH-slitaz-linux-gnueabi/' \
-					-e s'/xorg-dev/""/' \
-					/etc/slitaz/cook.conf ;;
+				flags="-O2 -march=armv6"
+				host="$ARCH-slitaz-linux-gnueabi" ;;
+			armv6hf)
+				flags="-O2 -march=armv6j -mfpu=vfp -mfloat-abi=hard"
+				host="$ARCH-slitaz-linux-gnueabi" ;;
+			armv7)
+				flags="-Os -march=armv7-a -mfpu=vfpv3-d16 -mfloat-abi=softfp -pipe"
+				host="$ARCH-slitaz-linux-gnueabi" ;;
 			x86_64)
-				sed -i \
-					-e s'/CFLAGS=.*/CFLAGS=""/' \
-					-e s'/HOST_SYSTEM=.*/HOST_SYSTEM=$ARCH-slitaz-linux/' \
-					/etc/slitaz/cook.conf ;;
+				flags="-march=nocona -O2 -pipe"
+				host="$ARCH-slitaz-linux" ;;
 		esac
+		sed -i \
+			-e s"/CFLAGS=.*/CFLAGS=\"$flags\"/" \
+			-e s"/HOST_SYSTEM=.*/HOST_SYSTEM=$host/" \
+			/etc/slitaz/cook.conf
 		. /etc/slitaz/cook.conf
 		sysroot=$CROSS_TREE/sysroot
 		tools=/cross/$arch/tools
@@ -1142,6 +1147,7 @@ case "$1" in
 		# L10n: keep the same width of translations to get a consistent view
 		_ "Target arch     : \$ARCH"
 		_ "Configure args  : \$CONFIGURE_ARGS"
+		_ "Build flags     : \$flags"
 		_ "Arch sysroot    : \$sysroot"
 		_ "Tools prefix    : \$tools/bin"
 		# Tell the packages manager where to find packages.
