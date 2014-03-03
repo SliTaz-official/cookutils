@@ -17,6 +17,20 @@ tools=$WORK/tools
 sysroot=$WORK/sysroot
 logdir=$WORK/log
 
+# Cross-tools tarballs
+binutils_tarball="binutils-$BINUTILS_VERSION.tar.bz2"
+linux_tarball="linux-$LINUX_VERSION.tar.xz"
+glibc_tarball="glibc-$GLIBC_VERSION.tar.bz2"
+eglibc_tarball="eglibc-$EGLIBC_VERSION.tar.bz2"
+gcc_tarball="gcc-$GCC_VERSION.tar.bz2"
+
+# Cross-tools URLs
+binutils_wget="http://ftp.gnu.org/gnu/binutils/$binutils_tarball"
+linux_wget="http://www.kernel.org/pub/linux/kernel/v3.x/$linux_tarball"
+glibc_wget="http://ftp.gnu.org/gnu/libc/$glibc_tarball"
+eglibc_wget="svn://svn.eglibc.org/branches/eglibc-2_13"
+gcc_wget="http://ftp.gnu.org/gnu/gcc/gcc-$GCC_VERSION/$gcc_tarball"
+
 # Help and usage.
 usage() {
 	cat << EOT
@@ -27,7 +41,7 @@ Commands:
   howto           Man[like] page and howto
   info            Display cross-tools info
   testsuite       Execute a small testsuite
-  check           Check build host environment
+  setup [arch]    Setup build host environment
   download        Download necessary sources
   show-log        Show a compile log
   binutils        Compile Binutils
@@ -81,18 +95,18 @@ init_compile() {
 # Get source if not yet in $SRC.
 download_src() {
 	mkdir -p $SRC && cd $SRC
-	[ -f "$BINUTILS_TARBALL" ] || wget $BINUTILS_WGET
-	[ -f "$LINUX_TARBALL" ] || wget $LINUX_WGET
-	[ -f "$GLIBC_TARBALL" ] || wget $GLIBC_WGET
-	[ -f "$GCC_TARBALL" ] || wget $GCC_WGET
+	[ -f "$binutils_tarball" ] || wget $binutils_wget
+	[ -f "$linux_tarball" ] || wget $linux_wget
+	[ -f "$glibc_tarball" ] || wget $glibc_wget
+	[ -f "$gcc_tarball" ] || wget $gcc_wget
 }
 
 # 1. Binutils
 binutils() {
 	init_compile
 	rm -rf binutils-$BINUTILS_VERSION
-	echo "Extracting: $BINUTILS_TARBALL"
-	tar xjf $SRC/$BINUTILS_TARBALL
+	echo "Extracting: $binutils_tarball"
+	tar xjf $SRC/$binutils_tarball
 	echo "Configure: $BINUTILS_ARGS"
 	cd binutils-$BINUTILS_VERSION
 	./configure \
@@ -112,14 +126,18 @@ binutils() {
 linux_headers() {
 	init_compile
 	if [ ! -d "linux-$LINUX_VERSION" ]; then
-		echo "Extracting: $LINUX_TARBALL"
-		tar xJf $SRC/$LINUX_TARBALL
+		echo "Extracting: $linux_tarball"
+		tar xJf $SRC/$linux_tarball
 	fi
+	case "$ARCH" in
+		armv6hf) KARCH="arm" ;;
+		*) KARCH="$ARCH" ;;
+	esac
 	rm -rf linux-headers
 	cd linux-$LINUX_VERSION
-	make mrproper
-	make ARCH=$ARCH headers_check
-	make ARCH=$ARCH headers_install \
+	make CROSS_COMPILE="" mrproper
+	make ARCH=$KARCH headers_check
+	make ARCH=$KARCH headers_install \
 		INSTALL_HDR_PATH=$source/linux-headers
 	rm  $source/linux-headers/include/.*install*
 	echo "Copying headers to: $sysroot/usr"
@@ -129,8 +147,8 @@ linux_headers() {
 # 2.1 Glibc headers needed to compile x86_64 gcc-static.
 glibc_headers() {
 	init_compile
-	echo "Extracting: $GLIBC_TARBALL"
-	tar xjf $SRC/$GLIBC_TARBALL
+	echo "Extracting: $glibc_tarball"
+	tar xjf $SRC/$glibc_tarball
 	rm -rf glibc-headers
 	mkdir glibc-headers && cd glibc-headers
 	libc_cv_forced_unwind=yes \
@@ -152,8 +170,8 @@ glibc_headers() {
 # 3. GCC static (first pass)
 gcc_static() {
 	init_compile
-	echo "Extracting: $GCC_TARBALL"
-	tar xjf $SRC/$GCC_TARBALL
+	echo "Extracting: $gcc_tarball"
+	tar xjf $SRC/$gcc_tarball
 	echo "Configure: $GCC_STATIC_ARGS"
 	rm -rf gcc-static
 	mkdir gcc-static && cd gcc-static
@@ -178,8 +196,8 @@ gcc_static() {
 # 4. GNU Glibc
 glibc() {
 	init_compile
-	echo "Extracting: $GLIBC_TARBALL"
-	tar xjf $SRC/$GLIBC_TARBALL
+	echo "Extracting: $glibc_tarball"
+	tar xjf $SRC/$glibc_tarball
 	echo "Configure: $GLIBC_ARGS"
 	# Some arch may need glibc-ports and custom CFLAGS
 	case "$ARCH" in
@@ -232,19 +250,19 @@ glibc() {
 	echo "cross: glibc compiled on: $(date)"
 }
 
-# 4. Eglibc: always use --prefix=/usr
+# 4. eglibc: always use --prefix=/usr
 eglibc() {
 	init_compile
 	rm -rf eglibc-build eglibc-$EGLIBC_VERSION
-	echo "Extracting: $EGLIBC_TARBALL"
-	tar xjf $SRC/$EGLIBC_TARBALL || exit 1
+	echo "Extracting: $eglibc_tarball"
+	tar xjf $SRC/$eglibc_tarball || exit 1
 	# Some arch may need glibc-ports and custom CFLAGS
 	case "$ARCH" in
 		arm)
 			export CFLAGS="-march=armv6 -O2"
 			if [ ! -d "$source/eglibc-ports-$EGLIBC_VERSION" ]; then
-				echo "Cloning $EGLIBC_WGET/ports"
-				svn co $EGLIBC_WGET/ports eglibc-ports-$EGLIBC_VERSION >/dev/null
+				echo "Cloning $eglibc_wget/ports"
+				svn co $eglibc_wget/ports eglibc-ports-$EGLIBC_VERSION >/dev/null
 			fi
 			cp -a eglibc-ports-$EGLIBC_VERSION eglibc-$EGLIBC_VERSION/ports
 			libexec=/usr/lib/eglibc ;;
@@ -290,8 +308,8 @@ EOT
 gcc_final() {
 	init_compile
 	if [ ! -d "gcc-$GCC_VERSION" ]; then
-		echo "Extracting: $GCC_TARBALL"
-		tar xjf $SRC/$GCC_TARBALL
+		echo "Extracting: $gcc_tarball"
+		tar xjf $SRC/$gcc_tarball
 	fi
 	echo "Configure: $GCC_FINAL_ARGS"
 	rm -rf gcc-build
@@ -362,7 +380,11 @@ EOT
 		fi
 		echo -e "\n[CHECKING] readelf -h test.out" | tee -a $logdir/testsuite.log
 		readelf -h test.out | tee -a $logdir/testsuite.log ;;
-	check)
+	*setup)
+		data="/usr/share/cross"
+		arch=${1%-setup}
+		[ "$arch" == "setup" ] && arch="arm"
+		newline
 		echo "Checking: build system packages"
 		for pkg in slitaz-toolchain mpfr mpfr-dev gmp gmp-dev mpc-library \
 			gawk autoconf; do
@@ -375,7 +397,12 @@ EOT
 				fi
 			fi
 		done
-		echo "Using: --with-sysroot=$sysroot" ;;
+		echo "Getting $arch cross.conf"
+		cp -f ${data}/cross-${arch}.conf /etc/slitaz/cross.conf
+		cook ${arch}-setup
+		echo "Setting up cook environment"
+		cook setup >/dev/null 
+		newline ;;
 	download)
 		download_src ;;
 	show-log)
@@ -413,7 +440,7 @@ EOT
 		gcc_static 2>&1 | tee $logdir/gcc-static.log
 		linux_headers 2>&1 | tee $logdir/linux-headers.log
 		case "$ARCH" in
-			arm) eglibc 2>&1 | tee $logdir/eglibc.log ;;
+			arm*) eglibc 2>&1 | tee $logdir/eglibc.log ;;
 			x86_64) glibc 2>&1 | tee $logdir/glibc.log ;;
 		esac
 		gcc_final 2>&1 | tee $logdir/gcc-final.log

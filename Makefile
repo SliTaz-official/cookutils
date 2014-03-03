@@ -62,9 +62,10 @@ install-cross:
 	install -m 0755 -d $(DESTDIR)/etc/slitaz
 	install -m 0755 -d $(DESTDIR)$(PREFIX)/bin
 	install -m 0755 -d $(DESTDIR)$(PREFIX)/share/doc/cookutils
+	install -m 0755 -d $(DESTDIR)$(PREFIX)/share/cross
 	install -m 0755 cross $(DESTDIR)$(PREFIX)/bin
-	install -m 0644 cross.conf $(DESTDIR)/etc/slitaz
 	install -m 0644 doc/cross.txt $(DESTDIR)$(PREFIX)/share/doc/cookutils
+	install -m 0644 data/cross-*.conf $(DESTDIR)$(PREFIX)/share/cross
 
 uninstall-cross:
 	rm -rf \
