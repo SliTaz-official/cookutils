@@ -446,8 +446,8 @@ EOT
 		case "$ARCH" in
 			x86_64) glibc_headers 2>&1 | tee $logdir/glibc-headers.log ;;
 		esac
-		gcc_static 2>&1 | tee $logdir/gcc-static.log
 		linux_headers 2>&1 | tee $logdir/linux-headers.log
+		gcc_static 2>&1 | tee $logdir/gcc-static.log
 		case "$ARCH" in
 			arm*) eglibc 2>&1 | tee $logdir/eglibc.log ;;
 			x86_64) glibc 2>&1 | tee $logdir/glibc.log ;;
