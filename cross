@@ -2,7 +2,7 @@
 #
 # Cross - Help build a cross toolchain on SliTaz.
 #
-# Copyright 2012-2013 (C) SliTaz GNU/Linux - BSD License
+# Copyright 2012-2014 (C) SliTaz GNU/Linux - BSD License
 # Author: Christophe Lincoln <pankso@slitaz.org>
 #
 . /lib/libtaz.sh
@@ -90,6 +90,15 @@ init_compile() {
 	echo "Tools prefix   : --prefix=$tools "
 	echo "Target sysroot : --with-sysroot=$sysroot"
 	cd $source
+}
+
+# Some arch may need custom CFLAGS to build Glibc/Eglibc
+init_cflags() {
+	case "$ARCH" in
+		arm|armv6) export CFLAGS="-march=armv6 -O2" ;;
+		armv6hf) export CFLAGS="-O2 -march=armv6j -mfpu=vfp -mfloat-abi=hard" ;;
+		armv7) export CFLAGS="-Os -march=armv7-a -mfpu=vfpv3-d16 -mfloat-abi=softfp -pipe" ;;
+	esac
 }
 
 # Get source if not yet in $SRC.
@@ -193,7 +202,7 @@ gcc_static() {
 	echo "cross: gcc-static compiled on: $(date)"
 }
 
-# 4. GNU Glibc
+# 4. GNU Glibc: TODO Improve ARM support
 glibc() {
 	init_compile
 	echo "Extracting: $glibc_tarball"
@@ -253,15 +262,10 @@ glibc() {
 # 4. eglibc: always use --prefix=/usr
 eglibc() {
 	init_compile
+	init_cflags
 	rm -rf eglibc-build eglibc-$EGLIBC_VERSION
 	echo "Extracting: $eglibc_tarball"
 	tar xjf $SRC/$eglibc_tarball || exit 1
-	# Some arch may need glibc-ports and custom CFLAGS
-	case "$ARCH" in
-		arm) export CFLAGS="-march=armv6 -O2" ;;
-		armv6hf) export CFLAGS="-O2 -march=armv6j -mfpu=vfp -mfloat-abi=hard" ;;
-		armv7) export CFLAGS="-Os -march=armv7-a -mfpu=vfpv3-d16 -mfloat-abi=softfp -pipe" ;;
-	esac
 	case "$ARCH" in
 		arm*)
 			if [ ! -d "$source/eglibc-ports-$EGLIBC_VERSION" ]; then
@@ -280,6 +284,7 @@ eglibc() {
 	cp Makeconfig Makeconfig.orig
 	sed -e 's/-lgcc_eh//g' Makeconfig.orig > Makeconfig
 	cd ..
+	echo "CFLAGS: $CFLAGS"
 	mkdir -p eglibc-build && cd eglibc-build
 	# config.cache
 	cat > config.cache << EOT
@@ -353,12 +358,14 @@ case "$1" in
 		[ -f "$doc" ] && less -E $doc ;;
 	info)
 		init_compile
+		init_cflags
 		CC=${TARGET}-gcc
 		echo -e "\nCross Toolchain information" && separator
 		[ "$config" ] && echo "Config file     : $config"
 		cat << EOT
 Target arch     : $ARCH
 C Compiler      : $CC
+CFLAGS          : $CFLAGS
 Build directory : $WORK
 Tools prefix    : $tools/bin
 Arch sysroot    : $sysroot
@@ -404,8 +411,6 @@ EOT
 		echo "Getting $arch cross.conf"
 		cp -f ${data}/cross-${arch}.conf /etc/slitaz/cross.conf
 		cook ${arch}-setup
-		echo "Setting up cook environment"
-		cook setup >/dev/null 
 		newline ;;
 	download)
 		download_src ;;
