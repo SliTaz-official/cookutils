@@ -95,7 +95,7 @@ init_compile() {
 # Some arch may need custom CFLAGS to build Glibc/Eglibc
 init_cflags() {
 	case "$ARCH" in
-		arm|armv6) export CFLAGS="-march=armv6 -O2" ;;
+		arm|armv6) export CFLAGS="-O2 -march=armv6" ;;
 		armv6hf) export CFLAGS="-O2 -march=armv6j -mfpu=vfp -mfloat-abi=hard" ;;
 		armv7) export CFLAGS="-Os -march=armv7-a -mfpu=vfpv3-d16 -mfloat-abi=softfp -pipe" ;;
 	esac
@@ -221,7 +221,7 @@ glibc() {
 			mv glibc-ports-$GLIBC_VERSION glibc-$GLIBC_VERSION/ports
 			libexec=/usr/lib/glibc ;;
 		x86_64)
-			#export CFLAGS="-march=nocona -O2 -pipe"
+			#export CFLAGS="-02 -march=generic -pipe"
 			ccflags="-m64"
 			libexec=/usr/lib64/glibc ;;
 	esac

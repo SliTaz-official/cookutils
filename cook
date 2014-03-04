@@ -1132,7 +1132,7 @@ case "$1" in
 				flags="-Os -march=armv7-a -mfpu=vfpv3-d16 -mfloat-abi=softfp -pipe"
 				host="$ARCH-slitaz-linux-gnueabi" ;;
 			x86_64)
-				flags="-march=nocona -O2 -pipe"
+				flags="-02 -march=generic -pipe"
 				host="$ARCH-slitaz-linux" ;;
 		esac
 		sed -i \
