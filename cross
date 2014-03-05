@@ -487,6 +487,18 @@ EOT
 		echo "" ;;
 	libtool)
 		cross_libtool 2>&1 | tee $logdir/libtool.log ;;
+	libhack)
+		# Some libxx.la files have libdir='/usr/lib' and make packages 
+		# cross compilation fail. Some receipt may got hack to force
+		# use of libs in sysroot but 'cross libhack' should be prefered.
+		echo "Libdir: $sysroot/usr/lib" 
+		for la in $(fgrep -l libdir= $sysroot/usr/lib/*.la)
+		do
+			if fgrep -q "libdir='/usr/lib'" ${la}; then
+				echo "Cross fixing: $(basename $la)"
+				sed -i s"#libdir=.*#libdir='/cross/$ARCH/sysroot/usr/lib'#" ${la}
+			fi
+		done ;;
 	clean)
 		echo -n "Removing all source files..."
 		rm -rf $WORK/source && status
