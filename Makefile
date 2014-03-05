@@ -59,10 +59,9 @@ uninstall-libcook:
 # Cross
 
 install-cross:
-	install -m 0755 -d $(DESTDIR)/etc/slitaz
 	install -m 0755 -d $(DESTDIR)$(PREFIX)/bin
-	install -m 0755 -d $(DESTDIR)$(PREFIX)/share/doc/cookutils
 	install -m 0755 -d $(DESTDIR)$(PREFIX)/share/cross
+	install -m 0755 -d $(DESTDIR)$(PREFIX)/share/doc/cookutils
 	install -m 0755 cross $(DESTDIR)$(PREFIX)/bin
 	install -m 0644 doc/cross.txt $(DESTDIR)$(PREFIX)/share/doc/cookutils
 	install -m 0644 data/cross-*.conf $(DESTDIR)$(PREFIX)/share/cross
@@ -70,7 +69,7 @@ install-cross:
 uninstall-cross:
 	rm -rf \
 		$(DESTDIR)$(PREFIX)/bin/cross \
-		$(DESTDIR)/etc/slitaz/cross.conf \
+		$(DESTDIR)$(PREFIX)/share/cross \
 		$(DESTDIR)$(PREFIX)/share/doc/cookutils/cross.txt
 
 # i18n
