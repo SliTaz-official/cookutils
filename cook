@@ -676,6 +676,11 @@ cookit() {
 			mv * ../$PACKAGE-$VERSION
 		cd .. && rm -rf tmp
 	fi
+	
+	# Libtool shared libs path hack.
+	case "$ARCH" in
+		arm*) cross libhack ;;
+	esac
 
 	# Execute receipt rules.
 	if grep -q ^compile_rules $receipt; then
