@@ -16,6 +16,7 @@ source=$WORK/source
 tools=$WORK/tools
 sysroot=$WORK/sysroot
 logdir=$WORK/log
+mirror_url="http://mirror.slitaz.org/packages/cross/"
 
 # Cross-tools tarballs
 binutils_tarball="binutils-$BINUTILS_VERSION.tar.bz2"
@@ -23,6 +24,7 @@ linux_tarball="linux-$LINUX_VERSION.tar.xz"
 glibc_tarball="glibc-$GLIBC_VERSION.tar.bz2"
 eglibc_tarball="eglibc-$EGLIBC_VERSION.tar.bz2"
 gcc_tarball="gcc-$GCC_VERSION.tar.bz2"
+libtool_tarball="libtool-$LIBTOOL_VERSION.tar.gz"
 
 # Cross-tools URLs
 binutils_wget="http://ftp.gnu.org/gnu/binutils/$binutils_tarball"
@@ -30,6 +32,7 @@ linux_wget="http://www.kernel.org/pub/linux/kernel/v3.x/$linux_tarball"
 glibc_wget="http://ftp.gnu.org/gnu/libc/$glibc_tarball"
 eglibc_wget="svn://svn.eglibc.org/branches/eglibc-2_13"
 gcc_wget="http://ftp.gnu.org/gnu/gcc/gcc-$GCC_VERSION/$gcc_tarball"
+libtool_wget="ftp://sunsite.cnlab-switch.ch/mirror/gnu/libtool/$libtool_tarball"
 
 # Help and usage.
 usage() {
@@ -41,15 +44,17 @@ Commands:
   howto           Man[like] page and howto
   info            Display cross-tools info
   testsuite       Execute a small testsuite
-  setup [arch]    Setup build host environment
+  [arch]-setup    Setup build host environment
   download        Download necessary sources
-  show-log        Show a compile log
+  show-log        Show a package compile log
   binutils        Compile Binutils
   linux-headers   Install Kernel headers
   gcc-static      Compile GCC static
-  glibc           Compile GNU Glibc
+  glibc           Compile GNU Glibc library
+  eglibc          Compile EGlibc libc library
   gcc-final       Compile final GCC
   compile         Compile everything at once
+  libtool         Cross GNU Libtool (test in receipt LIBTOOL=)
   clean           Clean-up build environment
   clean-tools     Clean: $tools
   gen-prebuilt    Create a prebuilt toolchain archive
@@ -108,6 +113,7 @@ download_src() {
 	[ -f "$linux_tarball" ] || wget $linux_wget
 	[ -f "$glibc_tarball" ] || wget $glibc_wget
 	[ -f "$gcc_tarball" ] || wget $gcc_wget
+	[ -f "$libtool_tarball" ] || wget $libtool_wget
 }
 
 # 1. Binutils
@@ -348,6 +354,24 @@ gcc_final() {
 	echo "cross: GCC final compiled on: $(date)"
 }
 
+# A cross libtool should avoid some shared libs path/format bugs
+cross_libtool() {
+	init_compile
+	[ "$clean" ] && rm -rf libtool-${LIBTOOL_VERSION}
+	if [ ! -d "libtool-$LIBTOOL_VERSION" ]; then
+		echo "Extracting: $libtool_tarball"
+		tar xzf $SRC/$libtool_tarball
+	fi
+	cd libtool-${LIBTOOL_VERSION}
+	./configure \
+		--prefix=$tools \
+		--host=${TARGET} \
+		--program-prefix=${TARGET}- &&
+	make || exit 1
+	make install
+	echo "cross: Cross libtool compiled on: $(date)"
+}
+
 #
 # Commands
 #
@@ -461,6 +485,8 @@ EOT
 		[ "$div" != 0 ] && min="~ ${div}m"
 		echo "Build time   : ${sec}s $min" | tee -a $logdir/compile.log
 		echo "" ;;
+	libtool)
+		cross_libtool 2>&1 | tee $logdir/libtool.log ;;
 	clean)
 		echo -n "Removing all source files..."
 		rm -rf $WORK/source && status
