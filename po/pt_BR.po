@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: Cook 3.1.4\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2014-03-05 15:28+0200\n"
-"PO-Revision-Date: 2014-01-13 19:37-0200\n"
+"PO-Revision-Date: 2014-03-07 23:29-0300\n"
 "Last-Translator: Claudinei Pereira <claudinei@slitaz.org>\n"
 "Language-Team: Brazilian Portuguese <i18n@slitaz.org>\n"
 "Language: pt_BR\n"
@@ -94,9 +94,8 @@ msgid "unblock a blocked package."
 msgstr "desbloqueia um pacote."
 
 #: cook:53
-#, fuzzy
 msgid "check dependencies of cooked package."
-msgstr "Força a reinstalação de pacotes no chroot."
+msgstr "Checa as dependências de um pacote compilado."
 
 #: cook:54
 msgid "repack an already built package."
@@ -553,14 +552,13 @@ msgid "Leaving aufs chroot..."
 msgstr "Deixando aufs chroot..."
 
 #: cook:1030
-#, fuzzy, sh-format
+#, sh-format
 msgid "List of $ARCH packages in: $WOK"
-msgstr "Lista de pacotes em: $WOK"
+msgstr "Lista de pacotes $ARCH em: $WOK"
 
 #: cook:1046
-#, fuzzy
 msgid "Packages:"
-msgstr "Pacote: $tazpkg"
+msgstr "Pacote:"
 
 #: cook:1053
 #, sh-format
@@ -621,9 +619,9 @@ msgid "Configure args  : $CONFIGURE_ARGS"
 msgstr "Argumentos de configuração: $CONFIGURE_ARGS"
 
 #: cook:1150
-#, fuzzy, sh-format
+#, sh-format
 msgid "Build flags     : $flags"
-msgstr "Arquivos        : $files"
+msgstr "Flags de compilação: $flags"
 
 #: cook:1151
 #, sh-format
@@ -934,9 +932,8 @@ msgid "Need to build $pkg."
 msgstr "Necessário compilar $pkg."
 
 #: cook:1480
-#, fuzzy
 msgid "Checking depends"
-msgstr "Verificando dependências de compilação..."
+msgstr "Verificando dependências"
 
 #: cook:1507
 #, sh-format
@@ -947,6 +944,3 @@ msgstr "Pacote requerido está bloqueado: $wanted"
 #, sh-format
 msgid "WANTED package is broken: $wanted"
 msgstr "Pacote requerido está quebrado: $wanted"
-
-#~ msgid "Packages: $pkg_total"
-#~ msgstr "Pacotes: $pkg_total"
