@@ -101,8 +101,8 @@ init_compile() {
 init_cflags() {
 	case "$ARCH" in
 		arm|armv6) export CFLAGS="-O2 -march=armv6" ;;
-		armv6hf) export CFLAGS="-O2 -march=armv6j -mfpu=vfp -mfloat-abi=hard" ;;
-		armv7) export CFLAGS="-Os -march=armv7-a -mfpu=vfpv3-d16 -mfloat-abi=softfp -pipe" ;;
+		armv6hf) export CFLAGS="-O2 -march=armv6j" ;;
+		armv7) export CFLAGS="-Os -march=armv7-a" ;;
 	esac
 }
 
