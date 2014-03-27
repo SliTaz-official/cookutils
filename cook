@@ -42,6 +42,7 @@ $(_ "\033[1mCommands:\033[0m")
   list               $(_ "Cook a list of packages.")
   clean-wok          $(_ "Clean-up all packages files.")
   clean-src          $(_ "Clean-up all packages sources.")
+  uncook             $(_ "Check for uncooked packages")
   pkgdb              $(_ "Create packages DB lists and flavors.")
 
 $(_ "\033[1mOptions:\033[0m")
@@ -52,6 +53,7 @@ $(_ "\033[1mOptions:\033[0m")
   --unblock|-ub      Cook : $(_ "unblock a blocked package.")
   --cdeps            Cook : $(_ "check dependencies of cooked package.")
   --pack             Cook : $(_ "repack an already built package.")
+  --debug            Cook : $(_ "display debugging messages.")
   --interactive|-x   New  : $(_ "create a receipt interactively.")
   --wok              Setup: $(_ "clone the cooking wok from Hg repo.")
   --stable           Setup: $(_ "clone the stable wok from Hg repo.")
@@ -163,8 +165,8 @@ set_paths() {
 	elif [ -f "$INSTALLED/linux-api-headers/receipt" ]; then
 		kvers=$(grep ^VERSION= $INSTALLED/linux-api-headers/receipt | cut -d '"' -f 2)
 		kbasevers=${kvers:0:3}
-	fi	
-	# Python version 
+	fi
+	# Python version
 	if [ -f "$WOK/python/receipt" ]; then
 		pyvers=$(grep ^VERSION= $WOK/python/receipt | cut -d '"' -f 2)
 	fi
@@ -418,7 +420,7 @@ copy_generic_files()
 		mkdir -p $fs/usr/share/applications
 		cp -a $stuff/$PACKAGE.desktop $fs/usr/share/applications
 	fi
-	
+
 	# Add custom licenses
 	if [ -d "$stuff/licenses" ]; then
 		mkdir -p $fs/usr/share/licenses
@@ -676,7 +678,7 @@ cookit() {
 			mv * ../$PACKAGE-$VERSION
 		cd .. && rm -rf tmp
 	fi
-	
+
 	# Libtool shared libs path hack.
 	case "$ARCH" in
 		arm*) cross libhack ;;
@@ -954,7 +956,7 @@ gen_rss() {
 EOT
 }
 
-# Truncate stdout log file to $1 Mb. 
+# Truncate stdout log file to $1 Mb.
 loglimit()
 {
 	if [ -n "$DEFAULT_LOG_LIMIT" ]; then
@@ -1036,7 +1038,7 @@ case "$1" in
 		cd $WOK
 		if [ "$ARCH" != "i486" ]; then
 			count=0
-			for pkg in $(fgrep 'HOST_ARCH=' */receipt | fgrep $ARCH | cut -d : -f 1) 
+			for pkg in $(fgrep 'HOST_ARCH=' */receipt | fgrep $ARCH | cut -d : -f 1)
 			do
 				unset HOST_ARCH
 				. $pkg
@@ -1260,6 +1262,45 @@ case "$1" in
 		newline; _n "Cleaning all packages sources..."
 		rm -rf $WOK/*/source
 		status; newline ;;
+	uncook)
+		cd $WOK
+		count=0
+		newline
+		_ "Checking for uncook packages"
+		separator
+		for pkg in *
+		do
+			unset HOST_ARCH
+			. $pkg/receipt
+			# Source cooked pkg receipt to get EXTRAVERSION
+			if [ -f "$WOK/$pkg/taz/*/receipt" ]; then
+				. $WOK/$pkg/taz/*/receipt
+			fi 
+			case "$ARCH" in
+				i486)
+					debug "Package: $PKGS/${PACKAGE}-${VERSION}${EXTRAVERSION}.tazpkg"
+					if [ ! -f "$PKGS/${PACKAGE}-${VERSION}${EXTRAVERSION}.tazpkg" ]; then
+						count=$(($count + 1))
+						colorize 34 "$pkg"
+					fi ;;
+				arm)
+					# Check only packages include in arch
+					if echo "$HOST_ARCH" | fgrep -q "$ARCH"; then
+						# *.tazpkg
+						if [ ! -f "$PKGS/${PACKAGE}-${VERSION}${EXTRAVERSION}-${ARCH}.tazpkg" ]; then
+							count=$(($count + 1))
+							colorize 34 "$pkg"
+						fi
+					fi ;;
+			esac
+		done
+		if [ "$count" -gt "0" ]; then
+			separator
+			_n "Uncook packages: "; colorize 31 "$count"
+		else
+			_ "All packages are cooked :-)"
+		fi
+		newline ;;
 	pkgdb)
 		# Create suitable packages list for TazPKG and only for built packages
 		# as well as flavors files for TazLiTo. We dont need logs since we do it
@@ -1424,6 +1465,7 @@ EOT
 
 		# Some packages are not included in some arch or fail to cross compile.
 		: ${HOST_ARCH=i486}
+		debug "Host arch $HOST_ARCH"
 		if ! $(echo "$HOST_ARCH" | fgrep -q $ARCH); then
 			_ "cook: HOST_ARCH=\$HOST_ARCH"
 			_ "cook: \$pkg doesn't cook or is not included in: \$ARCH"
