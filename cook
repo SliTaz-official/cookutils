@@ -1273,8 +1273,9 @@ case "$1" in
 			unset HOST_ARCH
 			. $pkg/receipt
 			# Source cooked pkg receipt to get EXTRAVERSION
-			if [ -f "$WOK/$pkg/taz/*/receipt" ]; then
-				. $WOK/$pkg/taz/*/receipt
+			if [ -d "$WOK/$pkg/taz" ]; then
+				cd $WOK/$pkg/taz/$pkg-*
+				. receipt && cd $WOK
 			fi 
 			case "$ARCH" in
 				i486)
