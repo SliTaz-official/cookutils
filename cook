@@ -1270,7 +1270,7 @@ case "$1" in
 		separator
 		for pkg in *
 		do
-			unset HOST_ARCH
+			unset HOST_ARCH EXTRAVERSION
 			. $pkg/receipt
 			# Source cooked pkg receipt to get EXTRAVERSION
 			if [ -d "$WOK/$pkg/taz" ]; then
