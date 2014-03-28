@@ -1266,7 +1266,7 @@ case "$1" in
 		cd $WOK
 		count=0
 		newline
-		_ "Checking for uncook packages"
+		_ "Checking for uncooked packages"
 		separator
 		for pkg in *
 		do
@@ -1285,7 +1285,7 @@ case "$1" in
 						colorize 34 "$pkg"
 					fi ;;
 				arm)
-					# Check only packages include in arch
+					# Check only packages included in arch
 					if echo "$HOST_ARCH" | fgrep -q "$ARCH"; then
 						# *.tazpkg
 						if [ ! -f "$PKGS/${PACKAGE}-${VERSION}${EXTRAVERSION}-${ARCH}.tazpkg" ]; then
@@ -1297,7 +1297,7 @@ case "$1" in
 		done
 		if [ "$count" -gt "0" ]; then
 			separator
-			_n "Uncook packages: "; colorize 31 "$count"
+			_n "Uncooked packages: "; colorize 31 "$count"
 		else
 			_ "All packages are cooked :-)"
 		fi
