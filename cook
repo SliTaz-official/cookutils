@@ -1442,17 +1442,8 @@ EOT
 		unset inst
 		unset_receipt
 		. $receipt
-
+		
 		# Handle cross compilation.
-		#
-		# CROSS_NOTE: Actually we are running an ARM cooker but running
-		# the cooker and building each commit in wok is not possible since
-		# we dont cook the full wok for this arch. For ARM we need a set
-		# of packages to handle a touch screen desktop, servers but not
-		# erlang.
-		#
-		# The temporary solution is to build only reviewed and tested
-		# packages with HOST_ARCH set in receipt.
 		case "$ARCH" in
 			arm)
 				if [ ! "$HOST_ARCH" ]; then
