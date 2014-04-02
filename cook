@@ -517,7 +517,8 @@ cookit() {
 			export AS=${HOST_SYSTEM}-as
 			export RANLIB=${HOST_SYSTEM}-ranlib
 			export LD=${HOST_SYSTEM}-ld
-			export STRIP=${HOST_SYSTEM}-strip ;;
+			export STRIP=${HOST_SYSTEM}-strip
+			export LIBTOOL=${HOST_SYSTEM}-libtool ;;
 	esac
 
 	[ "$QA" ] && receipt_quality
