@@ -54,6 +54,7 @@ $(_ "\033[1mOptions:\033[0m")
   --cdeps            Cook : $(_ "check dependencies of cooked package.")
   --pack             Cook : $(_ "repack an already built package.")
   --debug            Cook : $(_ "display debugging messages.")
+  --continue         Cook : $(_ "continue running compile_rules.")
   --interactive|-x   New  : $(_ "create a receipt interactively.")
   --wok              Setup: $(_ "clone the cooking wok from Hg repo.")
   --stable           Setup: $(_ "clone the stable wok from Hg repo.")
@@ -523,15 +524,15 @@ cookit() {
 
 	[ "$QA" ] && receipt_quality
 	cd $pkgdir
-	rm -rf install taz source 2> /dev/null
+	[ "$continue" ] || rm -rf source 2> /dev/null
+	rm -rf install taz 2> /dev/null
 
 	# Disable -pipe if less than 512Mb free RAM.
 	free=$(free | fgrep '/+ buffers' | tr -s ' ' | cut -f 4 -d ' ')
 	if [ "$free" -lt 524288 ] && [ "$CFLAGS" != "${CFLAGS/-pipe}" ]; then
-			_ "Disabling -pipe compile flag: \$free RAM"
-			CFLAGS="${CFLAGS/-pipe}" && CFLAGS=$(echo "$CFLAGS" | tr -s ' ')
-			CXXFLAGS="${CXXFLAGS/-pipe}" && \
-				CXXFLAGS=$(echo "$CXXFLAGS" | tr -s ' ')
+		_ "Disabling -pipe compile flag: \$free RAM"
+		CFLAGS="${CFLAGS/-pipe}" && CFLAGS=$(echo "$CFLAGS" | tr -s ' ')
+		CXXFLAGS="${CXXFLAGS/-pipe}" && CXXFLAGS=$(echo "$CXXFLAGS" | tr -s ' ')
 	fi
 	unset free
 
