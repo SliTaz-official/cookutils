@@ -1040,7 +1040,7 @@ case "$1" in
 		cd $WOK
 		if [ "$ARCH" != "i486" ]; then
 			count=0
-			for pkg in $(fgrep 'HOST_ARCH=' */receipt | fgrep $ARCH | cut -d : -f 1)
+			for pkg in $(fgrep 'HOST_ARCH=' */receipt | egrep "$ARCH|any" | cut -d : -f 1)
 			do
 				unset HOST_ARCH
 				. $pkg
@@ -1288,7 +1288,7 @@ case "$1" in
 					fi ;;
 				arm)
 					# Check only packages included in arch
-					if echo "$HOST_ARCH" | fgrep -q "$ARCH"; then
+					if echo "$HOST_ARCH" | egrep -q "$ARCH|any"; then
 						# *.tazpkg
 						if [ ! -f "$PKGS/${PACKAGE}-${VERSION}${EXTRAVERSION}-${ARCH}.tazpkg" ]; then
 							count=$(($count + 1))
@@ -1460,7 +1460,7 @@ EOT
 		# Some packages are not included in some arch or fail to cross compile.
 		: ${HOST_ARCH=i486}
 		debug "Host arch $HOST_ARCH"
-		if ! $(echo "$HOST_ARCH" | fgrep -q $ARCH); then
+		if ! $(echo "$HOST_ARCH" | egrep -q "$ARCH|any"); then
 			_ "cook: HOST_ARCH=\$HOST_ARCH"
 			_ "cook: \$pkg doesn't cook or is not included in: \$ARCH"
 			[ "$CROSS_BUGS" ] && _ "bugs: \$CROSS_BUGS"

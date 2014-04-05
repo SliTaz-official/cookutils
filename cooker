@@ -212,7 +212,7 @@ arch_db() {
 		unset HOST_ARCH
 		. $wok/$pkg/receipt
 		#: ${HOST_ARCH=i486}
-		if $(echo "$HOST_ARCH" | fgrep -q $ARCH); then
+		if $(echo "$HOST_ARCH" | egrep -q "$ARCH|any"); then
 			count=$(($count + 1))
 			echo "Adding: $pkg"
 			touch $pkg/arch.$ARCH
