@@ -306,6 +306,7 @@ extract_source() {
 		*.tar) tar xf $SRC/$TARBALL ;;
 		*.zip|*.xpi) unzip -o $SRC/$TARBALL ;;
 		*.xz) unxz -c $SRC/$TARBALL | tar xf - || tar xf $SRC/$TARBALL 2>/dev/null;;
+		*.7z) 7zr x $SRC/$TARBALL ;;
 		*.Z) uncompress -c $SRC/$TARBALL | tar xf - ;;
 		*.rpm) rpm2cpio $SRC/$TARBALL | cpio -idm --quiet ;;
 		*.run) /bin/sh $SRC/$TARBALL $RUN_OPTS ;;
@@ -1478,7 +1479,8 @@ EOT
 			_ "cook: \$pkg doesn't cook or is not included in: \$ARCH"
 			[ "$CROSS_BUGS" ] && _ "bugs: \$CROSS_BUGS"
 			_ "Cook skip: \$pkg doesn't cook or is not included in: \$ARCH" | log
-			newline && exit 1
+			sed -i /^${pkg}$/d $broken
+			newline && exit 0
 		fi
 
 		# Skip blocked, 3 lines also for the Cooker.
