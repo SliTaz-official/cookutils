@@ -492,7 +492,7 @@ EOT
 		# cross compilation fail. Some receipt may got hack to force
 		# use of libs in sysroot but 'cross libhack' should be prefered.
 		echo "Libdir: $sysroot/usr/lib" 
-		for la in $(fgrep -l libdir= $sysroot/usr/lib/*.la)
+		for la in $(fgrep -l libdir= $sysroot/usr/lib/*.la 2>/dev/null)
 		do
 			if fgrep -q "libdir='/usr/lib'" ${la}; then
 				echo "Cross fixing: $(basename $la)"

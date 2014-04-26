@@ -493,7 +493,7 @@ cookit() {
 
 	# Handle cross-tools.
 	case "$ARCH" in
-		arm|x86_64)
+		arm*|x86_64)
 			# CROSS_COMPILE is used by at least Busybox and the kernel to set
 			# the cross-tools prefix. Sysroot is the root of our target arch
 			sysroot=$CROSS_TREE/sysroot
@@ -1474,7 +1474,8 @@ EOT
 		# Some packages are not included in some arch or fail to cross compile.
 		: ${HOST_ARCH=i486}
 		debug "Host arch $HOST_ARCH"
-		if ! $(echo "$HOST_ARCH" | egrep -q "$ARCH|any"); then
+		# Handle arm{v6hf,v7,..}
+		if ! $(echo "$HOST_ARCH" | egrep -q "${ARCH%v[0-9]*}|any"); then
 			_ "cook: HOST_ARCH=\$HOST_ARCH"
 			_ "cook: \$pkg doesn't cook or is not included in: \$ARCH"
 			[ "$CROSS_BUGS" ] && _ "bugs: \$CROSS_BUGS"
