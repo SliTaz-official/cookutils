@@ -435,7 +435,7 @@ copy_generic_files()
 # must be stripped with cross-tools aka $ARCH-slitaz-*-strip
 strip_package() {
 	case "$ARCH" in
-		arm|x86_64) export STRIP=${HOST_SYSTEM}-strip ;;
+		arm*|x86_64) export STRIP=${HOST_SYSTEM}-strip ;;
 		*) export STRIP=strip ;;
 	esac
 	_n "Executing strip on all files..."
@@ -733,7 +733,7 @@ packit() {
 
 	# Handle cross compilation
 	case "$ARCH" in
-		arm|x86_64) arch="-$ARCH" ;;
+		arm*|x86_64) arch="-$ARCH" ;;
 	esac
 
 	_ "Pack: \$PACKAGE \${VERSION}\${arch}"; separator
@@ -869,7 +869,7 @@ tac() {
 # Install package on --install or update the chroot.
 install_package() {
 	case "$ARCH" in
-		arm|x86_64)
+		arm*|x86_64)
 			arch="-${ARCH}"
 			root=$CROSS_TREE/sysroot ;;
 	esac
@@ -1087,7 +1087,7 @@ case "$1" in
 		# Use setup pkgs from cross.conf or cook.conf. When cross compiling
 		# ARCH-setup or 'cross check' should be used before: cook setup
 		case "$ARCH" in
-			arm|x86_64)
+			arm*|x86_64)
 				if [ ! -x "/usr/bin/cross" ]; then
 					_ "ERROR: cross is not installed"
 					exit 1
@@ -1300,7 +1300,7 @@ case "$1" in
 						count=$(($count + 1))
 						colorize 34 "$pkg"
 					fi ;;
-				arm)
+				arm*)
 					# Check only packages included in arch
 					if echo "$HOST_ARCH" | egrep -q "$ARCH|any"; then
 						# *.tazpkg
@@ -1461,7 +1461,7 @@ EOT
 		
 		# Handle cross compilation.
 		case "$ARCH" in
-			arm)
+			arm*)
 				if [ ! "$HOST_ARCH" ]; then
 					_ "cook: HOST_ARCH is not set in \$pkg receipt"
 					_ "cook: This package is not included in: \$ARCH"
