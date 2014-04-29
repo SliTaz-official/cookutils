@@ -470,23 +470,18 @@ case "$1" in
 
 		# Handle cross compilation. Create arch packages DB and remove pkgs
 		# not cooked for this arch from the commits list.
-		case "$ARCH" in
-			arm)
-				arch_db | log_commits
-				for pkg in $(cat $commits)
-				do
-					if [ ! -f "$wok/$pkg/arch.$ARCH" ]; then
-						echo "Cooker arch : skip $pkg (not included in: $ARCH)" | \
-							log_commits
-						sed -i "/^${pkg}$/"d $commits
-					fi
-				done ;;
-			i486)
-				echo "Cooker arch : $ARCH (default)" | log_commits ;;
-			*)
-				echo "Cooker arch : $ARCH" | log_commits ;;
-		esac
-
+		arch_db
+		for pkg in $(cat $commits)
+		do
+			if [ ! -f "$wok/$pkg/arch.$ARCH" ]; then
+				echo "Cooker arch : skip $pkg (not included in: $ARCH)" | \
+					log_commits
+				sed -i "/^${pkg}$/"d $commits
+			else
+				echo "Cooker arch : $ARCH" | log_commits
+			fi
+		done
+		
 		# Stats
 		pkgs=$(cat $commits | wc -l)
 		echo "Packages to cook: $pkgs" | log

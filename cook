@@ -1160,13 +1160,11 @@ case "$1" in
 		esac
 		sed -i \
 			-e s"/CFLAGS=.*/CFLAGS=\"$flags\"/" \
-			-e s"/HOST_SYSTEM=.*/HOST_SYSTEM=$host/" \
-			/etc/slitaz/cook.conf
+			-e s"/HOST_SYSTEM=.*/HOST_SYSTEM=$host/" /etc/slitaz/cook.conf
 		. /etc/slitaz/cook.conf
 		sysroot=$CROSS_TREE/sysroot
 		tools=/cross/$arch/tools
 		root=$sysroot
-		CC=$tools/bin/${HOST_SYSTEM}-gcc
 		# L10n: keep the same width of translations to get a consistent view
 		_ "Target arch     : \$ARCH"
 		_ "Configure args  : \$CONFIGURE_ARGS"
@@ -1188,7 +1186,7 @@ case "$1" in
 			colorize 36 $(_ "WARNING: (e)glibc-base is not installed in sysroot")
 		fi
 		# Show GCC version or warn if not yet compiled.
-		if [ -x $CC ]; then
+		if [ -x "$tools/bin/${HOST_SYSTEM}-gcc" ]; then
 			_ "Cross compiler  : \${HOST_SYSTEM}-gcc"
 		else
 			colorize 36 $(_ "C compiler is missing: \${HOST_SYSTEM}-gcc")

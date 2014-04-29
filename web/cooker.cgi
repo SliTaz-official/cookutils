@@ -301,11 +301,7 @@ case "${QUERY_STRING}" in
 		fi
 		# Main page with summary. Count only package include in ARCH,
 		# use 'cooker arch' to manually create arch.$ARCH files.
-		# We may have arm only packages, use arch.i486 ?
-		case "$ARCH" in
-			arm|x86_64) inwok=$(ls $WOK/*/arch.$ARCH | wc -l) ;;
-			*) inwok=$(ls $WOK | wc -l) ;;
-		esac
+		inwok=$(ls $WOK | wc -l)
 		cooked=$(ls $PKGS/*.tazpkg | wc -l)
 		unbuilt=$(($inwok - $cooked))
 		pct=0
