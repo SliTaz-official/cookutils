@@ -300,8 +300,8 @@ case "${QUERY_STRING}" in
 			toolchain='cooker.cgi?pkg=slitaz-toolchain'
 		fi
 		# Main page with summary. Count only package include in ARCH,
-		# use 'cooker arch' to manually create arch.$ARCH files.
-		inwok=$(ls $WOK | wc -l)
+		# use 'cooker arch-db' to manually create arch.$ARCH files.
+		inwok=$(ls $WOK/*/arch.$ARCH | wc -l)
 		cooked=$(ls $PKGS/*.tazpkg | wc -l)
 		unbuilt=$(($inwok - $cooked))
 		pct=0
