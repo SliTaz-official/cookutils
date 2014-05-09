@@ -16,7 +16,6 @@ source=$WORK/source
 tools=$WORK/tools
 sysroot=$WORK/sysroot
 logdir=$WORK/log
-mirror_url="http://mirror.slitaz.org/packages/cross/"
 
 # Cross-tools tarballs
 binutils_tarball="binutils-$BINUTILS_VERSION.tar.bz2"
@@ -30,7 +29,8 @@ libtool_tarball="libtool-$LIBTOOL_VERSION.tar.gz"
 binutils_wget="http://ftp.gnu.org/gnu/binutils/$binutils_tarball"
 linux_wget="http://www.kernel.org/pub/linux/kernel/v3.x/$linux_tarball"
 glibc_wget="http://ftp.gnu.org/gnu/libc/$glibc_tarball"
-eglibc_wget="svn://svn.eglibc.org/branches/eglibc-2_13"
+eglibc_wget="http://mirror.slitaz.org/arm/src/$eglibc_tarball"
+eglibc_svn="svn://svn.eglibc.org/branches/eglibc-2_14"
 gcc_wget="http://ftp.gnu.org/gnu/gcc/gcc-$GCC_VERSION/$gcc_tarball"
 libtool_wget="ftp://sunsite.cnlab-switch.ch/mirror/gnu/libtool/$libtool_tarball"
 
@@ -110,8 +110,9 @@ init_cflags() {
 download_src() {
 	mkdir -p $SRC && cd $SRC
 	[ -f "$binutils_tarball" ] || wget $binutils_wget
-	[ -f "$linux_tarball" ] || wget $linux_wget
+	[ -f "$linux_tarball" ] || wget --no-check-certificate $linux_wget
 	[ -f "$glibc_tarball" ] || wget $glibc_wget
+	[ -f "$eglibc_tarball" ] || wget $eglibc_wget
 	[ -f "$gcc_tarball" ] || wget $gcc_wget
 	[ -f "$libtool_tarball" ] || wget $libtool_wget
 }
@@ -156,6 +157,7 @@ linux_headers() {
 		INSTALL_HDR_PATH=$source/linux-headers
 	rm  $source/linux-headers/include/.*install*
 	echo "Copying headers to: $sysroot/usr"
+	mkdir -p $sysroot/usr
 	cp -a $source/linux-headers/* $sysroot/usr
 }
 
@@ -273,13 +275,17 @@ eglibc() {
 	init_compile
 	init_cflags
 	rm -rf eglibc-build eglibc-$EGLIBC_VERSION
+	if [ ! -f "$SRC/$eglibc_tarball" ]; then
+		echo "Missing: $SRC/$eglibc_tarball"
+		exit 1
+	fi
 	echo "Extracting: $eglibc_tarball"
 	tar xjf $SRC/$eglibc_tarball || exit 1
 	case "$ARCH" in
 		arm*)
 			if [ ! -d "$source/eglibc-ports-$EGLIBC_VERSION" ]; then
-				echo "Cloning $eglibc_wget/ports"
-				svn co $eglibc_wget/ports eglibc-ports-$EGLIBC_VERSION >/dev/null
+				echo "Cloning $eglibc_svn/ports"
+				svn co $eglibc_svn/ports eglibc-ports-$EGLIBC_VERSION >/dev/null
 			fi
 			cp -a eglibc-ports-$EGLIBC_VERSION eglibc-$EGLIBC_VERSION/ports
 			libexec=/usr/lib/eglibc ;;
@@ -318,7 +324,9 @@ EOT
 		--cache-file=config.cache \
 		$EGLIBC_ARGS &&
 	make || exit 1
-	make install_root=$sysroot install
+	make install_root=$sysroot install || exit 1
+	# Sep files for packaging
+	make install_root=$source/eglibc-install install || exit 1
 	echo "cross: eglibc compiled on: $(date)"
 }
 
