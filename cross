@@ -179,7 +179,10 @@ glibc_headers() {
 	# Fixes
 	mkdir -p $sysroot/usr/include/gnu
 	touch $sysroot/usr/include/gnu/stubs.h
-	cp bits/stdio_lim.h $sysroot/usr/include/bits
+	
+	# Fixe error: bits/stdio_lim.h not found
+	#cp bits/stdio_lim.h $sysroot/usr/include/bits
+	cp /usr/include/bits/stdio_lim.h $sysroot/usr/include/bits
 }
 
 # 3. GCC static (first pass)
