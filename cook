@@ -940,8 +940,8 @@ try_aufs_chroot() {
 	rm -rf ${base}rw
 	umount ${base}root
 	rmdir $base*
-	# Dont install pkg twice... it's done after
-	#install_package
+	# Install package outside the aufs jail
+	install_package
 	exit $status
 }
 
@@ -1594,7 +1594,8 @@ EOT
 		summary | tee -a $LOGS/$pkg.log
 		newline
 
-		# We may want to install/update.
+		# We may want to install/update (outside aufs jail !).
+		[ -s /aufs-umount.sh ] ||
 		install_package
 
 		# Finally we DON'T WANT to build the *-dev or packages with WANTED="$pkg"
