@@ -500,8 +500,8 @@ EOT
 		cross_libtool 2>&1 | tee $logdir/libtool.log ;;
 	libhack)
 		# Some libxx.la files have libdir='/usr/lib' and make packages 
-		# cross compilation fail. Some receipt may got hack to force
-		# use of libs in sysroot but 'cross libhack' should be prefered.
+		# cross compilation fail. Some receipts may have got hacked to force
+		# use of libs in sysroot but 'cross libhack' should be preferred.
 		echo "Libdir: $sysroot/usr/lib" 
 		for la in $(fgrep -l libdir= $sysroot/usr/lib/*.la 2>/dev/null)
 		do
