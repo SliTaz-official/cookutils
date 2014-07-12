@@ -234,11 +234,13 @@ get_source() {
 			url=${WGET_URL#git|}
 			_ "Getting source from Git..."
 			_ "URL: \$url"
+			cd $SRC
 			git clone $url $pkgsrc || (_ "ERROR: git clone \$url" && exit 1)
 			if [ "$BRANCH" ]; then
 				_ "Git branch: \$BRANCH"
 				cd $pkgsrc && git checkout $BRANCH && cd ..
 			fi
+			cd $SRC
 			create_tarball ;;
 		cvs*)
 			url=${WGET_URL#cvs|}
