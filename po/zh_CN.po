@@ -8,10 +8,10 @@ msgstr ""
 "Project-Id-Version: Cook 3.2\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2014-03-05 15:28+0200\n"
-"PO-Revision-Date: 2014-06-26 15:09+0800\n"
-"Last-Translator: 张文宇 <jame987165702@gmail.com>\n"
+"PO-Revision-Date: 2014-07-20 10:34+0800\n"
+"Last-Translator: rhsky <rhsky@qq.com>\n"
 "Language-Team: \n"
-"Language: zh_Hans_CN\n"
+"Language: zh_CN\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -336,7 +336,7 @@ msgstr "生成日期   : $cookdate"
 #: cook:340
 #, sh-format
 msgid "Host arch   : $ARCH"
-msgstr "主机架构   : $ARXH"
+msgstr "主机架构:  $ARCH"
 
 #: cook:346
 msgid "Debug information"
@@ -515,7 +515,7 @@ msgstr "包: $tazpkg"
 
 #: cook:833
 msgid "QA: checking for empty package..."
-msgstr ""
+msgstr "QA: 检查空包中……"
 
 #: cook:836
 msgid "ERROR: empty package"
@@ -792,7 +792,7 @@ msgstr "正在创建: packages.md5"
 #: cook:1286
 #, sh-format
 msgid "Creating lists from: $WOK"
-msgstr ""
+msgstr "从  $WOK 创建列表"
 
 #: cook:1328
 msgid "Done: packages.desc"
