@@ -11,7 +11,7 @@
 # reassigned in cook.conf.
 SSH_CMD="dbclient -i /root/.ssh/id_rsa.dropbear"
 SSH_ISO="/var/www/slitaz/mirror/iso"
-SSH_HOST="slitaz@mirror.slitaz.org"
+SSH_HOST="slitaz@mirror1.slitaz.org"
 #BWLIMIT="--bwlimit=40"
 
 . /usr/lib/slitaz/libcook.sh
