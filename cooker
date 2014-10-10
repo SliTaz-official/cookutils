@@ -209,9 +209,9 @@ arch_db() {
 	echo "Creating $ARCH packages DB..."
 	for pkg in *
 	do
-		if fgrep -q 'HOST_ARCH' $wok/$pkg/receipt; then
-			. $wok/$pkg/receipt
-			#: ${HOST_ARCH=i486}
+		HOST_ARCH=
+		. $wok/$pkg/receipt
+		if [ -n "$HOST_ARCH" ]; then
 			if $(echo "$HOST_ARCH" | egrep -q "$ARCH|any"); then
 				count=$(($count + 1))
 				echo "Adding: $pkg"
