@@ -40,7 +40,7 @@ echo ""
 
 # RSS feed generator
 if [ "$QUERY_STRING" == "rss" ]; then
-	pubdate=$(date "+%a, %d %b %Y %X %Z")
+	pubdate=$(date -u "+%a, %d %b %Y %X %Z")
 	cat << EOT
 <?xml version="1.0" encoding="utf-8" ?>
 <rss version="2.0">
@@ -327,7 +327,7 @@ Blocked packages : $(cat $blocked | wc -l)
 
 <p class="info">
 	Packages: $inwok in the wok - $cooked cooked - $unbuilt unbuilt -
-	Server date: $(date '+%Y-%m-%d %H:%M %Z')
+	Server date: $(date -u '+%Y-%m-%d %H:%M %Z')
 </p>
 <div class="pctbar">
 	<div class="pct" style="width: ${pct}%;">${pct}%</div>
