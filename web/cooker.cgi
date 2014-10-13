@@ -170,6 +170,7 @@ case "${QUERY_STRING}" in
 				if [ -f $PKGS/$PACKAGE-$VERSION$EXTRAVERSION-$ARCH.tazpkg ]; then
 					echo "<a href='cooker.cgi?download=$PACKAGE-$VERSION$EXTRAVERSION-$ARCH.tazpkg'>download</a>"
 				fi
+				echo "<a href='ftp://${HTTP_HOST%:*}/$pkg/'>browse</a>"
 			fi
 		else
 			echo "No package named: $pkg"
