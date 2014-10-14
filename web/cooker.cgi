@@ -35,25 +35,31 @@ EOT
 	exit
 fi
 
-echo "Content-Type: text/html"
+echo -n "Content-Type: "
+if [ "$QUERY_STRING" == "rss" ]; then
+	echo "application/rss+xml"
+else
+	echo "text/html; charset=utf-8"
+fi
 echo ""
 
 # RSS feed generator
 if [ "$QUERY_STRING" == "rss" ]; then
-	pubdate=$(date -u "+%a, %d %b %Y %X %Z")
+	pubdate=$(date -R)
 	cat << EOT
 <?xml version="1.0" encoding="utf-8" ?>
-<rss version="2.0">
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
 <channel>
 	<title>SliTaz Cooker</title>
 	<description>The SliTaz packages cooker feed</description>
 	<link>$COOKER_URL</link>
 	<lastBuildDate>$pubdate</lastBuildDate>
 	<pubDate>$pubdate</pubDate>
+	<atom:link href="http://cook.slitaz.org/cooker.cgi?rss" rel="self" type="application/rss+xml" />
 EOT
 	for rss in $(ls -lt $FEEDS/*.xml | head -n 12)
 	do
-		cat $rss
+		cat $rss | sed 's|<guid|& isPermaLink="false"|g;s|</pubDate| GMT&|g'
 	done
 	cat << EOT
 </channel>
