@@ -905,7 +905,7 @@ umount_aufs() {
 	tac ${1}rw/aufs-umount.sh | sh
 	rm -rf ${1}rw
 	umount ${1}root
-	rmdir $1*
+	rmdir ${1}r*
 }
 
 # Launch the cook command into a chroot jail protected by aufs.
