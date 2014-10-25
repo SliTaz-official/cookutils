@@ -900,6 +900,14 @@ install_package() {
 	fi
 }
 
+# remove chroot jail
+umount_aufs() {
+	tac ${1}rw/aufs-umount.sh | sh
+	rm -rf ${1}rw
+	umount ${1}root
+	rmdir $1*
+}
+
 # Launch the cook command into a chroot jail protected by aufs.
 # The current filesystems are used read-only and updates are
 # stored in a separate branch.
@@ -933,15 +941,13 @@ try_aufs_chroot() {
 		fi
 		echo "umount ${base}root$mnt" >> ${base}rw/aufs-umount.sh
 	done
+	trap "umount_aufs ${base}" INT
 
 	chroot ${base}root $(cd $(dirname $0); pwd)/$(basename $0) "$@"
 	status=$?
 
 	_ "Leaving aufs chroot..."
-	tac ${base}rw/aufs-umount.sh | sh
-	rm -rf ${base}rw
-	umount ${base}root
-	rmdir $base*
+	umount_aufs ${base}
 	# Install package outside the aufs jail
 	install_package
 	exit $status
