@@ -305,6 +305,7 @@ extract_source() {
 		*.tar.gz|*.tgz) tar xzf $SRC/$TARBALL 2>/dev/null ;;
 		*.tar.bz2|*.tbz|*.tbz2) tar xjf $SRC/$TARBALL 2>/dev/null ;;
 		*.tar.lzma) tar xaf $SRC/$TARBALL ;;
+		*.tar.lz|*.tlz) lzip -d < $SRC/$TARBALL | tar xf - 2>/dev/null ;;
 		*.tar) tar xf $SRC/$TARBALL ;;
 		*.zip|*.xpi) unzip -o $SRC/$TARBALL ;;
 		*.xz) unxz -c $SRC/$TARBALL | tar xf - || tar xf $SRC/$TARBALL 2>/dev/null;;
