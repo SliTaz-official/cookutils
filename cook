@@ -1347,7 +1347,8 @@ case "$1" in
 		datenow=$(date "$(_ '+%Y-%m-%d %H:%M')")
 		_ "Cook pkgdb started: \$datenow"
 		cd $PKGS
-		rm -f packages.*
+		rm -f packages.* extra.list
+		ln -s ../get.list extra.list
 		_ "Creating: packages.list"
 		ls -1 *.tazpkg | sed s'/.tazpkg//' > $PKGS/packages.list
 		_ "Creating: packages.md5"
@@ -1401,6 +1402,7 @@ EOT
 
 		# files.list.lzma
 		_ "Creating: files.list.lzma"
+		touch $PKGS/files.list
 		cd $PKGS && lzma e files.list files.list.lzma
 		rm -f files.list
 
