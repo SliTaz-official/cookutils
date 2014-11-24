@@ -1364,7 +1364,8 @@ case "$1" in
 			if [ -s $pkg/taz/*/receipt ]; then
 				. $pkg/taz/*/receipt
 			fi
-			if [ -f "$PKGS/$PACKAGE-${VERSION}${EXTRAVERSION}.tazpkg" ]; then
+			if [ -f "$PKGS/$PACKAGE-${VERSION}${EXTRAVERSION}.tazpkg" ] || \
+			   [ -f "$PKGS/$PACKAGE-${VERSION}${EXTRAVERSION}-${ARCH}.tazpkg" ]; then
 				# packages.desc lets us search easily in DB
 				cat >> $PKGS/packages.desc << EOT
 $PACKAGE | ${VERSION}$EXTRAVERSION | $SHORT_DESC | $CATEGORY | $WEB_SITE
