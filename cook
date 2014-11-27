@@ -1366,10 +1366,12 @@ case "$1" in
 			fi
 			if [ -f "$PKGS/$PACKAGE-${VERSION}${EXTRAVERSION}.tazpkg" ] || \
 			   [ -f "$PKGS/$PACKAGE-${VERSION}${EXTRAVERSION}-${ARCH}.tazpkg" ]; then
+
 				# packages.desc lets us search easily in DB
 				cat >> $PKGS/packages.desc << EOT
 $PACKAGE | ${VERSION}$EXTRAVERSION | $SHORT_DESC | $CATEGORY | $WEB_SITE
 EOT
+
 				# packages.txt used by tazpkg and tazpkg-web also to provide
 				# a human readable package list with version and description.
 				cat >> $PKGS/packages.txt << EOT
@@ -1379,6 +1381,15 @@ $SHORT_DESC
 $PACKED_SIZE ($UNPACKED_SIZE installed)
 
 EOT
+
+				# packages.info combines two previous files
+				# and will substitute them both
+				SIZES=$(echo $PACKED_SIZE $UNPACKED_SIZE | sed 's|\.0||g')
+				DEPENDS=$(echo $DEPENDS) # remove newlines from some receipts
+				cat >> $PKGS/packages.info << EOT
+$PACKAGE	${VERSION}$EXTRAVERSION	$CATEGORY	$SHORT_DESC	$WEB_SITE	$TAGS	$SIZES	$DEPENDS
+EOT
+
 				# packages.equiv is used by tazpkg install to check depends.
 				for i in $PROVIDE; do
 					DEST=""
@@ -1390,6 +1401,7 @@ EOT
 						echo "${i%:*}=$DEST$PACKAGE" >> $PKGS/packages.equiv
 					fi
 				done
+
 				# files.list provides a list of all packages files.
 				cat $pkg/taz/*/files.list | sed s/^/"$pkg: \0"/ >> \
 					$PKGS/files.list
@@ -1404,8 +1416,15 @@ EOT
 		# files.list.lzma
 		_ "Creating: files.list.lzma"
 		touch $PKGS/files.list
-		cd $PKGS && lzma e files.list files.list.lzma
+		cd $PKGS; lzma e files.list files.list.lzma
 		rm -f files.list
+
+		# packages.info.lzma
+		PI=packages.info
+		_ 'Creating: packages.info.lzma'
+		touch $PKGS/$PI
+		cd $PKGS; lzma e $PI $PI.lzma
+		rm -f $PI
 
 		# Display some info.
 		separator
