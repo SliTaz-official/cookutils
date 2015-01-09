@@ -179,7 +179,26 @@ case "${QUERY_STRING}" in
 				echo "<a href='ftp://${HTTP_HOST%:*}/$pkg/'>browse</a>"
 			fi
 		else
-			echo "No package named: $pkg"
+			if [ $(ls $wok/*$pkg*/receipt 2> /dev/null | wc -l) -eq 0 ]; then
+				echo "No package named: $pkg"
+			else
+				ls $wok/$pkg/receipt >/dev/null 2>&1 || pkg="*$pkg*"
+				echo '<table style="width:100%">'
+				for i in $(cd $wok ; ls $pkg/receipt); do
+					pkg=$(dirname $i)
+					unset SHORT_DESC CATEGORY
+					. $wok/$pkg/receipt
+					cat <<EOT
+<tr>
+<td><a href="cooker.cgi?pkg=$pkg">$pkg</a></td>
+<td>$SHORT_DESC</td>
+<td>$CATEGORY</td>
+</tr>
+EOT					
+				done
+				echo '</table>'
+				unset pkg
+			fi
 		fi
 		echo '</div>'
 
@@ -207,7 +226,7 @@ case "${QUERY_STRING}" in
 			cat $log | syntax_highlighter log
 			echo '</pre>'
 		else
-			echo "<pre>No log: $pkg</pre>"
+			[ "$pkg" ] && echo "<pre>No log: $pkg</pre>"
 		fi ;;
 	file=*)
 		# Dont allow all files on the system for security reasons.
@@ -277,9 +296,9 @@ case "${QUERY_STRING}" in
 		fi ;;
 	files=*)
 		pkg=${QUERY_STRING#files=}
-		echo "<h2>Installed files by: $pkg</h2>"
 		dir=$(ls -d $WOK/$pkg/taz/$pkg-*)
 		if [ -d "$dir/fs" ]; then
+			echo "<h2>Installed files by: $pkg ($(du -hs $dir/fs | awk '{ print $1 }'))</h2>"
 			echo '<pre>'
 			find $dir/fs -not -type d | xargs ls -ld | \
 				sed "s|\(.*\) /.*\(${dir#*wok}/fs\)\(.*\)|\1 <a href=\"?download=../wok\2\3\">\3</a>|;s|^\([^-].*\)\(<a.*\)\">\(.*\)</a>|\1\3|"
