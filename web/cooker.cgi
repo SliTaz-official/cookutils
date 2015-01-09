@@ -194,7 +194,7 @@ case "${QUERY_STRING}" in
 <td>$SHORT_DESC</td>
 <td>$CATEGORY</td>
 </tr>
-EOT					
+EOT
 				done
 				echo '</table>'
 				unset pkg
