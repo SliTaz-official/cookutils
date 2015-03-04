@@ -8,7 +8,9 @@ touch $DONELIST
 while true; do
 	chmod +x $DONELIST
 	for i in /home/slitaz/wok/*/receipt ; do
-		grep -q "^$(basename ${i%/receipt})$" $DONELIST && continue
+		pkg=$(basename ${i%/receipt})
+		grep -q "^$pkg$" $DONELIST && continue
+		grep -q "^$pkg$" /home/slitaz/cache/broken && continue
 		unset BUILD_DEPENDS WANTED
 		. $i
 		for j in $BUILD_DEPENDS $WANTED ; do
@@ -24,9 +26,10 @@ while true; do
 	done
 	[ -x $DONELIST ] || continue
 	# try to break build dep loops...
-	for i in gettext python udev cups libQtClucene menu-cache ; do
-		grep -q "^$i$" $DONELIST && continue
-		. /home/slitaz/wok/$i/receipt
+	for pkg in gettext python udev cups libQtClucene menu-cache ; do
+		grep -q "^$pkg$" $DONELIST && continue
+		grep -q "^$pkg$" /home/slitaz/cache/broken && continue
+		. /home/slitaz/wok/$pkg/receipt
 		cooker pkg $PACKAGE
 		[ /home/slitaz/packages/$PACKAGE-$VERSION*.tazpkg -nt $DONELIST ] || continue
 		echo $PACKAGE >> $DONELIST
