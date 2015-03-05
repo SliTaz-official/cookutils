@@ -12,7 +12,12 @@ while true; do
 		grep -q "^$pkg$" $DONELIST && continue
 		grep -q "^$pkg$" /home/slitaz/cache/broken && continue
 		unset BUILD_DEPENDS WANTED
+		HOST_ARCH="i486"
 		. $i
+		case " $HOST_ARCH " in
+		*\ i486\ *|*\ any\ *);;
+		*) continue;;
+		esac
 		for j in $BUILD_DEPENDS $WANTED ; do
 			case " $SLITAZ_TOOLCHAIN " in
 			*\ $j\ *) continue ;;
@@ -43,7 +48,12 @@ TODOLIST=/tmp/todolist
 for i in /home/slitaz/wok/*/receipt ; do
 	grep -q "^$(basename ${i%/receipt})$" $DONELIST && continue
 	unset BUILD_DEPENDS WANTED
+	HOST_ARCH="i486"
 	. $i
+	case " $HOST_ARCH " in
+	*\ i486\ *|*\ any\ *);;
+	*) continue;;
+	esac
 	echo -n "$PACKAGE : "
 	for j in $BUILD_DEPENDS $WANTED ; do
 		grep -q "^$j$" $DONELIST || echo -n "$j "
