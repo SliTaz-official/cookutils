@@ -23,6 +23,7 @@ while true; do
 			*\ $j\ *) continue ;;
 			esac
 			grep -q "^$j$" $DONELIST || continue 2
+			grep -q "^$j$" /home/slitaz/cache/broken && continue 2
 		done
 		cooker pkg $PACKAGE
 		[ /home/slitaz/packages/$PACKAGE-$VERSION*.tazpkg -nt $DONELIST ] || continue
