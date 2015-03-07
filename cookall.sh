@@ -18,10 +18,10 @@ while true; do
 		*\ i486\ *|*\ any\ *);;
 		*) continue;;
 		esac
-		if [ -n "$WANTED" ]; then
-			grep -q "^$WANTED$" $DONELIST || continue
-			grep -q "^$WANTED$" /home/slitaz/cache/broken && continue
-		fi
+		for j in $WANTED ; do
+			grep -q "^$j$" $DONELIST || continue 2
+			grep -q "^$j$" /home/slitaz/cache/broken && continue 2
+		done
 		for j in $BUILD_DEPENDS ; do
 			case " $SLITAZ_TOOLCHAIN " in
 			*\ $j\ *) continue ;;
