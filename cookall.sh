@@ -36,7 +36,7 @@ while true; do
 	done
 	[ -x $DONELIST ] || continue
 	# try to break build dep loops...
-	for pkg in gettext python udev cups libQtClucene menu-cache ; do
+	for pkg in gettext python udev cups libQtClucene menu-cache tzdata ; do
 		grep -q "^$pkg$" $DONELIST && continue
 		grep -q "^$pkg$" /home/slitaz/cache/broken && continue
 		. /home/slitaz/wok/$pkg/receipt
