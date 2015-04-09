@@ -20,6 +20,8 @@ SSH_HOST="slitaz@mirror1.slitaz.org"
 for opt in "$@"
 do
 	case "$opt" in
+		--force)
+			force="yes" ;;
 		--pkgdb)
 			cook pkgdb --flavors ;;
 		--push)
@@ -64,6 +66,7 @@ $(echo -e "\033[1mCommands:\033[0m")
   rolling       Build the rolling ISOs if any changes.
 
 $(echo -e "\033[1mOptions:\033[0m")
+  --force       Build ISO rolling anyway.
   --pkgdb       Generate packages DB before building ISO.
   --push        Upload freshly generated ISO to a server.
   --flavors=    List of flavors to generate with 'gen' command.
@@ -211,7 +214,7 @@ case "$1" in
 		# Packages changes
 		[ -f "$last" ] || cp -f $pkgs $cache
 		diff $last $pkgs > $diff 
-		if [ -s "$diff" ]; then
+		if [ "$force" ] || [ -s "$diff" ]; then
 			echo "Found new or rebuilt packages" | log_bot
 			cat $diff | grep "^+" >> $rollog
 			#
