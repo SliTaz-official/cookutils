@@ -2,15 +2,16 @@
 
 DONELIST=${1:-/tmp/donelist}
 
-. /home/slitaz/wok/slitaz-toolchain/receipt
+. /etc/slitaz/cook.conf
+. $WOK/slitaz-toolchain/receipt
 SLITAZ_TOOLCHAIN="slitaz-toolchain $DEPENDS"
 touch $DONELIST
 while true; do
 	chmod +x $DONELIST
-	for i in /home/slitaz/wok/*/receipt ; do
+	for i in $WOK/*/receipt ; do
 		pkg=$(basename ${i%/receipt})
 		grep -q "^$pkg$" $DONELIST && continue
-		grep -q "^$pkg$" /home/slitaz/cache/broken && continue
+		grep -q "^$pkg$" $CACHE/broken && continue
 		unset BUILD_DEPENDS WANTED
 		HOST_ARCH="i486"
 		. $i
@@ -20,17 +21,17 @@ while true; do
 		esac
 		for j in $WANTED ; do
 			grep -q "^$j$" $DONELIST || continue 2
-			grep -q "^$j$" /home/slitaz/cache/broken && continue 2
+			grep -q "^$j$" $CACHE/broken && continue 2
 		done
 		for j in $BUILD_DEPENDS ; do
 			case " $SLITAZ_TOOLCHAIN " in
 			*\ $j\ *) continue ;;
 			esac
 			grep -q "^$j$" $DONELIST || continue 2
-			grep -q "^$j$" /home/slitaz/cache/broken && continue 2
+			grep -q "^$j$" $CACHE/broken && continue 2
 		done
 		cooker pkg $PACKAGE
-		[ /home/slitaz/packages/$PACKAGE-$VERSION*.tazpkg -nt $DONELIST ] || continue
+		[ $PKGS/$PACKAGE-$VERSION*.tazpkg -nt $DONELIST ] || continue
 		echo $PACKAGE >> $DONELIST
 		chmod -x $DONELIST
 	done
@@ -38,10 +39,10 @@ while true; do
 	# try to break build dep loops...
 	for pkg in gettext python udev cups libQtClucene menu-cache tzdata ; do
 		grep -q "^$pkg$" $DONELIST && continue
-		grep -q "^$pkg$" /home/slitaz/cache/broken && continue
-		. /home/slitaz/wok/$pkg/receipt
+		grep -q "^$pkg$" $CACHE/broken && continue
+		. $WOK/$pkg/receipt
 		cooker pkg $PACKAGE
-		[ /home/slitaz/packages/$PACKAGE-$VERSION*.tazpkg -nt $DONELIST ] || continue
+		[ $PKGS/$PACKAGE-$VERSION*.tazpkg -nt $DONELIST ] || continue
 		echo $PACKAGE >> $DONELIST
 		continue 2
 	done
@@ -50,7 +51,7 @@ done
 
 TODOLIST=/tmp/todolist
 # list packages to build and their (build) dependancies
-for i in /home/slitaz/wok/*/receipt ; do
+for i in $WOK/*/receipt ; do
 	grep -q "^$(basename ${i%/receipt})$" $DONELIST && continue
 	unset BUILD_DEPENDS WANTED
 	HOST_ARCH="i486"
