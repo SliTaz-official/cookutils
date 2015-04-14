@@ -872,7 +872,7 @@ packit() {
 		_ "Executing: genpkg_rules"; newline
 		set -e && cd $pkgdir && mkdir -p $fs
 		genpkg_rules || (newline; _ "ERROR: genpkg_rules failed"; newline) >> \
-			$LOGS/$pkg.log)
+			$LOGS/$pkg.log
 	else
 		_ "No packages rules: meta package"
 		mkdir -p $fs
