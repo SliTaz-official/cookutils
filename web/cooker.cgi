@@ -300,7 +300,7 @@ EOT
 		if [ -d "$dir/fs" ]; then
 			echo "<h2>Installed files by: $pkg ($(du -hs $dir/fs | awk '{ print $1 }'))</h2>"
 			echo '<pre>'
-			find $dir/fs -not -type d | xargs ls -ld | \
+			find $dir/fs -not -type d -print0 | xargs -0 ls -ld | \
 				sed "s|\(.*\) /.*\(${dir#*wok}/fs\)\(.*\)|\1 <a href=\"?download=../wok\2\3\">\3</a>|;s|^\([^-].*\)\(<a.*\)\">\(.*\)</a>|\1\3|"
 			echo '</pre>'
 		else
