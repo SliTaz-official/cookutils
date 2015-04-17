@@ -24,14 +24,14 @@ wokrev="$CACHE/wokrev"
 export TZ=$(cat /etc/TZ)
 
 if [ "${QUERY_STRING%%=*}" == "download" ]; then
-	file=$PKGS/${QUERY_STRING#*=}
+	file=$(busybox httpd -d "$PKGS/${QUERY_STRING#*=}")
 	cat <<EOT
 Content-Type: application/octet-stream
-Content-Length: $(stat -c %s $file)
-Content-Disposition: attachment; filename=$(basename $file)
+Content-Length: $(stat -c %s "$file")
+Content-Disposition: attachment; filename="$(basename "$file")"
 
 EOT
-	cat $file
+	cat "$file"
 	exit
 fi
 
