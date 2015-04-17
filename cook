@@ -1150,7 +1150,7 @@ EOT
 # Truncate stdout log file to $1 Mb.
 loglimit()
 {
-	if [ "$DEFAULT_LOG_LIMIT" ]; then
+	if [ -n "$DEFAULT_LOG_LIMIT" ]; then
 		tee /dev/stderr | dd bs=1024k count=${1:-$DEFAULT_LOG_LIMIT} 2> /dev/null
 	else
 		tee /dev/stderr
