@@ -1151,7 +1151,7 @@ EOT
 loglimit()
 {
 	if [ -n "$DEFAULT_LOG_LIMIT" ]; then
-		tee /dev/stderr | dd bs=1024k count=${1:-$DEFAULT_LOG_LIMIT} 2> /dev/null
+		tee /dev/stderr | head -qc ${1:-$DEFAULT_LOG_LIMIT}m
 	else
 		tee /dev/stderr
 	fi
