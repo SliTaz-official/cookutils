@@ -1443,7 +1443,7 @@ EOT
 		_ 'Creating: bundle.tar.lzma'
 		[ -f bundle.tar.lzma ] && rm bundle.tar.lzma
 		busybox tar -caf bundle.tar.lzma \
-			extra.list mirrors files.list.md5 packages.info \
+			extra.list ../../mirrors files.list.md5 packages.info \
 			packages.desc packages.md5 packages.txt packages.list packages.equiv
 
 		# Display some info.
