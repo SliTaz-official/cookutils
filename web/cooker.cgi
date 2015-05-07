@@ -23,7 +23,7 @@ wokrev="$CACHE/wokrev"
 # We're not logged and want time zone to display correct server date.
 export TZ=$(cat /etc/TZ)
 
-if [ "${QUERY_STRING%%=*}" == "download" ]; then
+if [ "${QUERY_STRING%%=*}" == 'download' ]; then
 	file=$(busybox httpd -d "$PKGS/${QUERY_STRING#*=}")
 	cat <<EOT
 Content-Type: application/octet-stream
@@ -36,17 +36,17 @@ EOT
 fi
 
 echo -n "Content-Type: "
-if [ "$QUERY_STRING" == "rss" ]; then
-	echo "application/rss+xml"
+if [ "$QUERY_STRING" == 'rss' ]; then
+	echo 'application/rss+xml'
 else
-	echo "text/html; charset=utf-8"
+	echo 'text/html; charset=utf-8'
 fi
-echo ""
+echo ''
 
 # RSS feed generator
-if [ "$QUERY_STRING" == "rss" ]; then
+if [ "$QUERY_STRING" == 'rss' ]; then
 	pubdate=$(date -R)
-	cat << EOT
+	cat <<EOT
 <?xml version="1.0" encoding="utf-8" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
 <channel>
@@ -57,22 +57,24 @@ if [ "$QUERY_STRING" == "rss" ]; then
 	<pubDate>$pubdate</pubDate>
 	<atom:link href="http://cook.slitaz.org/cooker.cgi?rss" rel="self" type="application/rss+xml" />
 EOT
-	for rss in $(ls -lt $FEEDS/*.xml | head -n 12)
-	do
+	for rss in $(ls -lt $FEEDS/*.xml | head -n 12); do
 		cat $rss | sed 's|<guid|& isPermaLink="false"|g;s|</pubDate| GMT&|g'
 	done
-	cat << EOT
+	cat <<EOT
 </channel>
 </rss>
 EOT
 	exit 0
 fi
 
+
 #
 # Functions
 #
 
+
 # Put some colors in log and DB files.
+
 syntax_highlighter() {
 	case $1 in
 		log)
@@ -89,49 +91,57 @@ syntax_highlighter() {
 				-e s"#^[a-zA-Z0-9]\([^']*\) :: #<span class='span-sky'>\0</span>#"g \
 				-e s"#ftp://[^ '\"]*#<a href='\0'>\0</a>#"g	\
 				-e s"#http://[^ '\"]*#<a href='\0'>\0</a>#"g ;;
+
 		receipt)
 			sed	-e s'|&|\&amp;|g' -e 's|<|\&lt;|g' -e 's|>|\&gt;|'g \
 				-e s"#^\#\([^']*\)#<span class='sh-comment'>\0</span>#"g \
 				-e s"#\"\([^']*\)\"#<span class='sh-val'>\0</span>#"g ;;
+
 		diff)
 			sed -e 's|&|\&amp;|g' -e 's|<|\&lt;|g' -e 's|>|\&gt;|g' \
 				-e s"#^-\([^']*\).#<span class='span-red'>\0</span>#"g \
 				-e s"#^+\([^']*\).#<span class='span-ok'>\0</span>#"g \
 				-e s"#@@\([^']*\)@@#<span class='span-sky'>@@\1@@</span>#"g ;;
+
 		activity)
 			sed s"#^\([^']* : \)#<span class='log-date'>\0</span>#"g ;;
 	esac
 }
 
+
 # Latest build pkgs.
+
 list_packages() {
 	cd $PKGS
 	ls -1t *.tazpkg | head -20 | \
-	while read file
-	do
+	while read file; do
 		echo -n $(stat -c '%y' $PKGS/$file | cut -d . -f 1 | sed s/:[0-9]*$//)
 		echo " : $file"
 	done
 }
 
+
 # Optional full list button
+
 more_button() {
 	[ $(wc -l < ${3:-$CACHE/$1}) -gt ${4:-12} ] &&
 	echo "<a class=\"button\" href=\"cooker.cgi?file=$1\">$2</a>"
 }
 
+
 # xHTML header. Pages can be customized with a separated html.header file.
+
 if [ -f "header.html" ]; then
 	cat header.html
 else
-	cat << EOT
+	cat <<EOT
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html lang="en">
 <head>
+	<meta charset="utf-8"/>
 	<title>SliTaz Cooker</title>
-	<meta charset="utf-8" />
-	<link rel="shortcut icon" href="favicon.ico" />
-	<link rel="stylesheet" type="text/css" href="style.css" />
+	<link rel="shortcut icon" href="favicon.ico"/>
+	<link rel="stylesheet" type="text/css" href="style.css"/>
 </head>
 <body>
 
@@ -144,6 +154,7 @@ else
 <div id="content">
 EOT
 fi
+
 
 #
 # Load requested page
@@ -161,8 +172,10 @@ case "${QUERY_STRING}" in
 			echo "<a href='cooker.cgi?receipt=$pkg'>receipt</a>"
 			unset WEB_SITE
 			. $wok/$pkg/receipt
+
 			[ -n "$WEB_SITE" ] && # busybox wget -s $WEB_SITE &&
 			echo "<a href='$WEB_SITE'>home</a>"
+
 			if [ -f "$wok/$pkg/taz/$PACKAGE-$VERSION/receipt" ]; then
 				echo "<a href='cooker.cgi?files=$pkg'>files</a>"
 				unset EXTRAVERSION
@@ -208,28 +221,29 @@ EOT
 				echo "<pre>The Cooker is currently building: $pkg</pre>"
 			fi
 			if fgrep -q "Summary for:" $LOGS/$pkg.log; then
-				echo "<h3>Cook summary</h3>"
+				echo '<h3>Cook summary</h3>'
 				echo '<pre>'
 				grep -A 12 "^Summary for:" $LOGS/$pkg.log | sed /^$/d | \
 					syntax_highlighter log
 				echo '</pre>'
 			fi
 			if fgrep -q "Debug information" $LOGS/$pkg.log; then
-				echo "<h3>Cook failed</h3>"
+				echo '<h3>Cook failed</h3>'
 				echo '<pre>'
 				grep -A 8 "^Debug information" $LOGS/$pkg.log | sed /^$/d | \
 						syntax_highlighter log
 				echo '</pre>'
 			fi
-			echo "<h3>Cook log</h3>"
+			echo '<h3>Cook log</h3>'
 			echo '<pre>'
 			cat $log | syntax_highlighter log
 			echo '</pre>'
 		else
 			[ "$pkg" ] && echo "<pre>No log: $pkg</pre>"
 		fi ;;
+
 	file=*)
-		# Dont allow all files on the system for security reasons.
+		# Don't allow all files on the system for security reasons.
 		file=${QUERY_STRING#file=}
 		case "$file" in
 			activity|cooknotes|cooklist)
@@ -239,6 +253,7 @@ EOT
 				echo '<pre>'
 				tac $CACHE/$file | syntax_highlighter activity
 				echo '</pre>' ;;
+
 			broken)
 				nb=$(cat $broken | wc -l)
 				echo "<h2>DB: broken - Packages: $nb</h2>"
@@ -246,6 +261,7 @@ EOT
 				cat $CACHE/$file | sort | \
 					sed s"#^[^']*#<a href='cooker.cgi?pkg=\0'>\0</a>#"g
 				echo '</pre>' ;;
+
 			*.diff)
 				diff=$CACHE/$file
 				echo "<h2>Diff for: ${file%.diff}</h2>"
@@ -255,6 +271,7 @@ EOT
 				echo '<pre>'
 				cat $diff | syntax_highlighter diff
 				echo '</pre>' ;;
+
 			*.log)
 				log=$LOGS/$file
 				name=$(basename $log)
@@ -273,12 +290,14 @@ EOT
 					echo "<pre>No log file: $log</pre>"
 				fi ;;
 		esac ;;
+
 	stuff=*)
 		file=${QUERY_STRING#stuff=}
 		echo "<h2>$file</h2>"
 		echo '<pre>'
 		cat $wok/$file | sed 's/&/\&amp;/g;s/</\&lt;/g;s/>/\&gt;/g'
 		echo '</pre>' ;;
+
 	receipt=*)
 		pkg=${QUERY_STRING#receipt=}
 		echo "<h2>Receipt for: $pkg</h2>"
@@ -294,6 +313,7 @@ EOT
 		else
 			echo "<pre>No receipt for: $pkg</pre>"
 		fi ;;
+
 	files=*)
 		pkg=${QUERY_STRING#files=}
 		dir=$(ls -d $WOK/$pkg/taz/$pkg-*)
@@ -306,6 +326,7 @@ EOT
 		else
 			echo "<pre>No files list for: $pkg</pre>"
 		fi ;;
+
 	description=*)
 		pkg=${QUERY_STRING#description=}
 		echo "<h2>Description of $pkg</h2>"
@@ -318,6 +339,7 @@ EOT
 		else
 			echo "<pre>No description for: $pkg</pre>"
 		fi ;;
+
 	*)
 		# We may have a toolchain.cgi script for cross cooker's
 		if [ -f "toolchain.cgi" ]; then
@@ -332,7 +354,7 @@ EOT
 		unbuilt=$(($inwok - $cooked))
 		pct=0
 		[ $inwok -gt 0 ] && pct=$(( ($cooked * 100) / $inwok ))
-		cat << EOT
+		cat <<EOT
 <div style="float: right;">
 	<form method="get" action="$SCRIPT_NAME">
 		Package:
@@ -352,8 +374,8 @@ Blocked packages : $(cat $blocked | wc -l)
 </pre>
 
 <p class="info">
-	Packages: $inwok in the wok - $cooked cooked - $unbuilt unbuilt -
-	Server date: $(date -u '+%Y-%m-%d %H:%M %Z')
+	Packages: $inwok in the wok | $cooked cooked | $unbuilt unbuilt |
+	Server date: $(date -u '+%F %R %Z')
 </p>
 <div class="pctbar">
 	<div class="pct" style="width: ${pct}%;">${pct}%</div>
@@ -368,48 +390,48 @@ Blocked packages : $(cat $blocked | wc -l)
 	<a href="$toolchain">toolchain</a>
 </p>
 
-<a name="activity"></a>
-<h2>Activity</h2>
+
+<h2 id="activity">Activity</h2>
 <pre>
 $(tac $CACHE/activity | head -n 12 | syntax_highlighter activity)
 </pre>
 $(more_button activity "More activity" $CACHE/activity 12)
 
-<a name="cooknotes"></a>
-<h2>Cooknotes</h2>
+
+<h2 id="cooknotes">Cooknotes</h2>
 <pre>
 $(tac $cooknotes | head -n 12 | syntax_highlighter activity)
 </pre>
 $(more_button cooknotes "More notes" $cooknotes 12)
 
-<a name="commits"></a>
-<h2>Commits</h2>
+
+<h2 id="commits">Commits</h2>
 <pre>
 $(cat $commits)
 </pre>
 
-<a name="cooklist"></a>
-<h2>Cooklist</h2>
+
+<h2 id="cooklist">Cooklist</h2>
 <pre>
 $(cat $cooklist | head -n 20)
 </pre>
 $(more_button cooklist "Full cooklist" $cooklist 20)
 
-<a name="broken"></a>
-<h2>Broken</h2>
+
+<h2 id="broken">Broken</h2>
 <pre>
 $(cat $broken | head -n 20 | sed s"#^[^']*#<a href='cooker.cgi?pkg=\0'>\0</a>#"g)
 </pre>
 $(more_button broken "All broken packages" $broken 20)
 
-<a name="blocked"></a>
-<h2>Blocked</h2>
+
+<h2 id="blocked">Blocked</h2>
 <pre>
 $(cat $blocked | sed s"#^[^']*#<a href='cooker.cgi?pkg=\0'>\0</a>#"g)
 </pre>
 
-<a name="lastcook"></a>
-<h2>Latest cook</h2>
+
+<h2 id="lastcook">Latest cook</h2>
 <pre>
 $(list_packages | sed s"#^\([^']*\).* : #<span class='log-date'>\0</span>#"g)
 </pre>
@@ -417,8 +439,10 @@ EOT
 	;;
 esac
 
+
 # Close xHTML page
-cat << EOT
+
+cat <<EOT
 </div>
 
 <div id="footer">

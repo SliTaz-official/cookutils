@@ -2,19 +2,22 @@
 #
 # SliTaz Cookiso CGI/web interface.
 #
-echo "Content-Type: text/html"
-echo ""
+echo 'Content-Type: text/html'
+echo ''
 
 [ -f "/etc/slitaz/cook.conf" ] && . /etc/slitaz/cook.conf
 [ -f "cook.conf" ] && . ./cook.conf
 
+
 # Cookiso DB files.
+
 cache="$CACHE/cookiso"
 iso="$SLITAZ/iso"
 activity="$cache/activity"
 command="$cache/command"
 rollog="$cache/rolling.log"
 synclog="$cache/rsync.log"
+
 
 #
 # Functions
@@ -33,29 +36,32 @@ syntax_highlighter() {
 	esac
 }
 
+
 # Latest build pkgs.
+
 list_isos() {
 	cd $iso
 	ls -1t *.iso | head -6 | \
-	while read file
-	do
+	while read file; do
 		echo -n $(stat -c '%y' $file | cut -d . -f 1 | sed s/:[0-9]*$//)
 		echo " : $file"
 	done
 }
 
+
 # xHTML header. Pages can be customized with a separate html.header file.
-if [ -f "header.html" ]; then
+
+if [ -f 'header.html' ]; then
 	cat header.html | sed s'/Cooker/ISO Cooker/'
 else
-	cat << EOT
+	cat <<EOT
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html lang="en">
 <head>
+	<meta charset="utf-8"/>
 	<title>SliTaz ISO Cooker</title>
-	<meta charset="utf-8" />
-	<link rel="shortcut icon" href="favicon.ico" />
-	<link rel="stylesheet" type="text/css" href="style.css" />
+	<link rel="shortcut icon" href="favicon.ico"/>
+	<link rel="stylesheet" type="text/css" href="style.css"/>
 </head>
 <body>
 
@@ -93,15 +99,16 @@ case "${QUERY_STRING}" in
 		echo '<pre>'
 		cat $log | syntax_highlighter log
 		echo '</pre>' ;;
+
 	*)
 		# Main page with summary.
-		echo -n "Running command  : "
+		echo -n 'Running command  : '
 		if [ -f "$command" ]; then
 			cat $command
 		else
-			echo "Not running"
+			echo 'Not running'
 		fi
-		cat << EOT
+		cat <<EOT
 <h2>Activity</h2>
 <pre>
 $(tac $activity | head -n 12 | syntax_highlighter activity)
@@ -114,14 +121,14 @@ $(list_isos | syntax_highlighter activity)
 EOT
 		# Rolling Bot log.
 		if [ -f "$rollog" ]; then
-			echo "<h2>Rolling log</h2>"
+			echo '<h2>Rolling log</h2>'
 			echo '<pre>'
 			cat $rollog
 			echo '</pre>'
 		fi
 		# Rsync log.
 		if [ -f "$synclog" ]; then
-			echo "<h2>Rsync log</h2>"
+			echo '<h2>Rsync log</h2>'
 			echo '<pre>'
 			awk '{
 	if (/\/s/) h=$0; 
@@ -135,8 +142,10 @@ EOT
 		fi ;;
 esac
 
+
 # Close xHTML page
-cat << EOT
+
+cat <<EOT
 </div>
 
 <div id="footer">

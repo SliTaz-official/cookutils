@@ -4,28 +4,31 @@
 # No patches, aufs and co, keep it simple. The goal is to let users build
 # a custom and optimized kernel in a few commands
 #
-# Copyright (C) 2014 SliTaz GNU/Linux - BSD License
+# Copyright (C) 2014-15 SliTaz GNU/Linux - BSD License
 #
 # Author: Christophe Lincoln <pankso@slitaz.org>
 #
+
 . /lib/libtaz.sh
 . /etc/slitaz/slitaz.conf
 
 version="$1"
-cookdir="/home/slitaz/src"
-srcurl="https://www.kernel.org/pub/linux/kernel"
+cookdir='/home/slitaz/src'
+srcurl='https://www.kernel.org/pub/linux/kernel'
 
 check_root
 
+
 # Help and usage
+
 usage() {
-	cat << EOT
+	cat <<EOT
 
 SliTaz Linux Kernel cooker
 
-$(boldify "Usage:") $(basename $0) [version] [--options]
+$(boldify 'Usage:') $(basename $0) [version] [--options]
 
-$(boldify "Options:")
+$(boldify 'Options:')
   --clean        Remove various generated files but keep the config
   --mrproper     Remove all generated files + config + backup files
   --defconfig    New config with default from ARCH supplied defconfig
@@ -38,45 +41,53 @@ $(boldify "Options:")
   --bzImage      Build the compressed kernel image
   --modules      Build all kernel modules
 
-$(boldify "Examples:")
+$(boldify 'Examples:')
   $(basename $0) 3.8.3 --defconfig --menuconfig --bzImage
   $(basename $0) 3.2.14 --tazconfig --bzImage --modules
 
 EOT
 }
 
+
 # Check and install a packages
+
 check_pkg() {
 	if [ ! -f "$PKGS_DB/installed/$1/receipt" ]; then
-		echo -n "Installing package:" && colorize 34 " $1"
+		echo -n "Installing package:"; colorize 34 " $1"
 		tazpkg -gi $1 2>/dev/null >/dev/null
 	fi
 }
 
+
 #
 # Commands/help - Support 3.x 2.6 and 2.4 kernels.
 #
+
 case "$1" in
-	3.*) wgeturl="${srcurl}/v3.0/" ;;
+	3.*)   wgeturl="${srcurl}/v3.0/" ;;
 	2.6.*) wgeturl="${srcurl}/v2.6/" ;;
 	2.4.*) wgeturl="${srcurl}/v2.4/" ;;
 	-h|-u|help|usage|"")
-		usage && exit 0 ;;
+		usage; exit 0 ;;
 esac
 
+
 # Sanity check
-[ ! "$wgeturl" ] && echo "Unable to set download url" && exit 0
+if [ -z "$wgeturl" ]; then
+	echo 'Unable to set download url';
+	exit 0
+fi
+
 
 #
 # Build start
 #
 
-echo -n "Building Linux kernel:" && colorize 32 " $version"
-echo -n "Source directory:" && colorize 30 " $cookdir"
+echo -n 'Building Linux kernel:'; colorize 32 " $version"
+echo -n 'Source directory:'; colorize 30 " $cookdir"
 
 # Install needed packages to compile.
-for pkg in slitaz-toolchain perl xz lzma patch tar bc
-do
+for pkg in slitaz-toolchain perl xz lzma patch tar bc; do
 	check_pkg $pkg
 done
 
@@ -88,98 +99,100 @@ if [ ! -f "linux-$version.tar.xz" ]; then
 fi
 if [ ! -d "linux-$version" ]; then
 	echo "Extracting: linux-$version.tar.xz"
-	unxz -c linux-$version.tar.xz | tar xf -
+	unxz -c linux-$version.tar.xz | tar -xf -
 fi
 
 # Clean-up and get or update config
 cd linux-$version
 
-if [ "$clean" ]; then
+if [ -n "$clean" ]; then
 	make clean
 	rm -rf slitaz
 fi
 
-if [ "$mrproper" ]; then
+if [ -n "$mrproper" ]; then
 	make mrproper
 	rm -rf slitaz
 fi
 
 # Get SliTaz current config.
-if [ "$tazconfig" ]; then
-	echo "Using current SliTaz config: /proc/config.gz"
+if [ -n "$tazconfig" ]; then
+	echo 'Using current SliTaz config: /proc/config.gz'
 	zcat /proc/config.gz > .config
 	yes '' | make oldconfig
 fi
 
 # Create a new default config.
-if [ "$defconfig" ]; then
+if [ -n "$defconfig" ]; then
 	make defconfig
 fi
 
 # Update config and wipe out unloaded modules.
-if [ "$localmod" ]; then
+if [ -n "$localmod" ]; then
 	make localmodconfig
 fi
+
 
 #
 # Configurators text/ncurses/Qt/GTK
 #
 
-if [ "$config" ]; then
-	echo "Starting Text mode configuration tool..."
+if [ -n "$config" ]; then
+	echo 'Starting Text mode configuration tool...'
 	make config
 fi
 
-if [ "$menuconfig" ]; then
-	echo "Starting Ncurses configuration tool..."
+if [ -n "$menuconfig" ]; then
+	echo 'Starting Ncurses configuration tool...'
 	check_pkg ncurses-dev
 	make menuconfig
 fi
 
-if [ "$xconfig" ]; then
-	echo "Starting QT configuration tool..."
+if [ -n "$xconfig" ]; then
+	echo 'Starting Qt configuration tool...'
 	check_pkg qt-4
 	make xconfig
 fi
 
-if [ "$gconfig" ]; then
-	echo "Starting GTK+ configuration tool..."
+if [ -n "$gconfig" ]; then
+	echo 'Starting GTK+ configuration tool...'
 	check_pkg gtk+-dev
 	check_pkg libglade-dev
 	make gconfig
 fi
 
-if [ "$bzImage" ]; then
-	echo "Building bzImage..."
+if [ -n "$bzImage" ]; then
+	echo 'Building bzImage...'
 	make bzImage || exit 1
 	mkdir -p slitaz/linux-custom-$version/fs/boot
 	cp -f arch/x86/boot/bzImage \
 		slitaz/linux-custom-$version/fs/boot/vmlinuz-$version
 fi
-		
-if [ "$modules" ]; then
-	echo "Building modules..."
+
+if [ -n "$modules" ]; then
+	echo 'Building modules...'
 	make modules || exit 1
 	make INSTALL_MOD_PATH=slitaz/linux-custom-$version/fs modules_install
 	rm -f slitaz/linux-custom-$version/fs/lib/modules/$version/build
 	rm -f slitaz/linux-custom-$version/fs/lib/modules/$version/source
 fi
 
+
 #
 # Packaging
 #
 
 if [ -d "slitaz/linux-custom-$version/fs" ]; then
-	echo "Packing Linux..."
+	echo 'Packing Linux...'
 	cd slitaz
 else
-	echo -n "Packing Linux:" && colorize 31 " not yet built"
+	echo -n 'Packing Linux:'; colorize 31 ' not yet built'
 	exit 0
 fi
 
 # Receipt.
-echo "Creating the receipt..."
-cat > linux-custom-$version/receipt << EOF
+echo 'Creating the receipt...'
+cat > linux-custom-$version/receipt <<EOF
 # SliTaz package receipt.
 
 PACKAGE="linux-custom"
@@ -225,7 +238,7 @@ EOF
 tazpkg pack linux-custom-$version
 
 # Install the new kernel.
-if [ "$install" ]; then
+if [ -n "$install" ]; then
 	cd $cookdir/linux-$version/slitaz
 	tazpkg -i linux-custom-$version.tazpkg --forced
 fi

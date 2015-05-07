@@ -4,7 +4,8 @@ html { min-height: 102%; }
 body { font: 13px sans-serif, vernada, arial; margin: 0; }
 h1 { margin: 0; padding: 8px; color: #fff; font-size: 20px; }
 h1 a { color: #fff; text-decoration: none; }
-h2 { color: #444; } h3 { color: #666; font-size: 140%; }
+h2 { color: #444; }
+h3 { color: #666; font-size: 140%; }
 a { text-decoration: underline; color: #215090; }
 a:hover { text-decoration: none; }
 hr { margin: 0; border: 1px solid #cfcfcf; }
@@ -19,7 +20,7 @@ pre {
 /* Header */
 
 #header {
-	color: white;
+	color: #fff;
 	background: #222;
 	height: 40px;
 	border-bottom: 4px solid #afafaf;
@@ -32,7 +33,7 @@ pre {
 }
 
 #header h1 a {
-	color: white;
+	color: #fff;
 	text-decoration: none;
 	font-size: 20px;
 	font-style: italic;
@@ -64,14 +65,14 @@ pre {
 	text-align: justify;
 }
 
-.span-ok { color: green; }
-.span-red { color: red; }
-.span-sky { color: blue; }
-.span-no { color: orange; }
-.span-line { color: #888; }
-.log-date { color: #666; font-size: 95%; }
+.span-ok    { color: green; }
+.span-red   { color: red; }
+.span-sky   { color: blue; }
+.span-no    { color: orange; }
+.span-line  { color: #888; }
+.log-date   { color: #666; font-size: 95%; }
 .sh-comment { color: #b20000; }
-.sh-val { color: #f35a00; }
+.sh-val     { color: #f35a00; }
 
 /* Buttons */
 
@@ -90,7 +91,7 @@ a.button, .pctbar  {
 	border: 1px solid #999;
 }
 
-.pct { background: #9dff4a; padding: 2px 4px;  }
+.pct { background: #9dff4a; padding: 2px 4px; }
 .pctbar { overflow: hidden; }
 
 .button, .pctbar {

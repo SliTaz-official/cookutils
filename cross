@@ -2,22 +2,27 @@
 #
 # Cross - Help build a cross toolchain on SliTaz.
 #
-# Copyright 2012-2014 (C) SliTaz GNU/Linux - BSD License
+# Copyright 2012-2015 (C) SliTaz GNU/Linux - BSD License
 # Author: Christophe Lincoln <pankso@slitaz.org>
 #
+
 . /lib/libtaz.sh
 
 [ -f "/etc/slitaz/cross.conf" ] && . /etc/slitaz/cross.conf
 [ -f "cross.conf" ] && . ./cross.conf
 
+
 # Handle --config=/path/to/cross.conf
+
 [ "$config" ] && . $config
-source=$WORK/source
-tools=$WORK/tools
-sysroot=$WORK/sysroot
-logdir=$WORK/log
+source="$WORK/source"
+tools="$WORK/tools"
+sysroot="$WORK/sysroot"
+logdir="$WORK/log"
+
 
 # Cross-tools tarballs
+
 binutils_tarball="binutils-$BINUTILS_VERSION.tar.bz2"
 linux_tarball="linux-$LINUX_VERSION.tar.xz"
 glibc_tarball="glibc-$GLIBC_VERSION.tar.bz2"
@@ -25,7 +30,9 @@ eglibc_tarball="eglibc-$EGLIBC_VERSION.tar.bz2"
 gcc_tarball="gcc-$GCC_VERSION.tar.bz2"
 libtool_tarball="libtool-$LIBTOOL_VERSION.tar.gz"
 
+
 # Cross-tools URLs
+
 binutils_wget="http://ftp.gnu.org/gnu/binutils/$binutils_tarball"
 linux_wget="http://www.kernel.org/pub/linux/kernel/v3.x/$linux_tarball"
 glibc_wget="http://ftp.gnu.org/gnu/libc/$glibc_tarball"
@@ -34,9 +41,11 @@ eglibc_svn="svn://svn.eglibc.org/branches/eglibc-2_14"
 gcc_wget="http://ftp.gnu.org/gnu/gcc/gcc-$GCC_VERSION/$gcc_tarball"
 libtool_wget="ftp://sunsite.cnlab-switch.ch/mirror/gnu/libtool/$libtool_tarball"
 
+
 # Help and usage.
+
 usage() {
-	cat << EOT
+	cat <<EOT
 
 Usage: $(basename $0) command --option
 
@@ -62,10 +71,12 @@ Commands:
 EOT
 }
 
+
 # Prebuilt README
+
 prebuilt_readme() {
-	echo -n "Creating toolchain README..."
-	cat >> $package/README << EOT
+	echo -n 'Creating toolchain README...'
+	cat >> $package/README <<EOT
 
 SliTaz Prebuilt $ARCH cross toolchain
 ================================================================================
@@ -85,7 +96,9 @@ EOT
 	status
 }
 
+
 # Make sure we have all directories.
+
 init_compile() {
 	unset CFLAGS CXXFLAGS
 	export LC_ALL=POSIX LANG=POSIX
@@ -97,32 +110,38 @@ init_compile() {
 	cd $source
 }
 
+
 # Some arch may need custom CFLAGS to build Glibc/Eglibc
+
 init_cflags() {
 	case "$ARCH" in
 		arm|armv6) export CFLAGS="-O2 -march=armv6" ;;
-		armv6hf) export CFLAGS="-O2 -march=armv6j" ;;
-		armv7) export CFLAGS="-Os -march=armv7-a" ;;
+		armv6hf)   export CFLAGS="-O2 -march=armv6j" ;;
+		armv7)     export CFLAGS="-Os -march=armv7-a" ;;
 	esac
 }
 
+
 # Get source if not yet in $SRC.
+
 download_src() {
-	mkdir -p $SRC && cd $SRC
+	mkdir -p $SRC; cd $SRC
 	[ -f "$binutils_tarball" ] || wget $binutils_wget
-	[ -f "$linux_tarball" ] || wget --no-check-certificate $linux_wget
-	[ -f "$glibc_tarball" ] || wget $glibc_wget
-	[ -f "$eglibc_tarball" ] || wget $eglibc_wget
-	[ -f "$gcc_tarball" ] || wget $gcc_wget
-	[ -f "$libtool_tarball" ] || wget $libtool_wget
+	[ -f "$linux_tarball" ]    || wget --no-check-certificate $linux_wget
+	[ -f "$glibc_tarball" ]    || wget $glibc_wget
+	[ -f "$eglibc_tarball" ]   || wget $eglibc_wget
+	[ -f "$gcc_tarball" ]      || wget $gcc_wget
+	[ -f "$libtool_tarball" ]  || wget $libtool_wget
 }
 
+
 # 1. Binutils
+
 binutils() {
 	init_compile
 	rm -rf binutils-$BINUTILS_VERSION
 	echo "Extracting: $binutils_tarball"
-	tar xjf $SRC/$binutils_tarball
+	tar -xjf $SRC/$binutils_tarball
 	echo "Configure: $BINUTILS_ARGS"
 	cd binutils-$BINUTILS_VERSION
 	./configure \
@@ -138,16 +157,18 @@ binutils() {
 	echo "cross: binutils compiled on: $(date)"
 }
 
+
 # 2. Kernel headers could use CROSS_COMPILE but gcc is not yet built.
+
 linux_headers() {
 	init_compile
 	if [ ! -d "linux-$LINUX_VERSION" ]; then
 		echo "Extracting: $linux_tarball"
-		tar xJf $SRC/$linux_tarball
+		tar -xJf $SRC/$linux_tarball
 	fi
 	case "$ARCH" in
-		armv6hf) KARCH="arm" ;;
-		*) KARCH="$ARCH" ;;
+		armv6hf) KARCH='arm' ;;
+		*)       KARCH="$ARCH" ;;
 	esac
 	rm -rf linux-headers
 	cd linux-$LINUX_VERSION
@@ -161,13 +182,15 @@ linux_headers() {
 	cp -a $source/linux-headers/* $sysroot/usr
 }
 
+
 # 2.1 Glibc headers needed to compile x86_64 gcc-static.
+
 glibc_headers() {
 	init_compile
 	echo "Extracting: $glibc_tarball"
-	tar xjf $SRC/$glibc_tarball
+	tar -xjf $SRC/$glibc_tarball
 	rm -rf glibc-headers
-	mkdir glibc-headers && cd glibc-headers
+	mkdir glibc-headers; cd glibc-headers
 	libc_cv_forced_unwind=yes \
 	libc_cv_c_cleanup=yes \
 	../glibc-$GLIBC_VERSION/configure \
@@ -181,20 +204,22 @@ glibc_headers() {
 	# Fixes
 	mkdir -p $sysroot/usr/include/gnu
 	touch $sysroot/usr/include/gnu/stubs.h
-	
+
 	# Fixe error: bits/stdio_lim.h not found
 	#cp bits/stdio_lim.h $sysroot/usr/include/bits
 	cp /usr/include/bits/stdio_lim.h $sysroot/usr/include/bits
 }
 
+
 # 3. GCC static (first pass)
+
 gcc_static() {
 	init_compile
 	echo "Extracting: $gcc_tarball"
-	tar xjf $SRC/$gcc_tarball
+	tar -xjf $SRC/$gcc_tarball
 	echo "Configure: $GCC_STATIC_ARGS"
 	rm -rf gcc-static
-	mkdir gcc-static && cd gcc-static
+	mkdir gcc-static; cd gcc-static
 	../gcc-$GCC_VERSION/configure \
 		--prefix=$tools \
 		--libexec=$tools/lib \
@@ -213,28 +238,30 @@ gcc_static() {
 	echo "cross: gcc-static compiled on: $(date)"
 }
 
+
 # 4. GNU Glibc: TODO Improve ARM support
+
 glibc() {
 	init_compile
 	echo "Extracting: $glibc_tarball"
-	tar xjf $SRC/$glibc_tarball
+	tar -xjf $SRC/$glibc_tarball
 	echo "Configure: $GLIBC_ARGS"
 	# Some arch may need glibc-ports and custom CFLAGS
 	case "$ARCH" in
 		arm*)
-			export CFLAGS="-march=armv6 -O2"
+			export CFLAGS='-march=armv6 -O2'
 			[ -f "$SRC/glibc-ports-$GLIBC_VERSION.tar.bz2" ] || wget \
 				http://ftp.gnu.org/gnu/libc/glibc-ports-$GLIBC_VERSION.tar.bz2 \
 				-O $SRC/glibc-ports-$GLIBC_VERSION.tar.bz2 || exit 1
 			echo "Extracting: glibc-ports-$GLIBC_VERSION.tar.bz2"
 			rm -rf glibc-$GLIBC_VERSION/ports
-			tar xjf $SRC/glibc-ports-$GLIBC_VERSION.tar.bz2
+			tar -xjf $SRC/glibc-ports-$GLIBC_VERSION.tar.bz2
 			mv glibc-ports-$GLIBC_VERSION glibc-$GLIBC_VERSION/ports
-			libexec=/usr/lib/glibc ;;
+			libexec='/usr/lib/glibc' ;;
 		x86_64)
 			#export CFLAGS="-02 -march=generic -pipe"
-			ccflags="-m64"
-			libexec=/usr/lib64/glibc ;;
+			ccflags='-m64'
+			libexec='/usr/lib64/glibc' ;;
 	esac
 	# Disable linking to libgcc_eh
 	cd glibc-$GLIBC_VERSION
@@ -243,7 +270,7 @@ glibc() {
 	cd ..
 	echo "CFLAGS: $CFLAGS"
 	rm -rf glibc-build
-	mkdir -p glibc-build && cd glibc-build
+	mkdir -p glibc-build; cd glibc-build
 	BUILD_CC="gcc" \
 	CC="${TARGET}-gcc $ccflags" \
 	AR="${TARGET}-ar" \
@@ -264,13 +291,15 @@ glibc() {
 	case "$ARCH" in
 		x86_64)
 			rm -f $sysroot/lib $sysroot/usr/lib
-			cd $sysroot && ln -s lib64 lib
-			cd usr && ln -s lib64 lib ;;
+			cd $sysroot; ln -s lib64 lib
+			cd usr;      ln -s lib64 lib ;;
 	esac
 	echo "cross: glibc compiled on: $(date)"
 }
 
+
 # 4. eglibc: always use --prefix=/usr
+
 eglibc() {
 	init_compile
 	init_cflags
@@ -280,7 +309,7 @@ eglibc() {
 		exit 1
 	fi
 	echo "Extracting: $eglibc_tarball"
-	tar xjf $SRC/$eglibc_tarball || exit 1
+	tar -xjf $SRC/$eglibc_tarball || exit 1
 	case "$ARCH" in
 		arm*)
 			if [ ! -d "$source/eglibc-ports-$EGLIBC_VERSION" ]; then
@@ -288,11 +317,11 @@ eglibc() {
 				svn co $eglibc_svn/ports eglibc-ports-$EGLIBC_VERSION >/dev/null
 			fi
 			cp -a eglibc-ports-$EGLIBC_VERSION eglibc-$EGLIBC_VERSION/ports
-			libexec=/usr/lib/eglibc ;;
+			libexec='/usr/lib/eglibc' ;;
 		x86_64)
 			#export CFLAGS="-march=nocona -O2 -pipe"
-			ccflags="-m64"
-			libexec=/usr/lib64/eglibc ;;
+			ccflags='-m64'
+			libexec='/usr/lib64/eglibc' ;;
 	esac
 	# Disable linking to libgcc_eh
 	cd eglibc-$EGLIBC_VERSION
@@ -300,14 +329,14 @@ eglibc() {
 	sed -e 's/-lgcc_eh//g' Makeconfig.orig > Makeconfig
 	cd ..
 	echo "CFLAGS: $CFLAGS"
-	mkdir -p eglibc-build && cd eglibc-build
+	mkdir -p eglibc-build; cd eglibc-build
 	# config.cache
-	cat > config.cache << EOT
+	cat > config.cache <<EOT
 libc_cv_forced_unwind=yes
 libc_cv_c_cleanup=yes
 libc_cv_gnu89_inline=yes
 EOT
-	BUILD_CC="gcc" \
+	BUILD_CC='gcc' \
 	CC="${TARGET}-gcc $ccflags" \
 	AR="${TARGET}-ar" \
 	RANLIB="${TARGET}-ranlib" \
@@ -330,16 +359,18 @@ EOT
 	echo "cross: eglibc compiled on: $(date)"
 }
 
+
 # 5. GCC final
+
 gcc_final() {
 	init_compile
 	if [ ! -d "gcc-$GCC_VERSION" ]; then
 		echo "Extracting: $gcc_tarball"
-		tar xjf $SRC/$gcc_tarball
+		tar -xjf $SRC/$gcc_tarball
 	fi
 	echo "Configure: $GCC_FINAL_ARGS"
 	rm -rf gcc-build
-	mkdir -p gcc-build && cd gcc-build
+	mkdir -p gcc-build; cd gcc-build
 	AR=ar \
 	../gcc-$GCC_VERSION/configure \
 		--prefix=$tools \
@@ -365,13 +396,15 @@ gcc_final() {
 	echo "cross: GCC final compiled on: $(date)"
 }
 
+
 # A cross libtool should avoid some shared libs path/format bugs
+
 cross_libtool() {
 	init_compile
 	[ "$clean" ] && rm -rf libtool-${LIBTOOL_VERSION}
 	if [ ! -d "libtool-$LIBTOOL_VERSION" ]; then
 		echo "Extracting: $libtool_tarball"
-		tar xzf $SRC/$libtool_tarball
+		tar -xzf $SRC/$libtool_tarball
 	fi
 	cd libtool-${LIBTOOL_VERSION}
 	./configure \
@@ -383,21 +416,23 @@ cross_libtool() {
 	echo "cross: Cross libtool compiled on: $(date)"
 }
 
+
 #
 # Commands
 #
 
 case "$1" in
 	howto|man)
-		doc=/usr/share/doc/cookutils/cross.txt
+		doc='/usr/share/doc/cookutils/cross.txt'
 		[ -f "$doc" ] && less -E $doc ;;
+
 	info)
 		init_compile
 		init_cflags
 		CC=${TARGET}-gcc
-		echo -e "\nCross Toolchain information" && separator
+		echo -e '\nCross Toolchain information'; separator
 		[ "$config" ] && echo "Config file     : $config"
-		cat << EOT
+		cat <<EOT
 Target arch     : $ARCH
 C Compiler      : $CC
 CFLAGS          : $CFLAGS
@@ -405,15 +440,16 @@ Build directory : $WORK
 Tools prefix    : $tools/bin
 Arch sysroot    : $sysroot
 EOT
-		separator && echo ""
-		echo "GCC version" && separator
+		separator; newline
+		echo 'GCC version'; separator
 		if [ -x "$tools/bin/$CC" ]; then
 			$CC -v
 		else
-			echo "No C compiler. To build a toolchain run: cross compile"
+			echo 'No C compiler. To build a toolchain run: cross compile'
 			echo "Missing: $tools/bin/$CC"
 		fi
-		separator && echo "" ;;
+		separator; newline ;;
+
 	testsuite)
 		init_compile
 		echo "[COMPILING] $TARGET-gcc -v -Wall -o test.out test.c" \
@@ -426,12 +462,13 @@ EOT
 		fi
 		echo -e "\n[CHECKING] readelf -h test.out" | tee -a $logdir/testsuite.log
 		readelf -h test.out | tee -a $logdir/testsuite.log ;;
+
 	*setup)
-		data="/usr/share/cross"
+		data='/usr/share/cross'
 		arch=${1%-setup}
-		[ "$arch" == "setup" ] && arch="arm"
-		newline
-		echo "Checking: build system packages"
+		[ "$arch" == 'setup' ] && arch="arm"
+
+		newline; echo 'Checking: build system packages'
 		for pkg in slitaz-toolchain mpfr mpfr-dev gmp gmp-dev mpc-library \
 			gawk autoconf; do
 			if [ ! -d "/var/lib/tazpkg/installed/$pkg" ]; then
@@ -447,30 +484,41 @@ EOT
 		cp -f ${data}/cross-${arch}.conf /etc/slitaz/cross.conf
 		cook ${arch}-setup
 		newline ;;
+
 	download)
 		download_src ;;
+
 	show-log)
 		pkg=$2
 		log=$logdir/$pkg.log
 		if [ ! -f "$log" ]; then
-			echo "No log file found for: $pkg" && exit 1
+			echo "No log file found for: $pkg"
+			exit 1
 		fi
 		less -E $log ;;
+
 	binutils)
 		rm -f $logdir/binutils.log
 		binutils 2>&1 | tee $logdir/binutils.log ;;
+
 	linux-headers)
 		linux_headers 2>&1 | tee $logdir/linux-headers.log ;;
+
 	glibc-headers)
 		glibc_headers 2>&1 | tee $logdir/glibc-headers.log ;;
+
 	gcc-static)
 		gcc_static 2>&1 | tee $logdir/gcc-static.log ;;
+
 	glibc)
 		glibc 2>&1 | tee $logdir/glibc.log ;;
+
 	eglibc)
 		eglibc 2>&1 | tee $logdir/eglibc.log ;;
+
 	gcc-final)
 		gcc_final 2>&1 | tee $logdir/gcc-final.log ;;
+
 	compile)
 		# Compile the full toolchain.
 		time=$(date +%s)
@@ -484,11 +532,11 @@ EOT
 		linux_headers 2>&1 | tee $logdir/linux-headers.log
 		gcc_static 2>&1 | tee $logdir/gcc-static.log
 		case "$ARCH" in
-			arm*) eglibc 2>&1 | tee $logdir/eglibc.log ;;
+			arm*)  eglibc 2>&1 | tee $logdir/eglibc.log ;;
 			x86_64) glibc 2>&1 | tee $logdir/glibc.log ;;
 		esac
 		gcc_final 2>&1 | tee $logdir/gcc-final.log
-		echo ""
+		newline
 		echo "Compile end  : $(date)" | tee -a $logdir/compile.log
 		time=$(($(date +%s) - $time))
 		sec=$time
@@ -496,40 +544,43 @@ EOT
 		[ "$div" != 0 ] && min="~ ${div}m"
 		echo "Build time   : ${sec}s $min" | tee -a $logdir/compile.log
 		echo "" ;;
+
 	libtool)
 		cross_libtool 2>&1 | tee $logdir/libtool.log ;;
+
 	libhack)
 		# Some libxx.la files have libdir='/usr/lib' and make packages 
 		# cross compilation fail. Some receipts may have got hacked to force
 		# use of libs in sysroot but 'cross libhack' should be preferred.
 		echo "Libdir: $sysroot/usr/lib" 
-		for la in $(fgrep -l libdir= $sysroot/usr/lib/*.la 2>/dev/null)
-		do
+		for la in $(fgrep -l libdir= $sysroot/usr/lib/*.la 2>/dev/null); do
 			if fgrep -q "libdir='/usr/lib'" ${la}; then
 				echo "Cross fixing: $(basename $la)"
 				sed -i s"#libdir=.*#libdir='/cross/$ARCH/sysroot/usr/lib'#" ${la}
 			fi
 		done ;;
+
 	clean)
-		echo -n "Removing all source files..."
-		rm -rf $WORK/source && status
+		echo -n 'Removing all source files...'
+		rm -rf $WORK/source; status
 		[ "$log" ] && rm -f $WORK/log/*.log ;;
+
 	clean-tools)
 		# Remove crap :-)
 		init_compile
 		echo "Cleaning   : $tools ($(du -sh $tools | awk '{print $1}'))"
-		for file in share/info share/man share/local
-		do
+		for file in share/info share/man share/local; do
 			echo -n "Removing   : $file"
-			rm -rf $tools/$file && status
+			rm -rf $tools/$file; status
 		done
 		echo -n "Stripping  : shared libs and binaries"
-		find $tools/bin -type f -exec strip -s '{}' 2>/dev/null \;
-		find $tools/lib -name cc1* -exec strip -s '{}' 2>/dev/null \;
-		find $tools/lib -name lto* -exec strip -s '{}' 2>/dev/null \;
+		find $tools/bin -type f     -exec strip -s '{}' 2>/dev/null \;
+		find $tools/lib -name cc1*  -exec strip -s '{}' 2>/dev/null \;
+		find $tools/lib -name lto*  -exec strip -s '{}' 2>/dev/null \;
 		find $sysroot -name "*.so*" -exec ${TARGET}-strip -s '{}' 2>/dev/null \;
-		sleep 1 && status
-		echo -n "Tools size : " && du -sh $tools | awk '{print $1}' ;;
+		sleep 1; status
+		echo -n "Tools size : "; du -sh $tools | awk '{print $1}' ;;
+
 	gen-prebuilt)
 		# Create a prebuilt cross toolchain tarball.
 		init_compile
@@ -538,20 +589,21 @@ EOT
 		tarball="$package.tar.bz2"
 		cd /cross
 		mkdir -p $package/$ARCH || exit 1
-		echo ""
+		newline
 		echo -n "Copying $ARCH to: $package"
 		cp -a $ARCH/tools $package/$ARCH
 		cp -a $ARCH/sysroot $package/$ARCH
 		status
 		prebuilt_readme
 		echo -n "Creating prebuilt $ARCH toolchain tarball..."
-		tar cjf $tarball $package
+		tar -cjf $tarball $package
 		status
 		rm -rf $package
 		size=$(du -sh $tarball | awk '{print $1}')
 		echo "Tarball path: $(pwd)/$tarball"
 		echo "Tarball size: $size"
-		echo "" ;;
+		newline ;;
+
 	*)
 		usage ;;
 esac

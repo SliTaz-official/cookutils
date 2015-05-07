@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Cook 3.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-03-05 15:28+0200\n"
+"POT-Creation-Date: 2015-05-07 12:52+0300\n"
 "PO-Revision-Date: 2014-06-04 03:36+0800\n"
 "Last-Translator: lunglungyu <lunglungyu2004@gmail.com>\n"
 "Language-Team: Traditional Chinese\n"
@@ -17,12 +17,16 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #: cook:32
-msgid "\\033[1mUsage:\\033[0m cook [package|command] [list|--option]"
-msgstr "\\033[1m用法:\\033[0m cook [package|command] [list|--option]"
+msgid "Usage:"
+msgstr "用法："
+
+#: cook:32
+msgid "cook [package|command] [list|--option]"
+msgstr "cook [package|command] [list|--option]"
 
 #: cook:34
-msgid "\\033[1mCommands:\\033[0m"
-msgstr "\\033[1m命令:\\033[0m"
+msgid "Commands:"
+msgstr "命令："
 
 #: cook:35
 msgid "Display this short usage."
@@ -36,910 +40,795 @@ msgstr "設置建構環境"
 msgid "Setup a cross environment."
 msgstr "設置交叉環境"
 
-#: cook:38
+#: cook:39
 msgid "Test environment and cook a package."
 msgstr "打包測試環境"
 
-#: cook:39
+#: cook:40
 msgid "List packages in the wok."
 msgstr "列出wok庫內的包"
 
-#: cook:40
+#: cook:41
 msgid "Simple packages search function."
 msgstr "包搜索"
 
-#: cook:41
+#: cook:42
 msgid "Create a new package with a receipt."
 msgstr "根據清單創建新包"
 
-#: cook:42
+#: cook:43
 msgid "Cook a list of packages."
 msgstr "打包清單內的包(packages)"
 
-#: cook:43
+#: cook:44
 msgid "Clean-up all packages files."
 msgstr "清理所有包文件"
 
-#: cook:44
+#: cook:45
 msgid "Clean-up all packages sources."
 msgstr "清理所有包源文檔"
 
-#: cook:45
+#: cook:46
+msgid "Check for uncooked packages"
+msgstr ""
+
+#: cook:47
 msgid "Create packages DB lists and flavors."
 msgstr "創建包數據庫清單及設置"
 
-#: cook:47
-msgid "\\033[1mOptions:\\033[0m"
-msgstr "\\033[1m選項:\\033[0m"
+#: cook:49
+msgid "Options:"
+msgstr "選項："
 
-#: cook:48
+#: cook:51
 msgid "clean the package in the wok."
 msgstr "清除wok庫內的包"
 
-#: cook:49
+#: cook:52
 msgid "cook and install the package."
 msgstr "編成及安裝包"
 
-#: cook:50
+#: cook:53
 msgid "get the package source tarball."
 msgstr "取得包源壓縮包(tarball)"
 
-#: cook:51
+#: cook:54
 msgid "block a package so cook will skip it."
 msgstr "封鎖及在建成時跳過包"
 
-#: cook:52
+#: cook:55
 msgid "unblock a blocked package."
 msgstr "取消封鎖包"
 
-#: cook:53
+#: cook:56
 msgid "check dependencies of cooked package."
 msgstr "檢查當前包的依賴"
 
-#: cook:54
+#: cook:57
 msgid "repack an already built package."
 msgstr "重新打包"
 
-#: cook:55
+#: cook:58
+msgid "display debugging messages."
+msgstr ""
+
+#: cook:59
+msgid "continue running compile_rules."
+msgstr ""
+
+#: cook:61
 msgid "create a receipt interactively."
 msgstr "互動地創建清單"
 
-#: cook:56
+#: cook:63
 msgid "clone the cooking wok from Hg repo."
 msgstr "由Hg repo.克隆 cooking wok"
 
-#: cook:57
+#: cook:64
 msgid "clone the stable wok from Hg repo."
 msgstr "由Hg repo.克隆 stable wok"
 
-#: cook:58
+#: cook:65
 msgid "clone the undigest wok from Hg repo."
 msgstr "由Hg repo.克隆 undigest wok"
 
-#: cook:59
+#: cook:66
 msgid "clone the tiny SliTaz wok from Hg repo."
 msgstr "由Hg repo.克隆 tiny wok"
 
-#: cook:60
+#: cook:67
 msgid "force reinstall of chroot packages."
 msgstr "強制重新安裝chroot包"
 
-#: cook:61
+#: cook:69
 msgid "create up-to-date flavors files."
 msgstr "創建最新的偏好文件"
 
-#: cook:76
-#, sh-format
-msgid "Unable to find package in the wok: $pkg"
-msgstr "在wok內找不到包: $pkg"
+#: cook:88
+msgid "Unable to find package \"%s\" in the wok"
+msgstr "在wok內找不到包：%s"
 
 #. L10n: QA is quality assurance
-#: cook:84
-#, sh-format
-msgid "QA: empty variable: ${var}=\"\""
-msgstr "QA: 空變量: ${var}=\"\""
+#: cook:97
+msgid "QA: empty variable: %s"
+msgstr "QA：空變量：%s"
 
-#: cook:91
-#, sh-format
-msgid "Creating directories structure in: $SLITAZ"
-msgstr "正在創建包結構： $SLITAZ"
+#: cook:106
+msgid "Creating directories structure in \"%s\""
+msgstr "正在創建包結構：%s"
 
-#: cook:93
-#, sh-format
-msgid "Creating DB files in: $CACHE"
-msgstr "在以下資料夾創建數庫庫文件: $CACHE "
-
-#: cook:102
-msgid "QA: checking package receipt..."
-msgstr "QA: 正在檢查包清單"
+#: cook:108
+msgid "Creating DB files in \"%s\""
+msgstr "在以下資料夾創建數庫庫文件：%s"
 
 #: cook:118
-#, sh-format
-msgid "QA: unknown category: $value"
-msgstr "QA: unknown category: $value"
+msgid "QA: checking package receipt..."
+msgstr "QA：正在檢查包清單"
 
-#: cook:119
-#, sh-format
-msgid "Please, use one of: $valid"
-msgstr "請用以下其中一項： $valid"
+#: cook:133
+msgid "QA: unknown category \"%s\""
+msgstr ""
 
-#: cook:128
-#, sh-format
-msgid "QA: unable to reach: $value"
-msgstr "QA: 無法存取: $value"
+#: cook:134
+msgid "Please, use one of: %s"
+msgstr "請用以下其中一項：%s"
 
-#: cook:184
-#, sh-format
-msgid "Creating tarball: $tarball"
-msgstr "創建tarball壓縮包中: $tarball"
+#: cook:144
+msgid "QA: unable to reach \"%s\""
+msgstr "QA：無法存取：%s"
 
-#: cook:207 cook:211
-#, sh-format
-msgid "ERROR: wget $WGET_URL"
-msgstr "錯誤: wget $WGET_URL"
+#: cook:204
+msgid "Creating tarball \"%s\""
+msgstr "創建tarball壓縮包中：%s"
 
-#: cook:218
-msgid "Getting source from Hg..."
-msgstr "正在Hg中取得源文件"
+#: cook:229 cook:234 cook:248 cook:250 cook:260 cook:330
+msgid "ERROR: %s"
+msgstr "錯誤：%s"
 
-#: cook:219 cook:233 cook:245 cook:257
-#, sh-format
-msgid "URL: $url"
-msgstr "URL: $url"
+#: cook:242 cook:257 cook:272 cook:285 cook:296 cook:328
+msgid "Getting source from %s..."
+msgstr "正在%s中取得源文件"
 
-#: cook:220
-#, sh-format
-msgid "Cloning to: $pwd/$pkgsrc"
-msgstr "克隆到: $pwd/$pkgsrc"
+#: cook:243 cook:258 cook:273 cook:286 cook:329
+msgid "URL: %s"
+msgstr "URL：%s"
 
-#: cook:222
-#, sh-format
-msgid "Hg branch: $BRANCH"
-msgstr "Hg branch: $BRANCH"
-
-#: cook:224
-#, sh-format
-msgid "ERROR: hg clone $url --rev $BRANCH"
-msgstr "錯誤: hg clone $url --rev $BRANCH"
-
-#: cook:226
-#, sh-format
-msgid "ERROR: hg clone $url"
-msgstr "錯誤: hg clone $url"
-
-#: cook:232
-msgid "Getting source from Git..."
-msgstr "正在由git取得源文件"
-
-#: cook:234
-#, sh-format
-msgid "ERROR: git clone $url"
-msgstr "錯誤: git clone $url"
-
-#: cook:236
-#, sh-format
-msgid "Git branch: $BRANCH"
-msgstr "Git branch: $BRANCH"
-
-#: cook:244
-msgid "Getting source from CVS..."
-msgstr "正在由CVS取得源文件"
+#: cook:244 cook:275
+msgid "Cloning to \"%s\""
+msgstr "克隆到：%s"
 
 #: cook:246
-#, sh-format
-msgid "CVS module: $mod"
-msgstr "CVS 模組: $mod"
+msgid "Hg branch: %s"
+msgstr ""
 
-#: cook:247
-#, sh-format
-msgid "Cloning to: $pwd/$mod"
-msgstr "克隆到: $pwd/$mod"
+#: cook:262
+msgid "Git branch: %s"
+msgstr ""
 
-#: cook:256
-msgid "Getting source from SVN..."
-msgstr "正在由SVN取得源文件"
+#: cook:274
+msgid "CVS module: %s"
+msgstr "CVS 模組：%s"
 
-#: cook:266
-msgid "Getting source from bazaar..."
-msgstr "正在由bazaar取得源文件"
-
-#: cook:276
+#: cook:306
 msgid "Don't forget to add to receipt:"
 msgstr "記得要加到清單"
 
-#: cook:283
-#, sh-format
-msgid "ERROR: Unable to handle: $WGET_URL"
-msgstr "錯誤: 無法處理: $WGET_URL"
-
-#: cook:295
-#, sh-format
-msgid "Getting source from mirror: $url"
-msgstr "正在由鏡像取得源文件: $url"
-
-#: cook:296
-#, sh-format
-msgid "ERROR: wget $url"
-msgstr "錯誤: wget $url"
-
-#: cook:298
-#, sh-format
-msgid "Extracting: $TARBALL"
-msgstr "正在解壓: $TARBALL"
-
-#. L10n: specify your format of date and time (to help: man date)
-#. L10n: not bad one is '+%x %R'
-#: cook:322 cook:349 cook:1277 cook:1384
-msgid "+%Y-%m-%d %H:%M"
-msgstr "+%Y-%m-%d %H:%M"
-
-#. L10n: 'm' is for minutes (approximate cooking time)
-#: cook:326
-#, sh-format
-msgid "~ ${div}m"
-msgstr "~ ${div}m"
-
-#: cook:327
-#, sh-format
-msgid "Summary for: $PACKAGE $VERSION"
-msgstr "包摘要: $PACKAGE $VERSION"
-
-#. L10n: keep the same width of translations to get a consistent view
-#: cook:330
-#, sh-format
-msgid "Source dir  : $srcdir"
-msgstr "源路徑 : $srcdir"
-
-#: cook:331
-#, sh-format
-msgid "Src file    : $TARBALL"
-msgstr "源文件 : $TARBALL"
+#: cook:314
+msgid "ERROR: Unable to handle \"%s\""
+msgstr "錯誤：無法處理：%s"
 
 #: cook:332
-#, sh-format
-msgid "Src size    : $srcsize"
-msgstr "源大小  : $srcsize"
+msgid "Extracting source archive \"%s\""
+msgstr "正在解壓：%s"
 
-#: cook:333
-#, sh-format
-msgid "Produced    : $prod"
-msgstr "已產生  : $prod"
+#. L10n: 'm' is for minutes (approximate cooking time)
+#: cook:367
+msgid "~ %dm"
+msgstr "~ %dm"
 
-#: cook:334
-#, sh-format
-msgid "Packed      : $fs"
-msgstr "已打包  : $fs"
+#: cook:370
+msgid "Summary for: %s"
+msgstr "包摘要：%s"
 
-#: cook:335
-#, sh-format
-msgid "Compressed  : $size"
-msgstr "已壓縮  : $size"
+#. L10n: keep the same width of translations to get a consistent view
+#: cook:374
+msgid "Source dir  : %s"
+msgstr "源路徑：%s"
 
-#: cook:336
-#, sh-format
-msgid "Files       : $files"
-msgstr "文件    : $files"
+#: cook:375
+msgid "Src file    : %s"
+msgstr "源文件：%s"
+
+#: cook:376
+msgid "Src size    : %s"
+msgstr "源大小：%s"
+
+#: cook:377
+msgid "Produced    : %s"
+msgstr "已產生：%s"
+
+#: cook:378
+msgid "Packed      : %s"
+msgstr "已打包：%s"
+
+#: cook:379
+msgid "Compressed  : %s"
+msgstr "已壓縮：%s"
+
+#: cook:380
+msgid "Files       : %s"
+msgstr "文件：%s"
 
 #. L10n: 's' is for seconds (cooking time)
-#: cook:338
-#, sh-format
-msgid "Cook time   : ${sec}s $min"
-msgstr "生成時間   : ${sec}s $min"
+#: cook:382
+msgid "Cook time   : %ds %s"
+msgstr "生成時間：%ds %s"
 
-#: cook:339
-#, sh-format
-msgid "Cook date   : $cookdate"
-msgstr "生成日期   : $cookdate"
+#: cook:383
+msgid "Cook date   : %s"
+msgstr "生成日期：%s"
 
-#: cook:340
-#, sh-format
-msgid "Host arch   : $ARCH"
-msgstr "主機架構   : $ARXH"
+#: cook:383 cook:395 cook:1448 cook:1602
+msgid "+%%F %%R"
+msgstr "+%%F %%R"
 
-#: cook:346
+#: cook:384
+msgid "Host arch   : %s"
+msgstr "主機架構：%s"
+
+#: cook:392
 msgid "Debug information"
 msgstr "除錯資訊"
 
-#: cook:350
-#, sh-format
-msgid "Cook date: $datenow"
-msgstr "生成日期: $datenow"
+#. L10n: specify your format of date and time (to help: man date)
+#. L10n: not bad one is '+%x %R'
+#: cook:395
+msgid "Cook date: %s"
+msgstr "生成日期：%s"
 
 #. L10n: Please, translate all messages beginning with ERROR in a same way
-#: cook:352 cook:614 cook:711 cook:742 cook:828 cook:1527
+#: cook:397 cook:661 cook:765 cook:799 cook:889 cook:1766
 msgid "ERROR"
 msgstr "錯誤"
 
-#: cook:437
+#: cook:484
 msgid "Executing strip on all files..."
 msgstr "正在為所有文件減肥"
 
-#: cook:450
+#: cook:496
 msgid "Removing Python compiled files..."
 msgstr "正在刪除Python編譯出的文件"
 
-#: cook:458
+#: cook:503
 msgid "Removing Perl compiled files..."
 msgstr "正在刪除Perl編譯出的文件"
 
-#: cook:472 cook:600
-msgid "Build dependencies to remove: "
+#: cook:518 cook:647
+msgid "Build dependencies to remove:"
 msgstr "要刪除的編譯依賴"
 
-#: cook:473 cook:601
+#: cook:520 cook:648
 msgid "Removing:"
-msgstr "正在刪除:"
+msgstr "正在刪除："
 
-#: cook:487
-#, sh-format
-msgid "Cook: $PACKAGE $VERSION"
-msgstr "Cook: $PACKAGE $VERSION"
+#: cook:535
+msgid "Cook: %s"
+msgstr ""
 
-#: cook:501
-#, sh-format
-msgid "$ARCH sysroot: $sysroot"
-msgstr "$ARCH sysroot: $sysroot"
+#: cook:549
+msgid "%s sysroot: %s"
+msgstr ""
 
-#: cook:502
-#, sh-format
-msgid "Adding $tools/bin to PATH"
-msgstr "正將 $tools/bin 加入 PATH"
+#: cook:550
+msgid "Adding \"%s\" to PATH"
+msgstr "正將 %s 加入 PATH"
 
-#: cook:506
-#, sh-format
-msgid "Using cross-tools: $CROSS_COMPILE"
-msgstr "正使用cross-tools: $CROSS_COMPILE"
+#: cook:554
+msgid "Using cross-tools: %s"
+msgstr "正使用cross-tools：%s"
 
-#: cook:528
-#, sh-format
-msgid "Disabling -pipe compile flag: $free RAM"
-msgstr "正在禁用 -pipe 編譯標誌: $free RAM"
+#: cook:578
+msgid "Disabling -pipe compile flag: %d RAM free"
+msgstr "正在禁用 -pipe 編譯標誌：%d RAM"
 
-#: cook:545
+#: cook:594
 msgid "Checking build dependencies..."
 msgstr "正在檢查編譯依賴"
 
-#: cook:546
-#, sh-format
-msgid "Using packages DB: ${root}$DB"
-msgstr "正使用包數據庫: ${root}$DB"
+#: cook:595
+msgid "Using packages DB: %s"
+msgstr "正使用包數據庫：%s"
 
-#: cook:572
-#, sh-format
-msgid "Missing dep (wok/pkg): $i $vers"
-msgstr "欠缺依賴 (wok/pkg): $i $vers"
+#: cook:619
+msgid "Missing dep (wok/pkg): %s"
+msgstr "欠缺依賴 (wok/pkg)：%s"
 
-#: cook:580
-#, sh-format
-msgid "ERROR: unknown dep $i"
-msgstr "錯誤: 未知依賴 $i"
+#: cook:627
+msgid "ERROR: unknown dep \"%s\""
+msgstr "錯誤：未知依賴 %s"
 
-#: cook:593
-msgid "Auto cook config is set: AUTO_COOK"
-msgstr "自動生成已配置: AUTO_COOK"
+#: cook:641
+msgid "Auto cook config is set: %s"
+msgstr "自動生成已配置：%s"
 
-#: cook:597
-#, sh-format
-msgid "Building dep (wok/pkg)    : $i $vers"
-msgstr "正在生成依賴 (wok/pkg)   : $i $vers"
+#: cook:644
+msgid "Building dep (wok/pkg)    : %s"
+msgstr "正在生成依賴 (wok/pkg)：%s"
 
-#: cook:602
-#, sh-format
-msgid "ERROR: can't cook dep '$i'"
-msgstr "錯誤: 無法生成依賴 '$i'"
+#: cook:649
+msgid "ERROR: can't cook dep \"%s\""
+msgstr "錯誤：無法生成依賴 '%s'"
 
-#: cook:617
-#, sh-format
-msgid "ERROR: missing dep $nb"
-msgstr "錯誤: 欠缺依賴 $nb"
+#: cook:664
+msgid "ERROR: missing %d dependency"
+msgid_plural "ERROR: missing %d dependencies"
+msgstr[0] "錯誤：欠缺依賴 %d"
 
-#: cook:624
-#, sh-format
-msgid "Installing dep (pkg/local): $i"
-msgstr "正在安裝依賴 (包/本地): $i"
+#: cook:671
+msgid "Installing dep (pkg/local): %s"
+msgstr "正在安裝依賴 (包/本地)：%s"
 
-#: cook:632
-#, sh-format
-msgid "Installing dep (web/cache): $i"
-msgstr "正在安裝依賴 (在線/緩存): $i"
+#: cook:678
+msgid "Installing dep (web/cache): %s"
+msgstr "正在安裝依賴 (在線/緩存)：%s"
 
-#: cook:682
-msgid "Executing: compile_rules"
-msgstr "正執行: 編譯規則"
+#: cook:734 cook:789
+msgid "Executing: %s"
+msgstr "正執行：%s"
 
-#: cook:699
+#: cook:751
 msgid "Running testsuite"
 msgstr "正運行測試"
 
-#: cook:708
+#: cook:762
 msgid "ERROR: cook failed"
-msgstr "錯誤： 生成失敗"
+msgstr "錯誤：生成失敗"
 
-#: cook:729
-#, sh-format
-msgid "Pack: $PACKAGE ${VERSION}${arch}"
-msgstr "Pack: $PACKAGE ${VERSION}${arch}"
+#: cook:786
+msgid "Pack: %s"
+msgstr ""
 
-#: cook:732
-msgid "Executing: genpkg_rules"
-msgstr "正在執行: 包生成規則"
-
-#: cook:734
+#: cook:791
 msgid "ERROR: genpkg_rules failed"
-msgstr "錯誤: 生成包規則錯誤"
+msgstr "錯誤：生成包規則錯誤"
 
-#: cook:737
+#: cook:794
 msgid "No packages rules: meta package"
-msgstr "沒有包規則: 元包"
+msgstr "沒有包規則：元包"
 
-#: cook:751
-#, sh-format
-msgid "Copying $file..."
-msgstr "正在拷貝 $file..."
+#: cook:807
+msgid "Copying \"%s\"..."
+msgstr "正在拷貝 %s..."
 
-#: cook:757
+#: cook:816
 msgid "Creating the list of files..."
 msgstr "正在創建文件清單"
 
-#: cook:768
+#: cook:824
 msgid "Creating md5sum of files..."
 msgstr "正在創建文件md5校驗和"
 
-#: cook:783
-msgid "Compressing the fs..."
+#: cook:839
+msgid "Compressing the FS..."
 msgstr "正在壓縮文件系統"
 
-#: cook:790
+#: cook:847
 msgid "Updating receipt sizes..."
 msgstr "正在更新清單大小"
 
-#: cook:798
-#, sh-format
-msgid "Updating receipt EXTRAVERSION: $EXTRAVERSION"
-msgstr "正在更新包額外版本: $EXTRAVERSION"
+#: cook:855
+msgid "Updating receipt EXTRAVERSION: %s"
+msgstr "正在更新包額外版本：%s"
 
-#: cook:805
+#: cook:862
 msgid "Creating full cpio archive..."
 msgstr "正在創建完整cpio壓縮包"
 
-#: cook:809
+#: cook:867
 msgid "Restoring original package tree..."
 msgstr "正復原包樹"
 
-#: cook:817
-#, sh-format
-msgid "Package: $tazpkg"
-msgstr "包: $tazpkg"
+#: cook:876
+msgid "Package \"%s\" created"
+msgstr "包：%s"
 
-#: cook:833
+#: cook:895
 msgid "QA: checking for empty package..."
 msgstr ""
 
-#: cook:836
+#: cook:898
 msgid "ERROR: empty package"
-msgstr "錯誤: 空包"
+msgstr "錯誤：空包"
 
-#: cook:844
-#, sh-format
-msgid "Removing old: $old_pkg"
-msgstr "正在刪除舊包: $old_pkg"
+#: cook:906
+msgid "Removing old package \"%s\""
+msgstr "正在刪除舊包：%s"
 
-#: cook:874
+#: cook:940
 msgid "Unable to install package, build has failed."
 msgstr "無法安裝包,生成失敗"
 
-#: cook:883
-#, sh-format
-msgid "Updating $ARCH chroot environment..."
-msgstr "正在更新 $ARCH chroot 環境"
+#: cook:949
+msgid "Updating %s chroot environment..."
+msgstr "正在更新 %s chroot 環境"
 
-#: cook:884
-#, sh-format
-msgid "Updating chroot: $pkg (${VERSION}${EXTRAVERSION}${arch})"
-msgstr "正在更新 chroot: $pkg (${VERSION}${EXTRAVERSION}${arch})"
+#: cook:950
+msgid "Updating chroot: %s"
+msgstr "正在更新 chroot：%s"
 
-#: cook:905
+#: cook:982
 msgid "Setup aufs chroot..."
 msgstr "正設置 aufs chroot"
 
-#: cook:917
-msgid "Aufs mountage failure"
-msgstr "Aufs mountage 錯誤"
+#: cook:994
+msgid "Aufs mount failure"
+msgstr "Aufs mount 錯誤"
 
-#: cook:928
+#: cook:1006
 msgid "Leaving aufs chroot..."
 msgstr "正離開 aufs chroot..."
 
-#: cook:1030
-#, sh-format
-msgid "List of $ARCH packages in: $WOK"
-msgstr "$WOK 內的 $ARCH 包清單"
+#: cook:1075
+msgid "Multiple choice:"
+msgstr ""
 
-#: cook:1046
-msgid "Packages:"
-msgstr "包:"
+#: cook:1076
+msgid "Select one [%s]: "
+msgstr ""
 
-#: cook:1053
-#, sh-format
-msgid "Search results for: $query"
-msgstr "$query 的搜索結果"
+#: cook:1117
+msgid "Getting standard devel files..."
+msgstr ""
 
-#: cook:1059
+#: cook:1134
+msgid "List of %s packages in \"%s\""
+msgstr "%2$s 內的 %1$s 包清單"
+
+#: cook:1150
+msgid "%s package"
+msgid_plural "%s packages"
+msgstr[0] "包："
+
+#: cook:1159
+msgid "Search results for \"%s\""
+msgstr "%s 的搜索結果"
+
+#: cook:1166
 msgid "Cook: setup environment"
-msgstr "Cook: 設置環境"
+msgstr "Cook：設置環境"
 
-#: cook:1060
+#: cook:1167
 msgid "Setting up your environment"
 msgstr "設置個人環境"
 
-#: cook:1063
+#: cook:1170
 msgid "Checking for packages to install..."
 msgstr "檢查要安裝的包"
 
-#: cook:1069
-msgid "ERROR: cross is not installed"
-msgstr "錯誤: 未安裝cross"
+#: cook:1176
+msgid "ERROR: %s is not installed"
+msgstr "錯誤：未安裝%s"
 
-#: cook:1072
-msgid "Using config file: /etc/slitaz/cross.conf"
-msgstr "使用配置文件: /etc/slitaz/cross.conf"
+#: cook:1179
+msgid "Using config file: %s"
+msgstr "使用配置文件：%s"
 
-#: cook:1097
-msgid "Adding group: slitaz"
-msgstr "正在加入組: slitaz"
+#: cook:1200
+msgid "Adding group \"%s\""
+msgstr "正在加入組：%s"
 
-#: cook:1100
-msgid "Setting permissions for slitaz group..."
-msgstr "正在設置slitaz組的權限"
+#: cook:1203
+msgid "Setting permissions for group \"%s\"..."
+msgstr "正在設置%s組的權限"
 
-#: cook:1103
+#: cook:1206
 msgid "All done, ready to cook packages :-)"
 msgstr "完成，可以開始生成包 :-)"
 
-#: cook:1116
-#, sh-format
-msgid "Cook: setup $arch cross environment"
-msgstr "生成: 設置 $arch cross 環境"
+#: cook:1221
+msgid "Cook: setup %s cross environment"
+msgstr "生成：設置 %s cross 環境"
 
-#: cook:1117
-#, sh-format
-msgid "Setting up your $arch cross environment"
-msgstr "正在設置你的 $arch cross 環境"
+#: cook:1222
+msgid "Setting up your %s cross environment"
+msgstr "正在設置你的 %s cross 環境"
 
 #. L10n: keep the same width of translations to get a consistent view
-#: cook:1148
-#, sh-format
-msgid "Target arch     : $ARCH"
-msgstr "目標架構   : $ARCH"
+#: cook:1251
+msgid "Target arch     : %s"
+msgstr "目標架構：%s"
 
-#: cook:1149
-#, sh-format
-msgid "Configure args  : $CONFIGURE_ARGS"
-msgstr "設置標誌   : $CONFIGURE_ARGS"
+#: cook:1252
+msgid "Configure args  : %s"
+msgstr "設置標誌：%s"
 
-#: cook:1150
-#, sh-format
-msgid "Build flags     : $flags"
-msgstr "編譯標誌   : $flags"
+#: cook:1253
+msgid "Build flags     : %s"
+msgstr "編譯標誌：%s"
 
-#: cook:1151
-#, sh-format
-msgid "Arch sysroot    : $sysroot"
-msgstr "Arch sysroot   : $sysroot"
+#: cook:1254
+msgid "Arch sysroot    : %s"
+msgstr ""
 
-#: cook:1152
-#, sh-format
-msgid "Tools prefix    : $tools/bin"
-msgstr "工具前綴   : $tools/bin"
+#: cook:1255
+msgid "Tools prefix    : %s"
+msgstr "工具前綴：%s"
 
-#: cook:1154
-#, sh-format
-msgid "Packages DB     : ${root}$DB"
-msgstr "包數據庫   : ${root}$DB"
+#: cook:1257
+msgid "Packages DB     : %s"
+msgstr "包數據庫：%s"
 
-#: cook:1165
-msgid "WARNING: (e)glibc-base is not installed in sysroot"
-msgstr "警告: 並無在sysroot 安裝 (e)glibc-base "
+#: cook:1268
+msgid "WARNING: %s is not installed in sysroot"
+msgstr "警告：並無在sysroot 安裝 %s"
 
-#: cook:1169
-#, sh-format
-msgid "Cross compiler  : ${HOST_SYSTEM}-gcc"
-msgstr "交叉編譯器   : ${HOST_SYSTEM}-gcc"
+#: cook:1272
+msgid "Cross compiler  : %s"
+msgstr "交叉編譯器：%s"
 
-#: cook:1171
-#, sh-format
-msgid "C compiler is missing: ${HOST_SYSTEM}-gcc"
-msgstr "欠缺C編譯器: ${HOST_SYSTEM}-gcc"
+#: cook:1274
+msgid "C compiler \"%s\" is missing"
+msgstr "欠缺C編譯器：%s"
 
-#: cook:1172
-msgid "Run 'cross compile' to cook a toolchain"
-msgstr "運行 'cross compile' 以生成工具串"
+#: cook:1275
+msgid "Run \"%s\" to cook a toolchain"
+msgstr "運行 '%s' 以生成工具串"
 
-#: cook:1177
+#: cook:1281
 msgid "Cook test: testing the cook environment"
-msgstr "生成測試: 正在測試生成環境"
+msgstr "生成測試：正在測試生成環境"
 
-#: cook:1187
-#, sh-format
-msgid "$pkg package already exists."
-msgstr "$pkg 包已存在"
+#: cook:1292
+msgid "Package \"%s\" already exists."
+msgstr "%s 包已存在"
 
-#: cook:1190
-#, sh-format
-msgid "Creating $WOK/$pkg"
-msgstr "正在創建 $WOK/$pkg"
+#: cook:1296
+msgid "Creating folder \"%s\""
+msgstr "正在創建 %s"
 
-#: cook:1192
+#: cook:1299
 msgid "Preparing the package receipt..."
 msgstr "正預備包清單"
 
-#: cook:1200
+#: cook:1307
 msgid "Entering interactive mode..."
 msgstr "正進入互動模式"
 
-#: cook:1202
-#, sh-format
-msgid "Package       : $pkg"
-msgstr "包   : $pkg"
+#: cook:1309
+msgid "Package       : %s"
+msgstr "包：%s"
 
-#: cook:1203
+#: cook:1311
 msgid "Version       : "
-msgstr "版本   : "
+msgstr "版本："
 
-#: cook:1205
+#: cook:1314
 msgid "Category      : "
-msgstr "分類   : "
+msgstr "分類："
 
 #. L10n: Short description
-#: cook:1208
+#: cook:1318
 msgid "Short desc    : "
-msgstr "簡短描述   : "
+msgstr "簡短描述："
 
-#: cook:1210
+#: cook:1321
 msgid "Maintainer    : "
-msgstr "維護者   : "
+msgstr "維護者："
 
-#: cook:1212
+#: cook:1324
 msgid "License       : "
-msgstr "授權 : "
+msgstr "授權："
 
-#: cook:1214
+#: cook:1327
 msgid "Web site      : "
-msgstr "網站   : "
+msgstr "網站："
 
-#: cook:1218
+#: cook:1332
 msgid "Wget URL to download source tarball."
 msgstr "Wget URL 以下載源tarball包"
 
-#: cook:1219
+#: cook:1333
 msgid "Example  : "
-msgstr "例子   : "
+msgstr "例子："
 
-#: cook:1220
+#: cook:1334
 msgid "Wget url : "
-msgstr "Wget url : "
+msgstr ""
 
-#: cook:1223
-msgid "Do you need a stuff directory? (y/N) : "
-msgstr "你需要一個stuff目錄嗎? (y/N) : "
+#: cook:1338
+msgid "Do you need a stuff directory? (y/N)"
+msgstr "你需要一個stuff目錄嗎? (y/N)："
 
-#: cook:1225
+#: cook:1340
 msgid "Creating the stuff directory..."
 msgstr "正在創建stuff目錄"
 
-#: cook:1229
-msgid "Are you going to write a description? (y/N) : "
-msgstr "你想寫一個描述嗎? (y/N) : "
+#: cook:1345
+msgid "Are you going to write a description? (y/N)"
+msgstr "你想寫一個描述嗎? (y/N)："
 
-#: cook:1231
-msgid "Creating the description.txt file..."
-msgstr "正在創建 description.txt 文件"
+#: cook:1347
+msgid "Creating the \"%s\" file..."
+msgstr "正在創建 %s 文件"
 
-#: cook:1234
+#: cook:1351
 msgid "Receipt is ready to use."
 msgstr "清單已可使用"
 
-#: cook:1240
+#: cook:1359
 msgid "No list in argument."
 msgstr "參數裏沒有清單"
 
-#: cook:1242
-#, sh-format
-msgid "No list found: $list2"
-msgstr "找不到清單: $list2"
+#: cook:1363
+msgid "List \"%s\" not found."
+msgstr "找不到清單：%s"
 
-#: cook:1243
-#, sh-format
-msgid "Cook list starting: $list2"
-msgstr "己在按清單生成: $list2"
+#: cook:1367
+msgid "Starting cooking the list \"%s\""
+msgstr "己在按清單生成：%s"
 
-#: cook:1250
+#: cook:1375
 msgid "Cleaning all packages files..."
 msgstr "清除所有包文件"
 
-#: cook:1255
+#: cook:1381
 msgid "Cleaning all packages sources..."
 msgstr "清除所有包源文件"
 
-#: cook:1268
-msgid "Packages directory doesn't exist"
-msgstr "包目錄不存在"
-
-#: cook:1275
-msgid "Cook pkgdb: Creating all packages lists"
-msgstr "Cook pkgdb: 創建所有包清單"
-
-#: cook:1276
-#, sh-format
-msgid "Creating lists for: $PKGS"
-msgstr "正在為 $PKGS 包創建清單"
-
-#: cook:1278
-#, sh-format
-msgid "Cook pkgdb started: $datenow"
-msgstr "已開始生成 pkgdb : $datenow"
-
-#: cook:1281
-msgid "Creating: packages.list"
-msgstr "正在創建: packages.list"
-
-#: cook:1283
-msgid "Creating: packages.md5"
-msgstr "正在創建: packages.md5"
-
-#: cook:1286
-#, sh-format
-msgid "Creating lists from: $WOK"
+#: cook:1388
+msgid "Checking for uncooked packages"
 msgstr ""
 
-#: cook:1328
-msgid "Done: packages.desc"
-msgstr "完成: packages.desc"
+#: cook:1401
+msgid "Package \"%s\""
+msgstr "包%s"
 
-#: cook:1329
-msgid "Done: packages.txt"
-msgstr "完成: packages.txt"
+#: cook:1420
+msgid "%s uncooked package"
+msgid_plural "%s uncooked packages"
+msgstr[0] ""
 
-#: cook:1330
-msgid "Done: packages.equiv"
-msgstr "完成: packages.equiv"
+#: cook:1422
+msgid "All packages are cooked :-)"
+msgstr ""
 
-#: cook:1333
-msgid "Creating: files.list.lzma"
-msgstr "正在創建: files.list.lzma"
+#: cook:1435
+msgid "Packages directory \"%s\" doesn't exist"
+msgstr "包目錄不存在%s"
+
+#: cook:1445
+msgid "Cook pkgdb: Creating all packages lists"
+msgstr "Cook pkgdb：創建所有包清單"
+
+#: cook:1446
+msgid "Creating lists for \"%s\""
+msgstr "正在為 %s 包創建清單"
+
+#: cook:1448
+msgid "Cook pkgdb started: %s"
+msgstr "已開始生成 pkgdb：%s"
+
+#: cook:1454 cook:1457 cook:1523 cook:1535 cook:1540
+msgid "Creating file \"%s\""
+msgstr "正在創建：%s"
+
+#: cook:1463
+msgid "Creating lists from \"%s\""
+msgstr ""
+
+#: cook:1516 cook:1517 cook:1518 cook:1529 cook:1547
+msgid "Done: %s (%s)"
+msgstr "完成：%s (%s)"
 
 #. L10n: 's' is for seconds (cooking time)
-#: cook:1342
-#, sh-format
-msgid "Packages: $nb - Time: ${time}s"
-msgstr "包: $nb - Time: ${time}s"
+#: cook:1554
+msgid "Packages: %s - Time: %ss"
+msgstr "包：%s - Time：%ss"
 
-#: cook:1348
-#, sh-format
-msgid "Missing flavors: $flavors"
-msgstr "欠缺設置: $flavors"
+#: cook:1563
+msgid "Missing flavors folder \"%s\""
+msgstr "欠缺設置：%s"
 
-#: cook:1350
-#, sh-format
-msgid "Creating flavors files in: $live"
-msgstr "正在於 $live 創建設置文件"
+#: cook:1568
+msgid "Creating flavors files in \"%s\""
+msgstr "正在於 %s 創建設置文件"
 
-#: cook:1351
+#: cook:1569
 msgid "Cook pkgdb: Creating all flavors"
-msgstr "生成 pkgdb: 正創建所有設置"
+msgstr "生成 pkgdb：正創建所有設置"
 
-#: cook:1353
+#: cook:1572
 msgid "Recharging lists to use latest packages..."
 msgstr "重新載入清單以使用最新包"
 
-#: cook:1358
-msgid "Creating configuration file: tazlito.conf"
-msgstr "正創建配置文件: tazlito.conf"
+#: cook:1577
+msgid "Creating configuration file \"%s\""
+msgstr "正創建配置文件：%s"
 
-#: cook:1368
+#: cook:1589
 msgid "Starting to generate flavors..."
 msgstr "開始生成設置"
 
-#: cook:1373
-#, sh-format
-msgid "Packing flavor: $fl"
-msgstr "正打包設置: $fl"
+#: cook:1593
+msgid "Packing flavor \"%s\""
+msgstr "正打包設置：%s"
 
-#: cook:1381
-#, sh-format
-msgid "Flavors size: $fl_size"
-msgstr "設置大小: $fl_size"
+#: cook:1599
+msgid "Total flavors size: %s"
+msgstr "設置大小：%s"
 
-#: cook:1385
-#, sh-format
-msgid "Cook pkgdb end: $datenow"
-msgstr "生成 pkgdb 完成: $datenow"
+#: cook:1602
+msgid "Cook pkgdb end: %s"
+msgstr "生成 pkgdb 完成：%s"
 
-#: cook:1412
-#, sh-format
-msgid "cook: HOST_ARCH is not set in $pkg receipt"
-msgstr "生成: 沒有在 $pkg 清單設置 HOST_ARCH"
+#: cook:1622
+msgid "cook: HOST_ARCH is not set in \"%s\" receipt"
+msgstr "生成：沒有在 %s 清單設置 HOST_ARCH"
 
-#: cook:1413
-#, sh-format
-msgid "cook: This package is not included in: $ARCH"
-msgstr "生成: 本包並不在 $ARCH 內"
+#: cook:1623
+msgid "package \"%s\" is not included in %s"
+msgstr "%s 並不在 %s 內"
 
-#: cook:1414 cook:1425
-#, sh-format
-msgid "bugs: $CROSS_BUGS"
-msgstr "bugs: $CROSS_BUGS"
+#: cook:1624 cook:1637 cook:1639
+msgid "cook: %s"
+msgstr "生成：%s"
 
-#: cook:1415
-#, sh-format
-msgid "Cook skip: $pkg is not included in: $ARCH"
-msgstr "生成跳過: $pkg 並不在 $ARCH 內"
+#: cook:1625 cook:1640
+msgid "bugs: %s"
+msgstr ""
 
-#: cook:1423
-#, sh-format
-msgid "cook: HOST_ARCH=$HOST_ARCH"
-msgstr "生成: HOST_ARCH=$HOST_ARCH"
+#: cook:1626 cook:1641
+msgid "Cook skip: %s"
+msgstr "生成跳過：%s"
 
-#: cook:1424
-#, sh-format
-msgid "cook: $pkg doesn't cook or is not included in: $ARCH"
-msgstr "生成: $pkg 並未生成或不在  $ARCH"
+#: cook:1634
+msgid "Host arch %s"
+msgstr "主機架構%s"
 
-#: cook:1426
-#, sh-format
-msgid "Cook skip: $pkg doesn't cook or is not included in: $ARCH"
-msgstr "生成跳過: $pkg 並未生成或不在  $ARCH"
+#: cook:1638
+msgid "package \"%s\" doesn't cook or is not included in %s"
+msgstr "%s 並未生成或不在 %s"
 
-#: cook:1432
-#, sh-format
-msgid "Blocked package: $pkg"
-msgstr "已封鎖包: $pkg"
+#: cook:1649
+msgid "Package \"%s\" is blocked"
+msgstr "已封鎖包：%s"
 
-#: cook:1439
-#, sh-format
-msgid "Cook started for: <a href='cooker.cgi?pkg=$pkg'>$pkg</a>"
-msgstr "已開始生成: <a href='cooker.cgi?pkg=$pkg'>$pkg</a>"
+#: cook:1656
+msgid "Cook started for: %s"
+msgstr "已開始生成：%s"
 
-#: cook:1450
-#, sh-format
-msgid "Cleaning: $pkg"
-msgstr "正在清理: $pkg"
+#: cook:1667
+msgid "Cleaning \"%s\""
+msgstr "正在清理：%s"
 
-#: cook:1456
-#, sh-format
-msgid "Getting source for: $pkg"
-msgstr "正在取得包源文件: $pkg"
+#: cook:1676
+msgid "Getting source for \"%s\""
+msgstr "正在取得包源文件：%s"
 
-#: cook:1458
-#, sh-format
-msgid "Tarball: $SRC/$TARBALL"
-msgstr "Tarball: $SRC/$TARBALL"
+#: cook:1678
+msgid "Tarball: %s"
+msgstr ""
 
-#: cook:1461
-#, sh-format
-msgid "Blocking: $pkg"
-msgstr "正在封鎖: $pkg"
+#: cook:1682
+msgid "Blocking package \"%s\""
+msgstr "正在封鎖：%s"
 
-#: cook:1465
-#, sh-format
-msgid "Unblocking: $pkg"
-msgstr "取消封鎖: $pkg"
+#: cook:1688
+msgid "Unblocking package \"%s\""
+msgstr "取消封鎖：%s"
 
-#: cook:1475 cook:1479
-#, sh-format
-msgid "Need to build $pkg."
-msgstr "需要生成 $pkg"
+#: cook:1700 cook:1707
+msgid "Need to build \"%s\""
+msgstr "需要生成 %s"
 
-#: cook:1480
+#: cook:1711
 msgid "Checking depends"
 msgstr "正在檢查依賴"
 
-#: cook:1507
-#, sh-format
-msgid "WANTED package is blocked: $wanted"
-msgstr "所請求的包被封鎖: $wanted"
+#: cook:1742
+msgid "WANTED package \"%s\" is blocked"
+msgstr "所請求的包被封鎖：%s"
 
-#: cook:1511
-#, sh-format
-msgid "WANTED package is broken: $wanted"
-msgstr "所請求的包已損壞: $wanted"
+#: cook:1748
+msgid "WANTED package \"%s\" is broken"
+msgstr "所請求的包已損壞：%s"

@@ -1,21 +1,22 @@
 # Russian translations for Cook package
-# Copyright (C) 2013 THE Cook'S COPYRIGHT HOLDER
+# Copyright (C) 2013-2015 SliTaz
 # This file is distributed under the same license as the Cook package.
 # Aleksej Bobylev <al.bobylev@gmail.com>, 2013.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: Cook 3.1.4\n"
+"Project-Id-Version: Cook 3.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-03-05 15:28+0200\n"
-"PO-Revision-Date: 2014-03-05 16:09+0300\n"
+"POT-Creation-Date: 2015-05-07 12:52+0300\n"
+"PO-Revision-Date: 2015-05-07 04:21+0300\n"
 "Last-Translator: Aleksej Bobylev <al.bobylev@gmail.com>\n"
 "Language-Team: Russian\n"
 "Language: ru\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
+"%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 "X-Poedit-Language: Russian\n"
 "X-Poedit-SourceCharset: utf-8\n"
 "X-Poedit-KeywordsList: _;_n\n"
@@ -23,12 +24,16 @@ msgstr ""
 "X-Poedit-SearchPath-0: .\n"
 
 #: cook:32
-msgid "\\033[1mUsage:\\033[0m cook [package|command] [list|--option]"
-msgstr "\\033[1mИспользование:\\033[0m cook [пакет|команда] [список|--параметр]"
+msgid "Usage:"
+msgstr "Использование:"
+
+#: cook:32
+msgid "cook [package|command] [list|--option]"
+msgstr "cook [пакет|команда] [список|--параметр]"
 
 #: cook:34
-msgid "\\033[1mCommands:\\033[0m"
-msgstr "\\033[1mКоманды:\\033[0m"
+msgid "Commands:"
+msgstr "Команды:"
 
 #: cook:35
 msgid "Display this short usage."
@@ -42,929 +47,801 @@ msgstr "Настроить сборочное окружение."
 msgid "Setup a cross environment."
 msgstr "Настроить кросс-сборочное окружение."
 
-#: cook:38
+#: cook:39
 msgid "Test environment and cook a package."
 msgstr "Тестировать окружение и собрать пакет."
 
-#: cook:39
+#: cook:40
 msgid "List packages in the wok."
 msgstr "Вывести список пакетов, имеющихся в wok."
 
-#: cook:40
+#: cook:41
 msgid "Simple packages search function."
 msgstr "Простой поиск по пакетам."
 
-#: cook:41
+#: cook:42
 msgid "Create a new package with a receipt."
 msgstr "Создать рецепт нового пакета."
 
-#: cook:42
+#: cook:43
 msgid "Cook a list of packages."
 msgstr "Собрать все пакеты из списка."
 
-#: cook:43
+#: cook:44
 msgid "Clean-up all packages files."
 msgstr "Очистить все файлы пакета."
 
-#: cook:44
+#: cook:45
 msgid "Clean-up all packages sources."
 msgstr "Очистить все исходники пакета."
 
-#: cook:45
+#: cook:46
+msgid "Check for uncooked packages"
+msgstr "Показать несобранные пакеты"
+
+#: cook:47
 msgid "Create packages DB lists and flavors."
 msgstr "Создать базу данных пакетов и редакций."
 
-#: cook:47
-msgid "\\033[1mOptions:\\033[0m"
-msgstr "\\033[1mПараметры:\\033[0m"
+#: cook:49
+msgid "Options:"
+msgstr "Параметры:"
 
-#: cook:48
+#: cook:51
 msgid "clean the package in the wok."
 msgstr "очистить пакет в wok."
 
-#: cook:49
+#: cook:52
 msgid "cook and install the package."
 msgstr "собрать и установить пакет."
 
-#: cook:50
+#: cook:53
 msgid "get the package source tarball."
 msgstr "загрузить архив исходников пакета."
 
-#: cook:51
+#: cook:54
 msgid "block a package so cook will skip it."
 msgstr "заблокировать пакет, чтобы cook пропускал его."
 
-#: cook:52
+#: cook:55
 msgid "unblock a blocked package."
 msgstr "разблокировать заблокированный пакет."
 
-#: cook:53
+#: cook:56
 msgid "check dependencies of cooked package."
 msgstr "проверить зависимости собираемого пакета."
 
-#: cook:54
+#: cook:57
 msgid "repack an already built package."
 msgstr "повторно упаковать созданный пакет."
 
-#: cook:55
+#: cook:58
+msgid "display debugging messages."
+msgstr "показывать отладочные сообщения."
+
+#: cook:59
+msgid "continue running compile_rules."
+msgstr "продолжить выполнение compile_rules."
+
+#: cook:61
 msgid "create a receipt interactively."
 msgstr "создать рецепт в интерактивном режиме."
 
-#: cook:56
+#: cook:63
 msgid "clone the cooking wok from Hg repo."
 msgstr "клонировать cooking wok из репозитория Hg."
 
-#: cook:57
+#: cook:64
 msgid "clone the stable wok from Hg repo."
 msgstr "клонировать стабильный wok из репозитория Hg."
 
-#: cook:58
+#: cook:65
 msgid "clone the undigest wok from Hg repo."
 msgstr "клонировать undigest wok из репозитория Hg."
 
-#: cook:59
+#: cook:66
 msgid "clone the tiny SliTaz wok from Hg repo."
 msgstr "клонировать tiny SliTaz wok из репозитория Hg."
 
-#: cook:60
+#: cook:67
 msgid "force reinstall of chroot packages."
 msgstr "принудительная переустановка пакетов в chroot."
 
-#: cook:61
+#: cook:69
 msgid "create up-to-date flavors files."
 msgstr "создать актуальные файлы редакций (flavors)."
 
-#: cook:76
-#, sh-format
-msgid "Unable to find package in the wok: $pkg"
-msgstr "Не удалось найти пакет «$pkg» в wok."
+#: cook:88
+msgid "Unable to find package \"%s\" in the wok"
+msgstr "Не удалось найти пакет «%s» в wok."
 
 #. L10n: QA is quality assurance
-#: cook:84
-#, sh-format
-msgid "QA: empty variable: ${var}=\"\""
-msgstr "ОТК: пустая переменная: ${var}=\"\""
+#: cook:97
+msgid "QA: empty variable: %s"
+msgstr "ОТК: пустая переменная: %s"
 
-#: cook:91
-#, sh-format
-msgid "Creating directories structure in: $SLITAZ"
-msgstr "Создание структуры папок в $SLITAZ"
+#: cook:106
+msgid "Creating directories structure in \"%s\""
+msgstr "Создание структуры папок в «%s»"
 
-#: cook:93
-#, sh-format
-msgid "Creating DB files in: $CACHE"
-msgstr "Создание файлов базы данных в $CACHE"
+#: cook:108
+msgid "Creating DB files in \"%s\""
+msgstr "Создание файлов базы данных в «%s»"
 
-#: cook:102
+#: cook:118
 msgid "QA: checking package receipt..."
 msgstr "ОТК: проверка рецепта пакета…"
 
-#: cook:118
-#, sh-format
-msgid "QA: unknown category: $value"
-msgstr "ОТК: неизвестная категория «$value»"
+#: cook:133
+msgid "QA: unknown category \"%s\""
+msgstr "ОТК: неизвестная категория «%s»"
 
-#: cook:119
-#, sh-format
-msgid "Please, use one of: $valid"
-msgstr "Используйте одну из: $valid"
+#: cook:134
+msgid "Please, use one of: %s"
+msgstr "Используйте одну из: %s"
 
-#: cook:128
-#, sh-format
-msgid "QA: unable to reach: $value"
-msgstr "ОТК: не удалось подключиться к $value"
+#: cook:144
+msgid "QA: unable to reach \"%s\""
+msgstr "ОТК: не удалось подключиться к «%s»"
 
-#: cook:184
-#, sh-format
-msgid "Creating tarball: $tarball"
-msgstr "Создание архива: $tarball"
+#: cook:204
+msgid "Creating tarball \"%s\""
+msgstr "Создание архива «%s»"
 
-#: cook:207
-#: cook:211
-#, sh-format
-msgid "ERROR: wget $WGET_URL"
-msgstr "ОШИБКА: wget $WGET_URL"
+#: cook:229 cook:234 cook:248 cook:250 cook:260 cook:330
+msgid "ERROR: %s"
+msgstr "ОШИБКА: %s"
 
-#: cook:218
-msgid "Getting source from Hg..."
-msgstr "Загрузка исходников с Hg…"
+#: cook:242 cook:257 cook:272 cook:285 cook:296 cook:328
+msgid "Getting source from %s..."
+msgstr "Загрузка исходников с %s…"
 
-#: cook:219
-#: cook:233
-#: cook:245
-#: cook:257
-#, sh-format
-msgid "URL: $url"
-msgstr "Адрес: $url"
+#: cook:243 cook:258 cook:273 cook:286 cook:329
+msgid "URL: %s"
+msgstr "Адрес: %s"
 
-#: cook:220
-#, sh-format
-msgid "Cloning to: $pwd/$pkgsrc"
-msgstr "Клонирование в $pwd/$pkgsrc"
-
-#: cook:222
-#, sh-format
-msgid "Hg branch: $BRANCH"
-msgstr "Ветвь Hg: $BRANCH"
-
-#: cook:224
-#, sh-format
-msgid "ERROR: hg clone $url --rev $BRANCH"
-msgstr "ОШИБКА: hg clone $url --rev $BRANCH"
-
-#: cook:226
-#, sh-format
-msgid "ERROR: hg clone $url"
-msgstr "ОШИБКА: hg clone $url"
-
-#: cook:232
-msgid "Getting source from Git..."
-msgstr "Загрузка исходников с Git…"
-
-#: cook:234
-#, sh-format
-msgid "ERROR: git clone $url"
-msgstr "ОШИБКА: git clone $url"
-
-#: cook:236
-#, sh-format
-msgid "Git branch: $BRANCH"
-msgstr "Ветвь Git: $BRANCH"
-
-#: cook:244
-msgid "Getting source from CVS..."
-msgstr "Загрузка исходников с CVS…"
+#: cook:244 cook:275
+msgid "Cloning to \"%s\""
+msgstr "Клонирование в «%s»"
 
 #: cook:246
-#, sh-format
-msgid "CVS module: $mod"
-msgstr "Модуль CVS: $mod"
+msgid "Hg branch: %s"
+msgstr "Ветвь Hg: %s"
 
-#: cook:247
-#, sh-format
-msgid "Cloning to: $pwd/$mod"
-msgstr "Клонирование в $pwd/$mod"
+#: cook:262
+msgid "Git branch: %s"
+msgstr "Ветвь Git: %s"
 
-#: cook:256
-msgid "Getting source from SVN..."
-msgstr "Загрузка исходников с SVN…"
+#: cook:274
+msgid "CVS module: %s"
+msgstr "Модуль CVS: %s"
 
-#: cook:266
-msgid "Getting source from bazaar..."
-msgstr "Загрузка исходников с bazaar…"
-
-#: cook:276
+#: cook:306
 msgid "Don't forget to add to receipt:"
 msgstr "Не забудьте добавить в рецепт:"
 
-#: cook:283
-#, sh-format
-msgid "ERROR: Unable to handle: $WGET_URL"
-msgstr "ОШИБКА: Не удалось обработать $WGET_URL"
-
-#: cook:295
-#, sh-format
-msgid "Getting source from mirror: $url"
-msgstr "Загрузка исходников из репозитария mirror: $url"
-
-#: cook:296
-#, sh-format
-msgid "ERROR: wget $url"
-msgstr "ОШИБКА: wget $url"
-
-#: cook:298
-#, sh-format
-msgid "Extracting: $TARBALL"
-msgstr "Распаковка архива $TARBALL"
-
-#. L10n: specify your format of date and time (to help: man date)
-#. L10n: not bad one is '+%x %R'
-#: cook:322
-#: cook:349
-#: cook:1277
-#: cook:1384
-msgid "+%Y-%m-%d %H:%M"
-msgstr "+%x %R"
-
-#. L10n: 'm' is for minutes (approximate cooking time)
-#: cook:326
-#, sh-format
-msgid "~ ${div}m"
-msgstr "(около $div мин)"
-
-#: cook:327
-#, sh-format
-msgid "Summary for: $PACKAGE $VERSION"
-msgstr "Сводка по пакету $PACKAGE $VERSION"
-
-#. L10n: keep the same width of translations to get a consistent view
-#: cook:330
-#, sh-format
-msgid "Source dir  : $srcdir"
-msgstr "Папка исходников     : $srcdir"
-
-#: cook:331
-#, sh-format
-msgid "Src file    : $TARBALL"
-msgstr "Архив исходников     : $TARBALL"
+#: cook:314
+msgid "ERROR: Unable to handle \"%s\""
+msgstr "ОШИБКА: Не удалось обработать «%s»"
 
 #: cook:332
-#, sh-format
-msgid "Src size    : $srcsize"
-msgstr "Размер архива        : $srcsize"
+msgid "Extracting source archive \"%s\""
+msgstr "Распаковка архива исходников «%s»"
 
-#: cook:333
-#, sh-format
-msgid "Produced    : $prod"
-msgstr "Скомпилировано       : $prod"
+#. L10n: 'm' is for minutes (approximate cooking time)
+#: cook:367
+msgid "~ %dm"
+msgstr "(около %d мин)"
 
-#: cook:334
-#, sh-format
-msgid "Packed      : $fs"
-msgstr "Помещено в пакет     : $fs"
+#: cook:370
+msgid "Summary for: %s"
+msgstr "Сводка по пакету %s"
 
-#: cook:335
-#, sh-format
-msgid "Compressed  : $size"
-msgstr "Размер сжатого пакета: $size"
+#. L10n: keep the same width of translations to get a consistent view
+#: cook:374
+msgid "Source dir  : %s"
+msgstr "Папка исходников     : %s"
 
-#: cook:336
-#, sh-format
-msgid "Files       : $files"
-msgstr "Количество файлов    : $files"
+#: cook:375
+msgid "Src file    : %s"
+msgstr "Архив исходников     : %s"
+
+#: cook:376
+msgid "Src size    : %s"
+msgstr "Размер архива        : %s"
+
+#: cook:377
+msgid "Produced    : %s"
+msgstr "Скомпилировано       : %s"
+
+#: cook:378
+msgid "Packed      : %s"
+msgstr "Помещено в пакет     : %s"
+
+#: cook:379
+msgid "Compressed  : %s"
+msgstr "Размер сжатого пакета: %s"
+
+#: cook:380
+msgid "Files       : %s"
+msgstr "Количество файлов    : %s"
 
 #. L10n: 's' is for seconds (cooking time)
-#: cook:338
-#, sh-format
-msgid "Cook time   : ${sec}s $min"
-msgstr "Время сборки         : $sec с $min"
+#: cook:382
+msgid "Cook time   : %ds %s"
+msgstr "Время сборки         : %d с %s"
 
-#: cook:339
-#, sh-format
-msgid "Cook date   : $cookdate"
-msgstr "Дата приготовления   : $cookdate"
+#: cook:383
+msgid "Cook date   : %s"
+msgstr "Дата приготовления   : %s"
 
-#: cook:340
-#, sh-format
-msgid "Host arch   : $ARCH"
-msgstr "Архитектура хоста    : $ARCH"
+#: cook:383 cook:395 cook:1448 cook:1602
+msgid "+%%F %%R"
+msgstr "+%%x %%R"
 
-#: cook:346
+#: cook:384
+msgid "Host arch   : %s"
+msgstr "Архитектура хоста    : %s"
+
+#: cook:392
 msgid "Debug information"
 msgstr "Отладочная информация"
 
-#: cook:350
-#, sh-format
-msgid "Cook date: $datenow"
-msgstr "Дата сборки: $datenow"
+#. L10n: specify your format of date and time (to help: man date)
+#. L10n: not bad one is '+%x %R'
+#: cook:395
+msgid "Cook date: %s"
+msgstr "Дата сборки: %s"
 
 #. L10n: Please, translate all messages beginning with ERROR in a same way
-#: cook:352
-#: cook:614
-#: cook:711
-#: cook:742
-#: cook:828
-#: cook:1527
+#: cook:397 cook:661 cook:765 cook:799 cook:889 cook:1766
 msgid "ERROR"
 msgstr "ОШИБКА"
 
-#: cook:437
+#: cook:484
 msgid "Executing strip on all files..."
 msgstr "Выполнение команды strip для всех файлов…"
 
-#: cook:450
+#: cook:496
 msgid "Removing Python compiled files..."
 msgstr "Удаление скомпилированных файлов Python…"
 
-#: cook:458
+#: cook:503
 msgid "Removing Perl compiled files..."
 msgstr "Удаление скомпилированных файлов Perl…"
 
-#: cook:472
-#: cook:600
-msgid "Build dependencies to remove: "
-msgstr "Будут удалены зависимости сборки: "
+#: cook:518 cook:647
+msgid "Build dependencies to remove:"
+msgstr "Будут удалены зависимости сборки:"
 
-#: cook:473
-#: cook:601
+#: cook:520 cook:648
 msgid "Removing:"
 msgstr "Удаление:"
 
-#: cook:487
-#, sh-format
-msgid "Cook: $PACKAGE $VERSION"
-msgstr "Приготовление пакета: $PACKAGE $VERSION"
+#: cook:535
+msgid "Cook: %s"
+msgstr "Приготовление пакета: %s"
 
-#: cook:501
-#, sh-format
-msgid "$ARCH sysroot: $sysroot"
-msgstr "Корень $ARCH: $sysroot"
+#: cook:549
+msgid "%s sysroot: %s"
+msgstr "Корень %s: %s"
 
-#: cook:502
-#, sh-format
-msgid "Adding $tools/bin to PATH"
-msgstr "Добавление «$tools/bin» в PATH"
+#: cook:550
+msgid "Adding \"%s\" to PATH"
+msgstr "Добавление «%s» в PATH"
 
-#: cook:506
-#, sh-format
-msgid "Using cross-tools: $CROSS_COMPILE"
-msgstr "Используемые кросс-инструменты: $CROSS_COMPILE"
+#: cook:554
+msgid "Using cross-tools: %s"
+msgstr "Используемые кросс-инструменты: %s"
 
-#: cook:528
-#, sh-format
-msgid "Disabling -pipe compile flag: $free RAM"
-msgstr "Отключение флага компиляции «-pipe»: свободно $free КБ RAM"
+#: cook:578
+msgid "Disabling -pipe compile flag: %d RAM free"
+msgstr "Отключение флага компиляции «-pipe»: свободно %d КБ RAM"
 
-#: cook:545
+#: cook:594
 msgid "Checking build dependencies..."
 msgstr "Проверка зависимостей сборки…"
 
-#: cook:546
-#, sh-format
-msgid "Using packages DB: ${root}$DB"
-msgstr "Используемая база данных пакетов: ${root}$DB"
+#: cook:595
+msgid "Using packages DB: %s"
+msgstr "Используемая база данных пакетов: %s"
 
-#: cook:572
-#, sh-format
-msgid "Missing dep (wok/pkg): $i $vers"
-msgstr "Отсутствует зависимость (wok/пакет): $i $vers"
+#: cook:619
+msgid "Missing dep (wok/pkg): %s"
+msgstr "Отсутствует зависимость (wok/пакет): %s"
 
-#: cook:580
-#, sh-format
-msgid "ERROR: unknown dep $i"
-msgstr "ОШИБКА: неизвестная зависимость «$i»"
+#: cook:627
+msgid "ERROR: unknown dep \"%s\""
+msgstr "ОШИБКА: неизвестная зависимость «%s»"
 
-#: cook:593
-msgid "Auto cook config is set: AUTO_COOK"
-msgstr "Авто-приготовление включено: AUTO_COOK"
+#: cook:641
+msgid "Auto cook config is set: %s"
+msgstr "Авто-приготовление включено: %s"
 
-#: cook:597
-#, sh-format
-msgid "Building dep (wok/pkg)    : $i $vers"
-msgstr "Сборка зависимости (wok/пакет): $i $vers"
+#: cook:644
+msgid "Building dep (wok/pkg)    : %s"
+msgstr "Сборка зависимости (wok/пакет): %s"
 
-#: cook:602
-#, sh-format
-msgid "ERROR: can't cook dep '$i'"
-msgstr "ОШИБКА: не удалось собрать зависимость «$i»"
+#: cook:649
+msgid "ERROR: can't cook dep \"%s\""
+msgstr "ОШИБКА: не удалось собрать зависимость «%s»"
 
-#: cook:617
-#, sh-format
-msgid "ERROR: missing dep $nb"
-msgstr "ОШИБКА: отсутствует зависимость «$nb»"
+#: cook:664
+msgid "ERROR: missing %d dependency"
+msgid_plural "ERROR: missing %d dependencies"
+msgstr[0] "ОШИБКА: отсутствует %d зависимость"
+msgstr[1] "ОШИБКА: отсутствует %d зависимости"
+msgstr[2] "ОШИБКА: отсутствует %d зависимостей"
 
-#: cook:624
-#, sh-format
-msgid "Installing dep (pkg/local): $i"
-msgstr "Установка зависимости (пакет/локальный): $i"
+#: cook:671
+msgid "Installing dep (pkg/local): %s"
+msgstr "Установка зависимости (пакет/локальный): %s"
 
-#: cook:632
-#, sh-format
-msgid "Installing dep (web/cache): $i"
-msgstr "Установка зависимости (веб/кеш): $i"
+#: cook:678
+msgid "Installing dep (web/cache): %s"
+msgstr "Установка зависимости (веб/кеш): %s"
 
-#: cook:682
-msgid "Executing: compile_rules"
-msgstr "Запуск правил компиляции исходников"
+#: cook:734 cook:789
+msgid "Executing: %s"
+msgstr "Запуск %s"
 
-#: cook:699
+#: cook:751
 msgid "Running testsuite"
 msgstr "Запуск набора тестов"
 
-#: cook:708
+#: cook:762
 msgid "ERROR: cook failed"
 msgstr "ОШИБКА: сборка не удалась"
 
-#: cook:729
-#, sh-format
-msgid "Pack: $PACKAGE ${VERSION}${arch}"
-msgstr "Упаковка: $PACKAGE ${VERSION}${arch}"
+#: cook:786
+msgid "Pack: %s"
+msgstr "Упаковка: %s"
 
-#: cook:732
-msgid "Executing: genpkg_rules"
-msgstr "Запуск правил создания пакета"
-
-#: cook:734
+#: cook:791
 msgid "ERROR: genpkg_rules failed"
 msgstr "ОШИБКА: не удалось выполнить правила создания пакета"
 
-#: cook:737
+#: cook:794
 msgid "No packages rules: meta package"
 msgstr "Для пакета отсутствуют правила, это мета-пакет"
 
-#: cook:751
-#, sh-format
-msgid "Copying $file..."
-msgstr "Копирование файла «$file»…"
+#: cook:807
+msgid "Copying \"%s\"..."
+msgstr "Копирование файла «%s»…"
 
-#: cook:757
+#: cook:816
 msgid "Creating the list of files..."
 msgstr "Создание списка файлов…"
 
-#: cook:768
+#: cook:824
 msgid "Creating md5sum of files..."
 msgstr "Расчёт контрольных сумм файлов…"
 
-#: cook:783
-msgid "Compressing the fs..."
+#: cook:839
+msgid "Compressing the FS..."
 msgstr "Сжатие файловой системы…"
 
-#: cook:790
+#: cook:847
 msgid "Updating receipt sizes..."
 msgstr "Обновление размеров в рецепте…"
 
-#: cook:798
-#, sh-format
-msgid "Updating receipt EXTRAVERSION: $EXTRAVERSION"
-msgstr "Обновление EXTRAVERSION в рецепте: $EXTRAVERSION"
+#: cook:855
+msgid "Updating receipt EXTRAVERSION: %s"
+msgstr "Обновление EXTRAVERSION в рецепте: %s"
 
-#: cook:805
+#: cook:862
 msgid "Creating full cpio archive..."
-msgstr "Создание полного архива CPIO…"
+msgstr "Создание полного архива cpio…"
 
-#: cook:809
+#: cook:867
 msgid "Restoring original package tree..."
 msgstr "Восстановление оригинального дерева пакета…"
 
-#: cook:817
-#, sh-format
-msgid "Package: $tazpkg"
-msgstr "Создан пакет «$tazpkg»"
+#: cook:876
+msgid "Package \"%s\" created"
+msgstr "Создан пакет «%s»"
 
-#: cook:833
+#: cook:895
 msgid "QA: checking for empty package..."
 msgstr "ОТК: проверка на пустой пакет…"
 
-#: cook:836
+#: cook:898
 msgid "ERROR: empty package"
 msgstr "ОШИБКА: пустой пакет"
 
-#: cook:844
-#, sh-format
-msgid "Removing old: $old_pkg"
-msgstr "Удаление старого пакета «$old_pkg»…"
+#: cook:906
+msgid "Removing old package \"%s\""
+msgstr "Удаление старого пакета «%s»…"
 
-#: cook:874
+#: cook:940
 msgid "Unable to install package, build has failed."
 msgstr "Не удалось установить пакет, сборка завершилась неудачей."
 
-#: cook:883
-#, sh-format
-msgid "Updating $ARCH chroot environment..."
-msgstr "Обновление окружения chroot $ARCH…"
+#: cook:949
+msgid "Updating %s chroot environment..."
+msgstr "Обновление окружения chroot %s…"
 
-#: cook:884
-#, sh-format
-msgid "Updating chroot: $pkg (${VERSION}${EXTRAVERSION}${arch})"
-msgstr "Обновление пакета $pkg (${VERSION}${EXTRAVERSION}${arch}) в chroot"
+#: cook:950
+msgid "Updating chroot: %s"
+msgstr "Обновление пакета %s в chroot"
 
-#: cook:905
+#: cook:982
 msgid "Setup aufs chroot..."
-msgstr "Настройка chroot AUFS…"
+msgstr "Настройка chroot aufs…"
 
-#: cook:917
-msgid "Aufs mountage failure"
-msgstr "Не удалось смонтировать AUFS"
+#: cook:994
+msgid "Aufs mount failure"
+msgstr "Не удалось смонтировать aufs"
 
-#: cook:928
+#: cook:1006
 msgid "Leaving aufs chroot..."
-msgstr "Выход из chroot AUFS…"
+msgstr "Выход из chroot aufs…"
 
-#: cook:1030
-#, sh-format
-msgid "List of $ARCH packages in: $WOK"
-msgstr "Список пакетов архитектуры $ARCH в репозитории $WOK"
+#: cook:1075
+msgid "Multiple choice:"
+msgstr "Множественный выбор:"
 
-#: cook:1046
-msgid "Packages:"
-msgstr "Количество пакетов:"
+#: cook:1076
+msgid "Select one [%s]: "
+msgstr "Выберите один [%s]: "
 
-#: cook:1053
-#, sh-format
-msgid "Search results for: $query"
-msgstr "Результаты поиска «$query»"
+#: cook:1117
+msgid "Getting standard devel files..."
+msgstr "Получение стандартных файлов разработчика…"
 
-#: cook:1059
+#: cook:1134
+msgid "List of %s packages in \"%s\""
+msgstr "Список пакетов архитектуры %s в репозитории «%s»"
+
+#: cook:1150
+msgid "%s package"
+msgid_plural "%s packages"
+msgstr[0] "%s пакет"
+msgstr[1] "%s пакета"
+msgstr[2] "%s пакетов"
+
+#: cook:1159
+msgid "Search results for \"%s\""
+msgstr "Результаты поиска «%s»"
+
+#: cook:1166
 msgid "Cook: setup environment"
 msgstr "Cook: настройка окружения"
 
-#: cook:1060
+#: cook:1167
 msgid "Setting up your environment"
 msgstr "Настройка окружения"
 
-#: cook:1063
+#: cook:1170
 msgid "Checking for packages to install..."
 msgstr "Подготовка к установке пакетов…"
 
-#: cook:1069
-msgid "ERROR: cross is not installed"
-msgstr "ОШИБКА: cross не установлен"
+#: cook:1176
+msgid "ERROR: %s is not installed"
+msgstr "ОШИБКА: %s не установлен"
 
-#: cook:1072
-msgid "Using config file: /etc/slitaz/cross.conf"
-msgstr "Использование файла параметров: /etc/slitaz/cross.conf"
+#: cook:1179
+msgid "Using config file: %s"
+msgstr "Использование файла параметров: %s"
 
-#: cook:1097
-msgid "Adding group: slitaz"
-msgstr "Добавление группы «slitaz»"
+#: cook:1200
+msgid "Adding group \"%s\""
+msgstr "Добавление группы «%s»"
 
-#: cook:1100
-msgid "Setting permissions for slitaz group..."
-msgstr "Установка прав доступа для группы «slitaz»…"
+#: cook:1203
+msgid "Setting permissions for group \"%s\"..."
+msgstr "Установка прав доступа для группы «%s»…"
 
-#: cook:1103
+#: cook:1206
 msgid "All done, ready to cook packages :-)"
 msgstr "Хорошо, теперь можно собирать пакеты :-)"
 
-#: cook:1116
-#, sh-format
-msgid "Cook: setup $arch cross environment"
-msgstr "Cook: настройка кросс-окружения $arch"
+#: cook:1221
+msgid "Cook: setup %s cross environment"
+msgstr "Cook: настройка кросс-окружения %s"
 
-#: cook:1117
-#, sh-format
-msgid "Setting up your $arch cross environment"
-msgstr "Настройка кросс-окружения $arch"
+#: cook:1222
+msgid "Setting up your %s cross environment"
+msgstr "Настройка кросс-окружения %s"
 
 #. L10n: keep the same width of translations to get a consistent view
-#: cook:1148
-#, sh-format
-msgid "Target arch     : $ARCH"
-msgstr "Целевая архитектура   : $ARCH"
+#: cook:1251
+msgid "Target arch     : %s"
+msgstr "Целевая архитектура   : %s"
 
-#: cook:1149
-#, sh-format
-msgid "Configure args  : $CONFIGURE_ARGS"
-msgstr "Параметры конфигурации: $CONFIGURE_ARGS"
+#: cook:1252
+msgid "Configure args  : %s"
+msgstr "Параметры конфигурации: %s"
 
-#: cook:1150
-#, sh-format
-msgid "Build flags     : $flags"
-msgstr "Флаги сборки          : $flags"
+#: cook:1253
+msgid "Build flags     : %s"
+msgstr "Флаги сборки          : %s"
 
-#: cook:1151
-#, sh-format
-msgid "Arch sysroot    : $sysroot"
-msgstr "Sysroot архитектуры   : $sysroot"
+#: cook:1254
+msgid "Arch sysroot    : %s"
+msgstr "Sysroot архитектуры   : %s"
 
-#: cook:1152
-#, sh-format
-msgid "Tools prefix    : $tools/bin"
-msgstr "Префикс инструментов  : $tools/bin"
+#: cook:1255
+msgid "Tools prefix    : %s"
+msgstr "Префикс инструментов  : %s"
 
-#: cook:1154
-#, sh-format
-msgid "Packages DB     : ${root}$DB"
-msgstr "База данных пакетов   : ${root}$DB"
+#: cook:1257
+msgid "Packages DB     : %s"
+msgstr "База данных пакетов   : %s"
 
-#: cook:1165
-msgid "WARNING: (e)glibc-base is not installed in sysroot"
-msgstr "ПРЕДУПРЕЖДЕНИЕ: пакет (e)glibc-base не установлен в sysroot"
+#: cook:1268
+msgid "WARNING: %s is not installed in sysroot"
+msgstr "ПРЕДУПРЕЖДЕНИЕ: пакет %s не установлен в sysroot"
 
-#: cook:1169
-#, sh-format
-msgid "Cross compiler  : ${HOST_SYSTEM}-gcc"
-msgstr "Кросс-компилятор      : ${HOST_SYSTEM}-gcc"
+#: cook:1272
+msgid "Cross compiler  : %s"
+msgstr "Кросс-компилятор      : %s"
 
-#: cook:1171
-#, sh-format
-msgid "C compiler is missing: ${HOST_SYSTEM}-gcc"
-msgstr "Отсутствует компилятор Си «${HOST_SYSTEM}-gcc»"
+#: cook:1274
+msgid "C compiler \"%s\" is missing"
+msgstr "Отсутствует компилятор Си «%s»"
 
-#: cook:1172
-msgid "Run 'cross compile' to cook a toolchain"
-msgstr "Запустите «cross compile» для приготовления тулчейна"
+#: cook:1275
+msgid "Run \"%s\" to cook a toolchain"
+msgstr "Запустите «%s» для приготовления тулчейна"
 
-#: cook:1177
+#: cook:1281
 msgid "Cook test: testing the cook environment"
 msgstr "Тест cook: проверка окружения cook"
 
-#: cook:1187
-#, sh-format
-msgid "$pkg package already exists."
-msgstr "Пакет $pkg уже существует."
+#: cook:1292
+msgid "Package \"%s\" already exists."
+msgstr "Пакет «%s» уже существует."
 
-#: cook:1190
-#, sh-format
-msgid "Creating $WOK/$pkg"
-msgstr "Создание папки $WOK/$pkg"
+#: cook:1296
+msgid "Creating folder \"%s\""
+msgstr "Создание папки «%s»"
 
-#: cook:1192
+#: cook:1299
 msgid "Preparing the package receipt..."
 msgstr "Подготовка рецепта пакета…"
 
-#: cook:1200
+#: cook:1307
 msgid "Entering interactive mode..."
 msgstr "Интерактивный режим создания рецепта"
 
-#: cook:1202
-#, sh-format
-msgid "Package       : $pkg"
-msgstr "Пакет         : $pkg"
+#: cook:1309
+msgid "Package       : %s"
+msgstr "Пакет         : %s"
 
-#: cook:1203
+#: cook:1311
 msgid "Version       : "
 msgstr "Версия        : "
 
-#: cook:1205
+#: cook:1314
 msgid "Category      : "
 msgstr "Категория     : "
 
 #. L10n: Short description
-#: cook:1208
+#: cook:1318
 msgid "Short desc    : "
 msgstr "Кратк.описание: "
 
-#: cook:1210
+#: cook:1321
 msgid "Maintainer    : "
 msgstr "Сопровождающий: "
 
-#: cook:1212
+#: cook:1324
 msgid "License       : "
 msgstr "Лицензия      : "
 
-#: cook:1214
+#: cook:1327
 msgid "Web site      : "
 msgstr "Сайт          : "
 
-#: cook:1218
+#: cook:1332
 msgid "Wget URL to download source tarball."
 msgstr "Адрес загрузки архива с исходниками."
 
-#: cook:1219
+#: cook:1333
 msgid "Example  : "
 msgstr "Пример        : "
 
-#: cook:1220
+#: cook:1334
 msgid "Wget url : "
 msgstr "Исходники     : "
 
-#: cook:1223
-msgid "Do you need a stuff directory? (y/N) : "
-msgstr "Нужна ли папка stuff? (y/N) : "
+#: cook:1338
+msgid "Do you need a stuff directory? (y/N)"
+msgstr "Нужна ли папка stuff? (y/N)"
 
-#: cook:1225
+#: cook:1340
 msgid "Creating the stuff directory..."
 msgstr "Создание папки stuff…"
 
-#: cook:1229
-msgid "Are you going to write a description? (y/N) : "
-msgstr "Хотите ли написать расширенное описание? (y/N) : "
+#: cook:1345
+msgid "Are you going to write a description? (y/N)"
+msgstr "Хотите ли написать расширенное описание? (y/N)"
 
-#: cook:1231
-msgid "Creating the description.txt file..."
-msgstr "Создание файла description.txt…"
+#: cook:1347
+msgid "Creating the \"%s\" file..."
+msgstr "Создание файла «%s»…"
 
-#: cook:1234
+#: cook:1351
 msgid "Receipt is ready to use."
 msgstr "Рецепт готов к использованию."
 
-#: cook:1240
+#: cook:1359
 msgid "No list in argument."
 msgstr "Не указан файл списка."
 
-#: cook:1242
-#, sh-format
-msgid "No list found: $list2"
-msgstr "Список «$list2» не обнаружен."
+#: cook:1363
+msgid "List \"%s\" not found."
+msgstr "Список «%s» не обнаружен."
 
-#: cook:1243
-#, sh-format
-msgid "Cook list starting: $list2"
-msgstr "Приготовление пакетов из списка «$list2»"
+#: cook:1367
+msgid "Starting cooking the list \"%s\""
+msgstr "Приготовление пакетов из списка «%s»"
 
-#: cook:1250
+#: cook:1375
 msgid "Cleaning all packages files..."
 msgstr "Очистка файлов всех пакетов…"
 
-#: cook:1255
+#: cook:1381
 msgid "Cleaning all packages sources..."
 msgstr "Очистка распакованных исходников всех пакетов…"
 
-#: cook:1268
-msgid "Packages directory doesn't exist"
-msgstr "Папка пакета не существует"
+#: cook:1388
+msgid "Checking for uncooked packages"
+msgstr "Проверка несобранных пакетов"
 
-#: cook:1275
+#: cook:1401
+msgid "Package \"%s\""
+msgstr "Пакет «%s»"
+
+#: cook:1420
+msgid "%s uncooked package"
+msgid_plural "%s uncooked packages"
+msgstr[0] "%s несобранный пакет"
+msgstr[1] "%s несобранных пакета"
+msgstr[2] "%s несобранных пакетов"
+
+#: cook:1422
+msgid "All packages are cooked :-)"
+msgstr "Все пакеты собраны :-)"
+
+#: cook:1435
+msgid "Packages directory \"%s\" doesn't exist"
+msgstr "Папка пакетов «%s» отсутствует"
+
+#: cook:1445
 msgid "Cook pkgdb: Creating all packages lists"
 msgstr "Cook pkgdb: создание списков всех пакетов"
 
-#: cook:1276
-#, sh-format
-msgid "Creating lists for: $PKGS"
-msgstr "Создание списков для «$PKGS»"
+#: cook:1446
+msgid "Creating lists for \"%s\""
+msgstr "Создание списков для «%s»"
 
-#: cook:1278
-#, sh-format
-msgid "Cook pkgdb started: $datenow"
-msgstr "Начало создания базы данных пакетов: $datenow"
+#: cook:1448
+msgid "Cook pkgdb started: %s"
+msgstr "Начало создания базы данных пакетов: %s"
 
-#: cook:1281
-msgid "Creating: packages.list"
-msgstr "Создание «packages.list»"
+#: cook:1454 cook:1457 cook:1523 cook:1535 cook:1540
+msgid "Creating file \"%s\""
+msgstr "Создание файла «%s»"
 
-#: cook:1283
-msgid "Creating: packages.md5"
-msgstr "Создание «packages.md5»"
+#: cook:1463
+msgid "Creating lists from \"%s\""
+msgstr "Создание списков пакетов из «%s»"
 
-#: cook:1286
-#, sh-format
-msgid "Creating lists from: $WOK"
-msgstr "Создание списков пакетов из $WOK"
-
-#: cook:1328
-msgid "Done: packages.desc"
-msgstr "Файл «packages.desc» готов."
-
-#: cook:1329
-msgid "Done: packages.txt"
-msgstr "Файл «packages.txt» готов."
-
-#: cook:1330
-msgid "Done: packages.equiv"
-msgstr "Файл «packages.equiv» готов."
-
-#: cook:1333
-msgid "Creating: files.list.lzma"
-msgstr "Создание файла «files.list.lzma»"
+#: cook:1516 cook:1517 cook:1518 cook:1529 cook:1547
+msgid "Done: %s (%s)"
+msgstr "Файл «%s» готов (%s)."
 
 #. L10n: 's' is for seconds (cooking time)
-#: cook:1342
-#, sh-format
-msgid "Packages: $nb - Time: ${time}s"
-msgstr "Пакетов: $nb - время: $time с"
+#: cook:1554
+msgid "Packages: %s - Time: %ss"
+msgstr "Пакетов: %s - время: %s с"
 
-#: cook:1348
-#, sh-format
-msgid "Missing flavors: $flavors"
-msgstr "Отсутствуют редакции $flavors"
+#: cook:1563
+msgid "Missing flavors folder \"%s\""
+msgstr "Отсутствует папка редакций «%s»"
 
-#: cook:1350
-#, sh-format
-msgid "Creating flavors files in: $live"
-msgstr "Создание редакций в $live"
+#: cook:1568
+msgid "Creating flavors files in \"%s\""
+msgstr "Создание редакций в «%s»"
 
-#: cook:1351
+#: cook:1569
 msgid "Cook pkgdb: Creating all flavors"
 msgstr "Cook pkgdb: создание всех редакций"
 
-#: cook:1353
+#: cook:1572
 msgid "Recharging lists to use latest packages..."
 msgstr "Обновление списков для использования свежих пакетов…"
 
-#: cook:1358
-msgid "Creating configuration file: tazlito.conf"
-msgstr "Создание файла концигурации «tazlito.conf»"
+#: cook:1577
+msgid "Creating configuration file \"%s\""
+msgstr "Создание файла конфигурации «%s»"
 
-#: cook:1368
+#: cook:1589
 msgid "Starting to generate flavors..."
 msgstr "Начало создания редакций…"
 
-#: cook:1373
-#, sh-format
-msgid "Packing flavor: $fl"
-msgstr "Упаковка редакции «$fl»"
+#: cook:1593
+msgid "Packing flavor \"%s\""
+msgstr "Упаковка редакции «%s»"
 
-#: cook:1381
-#, sh-format
-msgid "Flavors size: $fl_size"
-msgstr "Размер редакции: $fl_size"
+#: cook:1599
+msgid "Total flavors size: %s"
+msgstr "Суммарный размер редакций: %s"
 
-#: cook:1385
-#, sh-format
-msgid "Cook pkgdb end: $datenow"
-msgstr "База данных пакетов создана: $datenow"
+#: cook:1602
+msgid "Cook pkgdb end: %s"
+msgstr "База данных пакетов создана: %s"
 
-#: cook:1412
-#, sh-format
-msgid "cook: HOST_ARCH is not set in $pkg receipt"
-msgstr "cook: переменная HOST_ARCH не указана в рецепте пакета «$pkg»"
+#: cook:1622
+msgid "cook: HOST_ARCH is not set in \"%s\" receipt"
+msgstr "cook: переменная HOST_ARCH не указана в рецепте пакета «%s»"
 
-#: cook:1413
-#, sh-format
-msgid "cook: This package is not included in: $ARCH"
-msgstr "cook: этот пакет не включен в $ARCH"
+#: cook:1623
+msgid "package \"%s\" is not included in %s"
+msgstr "пакет %s не включен в %s"
 
-#: cook:1414
-#: cook:1425
-#, sh-format
-msgid "bugs: $CROSS_BUGS"
-msgstr "bugs: $CROSS_BUGS"
+#: cook:1624 cook:1637 cook:1639
+msgid "cook: %s"
+msgstr "cook: %s"
 
-#: cook:1415
-#, sh-format
-msgid "Cook skip: $pkg is not included in: $ARCH"
-msgstr "Пропуск: пакет $pkg не включен в $ARCH"
+#: cook:1625 cook:1640
+msgid "bugs: %s"
+msgstr "bugs: %s"
 
-#: cook:1423
-#, sh-format
-msgid "cook: HOST_ARCH=$HOST_ARCH"
-msgstr "cook: HOST_ARCH=$HOST_ARCH"
+#: cook:1626 cook:1641
+msgid "Cook skip: %s"
+msgstr "Пропуск: %s"
 
-#: cook:1424
-#, sh-format
-msgid "cook: $pkg doesn't cook or is not included in: $ARCH"
-msgstr "cook: пакет $pkg не приготовлен либо не включен в $ARCH"
+#: cook:1634
+msgid "Host arch %s"
+msgstr "Архитектура хоста %s"
 
-#: cook:1426
-#, sh-format
-msgid "Cook skip: $pkg doesn't cook or is not included in: $ARCH"
-msgstr "Пропуск: пакет $pkg не приготовлен либо не включен в $ARCH"
+#: cook:1638
+msgid "package \"%s\" doesn't cook or is not included in %s"
+msgstr "пакет «%s» не удается приготовить либо он не включен в %s"
 
-#: cook:1432
-#, sh-format
-msgid "Blocked package: $pkg"
-msgstr "Пакет $pkg заблокирован"
+#: cook:1649
+msgid "Package \"%s\" is blocked"
+msgstr "Пакет «%s» заблокирован"
 
-#: cook:1439
-#, sh-format
-msgid "Cook started for: <a href='cooker.cgi?pkg=$pkg'>$pkg</a>"
-msgstr "Начато приготовление <a href='cooker.cgi?pkg=$pkg'>$pkg</a>"
+#: cook:1656
+msgid "Cook started for: %s"
+msgstr "Начато приготовление %s"
 
-#: cook:1450
-#, sh-format
-msgid "Cleaning: $pkg"
-msgstr "Очистка пакета «$pkg»"
+#: cook:1667
+msgid "Cleaning \"%s\""
+msgstr "Очистка «%s»"
 
-#: cook:1456
-#, sh-format
-msgid "Getting source for: $pkg"
-msgstr "Загрузка исходников для «$pkg»"
+#: cook:1676
+msgid "Getting source for \"%s\""
+msgstr "Загрузка исходников для «%s»"
 
-#: cook:1458
-#, sh-format
-msgid "Tarball: $SRC/$TARBALL"
-msgstr "Архив исходников: $SRC/$TARBALL"
+#: cook:1678
+msgid "Tarball: %s"
+msgstr "Архив исходников: %s"
 
-#: cook:1461
-#, sh-format
-msgid "Blocking: $pkg"
-msgstr "Блокировка пакета «$pkg»"
+#: cook:1682
+msgid "Blocking package \"%s\""
+msgstr "Блокировка пакета «%s»"
 
-#: cook:1465
-#, sh-format
-msgid "Unblocking: $pkg"
-msgstr "Снятие блокировки пакета «$pkg»"
+#: cook:1688
+msgid "Unblocking package \"%s\""
+msgstr "Снятие блокировки пакета «%s»"
 
-#: cook:1475
-#: cook:1479
-#, sh-format
-msgid "Need to build $pkg."
-msgstr "Пакет $pkg сначала нужно собрать."
+#: cook:1700 cook:1707
+msgid "Need to build \"%s\""
+msgstr "Пакет «%s» сначала нужно собрать"
 
-#: cook:1480
+#: cook:1711
 msgid "Checking depends"
 msgstr "Проверка зависимостей"
 
-#: cook:1507
-#, sh-format
-msgid "WANTED package is blocked: $wanted"
-msgstr "Требуемый пакет «$wanted» заблокирован"
+#: cook:1742
+msgid "WANTED package \"%s\" is blocked"
+msgstr "Требуемый пакет «%s» заблокирован"
 
-#: cook:1511
-#, sh-format
-msgid "WANTED package is broken: $wanted"
-msgstr "Требуемый пакет «$wanted» сломан"
-
-#~ msgid "Packages: $pkg_total"
-#~ msgstr "Пакетов: $pkg_total"
+#: cook:1748
+msgid "WANTED package \"%s\" is broken"
+msgstr "Требуемый пакет «%s» сломан"
