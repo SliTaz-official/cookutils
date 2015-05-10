@@ -1456,7 +1456,6 @@ case "$1" in
 
 		cd $PKGS
 		rm -f packages.* extra.list
-		ln -s ../get.list extra.list
 		touch packages.equiv
 
 		_n 'Creating file "%s"' 'packages.list'
@@ -1558,8 +1557,9 @@ EOT
 		_n 'Creating file "%s"' 'bundle.tar.lzma'
 		[ -f bundle.tar.lzma ] && rm bundle.tar.lzma
 		wget -q http://mirror1.slitaz.org/mirrors
+		wget -q -O extra.list http://mirror1.slitaz.org/packages/get.list
 		busybox tar -chaf bundle.tar.lzma \
-			mirrors files-list.md5 packages.info \
+			mirrors extra.list files-list.md5 packages.info \
 			packages.desc packages.md5 packages.txt packages.list packages.equiv
 		rm ./mirrors
 		echo " ($(filesize $PKGS/bundle.tar.lzma))"
