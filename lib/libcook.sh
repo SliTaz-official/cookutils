@@ -56,7 +56,7 @@ crontabs="/var/spool/cron/crontabs/root"
 
 log() {
 	grep ^[A-Z] | \
-		sed s"#^[A-Z]\([^']*\)#$(date '+%F %R') : \0#" >> $activity
+		sed s"#^[A-Z]\([^']*\)#$(date -u '+%F %R') : \0#" >> $activity
 }
 
 
