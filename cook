@@ -1559,7 +1559,7 @@ EOT
 		[ -f bundle.tar.lzma ] && rm bundle.tar.lzma
 		wget -q http://mirror1.slitaz.org/mirrors
 		busybox tar -chaf bundle.tar.lzma \
-			extra.list mirrors files-list.md5 packages.info \
+			mirrors files-list.md5 packages.info \
 			packages.desc packages.md5 packages.txt packages.list packages.equiv
 		rm ./mirrors
 		echo " ($(filesize $PKGS/bundle.tar.lzma))"
