@@ -185,13 +185,13 @@ case "$1" in
 		echo 'Creating directories and files...'
 		mkdir -p $cache $iso
 		touch $activity
-		sed -i s'/^WORK_DIR=.*/WORK_DIR="\/home\/slitaz"/' 
+		sed -i s'/^WORK_DIR=.*/WORK_DIR="\/home\/slitaz"/' \
 			/etc/tazlito/tazlito.conf
 		newline
 		echo "Flavors files : $SLITAZ/flavors"
 		echo "Cache files   : $cache"
 		echo "ISO images    : $iso"
-		mewline ;;
+		newline ;;
 
 	push)
 		# Manually upload an ISO to a server.
