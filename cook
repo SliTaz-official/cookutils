@@ -1495,12 +1495,13 @@ $PACKED_SIZE ($UNPACKED_SIZE installed)
 
 EOT
 
-				# packages.info combines two previous files
-				# and will substitute them both
+				# packages.info combines TazPkg separate files
+				# and will substitute them all
 				SIZES=$(echo $PACKED_SIZE $UNPACKED_SIZE | sed 's|\.0||g')
 				DEPENDS=$(echo $DEPENDS) # remove newlines from some receipts
+				MD5="$(fgrep " $PACKAGE-$VERSION$EXTRAVERSION.tazpkg" $PKGS/packages.md5 | awk '{print $1}')"
 				cat >> $PKGS/packages.info <<EOT
-$PACKAGE	$VERSION$EXTRAVERSION	$CATEGORY	$SHORT_DESC	$WEB_SITE	$TAGS	$SIZES	$DEPENDS
+$PACKAGE	$VERSION$EXTRAVERSION	$CATEGORY	$SHORT_DESC	$WEB_SITE	$TAGS	$SIZES	$DEPENDS	$MD5
 EOT
 
 				# packages.equiv is used by tazpkg install to check depends.
