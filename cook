@@ -478,7 +478,7 @@ copy_generic_files() {
 
 strip_package() {
 	case "$ARCH" in
-		arm*|x86_64) export STRIP="${HOST_SYSTEM}-strip" ;;
+		arm*|x86_64) export STRIP="$HOST_SYSTEM-strip" ;;
 		*)           export STRIP='strip' ;;
 	esac
 	_n 'Executing strip on all files...'
@@ -544,27 +544,27 @@ cookit() {
 			tools="$CROSS_TREE/tools"
 			# Set root path when cross compiling. ARM tested but not x86_64
 			# When cross compiling we must install build deps in $sysroot.
-			arch="-${ARCH}"
+			arch="-$ARCH"
 			root="$sysroot"
 			_ '%s sysroot: %s' "$ARCH" "$sysroot"
 			_ 'Adding "%s" to PATH' "$tools/bin"
 			export PATH="$PATH:$tools/bin"
 			export PKG_CONFIG_PATH="$sysroot/usr/lib/pkgconfig"
-			export CROSS_COMPILE="${HOST_SYSTEM}-"
+			export CROSS_COMPILE="$HOST_SYSTEM-"
 			_ 'Using cross-tools: %s' "$CROSS_COMPILE"
 			if [ "$ARCH" == 'x86_64' ]; then
-				export CC="${HOST_SYSTEM}-gcc -m64"
-				export CXX="${HOST_SYSTEM}-g++ -m64"
+				export CC="$HOST_SYSTEM-gcc -m64"
+				export CXX="$HOST_SYSTEM-g++ -m64"
 			else
-				export CC="${HOST_SYSTEM}-gcc"
-				export CXX="${HOST_SYSTEM}-g++"
+				export CC="$HOST_SYSTEM-gcc"
+				export CXX="$HOST_SYSTEM-g++"
 			fi
-			export AR="${HOST_SYSTEM}-ar"
-			export AS="${HOST_SYSTEM}-as"
-			export RANLIB="${HOST_SYSTEM}-ranlib"
-			export LD="${HOST_SYSTEM}-ld"
-			export STRIP="${HOST_SYSTEM}-strip"
-			export LIBTOOL="${HOST_SYSTEM}-libtool" ;;
+			export AR="$HOST_SYSTEM-ar"
+			export AS="$HOST_SYSTEM-as"
+			export RANLIB="$HOST_SYSTEM-ranlib"
+			export LD="$HOST_SYSTEM-ld"
+			export STRIP="$HOST_SYSTEM-strip"
+			export LIBTOOL="$HOST_SYSTEM-libtool" ;;
 	esac
 
 	[ -n "$QA" ] && receipt_quality
@@ -596,7 +596,7 @@ cookit() {
 	for dep in $BUILD_DEPENDS; do
 		implicit="${dep%-dev}"
 		for i in $dep $implicit; do
-			if [ ! -f "${root}$INSTALLED/$i/receipt" ]; then
+			if [ ! -f "$root$INSTALLED/$i/receipt" ]; then
 				# Try local package first. In some cases implicit doesn't exist, ex:
 				# libboost-dev exists but not libboost, so check if we got vers.
 				unset vers
@@ -621,7 +621,7 @@ cookit() {
 						fi
 					else
 						# Package is not in wok but may be in online repo.
-						if fgrep -q $i-${vers}${arch} ${root}$DB/packages.list; then
+						if fgrep -q $i-$vers$arch $root$DB/packages.list; then
 							echo $i >> $CACHE/installed.web
 						else
 							_ 'ERROR: unknown dep "%s"' "$i"
@@ -665,7 +665,7 @@ cookit() {
 		exit 1
 	fi
 
-	# Install local packages: package-version${arch}
+	# Install local packages: package-version$arch
 	cd $PKGS
 	for i in $(uniq $CACHE/installed.local); do
 		_ 'Installing dep (pkg/local): %s' "$i"
@@ -861,7 +861,7 @@ packit() {
 	# Compress.
 	_n 'Creating full cpio archive...'
 	find . -print | cpio -o -H newc --quiet > \
-		../$PACKAGE-${VERSION}${EXTRAVERSION}${arch}.tazpkg
+		../$PACKAGE-$VERSION$EXTRAVERSION$arch.tazpkg
 	status
 
 	_n 'Restoring original package tree...'
@@ -926,14 +926,14 @@ tac() {
 install_package() {
 	case "$ARCH" in
 		arm*|x86_64)
-			arch="-${ARCH}"
+			arch="-$ARCH"
 			root="$CROSS_TREE/sysroot" ;;
 	esac
 	# Install package if requested but skip install if target host doesn't
 	# match build system or it will break the build chroot.
 	build=$(echo $BUILD_SYSTEM | cut -d- -f1)
 	if [ -n "$inst" ] && [ "$build" == "$ARCH" ]; then
-		if [ -f "$PKGS/$PACKAGE-${VERSION}${EXTRAVERSION}.tazpkg" ]; then
+		if [ -f "$PKGS/$PACKAGE-$VERSION$EXTRAVERSION.tazpkg" ]; then
 			cd $PKGS
 			tazpkg install $PACKAGE-$VERSION$EXTRAVERSION.tazpkg --forced
 		else
@@ -1004,7 +1004,7 @@ try_aufs_chroot() {
 	status=$?
 
 	_ 'Leaving aufs chroot...'
-	umount_aufs ${base}
+	umount_aufs $base
 	# Install package outside the aufs jail
 	install_package
 	exit $status
@@ -1024,9 +1024,9 @@ gen_rss() {
 	pubdate=$(date '+%a, %d %b %Y %X')
 	cat > $FEEDS/$pkg.xml <<EOT
 	<item>
-		<title>$PACKAGE $VERSION${EXTRAVERSION}</title>
+		<title>$PACKAGE $VERSION$EXTRAVERSION</title>
 		<link>${COOKER_URL}?pkg=$PACKAGE</link>
-		<guid>$PACKAGE-$VERSION${EXTRAVERSION}</guid>
+		<guid>$PACKAGE-$VERSION$EXTRAVERSION</guid>
 		<pubDate>$pubdate</pubDate>
 		<description>$(echo -n "$SHORT_DESC" | xml_ent)</description>
 	</item>
@@ -1275,7 +1275,7 @@ case "$1" in
 			colorize 36 $(_ 'WARNING: %s is not installed in sysroot' '(e)glibc-base')
 		fi
 		# Show GCC version or warn if not yet compiled.
-		if [ -x "$tools/bin/${HOST_SYSTEM}-gcc" ]; then
+		if [ -x "$tools/bin/$HOST_SYSTEM-gcc" ]; then
 			_ 'Cross compiler  : %s' "$HOST_SYSTEM-gcc"
 		else
 			colorize 36 $(_ 'C compiler "%s" is missing' "$HOST_SYSTEM-gcc")
