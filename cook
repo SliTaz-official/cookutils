@@ -492,18 +492,14 @@ strip_package() {
 	status
 
 	# Remove Python .pyc and .pyo from packages.
-	if echo "$PACKAGE $DEPENDS" | fgrep -q 'python'; then
-		_n 'Removing Python compiled files...'
-		find $fs -type f \( -name '*.pyc' -o -name '*.pyo' \) -delete 2>/dev/null
-		status
-	fi
+	#_n 'Removing Python compiled files...'
+	find $fs -type f \( -name '*.pyc' -o -name '*.pyo' \) -delete 2>/dev/null
+	#status
 
 	# Remove Perl perllocal.pod and .packlist from packages.
-	if echo "$DEPENDS" | fgrep -q 'perl'; then
-		_n 'Removing Perl compiled files...'
-		find $fs -type f \( -name 'perllocal.pod' -o -name '.packlist' \) -delete 2>/dev/null
-		status
-	fi
+	#_n 'Removing Perl compiled files...'
+	find $fs -type f \( -name 'perllocal.pod' -o -name '.packlist' \) -delete 2>/dev/null
+	#status
 }
 
 
