@@ -1465,6 +1465,18 @@ case "$1" in
 		md5sum packages.md5 | cut -d' ' -f1 > ID
 		( cat ./ID | tr $'\n' ' '; date -ur ./ID +%s ) > IDs	# md5 and timestamp
 
+		_n 'Creating file "%s"' 'descriptions.txt'
+		rm $PKGS/descriptions.txt
+		for i in $(ls $WOK | sort); do
+			if [ -e "$WOK/$i/description.txt" ]; then
+				echo "$i" >> descriptions.txt
+				cat "$WOK/$i/description.txt" | sed 's|^$| |' >> descriptions.txt
+				echo >> descriptions.txt
+			fi
+		done
+		echo " ($(filesize $PKGS/descriptions.txt))"
+
+
 		_ 'Creating lists from "%s"' "$WOK"
 		cd $WOK
 		for pkg in *; do
@@ -1556,7 +1568,7 @@ EOT
 		wget -q http://mirror1.slitaz.org/mirrors
 		wget -q -O extra.list http://mirror1.slitaz.org/packages/get.list
 		busybox tar -chaf bundle.tar.lzma \
-			mirrors extra.list files-list.md5 packages.info \
+			mirrors extra.list files-list.md5 packages.info descriptions.txt \
 			packages.desc packages.md5 packages.txt packages.list packages.equiv
 		rm ./mirrors
 		echo " ($(filesize $PKGS/bundle.tar.lzma))"
