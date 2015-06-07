@@ -385,6 +385,7 @@ Blocked packages : $(cat $blocked | wc -l)
 	Latest:
 	<a href="cooker.cgi?file=cookorder.log">cookorder.log</a>
 	<a href="cooker.cgi?file=commits.log">commits.log</a>
+	<a href="cooker.cgi?file=pkgdb.log">pkgdb.log</a>
 	<a href="cooker.cgi?file=installed.diff">installed.diff</a>
 	- Architecture $ARCH:
 	<a href="$toolchain">toolchain</a>
