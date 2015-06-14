@@ -201,7 +201,7 @@ create_tarball() {
 get_source() {
 	pwd=$(pwd)
 	for file in $@; do
-		_ "Getting source from url: \${file#*|}"
+		_ "Getting source from url:"; echo " ${file#*|}"
 		if [ "$file" = "$PATCH" -o "$file" = "$orig_url_patch" ]; then
 			SAVE_FILE="$SRC/$PTARBALL"
 		else
