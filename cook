@@ -1562,9 +1562,9 @@ EOT
 				sed -i "/ $pkgfile/d" $PKGS/packages.md5
 				[ -n "$rmpkg" ] && rm $PKGS/$pkgfile	# remove packages only with --rmpkg
 			done < $PKGS/packages.toremove
-			[ -n "$rmpkg" ] && rm $PKGS/packages.toremove
 			newline | dblog
 		fi
+		rm $PKGS/packages.toremove
 
 
 		# files.list.lzma
