@@ -1438,7 +1438,7 @@ case "$1" in
 		rm $LOGS/pkgdb.log 2>/dev/null
 
 		case "$2" in
-			--flavors) ;;
+			--flavors|--rmpkg) ;;
 			*)
 				[ -n "$2" ] && PKGS="$2"
 				if [ ! -d "$PKGS" ]; then
@@ -1468,6 +1468,7 @@ case "$1" in
 		_n 'Creating file "%s"' 'packages.md5' | dblog
 		md5sum *.tazpkg > $PKGS/packages.md5
 		echo " ($(filesize $PKGS/packages.md5))" | dblog
+		cp $PKGS/packages.md5 $PKGS/packages.toremove			# list of duplicates
 
 		md5sum packages.md5 | cut -d' ' -f1 > ID
 		( cat ./ID | tr $'\n' ' '; date -ur ./ID +%s ) > IDs	# md5 and timestamp
@@ -1534,6 +1535,11 @@ EOT
 				# files.list provides a list of all packages files.
 				cat $pkg/taz/*/files.list | sed s/^/"$pkg: \0"/ >> \
 					$PKGS/files.list
+
+				# list of duplicates
+				sed -i "/ $PACKAGE-$VERSION$EXTRAVERSION.tazpkg/d" $PKGS/packages.toremove
+			else
+				_ '  - absent: %s (%s)' "$PACKAGE-$VERSION$EXTRAVERSION.tazpkg" "$ARCH" | dblog
 			fi
 		done
 
@@ -1544,6 +1550,22 @@ EOT
 		_ 'Done: %s (%s)' 'packages.equiv' "$(filesize $PKGS/packages.equiv)" | dblog
 
 		cd $PKGS
+
+
+		# Check package duplicates
+		if [ -s "$PKGS/packages.toremove" ]; then
+			newline | dblog
+			_ 'Removing duplicates:' | dblog
+			while read pkgsum pkgfile; do
+				echo "  - $pkgfile" | dblog
+				sed -i "/${pkgfile%.tazpkg}/d" $PKGS/packages.list
+				sed -i "/ $pkgfile/d" $PKGS/packages.md5
+				[ -n "$rmpkg" ] && rm $PKGS/$pkgfile	# remove packages only with --rmpkg
+			done < $PKGS/packages.toremove
+			[ -n "$rmpkg" ] && rm $PKGS/packages.toremove
+			newline | dblog
+		fi
+
 
 		# files.list.lzma
 		_n 'Creating file "%s"' 'files.list.lzma' | dblog
