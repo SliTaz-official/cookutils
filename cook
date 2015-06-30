@@ -1539,7 +1539,10 @@ EOT
 				# list of duplicates
 				sed -i "/ $PACKAGE-$VERSION$EXTRAVERSION.tazpkg/d" $PKGS/packages.toremove
 			else
-				_ '  - absent: %s (%s)' "$PACKAGE-$VERSION$EXTRAVERSION.tazpkg" "$ARCH" | dblog
+				# if receipt variable HOST_ARCH absent/empty or contains ARCH
+				if [ -z "$HOST_ARCH" -o "${HOST_ARCH/$ARCH/}" != "$HOST_ARCH" ]; then
+					_ '  - absent: %s (%s)' "$PACKAGE-$VERSION$EXTRAVERSION.tazpkg" "$ARCH" | dblog
+				fi
 			fi
 		done
 
@@ -1594,8 +1597,16 @@ EOT
 		# Make bundle to fast recharge
 		_n 'Creating file "%s"' 'bundle.tar.lzma' | dblog
 		[ -f bundle.tar.lzma ] && rm bundle.tar.lzma
-		wget -q http://mirror1.slitaz.org/mirrors
-		wget -q -O extra.list http://mirror1.slitaz.org/packages/get.list
+		# Make sure to get "mirrors" file
+		until [ -e 'mirrors' ]; do
+			wget -q http://mirror1.slitaz.org/mirrors
+			echo -n '.' | dblog; sleep 5
+		done
+		# Make sure to get "extra.list" file
+		until [ -e 'extra.list' ]; do
+			wget -q -O extra.list http://mirror1.slitaz.org/packages/get.list
+			echo -n '.' | dblog; sleep 5
+		done
 		busybox tar -chaf bundle.tar.lzma \
 			mirrors extra.list files-list.md5 packages.info descriptions.txt \
 			packages.desc packages.md5 packages.txt packages.list packages.equiv
