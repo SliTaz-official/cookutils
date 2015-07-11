@@ -8,15 +8,15 @@ msgstr ""
 "Project-Id-Version: Cook 3.2\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2015-05-07 12:52+0300\n"
-"PO-Revision-Date: 2014-07-20 10:34+0800\n"
-"Last-Translator: rhsky <rhsky@qq.com>\n"
+"PO-Revision-Date: 2015-07-10 16:32+0800\n"
+"Last-Translator: Wenyu Zhang <jame987165702@gmail.com>\n"
 "Language-Team: \n"
 "Language: zh_CN\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Poedit 1.6.5\n"
+"X-Generator: Poedit 1.8.2\n"
 
 #: cook:32
 msgid "Usage:"
@@ -72,7 +72,7 @@ msgstr "清理所有包源文档"
 
 #: cook:46
 msgid "Check for uncooked packages"
-msgstr ""
+msgstr "检查没有配置的包"
 
 #: cook:47
 msgid "Create packages DB lists and flavors."
@@ -112,11 +112,11 @@ msgstr "重新打包"
 
 #: cook:58
 msgid "display debugging messages."
-msgstr ""
+msgstr "显示调试消息。"
 
 #: cook:59
 msgid "continue running compile_rules."
-msgstr ""
+msgstr "继续运行compile_rules。"
 
 #: cook:61
 msgid "create a receipt interactively."
@@ -169,7 +169,7 @@ msgstr "QA：正在检查包清单"
 
 #: cook:133
 msgid "QA: unknown category \"%s\""
-msgstr ""
+msgstr "QA：未知的类别“%s”"
 
 #: cook:134
 msgid "Please, use one of: %s"
@@ -193,7 +193,7 @@ msgstr "正在%s中取得源文件"
 
 #: cook:243 cook:258 cook:273 cook:286 cook:329
 msgid "URL: %s"
-msgstr ""
+msgstr "网址：%s"
 
 #: cook:244 cook:275
 msgid "Cloning to \"%s\""
@@ -201,11 +201,11 @@ msgstr "克隆到：%s"
 
 #: cook:246
 msgid "Hg branch: %s"
-msgstr ""
+msgstr "Hg分支：%s"
 
 #: cook:262
 msgid "Git branch: %s"
-msgstr ""
+msgstr "Git的分支：%s的"
 
 #: cook:274
 msgid "CVS module: %s"
@@ -315,11 +315,11 @@ msgstr "正在删除："
 
 #: cook:535
 msgid "Cook: %s"
-msgstr ""
+msgstr "生成：%s"
 
 #: cook:549
 msgid "%s sysroot: %s"
-msgstr ""
+msgstr "%s SYSROOT：%s"
 
 #: cook:550
 msgid "Adding \"%s\" to PATH"
@@ -388,7 +388,7 @@ msgstr "错误：生成失败"
 
 #: cook:786
 msgid "Pack: %s"
-msgstr ""
+msgstr "包：%s"
 
 #: cook:791
 msgid "ERROR: genpkg_rules failed"
@@ -472,15 +472,15 @@ msgstr "正离开 aufs chroot..."
 
 #: cook:1075
 msgid "Multiple choice:"
-msgstr ""
+msgstr "多项选择："
 
 #: cook:1076
 msgid "Select one [%s]: "
-msgstr ""
+msgstr "选择一个[%​​S]："
 
 #: cook:1117
 msgid "Getting standard devel files..."
-msgstr ""
+msgstr "获取标准devel软件包文件中..."
 
 #: cook:1134
 msgid "List of %s packages in \"%s\""
@@ -550,7 +550,7 @@ msgstr "编译标志：%s"
 
 #: cook:1254
 msgid "Arch sysroot    : %s"
-msgstr ""
+msgstr "Arch sysroot    : %s"
 
 #: cook:1255
 msgid "Tools prefix    : %s"
@@ -635,7 +635,7 @@ msgstr "例子："
 
 #: cook:1334
 msgid "Wget url : "
-msgstr ""
+msgstr "Wget的网址："
 
 #: cook:1338
 msgid "Do you need a stuff directory? (y/N)"
@@ -679,7 +679,7 @@ msgstr "清除所有包源文件"
 
 #: cook:1388
 msgid "Checking for uncooked packages"
-msgstr ""
+msgstr "检查没有配置的包"
 
 #: cook:1401
 msgid "Package \"%s\""
@@ -688,11 +688,11 @@ msgstr "包%s"
 #: cook:1420
 msgid "%s uncooked package"
 msgid_plural "%s uncooked packages"
-msgstr[0] ""
+msgstr[0] "%s个没有配置的包"
 
 #: cook:1422
 msgid "All packages are cooked :-)"
-msgstr ""
+msgstr "所有的包都配置好了:-)"
 
 #: cook:1435
 msgid "Packages directory \"%s\" doesn't exist"
@@ -777,7 +777,7 @@ msgstr "生成：%s"
 
 #: cook:1625 cook:1640
 msgid "bugs: %s"
-msgstr ""
+msgstr "错误：%s"
 
 #: cook:1626 cook:1641
 msgid "Cook skip: %s"
@@ -809,7 +809,7 @@ msgstr "正在取得包源文件：%s"
 
 #: cook:1678
 msgid "Tarball: %s"
-msgstr ""
+msgstr "压缩包：%s"
 
 #: cook:1682
 msgid "Blocking package \"%s\""
