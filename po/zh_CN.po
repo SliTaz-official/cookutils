@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: Cook 3.2\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2015-05-07 12:52+0300\n"
-"PO-Revision-Date: 2015-07-10 16:32+0800\n"
+"PO-Revision-Date: 2015-07-25 13:07+0800\n"
 "Last-Translator: Wenyu Zhang <jame987165702@gmail.com>\n"
 "Language-Team: \n"
 "Language: zh_CN\n"
@@ -44,39 +44,39 @@ msgstr "设置交叉环境"
 
 #: cook:39
 msgid "Test environment and cook a package."
-msgstr "打包测试环境"
+msgstr "打软件包测试环境"
 
 #: cook:40
 msgid "List packages in the wok."
-msgstr "列出wok库内的包"
+msgstr "列出wok库内的软件包"
 
 #: cook:41
 msgid "Simple packages search function."
-msgstr "包搜索"
+msgstr "软件包搜索"
 
 #: cook:42
 msgid "Create a new package with a receipt."
-msgstr "根据清单创建新包"
+msgstr "根据清单创建新软件包"
 
 #: cook:43
 msgid "Cook a list of packages."
-msgstr "打包清单内的包(packages)"
+msgstr "打软件包清单内的软件包(packages)"
 
 #: cook:44
 msgid "Clean-up all packages files."
-msgstr "清理所有包文件"
+msgstr "清理所有软件包文件"
 
 #: cook:45
 msgid "Clean-up all packages sources."
-msgstr "清理所有包源文档"
+msgstr "清理所有软件包源文档"
 
 #: cook:46
 msgid "Check for uncooked packages"
-msgstr "检查没有配置的包"
+msgstr "检查没有制作的软件包"
 
 #: cook:47
 msgid "Create packages DB lists and flavors."
-msgstr "创建包数据库清单及设置"
+msgstr "创建软件包数据库清单及设置"
 
 #: cook:49
 msgid "Options:"
@@ -84,31 +84,31 @@ msgstr "选项："
 
 #: cook:51
 msgid "clean the package in the wok."
-msgstr "清除wok库内的包"
+msgstr "清除wok库内的软件包"
 
 #: cook:52
 msgid "cook and install the package."
-msgstr "编成及安装包"
+msgstr "编成及安装软件包"
 
 #: cook:53
 msgid "get the package source tarball."
-msgstr "取得包源压缩包(tarball)"
+msgstr "取得软件包源压缩软件包(tarball)"
 
 #: cook:54
 msgid "block a package so cook will skip it."
-msgstr "封锁及在建成时跳过包"
+msgstr "封锁及在建成时跳过软件包"
 
 #: cook:55
 msgid "unblock a blocked package."
-msgstr "取消封锁包"
+msgstr "取消封锁软件包"
 
 #: cook:56
 msgid "check dependencies of cooked package."
-msgstr "检查当前包的依赖"
+msgstr "检查当前软件包的依赖"
 
 #: cook:57
 msgid "repack an already built package."
-msgstr "重新打包"
+msgstr "重新打软件包"
 
 #: cook:58
 msgid "display debugging messages."
@@ -140,7 +140,7 @@ msgstr "由Hg repo.克隆 tiny wok"
 
 #: cook:67
 msgid "force reinstall of chroot packages."
-msgstr "强制重新安装chroot包"
+msgstr "强制重新安装chroot软件包"
 
 #: cook:69
 msgid "create up-to-date flavors files."
@@ -148,7 +148,7 @@ msgstr "创建最新的偏好文件"
 
 #: cook:88
 msgid "Unable to find package \"%s\" in the wok"
-msgstr "在wok内找不到包：%s"
+msgstr "在wok内找不到软件包：%s"
 
 #. L10n: QA is quality assurance
 #: cook:97
@@ -157,7 +157,7 @@ msgstr "QA：空变量：%s"
 
 #: cook:106
 msgid "Creating directories structure in \"%s\""
-msgstr "正在创建包结构：%s"
+msgstr "正在创建软件包结构：%s"
 
 #: cook:108
 msgid "Creating DB files in \"%s\""
@@ -165,7 +165,7 @@ msgstr "在以下资料夹创建数库库文件：%s"
 
 #: cook:118
 msgid "QA: checking package receipt..."
-msgstr "QA：正在检查包清单"
+msgstr "QA：正在检查软件包清单"
 
 #: cook:133
 msgid "QA: unknown category \"%s\""
@@ -181,7 +181,7 @@ msgstr "QA：无法存取：%s"
 
 #: cook:204
 msgid "Creating tarball \"%s\""
-msgstr "创建tarball压缩包中：%s"
+msgstr "创建tarball压缩软件包中：%s"
 
 #: cook:229 cook:234 cook:248 cook:250 cook:260 cook:330
 msgid "ERROR: %s"
@@ -230,7 +230,7 @@ msgstr "~ %dm"
 
 #: cook:370
 msgid "Summary for: %s"
-msgstr "包摘要：%s"
+msgstr "软件包摘要：%s"
 
 #. L10n: keep the same width of translations to get a consistent view
 #: cook:374
@@ -251,7 +251,7 @@ msgstr "已产生：%s"
 
 #: cook:378
 msgid "Packed      : %s"
-msgstr "已打包：%s"
+msgstr "已打软件包：%s"
 
 #: cook:379
 msgid "Compressed  : %s"
@@ -339,7 +339,7 @@ msgstr "正在检查编译依赖"
 
 #: cook:595
 msgid "Using packages DB: %s"
-msgstr "正使用包数据库：%s"
+msgstr "正使用软件包数据库：%s"
 
 #: cook:619
 msgid "Missing dep (wok/pkg): %s"
@@ -351,7 +351,7 @@ msgstr "错误：未知依赖 %s"
 
 #: cook:641
 msgid "Auto cook config is set: %s"
-msgstr "自动生成已配置：%s"
+msgstr "自动生成已制作：%s"
 
 #: cook:644
 msgid "Building dep (wok/pkg)    : %s"
@@ -364,11 +364,11 @@ msgstr "错误：无法生成依赖 '%s'"
 #: cook:664
 msgid "ERROR: missing %d dependency"
 msgid_plural "ERROR: missing %d dependencies"
-msgstr[0] "错误：欠缺依赖 %d"
+msgstr[0] "错误: 缺少 %d 个依赖项"
 
 #: cook:671
 msgid "Installing dep (pkg/local): %s"
-msgstr "正在安装依赖 (包/本地)：%s"
+msgstr "正在安装依赖 (软件包/本地)：%s"
 
 #: cook:678
 msgid "Installing dep (web/cache): %s"
@@ -388,15 +388,15 @@ msgstr "错误：生成失败"
 
 #: cook:786
 msgid "Pack: %s"
-msgstr "包：%s"
+msgstr "软件包：%s"
 
 #: cook:791
 msgid "ERROR: genpkg_rules failed"
-msgstr "错误：生成包规则错误"
+msgstr "错误：生成软件包规则错误"
 
 #: cook:794
 msgid "No packages rules: meta package"
-msgstr "没有包规则：元包"
+msgstr "没有软件包规则：元软件包"
 
 #: cook:807
 msgid "Copying \"%s\"..."
@@ -420,7 +420,7 @@ msgstr "正在更新清单大小"
 
 #: cook:855
 msgid "Updating receipt EXTRAVERSION: %s"
-msgstr "正在更新包额外版本：%s"
+msgstr "正在更新软件包额外版本：%s"
 
 #: cook:862
 msgid "Creating full cpio archive..."
@@ -428,27 +428,27 @@ msgstr "正在创建完整cpio压缩包"
 
 #: cook:867
 msgid "Restoring original package tree..."
-msgstr "正复原包树"
+msgstr "正复原软件包树"
 
 #: cook:876
 msgid "Package \"%s\" created"
-msgstr "包：%s"
+msgstr "软件包：%s"
 
 #: cook:895
 msgid "QA: checking for empty package..."
-msgstr "QA：检查空包中……"
+msgstr "QA：检查空软件包中……"
 
 #: cook:898
 msgid "ERROR: empty package"
-msgstr "错误：空包"
+msgstr "错误：空软件包"
 
 #: cook:906
 msgid "Removing old package \"%s\""
-msgstr "正在删除旧包：%s"
+msgstr "正在删除旧软件包：%s"
 
 #: cook:940
 msgid "Unable to install package, build has failed."
-msgstr "无法安装包,生成失败"
+msgstr "无法安装软件包,生成失败"
 
 #: cook:949
 msgid "Updating %s chroot environment..."
@@ -480,16 +480,16 @@ msgstr "选择一个[%​​S]："
 
 #: cook:1117
 msgid "Getting standard devel files..."
-msgstr "获取标准devel软件包文件中..."
+msgstr "获取标准devel软件包文件..."
 
 #: cook:1134
 msgid "List of %s packages in \"%s\""
-msgstr "%2$s 内的 %1$s 包清单"
+msgstr "%2$s 内的 %1$s 软件包清单"
 
 #: cook:1150
 msgid "%s package"
 msgid_plural "%s packages"
-msgstr[0] "包："
+msgstr[0] "软件包："
 
 #: cook:1159
 msgid "Search results for \"%s\""
@@ -505,7 +505,7 @@ msgstr "设置个人环境"
 
 #: cook:1170
 msgid "Checking for packages to install..."
-msgstr "检查要安装的包"
+msgstr "检查要安装的软件包"
 
 #: cook:1176
 msgid "ERROR: %s is not installed"
@@ -513,7 +513,7 @@ msgstr "错误：未安装%s"
 
 #: cook:1179
 msgid "Using config file: %s"
-msgstr "使用配置文件：%s"
+msgstr "使用制作文件：%s"
 
 #: cook:1200
 msgid "Adding group \"%s\""
@@ -525,7 +525,7 @@ msgstr "正在设置%s组的权限"
 
 #: cook:1206
 msgid "All done, ready to cook packages :-)"
-msgstr "完成，可以开始生成包 :-)"
+msgstr "完成，可以开始生成软件包 :-)"
 
 #: cook:1221
 msgid "Cook: setup %s cross environment"
@@ -558,7 +558,7 @@ msgstr "工具前缀：%s"
 
 #: cook:1257
 msgid "Packages DB     : %s"
-msgstr "包数据库：%s"
+msgstr "软件包数据库：%s"
 
 #: cook:1268
 msgid "WARNING: %s is not installed in sysroot"
@@ -582,7 +582,7 @@ msgstr "生成测试：正在测试生成环境"
 
 #: cook:1292
 msgid "Package \"%s\" already exists."
-msgstr "%s 包已存在"
+msgstr "%s 软件包已存在"
 
 #: cook:1296
 msgid "Creating folder \"%s\""
@@ -590,7 +590,7 @@ msgstr "正在创建 %s"
 
 #: cook:1299
 msgid "Preparing the package receipt..."
-msgstr "正预备包清单"
+msgstr "正预备软件包清单"
 
 #: cook:1307
 msgid "Entering interactive mode..."
@@ -598,7 +598,7 @@ msgstr "正进入互动模式"
 
 #: cook:1309
 msgid "Package       : %s"
-msgstr "包：%s"
+msgstr "软件包：%s"
 
 #: cook:1311
 msgid "Version       : "
@@ -627,7 +627,7 @@ msgstr "网站："
 
 #: cook:1332
 msgid "Wget URL to download source tarball."
-msgstr "Wget URL 以下载源tarball包"
+msgstr "Wget URL 下载源码软件包。"
 
 #: cook:1333
 msgid "Example  : "
@@ -671,40 +671,40 @@ msgstr "己在按清单生成：%s"
 
 #: cook:1375
 msgid "Cleaning all packages files..."
-msgstr "清除所有包文件"
+msgstr "清除所有软件包文件..."
 
 #: cook:1381
 msgid "Cleaning all packages sources..."
-msgstr "清除所有包源文件"
+msgstr "清除所有软件包源文件..."
 
 #: cook:1388
 msgid "Checking for uncooked packages"
-msgstr "检查没有配置的包"
+msgstr "检查没有制作的软件包..."
 
 #: cook:1401
 msgid "Package \"%s\""
-msgstr "包%s"
+msgstr "软件包%s"
 
 #: cook:1420
 msgid "%s uncooked package"
 msgid_plural "%s uncooked packages"
-msgstr[0] "%s个没有配置的包"
+msgstr[0] "%s个没有制作的软件包"
 
 #: cook:1422
 msgid "All packages are cooked :-)"
-msgstr "所有的包都配置好了:-)"
+msgstr "所有的软件包都制作好了:-)"
 
 #: cook:1435
 msgid "Packages directory \"%s\" doesn't exist"
-msgstr "包目录不存在%s"
+msgstr "软件包目录不存在%s"
 
 #: cook:1445
 msgid "Cook pkgdb: Creating all packages lists"
-msgstr "Cook pkgdb：创建所有包清单"
+msgstr "Cook pkgdb：创建所有软件包清单"
 
 #: cook:1446
 msgid "Creating lists for \"%s\""
-msgstr "正在为 %s 包创建清单"
+msgstr "正在为 %s 软件包创建清单"
 
 #: cook:1448
 msgid "Cook pkgdb started: %s"
@@ -725,7 +725,7 @@ msgstr "完成：%s (%s)"
 #. L10n: 's' is for seconds (cooking time)
 #: cook:1554
 msgid "Packages: %s - Time: %ss"
-msgstr "包：%s - Time：%ss"
+msgstr "软件包：%s - 时间：%ss"
 
 #: cook:1563
 msgid "Missing flavors folder \"%s\""
@@ -741,11 +741,11 @@ msgstr "生成 pkgdb：正创建所有设置"
 
 #: cook:1572
 msgid "Recharging lists to use latest packages..."
-msgstr "重新载入清单以使用最新包"
+msgstr "重新载入清单以使用最新软件包"
 
 #: cook:1577
 msgid "Creating configuration file \"%s\""
-msgstr "正创建配置文件：%s"
+msgstr "正创建制作文件：%s"
 
 #: cook:1589
 msgid "Starting to generate flavors..."
@@ -753,7 +753,7 @@ msgstr "开始生成设置"
 
 #: cook:1593
 msgid "Packing flavor \"%s\""
-msgstr "正打包设置：%s"
+msgstr "正打软件包设置：%s"
 
 #: cook:1599
 msgid "Total flavors size: %s"
@@ -793,7 +793,7 @@ msgstr "%s 并未生成或不在 %s"
 
 #: cook:1649
 msgid "Package \"%s\" is blocked"
-msgstr "已封锁包：%s"
+msgstr "已封锁软件包：%s"
 
 #: cook:1656
 msgid "Cook started for: %s"
@@ -805,7 +805,7 @@ msgstr "正在清理：%s"
 
 #: cook:1676
 msgid "Getting source for \"%s\""
-msgstr "正在取得包源文件：%s"
+msgstr "正在取得软件包源文件：%s"
 
 #: cook:1678
 msgid "Tarball: %s"
@@ -829,8 +829,8 @@ msgstr "正在检查依赖"
 
 #: cook:1742
 msgid "WANTED package \"%s\" is blocked"
-msgstr "所请求的包被封锁：%s"
+msgstr "所请求的软件包被封锁：%s"
 
 #: cook:1748
 msgid "WANTED package \"%s\" is broken"
-msgstr "所请求的包已损坏：%s"
+msgstr "所请求的软件包已损坏：%s"
