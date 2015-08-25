@@ -1120,6 +1120,7 @@ get_dev_files() {
 	_n 'Getting standard devel files...'
 	mkdir -p $fs/usr/lib
 	cp -a $install/usr/lib/pkgconfig $fs/usr/lib
+	cp -a $install/usr/lib/*a $fs/usr/lib
 	cp -a $install/usr/include $fs/usr
 	status
 }
