@@ -1676,6 +1676,8 @@ EOT
 		time=$(date +%s)
 		pkg="$1"
 		[ -z "$pkg" ] && usage
+		lastcooktime=$(sed '/^Cook time/!d;s|.*: *\([0-9]*\)s.*|\1|' \
+				$LOGS/$pkg.log 2> /dev/null)
 		receipt="$WOK/$pkg/receipt"
 		check_pkg_in_wok
 		newline
@@ -1724,6 +1726,8 @@ EOT
 		# Log and source receipt.
 		_ 'Cook started for: %s' "<a href='cooker.cgi?pkg=$pkg'>$pkg</a>" | log
 		echo "cook:$pkg" > $command
+		[ "$lastcooktime" ] &&
+		echo "cook:$pkg $lastcooktime $(date +%s)" > $cooktime
 
 		# Display and log info if cook process stopped.
 		# FIXME: gettext not working (in single quotes) here!

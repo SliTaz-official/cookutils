@@ -41,6 +41,7 @@ blocked="$cache/blocked"
 broken="$cache/broken"
 wokrev="$cache/wokrev"
 cooknotes="$cache/cooknotes"
+cooktime="$cache/cooktime"
 crontabs="/var/spool/cron/crontabs/root"
 
 

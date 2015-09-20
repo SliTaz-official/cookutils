@@ -129,6 +129,22 @@ more_button() {
 }
 
 
+# Show the running command and its progression
+
+running_command()
+{
+	local state="Not running"
+	if [ -s "$command" ]; then
+		state="$(cat $command)"
+		if grep -q "^$state" $cooktime ; then
+			set -- $(cat $cooktime)
+			state="$state $((($(date +%s)-$3)*100/$2))%"
+		fi
+	fi
+	echo $state
+}
+
+
 # xHTML header. Pages can be customized with a separated html.header file.
 
 if [ -f "header.html" ]; then
@@ -365,7 +381,7 @@ EOT
 <h2>Summary</h2>
 
 <pre>
-Running command  : $([ -s "$command" ] && cat $command || echo "Not running")
+Running command  : $(running_command)
 Wok revision     : <a href="$WOK_URL">$(cat $wokrev)</a>
 Commits to cook  : $(cat $commits | wc -l)
 Current cooklist : $(cat $cooklist | wc -l)
