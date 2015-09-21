@@ -18,6 +18,7 @@ command="$CACHE/command"
 blocked="$CACHE/blocked"
 broken="$CACHE/broken"
 cooknotes="$CACHE/cooknotes"
+cooktime="$CACHE/cooktime"
 wokrev="$CACHE/wokrev"
 
 # We're not logged and want time zone to display correct server date.
