@@ -393,6 +393,7 @@ debug_info() {
 	# L10n: specify your format of date and time (to help: man date)
 	# L10n: not bad one is '+%x %R'
 	_ 'Cook date: %s' "$(date "$(_ '+%%F %%R')")"
+	[ "$time" ] && _ 'Cook time: %ds' "$(($(date +%s) - $time))"
 	# L10n: Please, translate all messages beginning with ERROR in a same way
 	lerror=$(_n 'ERROR')
 	for error in \
@@ -404,7 +405,6 @@ debug_info() {
 		fgrep "$error" $LOGS/$pkg.log
 	done > $LOGS/$pkg.log.debug_info 2>&1
 	cat $LOGS/$pkg.log.debug_info
-	[ "$time" ] && _ 'Cook time   : %ds' "$(($(date +%s) - $time))"
 	rm -f $LOGS/$pkg.log.debug_info
 	separator; newline
 }
