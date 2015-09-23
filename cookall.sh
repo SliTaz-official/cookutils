@@ -60,9 +60,11 @@ for i in $WOK/*/receipt ; do
 	*\ i486\ *|*\ any\ *);;
 	*) continue;;
 	esac
+	grep -q "^$PACKAGE$" $CACHE/broken && echo -n "broken/"
 	echo -n "$PACKAGE : "
 	for j in $BUILD_DEPENDS $WANTED ; do
 		grep -q "^$j$" $DONELIST || echo -n "$j "
+		grep -q "^$j$" $CACHE/broken && echo -n "broken/$j "
 	done
 	echo
 done > $TODOLIST
