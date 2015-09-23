@@ -389,6 +389,7 @@ summary() {
 # Display debugging error info.
 
 debug_info() {
+	time=$(($(date +%s) - $time))
 	newline; _ 'Debug information'; separator
 	# L10n: specify your format of date and time (to help: man date)
 	# L10n: not bad one is '+%x %R'
@@ -404,6 +405,7 @@ debug_info() {
 		fgrep "$error" $LOGS/$pkg.log
 	done > $LOGS/$pkg.log.debug_info 2>&1
 	cat $LOGS/$pkg.log.debug_info
+	_ 'Cook time   : %ds' "$time"
 	rm -f $LOGS/$pkg.log.debug_info
 	separator; newline
 }
