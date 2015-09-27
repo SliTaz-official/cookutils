@@ -293,8 +293,12 @@ case "$1" in
 			mkdir -p /var/spool/cron/crontabs
 		fi
 		if ! fgrep -q /usr/bin/cooker $crontabs; then
-			echo "# Run SliTaz Cooker every $hours hours" > $crontabs
-			echo "0 */$hours * * *  /usr/bin/cooker --output=html" >> $crontabs
+			cat > $crontabs << EOT
+# Run SliTaz Cooker every $hours hours
+0 */$hours * * *  /usr/bin/cooker --output=html
+*/5 * * * *  [ $CACHE/cooker-request -nt $CACHE/activity ] && /usr/bin/cooker --output=html
+EOT
+			touch $CACHE/cooker-request
 			killall crond 2>/dev/null && /etc/init.d/crond start
 		fi ;;
 
