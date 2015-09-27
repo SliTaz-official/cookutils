@@ -178,6 +178,8 @@ fi
 #
 
 case "${QUERY_STRING}" in
+	poke)
+		touch $CACHE/cooker-request ;;
 	pkg=*)
 		pkg=${QUERY_STRING#pkg=}
 		log=$LOGS/$pkg.log
@@ -407,7 +409,12 @@ Blocked packages : $(cat $blocked | wc -l)
 	- Architecture $ARCH:
 	<a href="$toolchain">toolchain</a>
 </p>
+EOT
+		[ -e $CACHE/cooker-request ] && cat <<EOT
 
+<a class="button" href="cooker.cgi?poke">Poke cooker</a>
+EOT
+		cat <<EOT
 
 <h2 id="activity">Activity</h2>
 <pre>
