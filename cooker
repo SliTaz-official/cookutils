@@ -299,6 +299,7 @@ case "$1" in
 */5 * * * *  [ $CACHE/cooker-request -nt $CACHE/activity ] && /usr/bin/cooker --output=html
 EOT
 			touch $CACHE/cooker-request
+			chmod 666 $CACHE/cooker-request
 			killall crond 2>/dev/null && /etc/init.d/crond start
 		fi ;;
 
