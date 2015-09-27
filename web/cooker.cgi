@@ -178,8 +178,6 @@ fi
 #
 
 case "${QUERY_STRING}" in
-	poke)
-		touch $CACHE/cooker-request ;;
 	pkg=*)
 		pkg=${QUERY_STRING#pkg=}
 		log=$LOGS/$pkg.log
@@ -360,6 +358,7 @@ EOT
 		fi ;;
 
 	*)
+		[ "${QUERY_STRING}" == "poke" ] && touch $CACHE/cooker-request
 		# We may have a toolchain.cgi script for cross cooker's
 		if [ -f "toolchain.cgi" ]; then
 			toolchain='toolchain.cgi'
