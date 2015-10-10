@@ -58,8 +58,8 @@ log_commits() {
 
 clean_exit() {
 	rm -f $command; touch $command
-	ps | grep -q "${previous_command/:/ }" &&
-	echo "$previous_command" > $command
+	[ "$previous_command" ] && ps | grep -q "${previous_command/:/ }" &&
+	echo -n "$previous_command" > $command
 	rm -f $pidfile
 }
 
