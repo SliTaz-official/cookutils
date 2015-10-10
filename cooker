@@ -191,6 +191,7 @@ strip_blocked() {
 cook_commits() {
 	if [ -s "$commits" ]; then
 		for pkg in $(cat $commits); do
+			ps | grep -q "cook $pkg$" && continue
 			echo "cook:$pkg" > $command
 			cook $pkg || broken
 			sed -i /^${pkg}$/d $commits
@@ -203,6 +204,7 @@ cook_commits() {
 
 cook_list() {
 	for pkg in $(cat $cooklist); do
+		ps | grep -q "cook $pkg$" && continue
 		cook $pkg || broken
 		sed -i /^${pkg}$/d $cooklist
 	done
@@ -361,6 +363,7 @@ EOT
 
 	pkg|-p)
 		# Same as 'cook pkg' but with log for web interface.
+		ps | grep -q "cook $pkg$" && echo 'Already running' && continue
 		cook $pkg || broken
 		clean_exit ;;
 
