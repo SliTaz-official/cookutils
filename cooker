@@ -58,6 +58,8 @@ log_commits() {
 
 clean_exit() {
 	rm -f $command; touch $command
+	ps | grep -q "${previous_command/:/ }" &&
+	echo "$previous_command" > $command
 	rm -f $pidfile
 }
 
@@ -248,6 +250,7 @@ arch_db() {
 # Commands
 #
 
+previous_command="$(cat $command)"
 case "$1" in
 	usage|help|-u|-h)
 		usage ;;
