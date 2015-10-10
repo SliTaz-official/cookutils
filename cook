@@ -1678,7 +1678,7 @@ EOT
 		pkg="$1"
 		[ -z "$pkg" ] && usage
 		lastcooktime=$(sed '/^Cook time/!d;s|.*: *\([0-9]*\)s.*|\1|' \
-				$LOGS/$pkg.log 2> /dev/null)
+				$LOGS/$pkg.log 2> /dev/null | sed '$!d')
 		receipt="$WOK/$pkg/receipt"
 		check_pkg_in_wok
 		newline
