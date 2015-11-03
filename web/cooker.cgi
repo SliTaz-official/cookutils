@@ -409,7 +409,8 @@ Blocked packages : $(cat $blocked | wc -l)
 	<a href="$toolchain">toolchain</a>
 </p>
 EOT
-		[ -e $CACHE/cooker-request ] && cat <<EOT
+		[ -e $CACHE/cooker-request ] &&
+		[ $CACHE/activity -nt $CACHE/cooker-request ] && cat <<EOT
 
 <a class="button" href="cooker.cgi?poke">Poke cooker</a>
 EOT
