@@ -473,6 +473,39 @@ copy_generic_files() {
 }
 
 
+# Fix common errors and warnings in the .desktop files
+
+fix_desktop_files() {
+	[ -d "$install/usr/share/applications" ] || return
+
+	if [ -n "$QA" -a -z "$(which desktop-file-validate)" ]; then
+		_n 'Installing dep (web/cache): %s' 'desktop-file-utils-extra'
+		tazpkg -gi desktop-file-utils-extra >/dev/null
+		status
+	fi
+
+	for desktop in $(find $install/usr/share/applications -name '*.desktop'); do
+		# Sort out .desktop file (is prerequisite to correct working of `fix-desktop-file`)
+		sdft "$desktop" -i
+
+		cp "$desktop" "$desktop.orig"
+
+		# Fix common errors in .desktop file
+		fix-desktop-file "$desktop"
+
+		if [ -n "$QA" ]; then
+			# Check the rest of errors, warnings and tips
+			_ 'QA: Checking %s...' "$(basename $desktop)"
+			diff "$desktop.orig" "$desktop"
+			desktop-file-validate "$desktop"
+			echo
+		fi
+
+		rm "$desktop.orig"
+	done
+}
+
+
 # Find and strip: --strip-all (-s) or --strip-debug on static libs as well
 # as removing unneeded files like in Python packages. Cross compiled binaries
 # must be stripped with cross-tools aka $ARCH-slitaz-*-strip
@@ -501,6 +534,18 @@ strip_package() {
 	#_n 'Removing Perl compiled files...'
 	find $fs -type f \( -name 'perllocal.pod' -o -name '.packlist' \) -delete 2>/dev/null
 	#status
+}
+
+
+# Update installed.cook.diff
+
+update_installed_cook_diff() {
+	# If a cook failed deps are removed.
+	cd $root$INSTALLED; ls -1 > $CACHE/installed.cook
+	cd $CACHE
+	[ "$1" == 'force' -o ! -s '/tmp/installed.cook.diff' ] && \
+		busybox diff installed.list installed.cook > /tmp/installed.cook.diff
+	deps=$(cat /tmp/installed.cook.diff | grep ^+[a-zA-Z0-9] | wc -l)
 }
 
 
@@ -676,12 +721,7 @@ cookit() {
 		tazpkg get-install $i --root=$root >/dev/null
 	done
 
-	# If a cook failed deps are removed.
-	cd $root$INSTALLED; ls -1 > $CACHE/installed.cook
-	cd $CACHE
-	[ ! -s '/tmp/installed.cook.diff' ] && \
-		busybox diff installed.list installed.cook > /tmp/installed.cook.diff
-	deps=$(cat /tmp/installed.cook.diff | grep ^+[a-zA-Z0-9] | wc -l)
+	update_installed_cook_diff
 
 	# Get source tarball and make sure we have source dir named:
 	# $PACKAGE-$VERSION to be standard in receipts. Here we use tar.lzma
@@ -749,6 +789,9 @@ cookit() {
 		testsuite $@ || exit 1
 		separator; newline
 	fi
+
+	fix_desktop_files
+	update_installed_cook_diff force
 }
 
 

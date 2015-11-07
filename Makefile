@@ -22,6 +22,7 @@ install-cook:
 	install -m 0755 -d $(DESTDIR)$(PREFIX)/share/cook/cooktest
 	install -m 0755 -d $(DESTDIR)$(PREFIX)/share/doc/cookutils
 	install -m 0755 cook $(DESTDIR)$(PREFIX)/bin
+	install -m 0755 fix-desktop-file $(DESTDIR)$(PREFIX)/bin
 	install -m 0755 cooker $(DESTDIR)$(PREFIX)/bin
 	install -m 0755 cookiso $(DESTDIR)$(PREFIX)/bin
 	install -m 0755 cooklinux $(DESTDIR)$(PREFIX)/bin
@@ -40,6 +41,7 @@ install-cook:
 uninstall-cook:
 	rm -rf \
 		$(DESTDIR)$(PREFIX)/bin/cook \
+		$(DESTDIR)$(PREFIX)/bin/fix-desktop-file \
 		$(DESTDIR)$(PREFIX)/bin/cooker \
 		$(DESTDIR)$(PREFIX)/bin/cookiso \
 		$(DESTDIR)$(PREFIX)/bin/cooklinux \

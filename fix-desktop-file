@@ -1,0 +1,304 @@
+#!/bin/sh
+#
+# Description:
+# -----------
+# There is a utility that allows you to check a lot of mistakes in the
+# '.desktop' files: `desktop-file-validate`.
+# This utility, `fix-desktop-file`, allows you to correct most errors
+# automatically.
+# 
+# Using:
+# -----
+#     fix-desktop-file /path/to/desktop-file.desktop
+# All the changes are made at the place with the replacement of the original
+# file.
+# 
+# License:
+# -------
+# `fix-desktop-file` is a part of Cookutils suite for SliTaz GNU/Linux
+# and distributed under the same license as the Cookutils.
+# 
+# Useful links:
+# ------------
+#   * <http://standards.freedesktop.org/desktop-entry-spec/desktop-entry-spec-1.1.html>
+#   * <http://standards.freedesktop.org/menu-spec/menu-spec-1.0.html>
+# 
+# Author:
+# ------
+# Aleksej Bobylev <al.bobylev@gmail.com>, November 2015.
+
+
+desktop="$1"
+
+busybox awk '
+BEGIN {
+	FS = "=";
+	in_section = 0;
+	Name = "";
+	Comment = "";
+	Icon = "";
+}
+
+function handle_cats(x, y,    yy) {
+	split(y, yy, ";");
+	for(i in yy) {
+		if (cats[x] && ! cats[yy[i]]) {
+			printf "%s;", yy[i];
+			cats[yy[i]] = "printed";
+		}
+	}
+}
+
+in_section == 1 {
+	# remove Version and deprecated keys
+	if ($0 ~ /^(Version|Protocols|Extensions|BinaryPattern|MapNotify|Patterns|DefaultApp|MiniIcon|TerminalOptions|Encoding|SwallowTitle|SwallowExec|SortOrder|FilePattern|MultipleArgs)[[:space:]]*=/)
+		next;
+
+	# process Icon
+	if ($0 ~ /^Icon[[:space:]]*=/) {
+		if (Icon) next;  # Icon already printed
+		Icon = gensub(/^[^=]+=[[:space:]]*/, "", "");
+		# remove icon extension for non-absolute path
+		if ($0 ~ /^Icon[[:space:]]*=[^\/]*$/)
+			sub(/\.(png|xpm|svg)$/, "");
+	}
+
+	# fix boolean values
+	if ($0 ~ /^(NoDisplay|Hidden|DBusActivatable|Terminal|StartupNotify)[[:space:]]*=/) {
+		sub(/0/, "false"); sub(/False/, "false");
+		sub(/1/, "true");  sub(/True/,  "true");
+	}
+
+	# process Name
+	if ($0 ~ /^Name[[:space:]]*=/) {
+		if (Name) next;  # Name already printed
+		Name = gensub(/^[^=]+=[[:space:]]*/, "", "");
+		print;
+		for (i in name) {
+			if (name[i] &&
+			    name[i] != Name) {  # skip redundant
+				printf "Name[%s]=%s\n", i, name[i];
+			}
+		}
+		next;
+	}
+
+	# process localized Names
+	if ($0 ~ /^Name\[[^\]+\][[:space:]]*=/) {
+		locale = gensub(/^[^\[]*\[([^\]+)\].*$/,    "\\1", "");
+		value  = gensub(/^[^=]*=[[:space:]]*(.*)$/, "\\1", "");
+		if (name[locale]) next;  # Name[locale] already printed
+		name[locale] = value;
+		if (Name &&
+		    Name != value) {  # skip redundant
+			name[locale] = value;
+			print;
+		}
+		if (comment[locale] &&  # print pending Comment[xx]
+		    tolower(comment[locale]) != tolower(name[locale]))
+			printf "Comment[%s]=%s\n", locale, comment[locale];
+		next;
+	}
+
+	# process Comment
+	if ($0 ~ /^Comment[[:space:]]*=/) {
+		if (Comment) next;  # Comment already printed
+		Comment = gensub(/^[^=]+=[[:space:]]*/, "", "");
+		if (Comment == Name) {
+			printf "%s (*)\n", $0;  # Forgive redundant Comment: Comment[xx] required it
+		} else {
+			print;
+		}
+		for (i in comment) {
+			if (comment[i] &&
+			    tolower(comment[i]) != tolower(Comment) &&
+			    tolower(comment[i]) != tolower(name[i])) {  # skip redundant
+				printf "Comment[%s]=%s\n", i, comment[i];
+			}
+		}
+		next;
+	}
+
+	# process localized Comments
+	if ($0 ~ /^Comment\[[^\]+\][[:space:]]*=/) {
+		locale = gensub(/^[^\[]*\[([^\]+)\].*$/,    "\\1", "");
+		locomm = gensub(/^[^=]*=[[:space:]]*(.*)$/, "\\1", "");
+		if (comment[locale]) next;  # Comment[locale] already printed
+		comment[locale] = locomm;
+		if (Comment &&  # pending until Comment appear
+		    name[locale] &&  # pending until Name[xx] appear
+		    tolower(locomm) != tolower(Comment) &&
+		    tolower(locomm) != tolower(name[locale])) {  # skip redundant
+			comment[locale] = locomm;
+			print;
+		}
+		next;
+	}
+
+	# process Categories list
+	if ($0 ~ /^Categories[[:space:]]*=/) {
+		value  = gensub(/^[^=]*=[[:space:]]*(.*)$/, "\\1", "");
+		split(value, categories, ";");
+		printf "Categories=";
+		for (i in categories) {
+			# skip empty (;;), Application(s), and repeated categories
+			if (categories[i] &&
+			    categories[i] != "Application" &&
+			    categories[i] != "Applications" &&
+			    ! cats[categories[i]]) {
+				if (categories[i] == "Terminal") categories[i] = "ConsoleOnly"  # Mistake
+				if (categories[i] == "Multimedia") categories[i] = "AudioVideo"  # Mistake
+				gsub(/ /, "", categories[i]);
+				printf "%s;", categories[i];
+				cats[categories[i]] = "printed";
+			}
+		}
+		# add main category if needed (http://standards.freedesktop.org/menu-spec/latest/apas02.html)
+		handle_cats("Audio",             "AudioVideo");
+		handle_cats("Video",             "AudioVideo");
+		handle_cats("Building",          "Development");
+		handle_cats("Debugger",          "Development");
+		handle_cats("IDE",               "Development");
+		handle_cats("GUIDesigner",       "Development");
+		handle_cats("Profiling",         "Development");
+		handle_cats("RevisionControl",   "Development");
+		handle_cats("Translation",       "Development");
+		handle_cats("Calendar",          "Office");
+		handle_cats("ContactManagement", "Office");
+		handle_cats("Chart",             "Office");
+		handle_cats("Finance",           "Office");
+		handle_cats("FlowChart",         "Office");
+		handle_cats("PDA",               "Office");
+		handle_cats("Presentation",      "Office");
+		handle_cats("Spreadsheet",       "Office");
+		handle_cats("WordProcessor",     "Office");
+		handle_cats("2DGraphics",        "Graphics");
+		handle_cats("VectorGraphics",    "Graphics;2DGraphics");
+		handle_cats("RasterGraphics",    "Graphics;2DGraphics");
+		handle_cats("3DGraphics",        "Graphics");
+		handle_cats("Scanning",          "Graphics");
+		handle_cats("OCR",               "Graphics;Scanning");
+		handle_cats("TextTools",         "Utility");
+		handle_cats("DesktopSettings",   "Settings");
+		handle_cats("HardwareSettings",  "Settings");
+		handle_cats("Printing",          "HardwareSettings;Settings");
+		handle_cats("PackageManager",    "Settings");
+		handle_cats("Dialup",            "Network");
+		handle_cats("InstantMessaging",  "Network");
+		handle_cats("Chat",              "Network");
+		handle_cats("IRCClient",         "Network");
+		handle_cats("Feed",              "Network");
+		handle_cats("FileTransfer",      "Network");
+		handle_cats("News",              "Network");
+		handle_cats("P2P",               "Network");
+		handle_cats("RemoteAccess",      "Network");
+		handle_cats("Telephony",         "Network");
+		handle_cats("TelephonyTools",    "Utility");
+		handle_cats("VideoConference",   "Network");
+		handle_cats("WebBrowser",        "Network");
+		handle_cats("Midi",              "AudioVideo;Audio");
+		handle_cats("Mixer",             "AudioVideo;Audio");
+		handle_cats("Sequencer",         "AudioVideo;Audio");
+		handle_cats("Tuner",             "AudioVideo;Audio");
+		handle_cats("TV",                "AudioVideo;Video");
+		handle_cats("DiscBurning",       "AudioVideo");
+		handle_cats("ActionGame",        "Game");
+		handle_cats("AdventureGame",     "Game");
+		handle_cats("ArcadeGame",        "Game");
+		handle_cats("BoardGame",         "Game");
+		handle_cats("BlocksGame",        "Game");
+		handle_cats("CardGame",          "Game");
+		handle_cats("KidsGame",          "Game");
+		handle_cats("LogicGame",         "Game");
+		handle_cats("RolePlaying",       "Game");
+		handle_cats("Shooter",           "Game");
+		handle_cats("Simulation",        "Game");
+		handle_cats("SportsGame",        "Game");
+		handle_cats("StrategyGame",      "Game");
+		handle_cats("Archiving",         "Utility");
+		handle_cats("Compression",       "Utility;Archiving");
+		handle_cats("FileManager",       "System;FileTools");
+		handle_cats("TerminalEmulator",  "System");
+		handle_cats("Filesystem",        "System");
+		handle_cats("Calculator",        "Utility");
+		handle_cats("Clock",             "Utility");
+		handle_cats("TextEditor",        "Utility");
+		handle_cats("KDE",               "Qt");
+		handle_cats("GNOME",             "GTK");
+		handle_cats("XFCE",              "GTK");
+
+		printf "\n";
+		next;
+	}
+
+	# process MimeType list
+	if ($0 ~ /^MimeType[[:space:]]*=/) {
+		value = gensub(/^[^=]*=[[:space:]]*(.*)$/, "\\1", "");
+		value = gensub(/x-directory\/gnome-default-handler/, "inode/directory", "g", value);
+		value = gensub(/x-directory\/normal/, "inode/directory", "g", value);
+		gsub(/ /, "", value);
+		split(value, mimetype, ";");
+		printf "MimeType=";
+		for (i in mimetype) {
+			# skip empty (;;), and repeated mimetypes
+			if (mimetype[i] &&
+			    ! mimes[mimetype[i]]) {
+				printf "%s;", mimetype[i];
+				mimes[mimetype[i]] = "printed";
+			}
+		}
+		printf "\n";
+		next;
+	}
+
+	# process Keywords
+	if ($0 ~ /^Keywords[[:space:]]*=/) {
+		value = gensub(/^[^=]*=[[:space:]]*(.*)$/, "\\1", "");
+		split(value, keywords, ";");
+		printf "Keywords=";
+		for (i in keywords) {
+			# skip empty (;;), and repeated keywords
+			if (keywords[i] &&
+			    ! keys[keywords[i]]) {
+				printf "%s;", keywords[i];
+				keys[keywords[i]] = "printed";
+			}
+		}
+		printf "\n";
+		delete keys;
+		next;
+	}
+
+	# process localized Keywords
+	if ($0 ~ /^Keywords\[[^\]+\][[:space:]]*=/) {
+		locale = gensub(/^[^\[]*\[([^\]+)\].*$/,    "\\1", "");
+		lokeys = gensub(/^[^=]*=[[:space:]]*(.*)$/, "\\1", "");
+		split(lokeys, keywords, ";");
+		printf "Keywords[%s]=", locale;
+		for (i in keywords) {
+			# skip empty (;;), and repeated keywords
+			if (keywords[i] &&
+			    ! keys[keywords[i]]) {
+				printf "%s;", keywords[i];
+				keys[keywords[i]] = "printed";
+			}
+		}
+		printf "\n";
+		delete keys;
+		next;
+	}
+
+}
+
+/^\[/ {
+	in_section = 0;
+}
+/^\[Desktop Entry\]/ {
+	in_section = 1;
+}
+{
+	print;
+}
+' "$desktop" > "$desktop.$$"
+
+mv -f "$desktop.$$" "$desktop"
