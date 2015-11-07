@@ -4,5 +4,5 @@ Name=Cookutils Doc
 Name[fr]=Doc de CookUtils
 Name[ru]=Документация CookUtils
 Exec=browser file:///usr/share/doc/cookutils/cookutils.html
-Icon=text-html
+Icon=slitaz-doc
 Categories=Documentation;
