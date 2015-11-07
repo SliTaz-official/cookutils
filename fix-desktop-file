@@ -74,12 +74,6 @@ in_section == 1 {
 		if (Name) next;  # Name already printed
 		Name = gensub(/^[^=]+=[[:space:]]*/, "", "");
 		print;
-		for (i in name) {
-			if (name[i] &&
-			    name[i] != Name) {  # skip redundant
-				printf "Name[%s]=%s\n", i, name[i];
-			}
-		}
 		next;
 	}
 
@@ -91,12 +85,8 @@ in_section == 1 {
 		name[locale] = value;
 		if (Name &&
 		    Name != value) {  # skip redundant
-			name[locale] = value;
 			print;
 		}
-		if (comment[locale] &&  # print pending Comment[xx]
-		    tolower(comment[locale]) != tolower(name[locale]))
-			printf "Comment[%s]=%s\n", locale, comment[locale];
 		next;
 	}
 
@@ -109,13 +99,6 @@ in_section == 1 {
 		} else {
 			print;
 		}
-		for (i in comment) {
-			if (comment[i] &&
-			    tolower(comment[i]) != tolower(Comment) &&
-			    tolower(comment[i]) != tolower(name[i])) {  # skip redundant
-				printf "Comment[%s]=%s\n", i, comment[i];
-			}
-		}
 		next;
 	}
 
@@ -125,9 +108,7 @@ in_section == 1 {
 		locomm = gensub(/^[^=]*=[[:space:]]*(.*)$/, "\\1", "");
 		if (comment[locale]) next;  # Comment[locale] already printed
 		comment[locale] = locomm;
-		if (Comment &&  # pending until Comment appear
-		    name[locale] &&  # pending until Name[xx] appear
-		    tolower(locomm) != tolower(Comment) &&
+		if (tolower(locomm) != tolower(Comment) &&
 		    tolower(locomm) != tolower(name[locale])) {  # skip redundant
 			comment[locale] = locomm;
 			print;

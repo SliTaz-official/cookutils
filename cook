@@ -485,10 +485,10 @@ fix_desktop_files() {
 	fi
 
 	for desktop in $(find $install/usr/share/applications -name '*.desktop'); do
+		cp "$desktop" "$desktop.orig"
+
 		# Sort out .desktop file (is prerequisite to correct working of `fix-desktop-file`)
 		sdft "$desktop" -i
-
-		cp "$desktop" "$desktop.orig"
 
 		# Fix common errors in .desktop file
 		fix-desktop-file "$desktop"
