@@ -302,9 +302,10 @@ case "$1" in
 # Run SliTaz Cooker every $hours hours
 0 */$hours * * *  /usr/bin/cooker --output=html
 */5 * * * *  [ $CACHE/cooker-request -nt $CACHE/activity ] && /usr/bin/cooker --output=html
+*/5 * * * *  [ -s $CACHE/recook-packages ] && /usr/bin/cooker list $CACHE/recook-packages
 EOT
-			touch $CACHE/cooker-request
-			chmod 666 $CACHE/cooker-request
+			touch $CACHE/cooker-request $CACHE/recook-packages
+			chmod 666 $CACHE/cooker-request $CACHE/recook-packages
 			killall crond 2>/dev/null && /etc/init.d/crond start
 		fi ;;
 
