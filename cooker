@@ -405,7 +405,8 @@ EOT
 			echo -e "\nSpecified list does not exist: $list\n"
 			exit 1
 		fi
-		cp -a $list $cooklist
+		cat $list >> $cooklist
+		echo -n > $list
 		strip_blocked
 		cook_order | tee $LOGS/cookorder.log
 		cook_list ;;
