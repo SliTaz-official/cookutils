@@ -251,11 +251,11 @@ EOT
 						syntax_highlighter log
 				echo '</pre>'
 			fi
-			echo "<a class=\"button\" href=\"cooker.cgi?recook=$pkg\">Recook</a>"
 			echo '<h3>Cook log</h3>'
 			echo '<pre>'
 			cat $log | syntax_highlighter log
 			echo '</pre>'
+			echo "<a class=\"button\" href=\"cooker.cgi?recook=$pkg\">Recook $pkg</a>"
 		else
 			[ "$pkg" ] && echo "<pre>No log: $pkg</pre>"
 		fi ;;
