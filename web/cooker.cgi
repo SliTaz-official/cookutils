@@ -251,6 +251,7 @@ EOT
 						syntax_highlighter log
 				echo '</pre>'
 			fi
+			echo "<a class=\"button\" href=\"cooker.cgi?recook=$pkg\">Recook</a>"
 			echo '<h3>Cook log</h3>'
 			echo '<pre>'
 			cat $log | syntax_highlighter log
@@ -358,7 +359,10 @@ EOT
 		fi ;;
 
 	*)
-		[ "${QUERY_STRING}" == "poke" ] && touch $CACHE/cooker-request
+		case "${QUERY_STRING}" in
+		poke) touch $CACHE/cooker-request ;;
+		recook=*) echo ${QUERY_STRING#recook=} >> $CACHE/recook-packages ;;
+		esac
 		# We may have a toolchain.cgi script for cross cooker's
 		if [ -f "toolchain.cgi" ]; then
 			toolchain='toolchain.cgi'
