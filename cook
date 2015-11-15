@@ -711,14 +711,14 @@ cookit() {
 	cd $PKGS
 	for i in $(uniq $CACHE/installed.local); do
 		_ 'Installing dep (pkg/local): %s' "$i"
-		tazpkg install $i --root=$root >/dev/null
+		tazpkg install $i --root=$root >/dev/null 2>/dev/null
 	done
 
 	# Install web or cached packages (if mirror is set to $PKGS we only
 	# use local packages).
 	for i in $(uniq $CACHE/installed.web); do
 		_ 'Installing dep (web/cache): %s' "$i"
-		tazpkg get-install $i --root=$root >/dev/null
+		tazpkg get-install $i --root=$root >/dev/null 2>/dev/null
 	done
 
 	update_installed_cook_diff
