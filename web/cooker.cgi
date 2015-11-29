@@ -24,7 +24,15 @@ wokrev="$CACHE/wokrev"
 # We're not logged and want time zone to display correct server date.
 export TZ=$(cat /etc/TZ)
 
-if [ "${QUERY_STRING%%=*}" == 'download' ]; then
+case "$QUERY_STRING" in
+poke)
+	touch $CACHE/cooker-request
+	cat <<EOT
+Location: $HTTP_REFERER
+
+EOT
+	exit ;;
+download)
 	file=$(busybox httpd -d "$PKGS/${QUERY_STRING#*=}")
 	cat <<EOT
 Content-Type: application/octet-stream
@@ -33,16 +41,21 @@ Content-Disposition: attachment; filename="$(basename "$file")"
 
 EOT
 	cat "$file"
-	exit
-fi
+	exit ;;
+rss)
+	cat <<EOT
+Content-Type: application/rss+xml
 
-echo -n "Content-Type: "
-if [ "$QUERY_STRING" == 'rss' ]; then
-	echo 'application/rss+xml'
-else
-	echo 'text/html; charset=utf-8'
-fi
-echo ''
+EOT
+	;;
+*)
+	cat <<EOT
+Content-Type: text/html; charset=utf-8
+
+EOT
+	;;
+esac
+
 
 # RSS feed generator
 if [ "$QUERY_STRING" == 'rss' ]; then
@@ -360,7 +373,6 @@ EOT
 
 	*)
 		case "${QUERY_STRING}" in
-		poke) touch $CACHE/cooker-request ;;
 		recook=*) echo ${QUERY_STRING#recook=} >> $CACHE/recook-packages ;;
 		esac
 		# We may have a toolchain.cgi script for cross cooker's
