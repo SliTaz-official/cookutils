@@ -77,7 +77,7 @@ uninstall-cross:
 # i18n
 
 pot:
-	xgettext -o po/cook.pot -k_ -k_n -k_p:1,2 -L Shell -cL10n \
+	xgettext -o po/cook.pot -kaction -ktitle -k_ -k_n -k_p:1,2 -L Shell -cL10n \
 		--copyright-holder="SliTaz Association" \
 		--package-name="Cook" \
 		--package-version="$(VERSION)" \

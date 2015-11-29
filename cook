@@ -10,6 +10,7 @@
 . /usr/lib/slitaz/libcook.sh
 
 VERSION="3.2"
+export output=raw
 
 
 # Internationalization.
@@ -389,7 +390,7 @@ summary() {
 # Display debugging error info.
 
 debug_info() {
-	newline; _ 'Debug information'; separator
+	title 'Debug information'
 	# L10n: specify your format of date and time (to help: man date)
 	# L10n: not bad one is '+%x %R'
 	_ 'Cook date: %s' "$(date "$(_ '+%%F %%R')")"
@@ -406,7 +407,7 @@ debug_info() {
 	done > $LOGS/$pkg.log.debug_info 2>&1
 	cat $LOGS/$pkg.log.debug_info
 	rm -f $LOGS/$pkg.log.debug_info
-	separator; newline
+	footer
 }
 
 
@@ -479,8 +480,8 @@ fix_desktop_files() {
 	[ -d "$install/usr/share/applications" ] || return
 
 	if [ -n "$QA" -a -z "$(which desktop-file-validate)" ]; then
-		_n 'Installing dep (web/cache): %s' 'desktop-file-utils-extra'
-		tazpkg -gi desktop-file-utils-extra >/dev/null
+		action 'Installing dep (web/cache): %s' 'desktop-file-utils-extra'
+		tazpkg -gi desktop-file-utils-extra --quiet
 		status
 	fi
 
@@ -515,7 +516,7 @@ strip_package() {
 		arm*|x86_64) export STRIP="$HOST_SYSTEM-strip" ;;
 		*)           export STRIP='strip' ;;
 	esac
-	_n 'Executing strip on all files...'
+	action 'Executing strip on all files...'
 	for dir in $fs/bin $fs/sbin $fs/usr/bin $fs/usr/sbin $fs/usr/games; do
 		if [ -d "$dir" ]; then
 			find $dir -type f -exec $STRIP -s '{}' 2>/dev/null \;
@@ -526,14 +527,10 @@ strip_package() {
 	status
 
 	# Remove Python .pyc and .pyo from packages.
-	#_n 'Removing Python compiled files...'
 	find $fs -type f \( -name '*.pyc' -o -name '*.pyo' \) -delete 2>/dev/null
-	#status
 
 	# Remove Perl perllocal.pod and .packlist from packages.
-	#_n 'Removing Perl compiled files...'
 	find $fs -type f \( -name 'perllocal.pod' -o -name '.packlist' \) -delete 2>/dev/null
-	#status
 }
 
 
@@ -574,7 +571,7 @@ remove_deps() {
 # The main cook function.
 
 cookit() {
-	_ 'Cook: %s' "$PACKAGE $VERSION"; separator
+	title 'Cook: %s' "$PACKAGE $VERSION"
 	set_paths
 
 	# Handle cross-tools.
@@ -711,14 +708,14 @@ cookit() {
 	cd $PKGS
 	for i in $(uniq $CACHE/installed.local); do
 		_ 'Installing dep (pkg/local): %s' "$i"
-		tazpkg install $i --root=$root >/dev/null 2>/dev/null
+		tazpkg install $i --root=$root --quiet
 	done
 
 	# Install web or cached packages (if mirror is set to $PKGS we only
 	# use local packages).
 	for i in $(uniq $CACHE/installed.web); do
 		_ 'Installing dep (web/cache): %s' "$i"
-		tazpkg get-install $i --root=$root >/dev/null 2>/dev/null
+		tazpkg get-install $i --root=$root --quiet
 	done
 
 	update_installed_cook_diff
@@ -781,13 +778,13 @@ cookit() {
 		# QA: no compile_rules so no error, valid.
 		mkdir -p $install
 	fi
-	separator; newline
+	footer
 
 	# Execute testsuite.
 	if grep -q ^testsuite $receipt; then
-		_ 'Running testsuite'; separator
+		title 'Running testsuite'
 		testsuite $@ || exit 1
-		separator; newline
+		footer
 	fi
 
 	fix_desktop_files
@@ -823,7 +820,7 @@ packit() {
 		arm*|x86_64) arch="-$ARCH" ;;
 	esac
 
-	_ 'Pack: %s' "$PACKAGE $VERSION$arch"; separator
+	title 'Pack: %s' "$PACKAGE $VERSION$arch"
 
 	if grep -q ^genpkg_rules $receipt; then
 		_ 'Executing: %s' 'genpkg_rules'
@@ -844,7 +841,7 @@ packit() {
 	cd $taz
 	for file in receipt description.txt; do
 		[ ! -f "../$file" ] && continue
-		_n 'Copying "%s"...' "$file"
+		action 'Copying "%s"...' "$file"
 		cp -f ../$file $pack; chown 0.0 $pack/$file; status
 	done
 	copy_generic_files
@@ -853,7 +850,7 @@ packit() {
 	strip_package
 
 	# Create files.list with redirecting find output.
-	_n 'Creating the list of files...'
+	action 'Creating the list of files...'
 	cd $fs
 	find . -type f -print > ../files.list
 	find . -type l -print >> ../files.list
@@ -861,7 +858,7 @@ packit() {
 	status
 
 	# Md5sum of files.
-	_n 'Creating md5sum of files...'
+	action 'Creating md5sum of files...'
 	while read file; do
 		[ -L "fs$file" ] && continue
 		[ -f "fs$file" ] || continue
@@ -876,7 +873,7 @@ packit() {
 		2>/dev/null | awk 'END{ print $1 }')
 
 	# Build cpio archives.
-	_n 'Compressing the FS...'
+	action 'Compressing the FS...'
 	find fs | cpio -o -H newc --quiet | lzma e fs.cpio.lzma -si
 	rm -rf fs
 	status
@@ -884,7 +881,7 @@ packit() {
 	PACKED_SIZE=$(du -chs fs.cpio.lzma receipt files.list md5sum description.txt \
 		2>/dev/null | awk 'END{ print $1 }')
 
-	_n 'Updating receipt sizes...'
+	action 'Updating receipt sizes...'
 	sed -i s/^PACKED_SIZE.*$// receipt
 	sed -i s/^UNPACKED_SIZE.*$// receipt
 	sed -i "s/^PACKAGE=/PACKED_SIZE=\"$PACKED_SIZE\"\nUNPACKED_SIZE=\"$UNPACKED_SIZE\"\nPACKAGE=/" receipt
@@ -892,19 +889,19 @@ packit() {
 
 	# Set extra version.
 	if [ -n "$EXTRAVERSION" ]; then
-		_n 'Updating receipt EXTRAVERSION: %s' "$EXTRAVERSION"
+		action 'Updating receipt EXTRAVERSION: %s' "$EXTRAVERSION"
 		sed -i s/^EXTRAVERSION.*$// receipt
 		sed -i "s/^VERSION=/EXTRAVERSION=\"$EXTRAVERSION\"\nVERSION=/" receipt
 		status
 	fi
 
 	# Compress.
-	_n 'Creating full cpio archive...'
+	action 'Creating full cpio archive...'
 	find . -print | cpio -o -H newc --quiet > \
 		../$PACKAGE-$VERSION$EXTRAVERSION$arch.tazpkg
 	status
 
-	_n 'Restoring original package tree...'
+	action 'Restoring original package tree...'
 	unlzma -c fs.cpio.lzma | cpio -idm --quiet
 	status
 
@@ -913,14 +910,14 @@ packit() {
 	# QA and give info.
 	tazpkg=$(ls *.tazpkg)
 	packit_quality
-	separator; _ 'Package "%s" created' "$tazpkg"; newline
+	footer "$(_ 'Package "%s" created' "$tazpkg")"
 }
 
 
 # Verify package quality and consistency.
 
 packit_quality() {
-	#gettext "QA: checking for broken link..."
+	#action 'QA: checking for broken link...'
 	#link=$(find $fs/usr -type l -follow)
 	#[ "$link" ] && echo -e "\nERROR: broken link in filesystem"
 	#status
@@ -932,7 +929,7 @@ packit_quality() {
 		exit 1
 	fi
 
-	_n 'QA: checking for empty package...'
+	action 'QA: checking for empty package...'
 	files=$(cat $WOK/$pkg/taz/$pkg-*/files.list | wc -l)
 	if [ "$files" == 0 ] && [ "$CATEGORY" != 'meta' ]; then
 		newline; _ 'ERROR: empty package'
@@ -943,13 +940,13 @@ packit_quality() {
 		old=$(ls $PKGS/$pkg-*.tazpkg 2>/dev/null | head -n1)
 		status
 		if [ -f "$old" ]; then
-			_n 'Removing old package "%s"' "$(basename $old)"
+			action 'Removing old package "%s"' "$(basename $old)"
 			rm -f $old; status
 		fi
 		mv -f $pkgdir/taz/$pkg-*.tazpkg $PKGS
 		sed -i /^${pkg}$/d $broken
-		#gettext "Removing source tree..."
-		#rm -f $WOK/$pkg/source && status
+		#action 'Removing source tree...'
+		#rm -f $WOK/$pkg/source; status
 	fi
 }
 
@@ -1161,7 +1158,7 @@ filesize() {
 #
 
 get_dev_files() {
-	_n 'Getting standard devel files...'
+	action 'Getting standard devel files...'
 	mkdir -p $fs/usr/lib
 	cp -a $install/usr/lib/pkgconfig $fs/usr/lib
 	cp -a $install/usr/lib/*a $fs/usr/lib
@@ -1183,7 +1180,7 @@ case "$1" in
 		 usage ;;
 
 	list-wok)
-		newline; _ 'List of %s packages in "%s"' "$ARCH" "$WOK"; separator
+		title 'List of %s packages in "%s"' "$ARCH" "$WOK"
 		cd $WOK
 		if [ "$ARCH" != 'i486' ]; then
 			count=0
@@ -1198,9 +1195,8 @@ case "$1" in
 			count=$(ls | wc -l)
 			ls -1
 		fi
-		separator
-		_p '%s package' '%s packages' "$count" "$(colorize 32 "$count")"
-		newline ;;
+		footer "$(_p '%s package' '%s packages' "$count" "$(colorize 32 "$count")")"
+		;;
 
 	activity)
 		cat $activity ;;
@@ -1208,15 +1204,15 @@ case "$1" in
 	search)
 		# Just a simple search function, we dont need more actually.
 		query="$2"
-		newline; _ 'Search results for "%s"' "$query"; separator
+		title 'Search results for "%s"' "$query"
 		cd $WOK; ls -1 | grep "$query"
-		separator; newline ;;
+		footer ;;
 
 	setup)
 		# Setup a build environment
 		check_root
 		_ 'Cook: setup environment' | log
-		newline; _ 'Setting up your environment'; separator
+		title 'Setting up your environment'
 		cd $SLITAZ
 		init_db_files
 		_ 'Checking for packages to install...'
@@ -1255,7 +1251,7 @@ case "$1" in
 		_ 'Setting permissions for group "%s"...' 'slitaz'
 		find $SLITAZ -maxdepth 2 -exec chown root.slitaz {} \;
 		find $SLITAZ -maxdepth 2 -exec chmod g+w {} \;
-		separator; _ 'All done, ready to cook packages :-)'; newline ;;
+		footer "$(_ 'All done, ready to cook packages :-)')" ;;
 
 	*-setup)
 		# Setup for cross compiling.
@@ -1271,7 +1267,7 @@ case "$1" in
 		done
 
 		_ 'Cook: setup %s cross environment' "$arch" | log
-		newline; boldify $(_n 'Setting up your %s cross environment' "$arch"); separator
+		title 'Setting up your %s cross environment' "$arch"
 		init_db_files
 		sed -i \
 			-e s"/ARCH=.*/ARCH=\"$arch\"/" \
@@ -1326,7 +1322,7 @@ case "$1" in
 			colorize 36 $(_ 'C compiler "%s" is missing' "$HOST_SYSTEM-gcc")
 			_ 'Run "%s" to cook a toolchain' 'cross compile'
 		fi
-		separator; newline ;;
+		footer ;;
 
 	test)
 		# Test a cook environment.
@@ -1345,10 +1341,10 @@ case "$1" in
 			exit 1
 		fi
 
-		_n 'Creating folder "%s"' "$WOK/$pkg"
+		action 'Creating folder "%s"' "$WOK/$pkg"
 		mkdir $WOK/$pkg; cd $WOK/$pkg; status
 
-		_n 'Preparing the package receipt...'
+		action 'Preparing the package receipt...'
 		cp $DATA/receipt .
 		sed -i s"/^PACKAGE=.*/PACKAGE=\"$pkg\"/" receipt
 		status; newline
@@ -1388,19 +1384,19 @@ case "$1" in
 
 				# Ask for a stuff dir.
 				confirm "$(_n 'Do you need a stuff directory? (y/N)')"
-				if [ "$?" == 0 ]; then
-					_n 'Creating the stuff directory...'
+				if [ "$?" -eq 0 ]; then
+					action 'Creating the stuff directory...'
 					mkdir $WOK/$pkg/stuff; status
 				fi
 
 				# Ask for a description file.
 				confirm "$(_n 'Are you going to write a description? (y/N)')"
-				if [ "$?" == 0 ]; then
-					_n 'Creating the "%s" file...' 'description.txt'
+				if [ "$?" -eq 0 ]; then
+					action 'Creating the "%s" file...' 'description.txt'
 					touch $WOK/$pkg/description.txt; status
 				fi
 
-				separator; _ 'Receipt is ready to use.'; newline ;;
+				footer "$(_ 'Receipt is ready to use.')" ;;
 		esac ;;
 
 	list)
@@ -1424,20 +1420,20 @@ case "$1" in
 
 	clean-wok)
 		check_root
-		newline; _n 'Cleaning all packages files...'
+		newline; action 'Cleaning all packages files...'
 		rm -rf $WOK/*/taz $WOK/*/install $WOK/*/source
 		status; newline ;;
 
 	clean-src)
 		check_root
-		newline; _n 'Cleaning all packages sources...'
+		newline; action 'Cleaning all packages sources...'
 		rm -rf $WOK/*/source
 		status; newline ;;
 
 	uncook)
 		cd $WOK
 		count=0
-		newline; _ 'Checking for uncooked packages'; separator
+		title 'Checking for uncooked packages'
 
 		for pkg in *; do
 			unset HOST_ARCH EXTRAVERSION
@@ -1468,12 +1464,12 @@ case "$1" in
 		done
 
 		if [ "$count" -gt "0" ]; then
-			separator
-			_p '%s uncooked package' '%s uncooked packages' "$count" "$(colorize 31 "$count")"
+			footer "$(_p '%s uncooked package' '%s uncooked packages' "$count" "$(colorize 31 "$count")")"
 		else
 			_ 'All packages are cooked :-)'
+			newline
 		fi
-		newline ;;
+		;;
 
 	pkgdb)
 		# Create suitable packages list for TazPKG and only for built packages
@@ -1781,7 +1777,7 @@ EOT
 		# Handle --options
 		case "$2" in
 			--clean|-c)
-				_n 'Cleaning "%s"' "$pkg"
+				action 'Cleaning "%s"' "$pkg"
 				cd $WOK/$pkg; rm -rf install taz source
 				status; newline
 				exit 0 ;;
@@ -1790,19 +1786,19 @@ EOT
 				inst='yes' ;;
 
 			--getsrc|-gs)
-				_ 'Getting source for "%s"' "$pkg"; separator
+				title 'Getting source for "%s"' "$pkg"
 				get_source
 				_ 'Tarball: %s' "$SRC/$TARBALL"; newline
 				exit 0 ;;
 
 			--block|-b)
-				_n 'Blocking package "%s"' "$pkg"
+				action 'Blocking package "%s"' "$pkg"
 				[ $(grep "^$pkg$" $blocked) ] || echo "$pkg" >> $blocked
 				status; newline
 				exit 0 ;;
 
 			--unblock|-ub)
-				_n 'Unblocking package "%s"' "$pkg"
+				action 'Unblocking package "%s"' "$pkg"
 				sed -i "/^${pkg}$/"d $blocked
 				status; newline
 				exit 0 ;;
@@ -1825,7 +1821,7 @@ EOT
 					exit 0
 				fi
 
-				_ 'Checking depends'; separator
+				title 'Checking depends'
 				lddlist='/tmp/lddlist'; touch $lddlist
 				missing='/var/cache/missing.file'
 
