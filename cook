@@ -634,6 +634,8 @@ cookit() {
 	[ -n "$root" ] && _ 'Using packages DB: %s' "$root$DB"
 	for dep in $BUILD_DEPENDS; do
 		implicit="${dep%-dev}"
+		# Don't add implicit dependency if it defined in BUILD_DEPENDS
+		echo '' $BUILD_DEPENDS '' | fgrep -q " $implicit " && implicit=''
 		for i in $dep $implicit; do
 			if [ ! -f "$root$INSTALLED/$i/receipt" ]; then
 				# Try local package first. In some cases implicit doesn't exist, ex:
