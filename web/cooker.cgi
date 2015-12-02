@@ -32,7 +32,7 @@ Location: $HTTP_REFERER
 
 EOT
 	exit ;;
-download)
+download*)
 	file=$(busybox httpd -d "$PKGS/${QUERY_STRING#*=}")
 	cat <<EOT
 Content-Type: application/octet-stream
