@@ -26,6 +26,7 @@ export TZ=$(cat /etc/TZ)
 
 case "$QUERY_STRING" in
 recook=*)
+	grep -qs "^${QUERY_STRING#recook=}$" $CACHE/recook-packages ||
 	echo ${QUERY_STRING#recook=} >> $CACHE/recook-packages
 	cat <<EOT
 Location: $HTTP_REFERER
