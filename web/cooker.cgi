@@ -25,6 +25,13 @@ wokrev="$CACHE/wokrev"
 export TZ=$(cat /etc/TZ)
 
 case "$QUERY_STRING" in
+recook=*)
+	echo ${QUERY_STRING#recook=} >> $CACHE/recook-packages
+	cat <<EOT
+Location: $HTTP_REFERER
+
+EOT
+	exit ;;
 poke)
 	touch $CACHE/cooker-request
 	cat <<EOT
@@ -373,9 +380,6 @@ EOT
 		fi ;;
 
 	*)
-		case "${QUERY_STRING}" in
-		recook=*) echo ${QUERY_STRING#recook=} >> $CACHE/recook-packages ;;
-		esac
 		# We may have a toolchain.cgi script for cross cooker's
 		if [ -f "toolchain.cgi" ]; then
 			toolchain='toolchain.cgi'
