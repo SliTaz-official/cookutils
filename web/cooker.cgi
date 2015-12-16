@@ -29,14 +29,14 @@ recook=*)
 	grep -qs "^${QUERY_STRING#recook=}$" $CACHE/recook-packages ||
 	echo ${QUERY_STRING#recook=} >> $CACHE/recook-packages
 	cat <<EOT
-Location: $HTTP_REFERER
+Location: ${HTTP_REFERER:-${REQUEST_URI%\?*}}
 
 EOT
 	exit ;;
 poke)
 	touch $CACHE/cooker-request
 	cat <<EOT
-Location: $HTTP_REFERER
+Location: ${HTTP_REFERER:-${REQUEST_URI%\?*}}
 
 EOT
 	exit ;;
@@ -161,6 +161,7 @@ running_command()
 		if grep -q "^$state" $cooktime ; then
 			set -- $(cat $cooktime)
 			state="$state $((($(date +%s)-$3)*100/$2))%"
+			[ $2 -gt 300 ] && state="$state (should end $(date -u -d @$(($2+$3))))"
 		fi
 	fi
 	echo $state
