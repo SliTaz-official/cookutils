@@ -710,7 +710,7 @@ cookit() {
 	cd $PKGS
 	for i in $(uniq $CACHE/installed.local); do
 		_ 'Installing dep (pkg/local): %s' "$i"
-		tazpkg install $i --root=$root --quiet
+		tazpkg install $i --root=$root --local --quiet
 	done
 
 	# Install web or cached packages (if mirror is set to $PKGS we only
@@ -938,13 +938,21 @@ packit_quality() {
 		rm -f $command
 		exit 1
 	else
-		# Ls sort by name so the first file is the one we want.
-		old=$(ls $PKGS/$pkg-*.tazpkg 2>/dev/null | head -n1)
-		status
-		if [ -f "$old" ]; then
-			action 'Removing old package "%s"' "$(basename $old)"
-			rm -f $old; status
-		fi
+		:; status
+		# Find and remove old package(s)
+		tempd="$(mktemp -d)"; cd "$tempd"
+		for testpkg in $PKGS/$pkg-*.tazpkg; do
+			# Extract receipt from each matched package
+			cpio -F "$testpkg" -i receipt >/dev/null 2>&1
+			name=$(. receipt; echo $PACKAGE)
+			rm receipt
+			if [ "$name" == "$pkg" ]; then
+				action 'Removing old package "%s"' "$(basename "$testpkg")"
+				rm -f "$testpkg"
+				status
+			fi
+		done
+		rm -r "$tempd"
 		mv -f $pkgdir/taz/$pkg-*.tazpkg $PKGS
 		sed -i /^${pkg}$/d $broken
 		#action 'Removing source tree...'
