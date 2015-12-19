@@ -278,6 +278,7 @@ EOT
 			echo '<pre>'
 			cat $log | syntax_highlighter log
 			echo '</pre>'
+			[ -f $CACHE/cooker-request ] &&
 			echo "<a class=\"button\" href=\"cooker.cgi?recook=$pkg\">Recook $pkg</a>"
 		else
 			[ "$pkg" ] && echo "<pre>No log: $pkg</pre>"
