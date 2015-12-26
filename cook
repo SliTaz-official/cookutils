@@ -941,7 +941,7 @@ packit_quality() {
 		:; status
 		# Find and remove old package(s)
 		tempd="$(mktemp -d)"; cd "$tempd"
-		for testpkg in $PKGS/$pkg-*.tazpkg; do
+		for testpkg in $(ls $PKGS/$pkg-*.tazpkg 2> /dev/null); do
 			# Extract receipt from each matched package
 			cpio -F "$testpkg" -i receipt >/dev/null 2>&1
 			name=$(. receipt; echo $PACKAGE)
