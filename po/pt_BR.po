@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: Cook 3.1.4\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2015-05-07 12:52+0300\n"
-"PO-Revision-Date: 2014-03-07 23:29-0300\n"
+"PO-Revision-Date: 2016-01-23 03:00-0200\n"
 "Last-Translator: Claudinei Pereira <claudinei@slitaz.org>\n"
 "Language-Team: Brazilian Portuguese <i18n@slitaz.org>\n"
 "Language: pt_BR\n"
@@ -16,6 +16,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"X-Generator: Poedit 1.8.6\n"
 
 #: cook:32
 msgid "Usage:"
@@ -71,7 +72,7 @@ msgstr "Limpa todos os fontes de pacotes."
 
 #: cook:46
 msgid "Check for uncooked packages"
-msgstr ""
+msgstr "Verificar pacotes não compilados"
 
 #: cook:47
 msgid "Create packages DB lists and flavors."
@@ -111,11 +112,11 @@ msgstr "reempacote um pacote já compilado."
 
 #: cook:58
 msgid "display debugging messages."
-msgstr ""
+msgstr "Exibir mensagens da depuração."
 
 #: cook:59
 msgid "continue running compile_rules."
-msgstr ""
+msgstr "continuar executando as regras de compilação."
 
 #: cook:61
 msgid "create a receipt interactively."
@@ -432,7 +433,7 @@ msgstr "Restaurando sistema de arquivos original do pacote..."
 
 #: cook:876
 msgid "Package \"%s\" created"
-msgstr "Pacote: %s"
+msgstr "Pacote \"%s\" criado"
 
 #: cook:895
 msgid "QA: checking for empty package..."
@@ -472,15 +473,15 @@ msgstr "Deixando aufs chroot..."
 
 #: cook:1075
 msgid "Multiple choice:"
-msgstr ""
+msgstr "Múltipla escolha:"
 
 #: cook:1076
 msgid "Select one [%s]: "
-msgstr ""
+msgstr "Escolha um [%s]: "
 
 #: cook:1117
 msgid "Getting standard devel files..."
-msgstr ""
+msgstr "Obtendo arquivos de desenvolvimento..."
 
 #: cook:1134
 msgid "List of %s packages in \"%s\""
@@ -680,21 +681,21 @@ msgstr "Limpando todos os fontes de pacote..."
 
 #: cook:1388
 msgid "Checking for uncooked packages"
-msgstr ""
+msgstr "Verificando pacotes não compilados"
 
 #: cook:1401
 msgid "Package \"%s\""
-msgstr ""
+msgstr "Pacote \"%s\""
 
 #: cook:1420
 msgid "%s uncooked package"
 msgid_plural "%s uncooked packages"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%s pacote não compilado"
+msgstr[1] "%s pacotes não compilados"
 
 #: cook:1422
 msgid "All packages are cooked :-)"
-msgstr ""
+msgstr "Todos os pacotes estão prontos :-)"
 
 #: cook:1435
 msgid "Packages directory \"%s\" doesn't exist"
