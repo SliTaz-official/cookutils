@@ -1859,6 +1859,14 @@ EOT
 				exit 0 ;;
 		esac
 
+		# Rotate log
+		for i in $(seq 9 -1 1); do
+			j=$(($i - 1))
+			[ -e $LOGS/$pkg.log.$j ] &&
+			mv -f $LOGS/$pkg.log.$j $LOGS/$pkg.log.$i
+		done
+		mv $LOGS/$pkg.log $LOGS/$pkg.log.0
+		
 		# Check if wanted is built now so we have separate log files.
 		for wanted in $WANTED ; do
 			if grep -q "^$wanted$" $blocked; then
