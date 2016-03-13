@@ -27,10 +27,15 @@ synclog="$cache/rsync.log"
 syntax_highlighter() {
 	case $1 in
 		log)
-			sed -e 's#OK#<span class="span-ok">OK</span>#g' \
-				-e 's#Failed#<span class="span-red">Failed</span>#g' \
-				-e 's|\(Filesystem size:\).*G\([0-9\.]*M\) *$|\1 \2|' \
-				-e 's|.\[1m|<b>|' -e 's|.\[0m|</b>|' -e 's|.\[[0-9Gm;]*||g' ;;
+			esc=$'\033'
+			sed -e 's|\(Filesystem size:\).*G\([0-9\.]*M\) *$|\1 \2|' \
+				-e "s|$esc\[1m|<span style=\"color: #008; font-weight: bold\">|g" \
+				-e "s|$esc\0m|</span>|g" -e "s|$esc\[0;39m|</span>|g" \
+				-e "s|$esc\[0;33m|<span style=\"color: #861\">|g" \
+				-e "s|$esc\[1;31m|<span style=\"color: #F00; font-weight: bold\">|g" \
+				-e "s|$esc\[1;32m|<span style=\"color: #0A0; font-weight: bold\">|g" \
+				-e "s|$esc\[[0-9;]*m|<span>|g"
+				;;
 		activity)
 			sed s"#^\([^']* : \)#<span class='log-date'>\0</span>#"g ;;
 	esac
