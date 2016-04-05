@@ -26,8 +26,11 @@ export TZ=$(cat /etc/TZ)
 
 case "$QUERY_STRING" in
 recook=*)
-	grep -qs "^${QUERY_STRING#recook=}$" $CACHE/recook-packages ||
-	echo ${QUERY_STRING#recook=} >> $CACHE/recook-packages
+	case "$HTTP_USER_AGENT" in
+	*SliTaz*)
+		grep -qs "^${QUERY_STRING#recook=}$" $CACHE/recook-packages ||
+		echo ${QUERY_STRING#recook=} >> $CACHE/recook-packages
+	esac
 	cat <<EOT
 Location: ${HTTP_REFERER:-${REQUEST_URI%\?*}}
 
@@ -278,8 +281,11 @@ EOT
 			echo '<pre>'
 			cat $log | syntax_highlighter log
 			echo '</pre>'
-			[ -f $CACHE/cooker-request ] && [ -n "$HTTP_REFERER" ] &&
-			echo "<a class=\"button\" href=\"cooker.cgi?recook=$pkg\">Recook $pkg</a>"
+			case "$HTTP_USER_AGENT" in
+			*SliTaz*)
+				[ -f $CACHE/cooker-request ] && [ -n "$HTTP_REFERER" ] &&
+				echo "<a class=\"button\" href=\"cooker.cgi?recook=$pkg\">Recook $pkg</a>"
+			esac
 		else
 			[ "$pkg" ] && echo "<pre>No log: $pkg</pre>"
 		fi ;;
