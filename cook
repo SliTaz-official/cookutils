@@ -402,7 +402,7 @@ debug_info() {
 		'error:' 'fatal error:' 'undefined reference to' \
 		'Unable to connect to' 'link: cannot find the library' \
 		'CMake Error' ': No such file or directory' \
-		'ould not read symbols: File in wrong format'
+		'Could not read symbols: File in wrong format'
 	do
 		fgrep "$error" $LOGS/$pkg.log
 	done > $LOGS/$pkg.log.debug_info 2>&1
