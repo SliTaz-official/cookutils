@@ -526,8 +526,11 @@ EOT
 		for pkg in *; do
 			if [ ! -d "${wok}-hg/$pkg" ]; then
 				echo "Removing package: $pkg" | log_commits
-				. $wok/$pkg/receipt
-				rm -rf $PKGS/$PACKAGE-$VERSION* $wok/$pkg $LOGS/$pkg.log
+				if [ -s $wok/$pkg/receipt ]; then
+					. $wok/$pkg/receipt
+					rm -f $PKGS/$PACKAGE-$VERSION*
+				fi
+				rm -rf $wok/$pkg $LOGS/$pkg.log
 				sed -i "/^${pkg}$/"d $blocked $broken $commits.tmp
 			fi
 		done
