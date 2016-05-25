@@ -226,6 +226,7 @@ arch_db() {
 	rm -f $wok/*/arch.$ARCH && cd $wok
 	echo "Creating $ARCH packages DB..."
 	for pkg in *; do
+		[ -s $wok/$pkg/receipt ] || continue
 		HOST_ARCH=
 		. $wok/$pkg/receipt
 		if [ -n "$HOST_ARCH" ]; then
@@ -351,6 +352,7 @@ EOT
 
 		cd $wok
 		for rev in *; do
+			[ -s $wok/$rev/receipt ] || continue
 			unset WANTED DEPENDS BUILD_DEPENDS; . $wok/$rev/receipt
 			if echo "$WANTED $DEPENDS $BUILD_DEPENDS" | fgrep -q $pkg; then
 				echo "$rev" | tee -a $cooklist
@@ -375,6 +377,7 @@ EOT
 
 		cd $wok
 		for pkg in *; do
+			[ -s $pkg/receipt ] || continue
 			unset CATEGORY; . $pkg/receipt
 			[ "$CATEGORY" == "$cat" ] && echo $pkg >> $cooklist
 		done
@@ -439,6 +442,7 @@ EOT
 
 		cd $wok
 		for pkg in *; do
+			[ -s $pkg/receipt ] || continue
 			unset EXTRAVERSION
 			. $pkg/receipt
 			[ -f "$pkg/taz/$PACKAGE-$VERSION/receipt" ] && \
