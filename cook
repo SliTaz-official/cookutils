@@ -645,7 +645,7 @@ cookit() {
 				vers=$(. $WOK/$i/receipt 2>/dev/null ; echo $VERSION)
 				# We may have a local package.
 				if [ -z "$vers" ]; then
-					vers=$(awk -F$'\t' -vp="$i" '$1==p{print $2; quit}' $PKGS/packages.info)
+					vers=$(awk -F$'\t' -vp="$i" '$1==p{print $2; quit}' $PKGS/packages.info 2> /dev/null)
 				fi
 				debug "bdep: $i version: $vers"
 				if [ -f "$PKGS/$i-$vers$arch.tazpkg" ]; then
