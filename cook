@@ -1177,6 +1177,41 @@ get_dev_files() {
 	status
 }
 
+cook_compress_manpages() {
+	action 'Compressing man pages...'
+
+	# Fast compress with gzip
+	find $install/usr/share/man -type f -exec gzip \{\} \;
+
+	# Fix symlinks
+	for i in $(find $install/usr/share/man -type l); do
+		dest=$(readlink $i)
+		rm $i; ln -s $dest.gz $i.gz
+	done
+
+	# Recompress with advdef (it can't compress, only recompress)
+	tazpkg -gi advancecomp --quiet
+	for i in $(find $install/usr/share/man -type f); do
+		advdef -z4q $i
+	done
+
+	status
+}
+
+cook_copy_files() {
+	action 'Copying files...'
+	cd $install
+	local i j
+	for i in $@; do
+		for j in $(find . -name $i ! -type d); do
+			mkdir -p $fs$(dirname ${j#.})
+			cp -a $j $fs/${j#.}
+		done
+	done
+	cd - >/dev/null
+	status
+}
+
 dblog() { tee -a $LOGS/pkgdb.log; }
 
 
