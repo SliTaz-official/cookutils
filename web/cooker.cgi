@@ -115,7 +115,12 @@ syntax_highlighter() {
 				-e s"#^====\([^']*\).#<span class='span-line'>\0</span>#"g \
 				-e s"#^[a-zA-Z0-9]\([^']*\) :: #<span class='span-sky'>\0</span>#"g \
 				-e s"#ftp://[^ '\"]*#<a href='\0'>\0</a>#"g	\
-				-e s"#http://[^ '\"]*#<a href='\0'>\0</a>#"g ;;
+				-e s"#http://[^ '\"]*#<a href='\0'>\0</a>#"g | \
+			sed "s|$src|<span class='var'>\${src}</span>|g;
+				 s|$install|<span class='var'>\${install}</span>|g;
+				 s|$fs|<span class='var'>\${fs}</span>|g;
+				 s|$stuff|<span class='var'>\${stuff}</span>|g"
+				;;
 
 		receipt)
 			sed	-e s'|&|\&amp;|g' -e 's|<|\&lt;|g' -e 's|>|\&gt;|'g \
@@ -208,6 +213,13 @@ case "${QUERY_STRING}" in
 		pkg=${QUERY_STRING#pkg=}
 		log=$LOGS/$pkg.log
 		echo "<h2>Package: $pkg</h2>"
+
+		# Define cook variables for syntax highlighter
+		. "$WOK/$pkg/receipt"
+		src="$WOK/$pkg/source/$PACKAGE-$VERSION"
+		install="$WOK/$pkg/install"
+		fs="$WOK/$pkg/taz/$PACKAGE-$VERSION/fs"
+		stuff="$WOK/$pkg/stuff"
 
 		# Package info.
 		echo '<div id="info">'
@@ -441,51 +453,56 @@ Blocked packages : $(cat $blocked | wc -l)
 EOT
 		[ -e $CACHE/cooker-request ] &&
 		[ $CACHE/activity -nt $CACHE/cooker-request ] && cat <<EOT
-
 <a class="button" href="cooker.cgi?poke">Poke cooker</a>
 EOT
-		cat <<EOT
 
+		cat <<EOT
 <h2 id="activity">Activity</h2>
 <pre>
 $(tac $CACHE/activity | head -n 12 | syntax_highlighter activity)
 </pre>
 $(more_button activity "More activity" $CACHE/activity 12)
+EOT
 
-
+		[ -s $cooknotes ] && cat <<EOT
 <h2 id="cooknotes">Cooknotes</h2>
 <pre>
 $(tac $cooknotes | head -n 12 | syntax_highlighter activity)
 </pre>
 $(more_button cooknotes "More notes" $cooknotes 12)
+EOT
 
-
+		[ -s $commits ] && cat <<EOT
 <h2 id="commits">Commits</h2>
 <pre>
 $(cat $commits)
 </pre>
+EOT
 
-
+		[ -s $cooklist ] && cat <<EOT
 <h2 id="cooklist">Cooklist</h2>
 <pre>
 $(cat $cooklist | head -n 20)
 </pre>
 $(more_button cooklist "Full cooklist" $cooklist 20)
+EOT
 
-
+		[ -s $broken ] && cat <<EOT
 <h2 id="broken">Broken</h2>
 <pre>
 $(cat $broken | head -n 20 | sed s"#^[^']*#<a href='cooker.cgi?pkg=\0'>\0</a>#"g)
 </pre>
 $(more_button broken "All broken packages" $broken 20)
+EOT
 
-
+		[ -s $blocked ] && cat <<EOT
 <h2 id="blocked">Blocked</h2>
 <pre>
 $(cat $blocked | sed s"#^[^']*#<a href='cooker.cgi?pkg=\0'>\0</a>#"g)
 </pre>
+EOT
 
-
+		cat <<EOT
 <h2 id="lastcook">Latest cook</h2>
 <pre>
 $(list_packages | sed s"#^\([^']*\).* : #<span class='log-date'>\0</span>#"g)
