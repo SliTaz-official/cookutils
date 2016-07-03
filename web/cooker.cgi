@@ -103,6 +103,11 @@ fi
 syntax_highlighter() {
 	case $1 in
 		log)
+			# If variables not defined - define them with some rare values
+			: ${_src=#_#_#}
+			: ${_install=#_#_#}
+			: ${_fs=#_#_#}
+			: ${_stuff=#_#_#}
 			sed	-e 's/&/\&amp;/g;s/</\&lt;/g;s/>/\&gt;/g' \
 				-e 's#OK$#<span class="span-ok">OK</span>#g' \
 				-e 's#Done$#<span class="span-ok">Done</span>#g' \
@@ -116,10 +121,10 @@ syntax_highlighter() {
 				-e s"#^[a-zA-Z0-9]\([^']*\) :: #<span class='span-sky'>\0</span>#"g \
 				-e s"#ftp://[^ '\"]*#<a href='\0'>\0</a>#"g	\
 				-e s"#http://[^ '\"]*#<a href='\0'>\0</a>#"g | \
-			sed "s|$src|<span class='var'>\${src}</span>|g;
-				 s|$install|<span class='var'>\${install}</span>|g;
-				 s|$fs|<span class='var'>\${fs}</span>|g;
-				 s|$stuff|<span class='var'>\${stuff}</span>|g"
+			sed "s|$_src|<span class='var'>\${src}</span>|g;
+				 s|$_install|<span class='var'>\${install}</span>|g;
+				 s|$_fs|<span class='var'>\${fs}</span>|g;
+				 s|$_stuff|<span class='var'>\${stuff}</span>|g"
 				;;
 
 		receipt)
@@ -216,10 +221,11 @@ case "${QUERY_STRING}" in
 
 		# Define cook variables for syntax highlighter
 		. "$WOK/$pkg/receipt"
-		src="$WOK/$pkg/source/$PACKAGE-$VERSION"
-		install="$WOK/$pkg/install"
-		fs="$WOK/$pkg/taz/$PACKAGE-$VERSION/fs"
-		stuff="$WOK/$pkg/stuff"
+		_wok='/home/slitaz/wok'
+		_src="$_wok/$pkg/source/$PACKAGE-$VERSION"
+		_install="$_wok/$pkg/install"
+		_fs="$_wok/$pkg/taz/$PACKAGE-$VERSION/fs"
+		_stuff="$_wok/$pkg/stuff"
 
 		# Package info.
 		echo '<div id="info">'
