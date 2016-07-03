@@ -1177,6 +1177,9 @@ get_dev_files() {
 	status
 }
 
+
+# Function to use in compile_rules() to compress all man pages
+
 cook_compress_manpages() {
 	action 'Compressing man pages...'
 
@@ -1198,6 +1201,26 @@ cook_compress_manpages() {
 	status
 }
 
+
+# Function to use in compile_rules() to compress all png images
+
+cook_compress_png() {
+	action 'Compressing png images...'
+	local size0=$(find $install -type f -name '*.png' -exec ls -l \{\} \; | awk '{s+=$5}END{print s}')
+	tazpkg -gi pngquant --quiet
+	tazpkg -gi optipng --quiet
+	for i in $(find $install -type f -name '*.png'); do
+		pngquant -f --skip-if-larger --ext .png --speed 1 "$i"
+		optipng -quiet -strip all -o7 -zm1-9 "$i"
+	done
+	local size1=$(find $install -type f -name '*.png' -exec ls -l \{\} \; | awk '{s+=$5}END{print s}')
+	status
+	echo "  Size: $size0 B -> $size1 B"
+}
+
+
+# Function to use in genpkg_rules() to copy specified files from $install to $fs
+
 cook_copy_files() {
 	action 'Copying files...'
 	cd $install
@@ -1209,6 +1232,18 @@ cook_copy_files() {
 		done
 	done
 	cd - >/dev/null
+	status
+}
+
+
+# Function to use in genpkg_rules() to copy hicolor icons in sizes 16 and 48 from $install to $fs
+
+cook_copy_icons() {
+	action 'Copying hicolor icons...'
+	mkdir -p $fs/usr/share/icons/hicolor
+	for i in 16x16 48x48; do
+		cp -a $install/usr/share/icons/hicolor/$i $fs/usr/share/icons/hicolor
+	done
 	status
 }
 
