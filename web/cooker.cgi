@@ -159,8 +159,11 @@ list_packages() {
 # Optional full list button
 
 more_button() {
-	[ $(wc -l < ${3:-$CACHE/$1}) -gt ${4:-12} ] &&
-	echo "<a class=\"button\" href=\"cooker.cgi?file=$1\">$2</a>"
+	[ $(wc -l < ${3:-$CACHE/$1}) -gt ${4:-12} ] && cat <<EOT
+<div style="float: right;">
+	<a class="button" href="cooker.cgi?file=$1">$2</a>
+</div>
+EOT
 }
 
 
@@ -438,7 +441,14 @@ Current cooklist : $(cat $cooklist | wc -l)
 Broken packages  : $(cat $broken | wc -l)
 Blocked packages : $(cat $blocked | wc -l)
 </pre>
-
+EOT
+		[ -e $CACHE/cooker-request ] &&
+		[ $CACHE/activity -nt $CACHE/cooker-request ] && cat <<EOT
+<div style="float: right;">
+	<a class="button" href="cooker.cgi?poke">Poke cooker</a>
+</div>
+EOT
+		cat <<EOT
 <p class="info">
 	Packages: $inwok in the wok | $cooked cooked | $unbuilt unbuilt |
 	Server date: $(date -u '+%F %R %Z')
@@ -456,26 +466,20 @@ Blocked packages : $(cat $blocked | wc -l)
 	- Architecture $ARCH:
 	<a href="$toolchain">toolchain</a>
 </p>
-EOT
-		[ -e $CACHE/cooker-request ] &&
-		[ $CACHE/activity -nt $CACHE/cooker-request ] && cat <<EOT
-<a class="button" href="cooker.cgi?poke">Poke cooker</a>
-EOT
 
-		cat <<EOT
+$(more_button activity "More activity" $CACHE/activity 12)
 <h2 id="activity">Activity</h2>
 <pre>
 $(tac $CACHE/activity | head -n 12 | syntax_highlighter activity)
 </pre>
-$(more_button activity "More activity" $CACHE/activity 12)
 EOT
 
 		[ -s $cooknotes ] && cat <<EOT
+$(more_button cooknotes "More notes" $cooknotes 12)
 <h2 id="cooknotes">Cooknotes</h2>
 <pre>
 $(tac $cooknotes | head -n 12 | syntax_highlighter activity)
 </pre>
-$(more_button cooknotes "More notes" $cooknotes 12)
 EOT
 
 		[ -s $commits ] && cat <<EOT
@@ -486,19 +490,19 @@ $(cat $commits)
 EOT
 
 		[ -s $cooklist ] && cat <<EOT
+$(more_button cooklist "Full cooklist" $cooklist 20)
 <h2 id="cooklist">Cooklist</h2>
 <pre>
 $(cat $cooklist | head -n 20)
 </pre>
-$(more_button cooklist "Full cooklist" $cooklist 20)
 EOT
 
 		[ -s $broken ] && cat <<EOT
+$(more_button broken "All broken packages" $broken 20)
 <h2 id="broken">Broken</h2>
 <pre>
 $(cat $broken | head -n 20 | sed s"#^[^']*#<a href='cooker.cgi?pkg=\0'>\0</a>#"g)
 </pre>
-$(more_button broken "All broken packages" $broken 20)
 EOT
 
 		[ -s $blocked ] && cat <<EOT
