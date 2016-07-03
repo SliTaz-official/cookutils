@@ -223,12 +223,14 @@ case "${QUERY_STRING}" in
 		echo "<h2>Package: $pkg</h2>"
 
 		# Define cook variables for syntax highlighter
-		. "$WOK/$pkg/receipt"
-		_wok='/home/slitaz/wok'
-		_src="$_wok/$pkg/source/$PACKAGE-$VERSION"
-		_install="$_wok/$pkg/install"
-		_fs="$_wok/$pkg/taz/$PACKAGE-$VERSION/fs"
-		_stuff="$_wok/$pkg/stuff"
+		if [ -s "$WOK/$pkg/receipt" ]; then
+			. "$WOK/$pkg/receipt"
+			_wok='/home/slitaz/wok'
+			_src="$_wok/$pkg/source/$PACKAGE-$VERSION"
+			_install="$_wok/$pkg/install"
+			_fs="$_wok/$pkg/taz/$PACKAGE-$VERSION/fs"
+			_stuff="$_wok/$pkg/stuff"
+		fi
 
 		# Package info.
 		echo '<div id="info">'
