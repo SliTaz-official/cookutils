@@ -568,6 +568,36 @@ remove_deps() {
 	fi
 }
 
+# Function to compress all man pages
+
+compress_manpages() {
+	local manpath="$install/usr/share/man" dest link
+	[ -d "$manpath" ] || return
+	action 'Compressing man pages...'
+
+	# We'll use only Gzip compression, so decompress other formats first
+	find $manpath -type f -name '*.bz2' -exec bunzip2 \{\} \;
+	find $manpath -type f -name '*.xz'  -exec unxz    \{\} \;
+
+	# Fast compress with gzip
+	find $manpath -type f -name '*.[1-9]' -exec gzip \{\} \;
+
+	# Fix symlinks
+	for i in $(find $install/usr/share/man -type l); do
+		dest=$(readlink $i | sed 's|\.[gbx]z2*$||')
+		link=$(echo $i | sed 's|\.[gbx]z2*$||')
+		rm $i; ln -s $dest.gz $link.gz
+	done
+
+	# Recompress with advdef (it can't compress, only recompress)
+	tazpkg -gi advancecomp --quiet
+	for i in $(find $install/usr/share/man -type f); do
+		advdef -z4q $i
+	done
+
+	status
+}
+
 
 # The main cook function.
 
@@ -781,6 +811,9 @@ cookit() {
 		# QA: no compile_rules so no error, valid.
 		mkdir -p $install
 	fi
+
+	# Actions to do after compiling the package
+	compress_manpages
 	footer
 
 	# Execute testsuite.
@@ -1178,26 +1211,18 @@ get_dev_files() {
 }
 
 
-# Function to use in compile_rules() to compress all man pages
+# Function to use in compile_rules() to copy man page from $src to $install
 
-cook_compress_manpages() {
-	action 'Compressing man pages...'
+cook_pick_manpages() {
+	local name section
+	action 'Copying man pages...'
 
-	# Fast compress with gzip
-	find $install/usr/share/man -type f -exec gzip \{\} \;
-
-	# Fix symlinks
-	for i in $(find $install/usr/share/man -type l); do
-		dest=$(readlink $i)
-		rm $i; ln -s $dest.gz $i.gz
+	for i in $@; do
+		name=$(echo $i | sed 's|\.[gbx]z2*$||')
+		section=${name##*/}; section=${section##*.}
+		mkdir -p $install/usr/share/man/man$section
+		cp -a $i $install/usr/share/man/man$section
 	done
-
-	# Recompress with advdef (it can't compress, only recompress)
-	tazpkg -gi advancecomp --quiet
-	for i in $(find $install/usr/share/man -type f); do
-		advdef -z4q $i
-	done
-
 	status
 }
 
