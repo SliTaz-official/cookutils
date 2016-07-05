@@ -3,6 +3,8 @@
 # SliTaz Cooker CGI/web interface.
 #
 
+. /usr/lib/slitaz/httphelper.sh
+
 [ -f "/etc/slitaz/cook.conf" ] && . /etc/slitaz/cook.conf
 [ -f "cook.conf" ] && . ./cook.conf
 
@@ -80,7 +82,7 @@ if [ "$QUERY_STRING" == 'rss' ]; then
 	<link>$COOKER_URL</link>
 	<lastBuildDate>$pubdate</lastBuildDate>
 	<pubDate>$pubdate</pubDate>
-	<atom:link href="http://cook.slitaz.org/cooker.cgi?rss" rel="self" type="application/rss+xml" />
+	<atom:link href="http://cook.slitaz.org/?rss" rel="self" type="application/rss+xml" />
 EOT
 	for rss in $(ls -lt $FEEDS/*.xml | head -n 12); do
 		cat $rss | sed 's|<guid|& isPermaLink="false"|g;s|</pubDate| GMT&|g'
@@ -96,6 +98,18 @@ fi
 #
 # Functions
 #
+
+
+# Unpack to stdout 
+
+docat() {
+	case "$1" in
+	*gz) zcat ;;
+	*bz2) bzcat ;;
+	*xz) xzcat ;;
+	*) cat
+	esac < $1
+}
 
 
 # Put some colors in log and DB files.
@@ -161,7 +175,7 @@ list_packages() {
 more_button() {
 	[ $(wc -l < ${3:-$CACHE/$1}) -gt ${4:-12} ] && cat <<EOT
 <div style="float: right;">
-	<a class="button" href="cooker.cgi?file=$1">$2</a>
+	<a class="button" href="?file=$1">$2</a>
 </div>
 EOT
 }
@@ -235,7 +249,7 @@ case "${QUERY_STRING}" in
 		# Package info.
 		echo '<div id="info">'
 		if [ -f "$wok/$pkg/receipt" ]; then
-			echo "<a href='cooker.cgi?receipt=$pkg'>receipt</a>"
+			echo "<a href='?receipt=$pkg'>receipt</a>"
 			unset WEB_SITE
 			. $wok/$pkg/receipt
 
@@ -243,18 +257,24 @@ case "${QUERY_STRING}" in
 			echo "<a href='$WEB_SITE'>home</a>"
 
 			if [ -f "$wok/$pkg/taz/$PACKAGE-$VERSION/receipt" ]; then
-				echo "<a href='cooker.cgi?files=$pkg'>files</a>"
+				echo "<a href='?files=$pkg'>files</a>"
 				unset EXTRAVERSION
 				. $wok/$pkg/taz/$PACKAGE-$VERSION/receipt
 				if [ -f $wok/$pkg/taz/$PACKAGE-$VERSION/description.txt ]; then
-					echo "<a href='cooker.cgi?description=$pkg'>description</a>"
+					echo "<a href='?description=$pkg'>description</a>"
 				fi
 				if [ -f $PKGS/$PACKAGE-$VERSION$EXTRAVERSION.tazpkg ]; then
-					echo "<a href='cooker.cgi?download=$PACKAGE-$VERSION$EXTRAVERSION.tazpkg'>download</a>"
+					echo "<a href='?download=$PACKAGE-$VERSION$EXTRAVERSION.tazpkg'>download</a>"
 				fi
 				if [ -f $PKGS/$PACKAGE-$VERSION$EXTRAVERSION-$ARCH.tazpkg ]; then
-					echo "<a href='cooker.cgi?download=$PACKAGE-$VERSION$EXTRAVERSION-$ARCH.tazpkg'>download</a>"
+					echo "<a href='?download=$PACKAGE-$VERSION$EXTRAVERSION-$ARCH.tazpkg'>download</a>"
 				fi
+			fi
+			if [ -x ./man2html && -d $wok/$pkg/install/usr/share/man ]; then
+				echo "<a href='?man=$PACKAGE'>man</a>"
+			fi
+			if [ -d $wok/$pkg/install/usr/share/doc ]; then
+				echo "<a href='?doc=$PACKAGE'>doc</a>"
 			fi
 			echo "<a href='ftp://${HTTP_HOST%:*}/$pkg/'>browse</a>"
 		else
@@ -269,7 +289,7 @@ case "${QUERY_STRING}" in
 					. $wok/$pkg/receipt
 					cat <<EOT
 <tr>
-<td><a href="cooker.cgi?pkg=$pkg">$pkg</a></td>
+<td><a href="?pkg=$pkg">$pkg</a></td>
 <td>$SHORT_DESC</td>
 <td>$CATEGORY</td>
 </tr>
@@ -307,7 +327,7 @@ EOT
 			case "$HTTP_USER_AGENT" in
 			*SliTaz*)
 				[ -f $CACHE/cooker-request ] && [ -n "$HTTP_REFERER" ] &&
-				echo "<a class=\"button\" href=\"cooker.cgi?recook=$pkg\">Recook $pkg</a>"
+				echo "<a class=\"button\" href=\"?recook=$pkg\">Recook $pkg</a>"
 			esac
 		else
 			[ "$pkg" ] && echo "<pre>No log: $pkg</pre>"
@@ -330,7 +350,7 @@ EOT
 				echo "<h2>DB: broken - Packages: $nb</h2>"
 				echo '<pre>'
 				cat $CACHE/$file | sort | \
-					sed s"#^[^']*#<a href='cooker.cgi?pkg=\0'>\0</a>#"g
+					sed s"#^[^']*#<a href='?pkg=\0'>\0</a>#"g
 				echo '</pre>' ;;
 
 			*.diff)
@@ -411,12 +431,41 @@ EOT
 			echo "<pre>No description for: $pkg</pre>"
 		fi ;;
 
+	man=*|doc=*)
+		type=${QUERY_STRING%%=*}
+		pkg=$(GET $type)
+		dir=$WOK/$pkg/install/usr/share/$type
+		page=$(GET file)
+		if [ -z "$page" ]; then
+			page=$(find $dir -type f | sed q)
+			page=${page#$dir/}
+		fi
+		find $dir -type f | while read file ; do
+			file=${file#$dir/}
+			echo "<a href='?$type=$pkg&amp;file=$file'>$(basename $file)</a>"
+		done
+		echo "<h2>$(basename $page)</h2>"
+		tmp="$(mktemp)"
+		docat "$dir/$page" > $tmp
+		case "$type" in
+		doc)
+			echo '<pre>'
+			sed 's/&/\&amp;/g;s/</\&lt;/g;s/>/\&gt;/g' < "$tmp"
+			echo '</pre>' ;;
+		man)
+			export TEXTDOMAIN='man2html'
+			./man2html "$tmp" | sed -e '1,/<header>/d' \
+			-e 's|<a href="file:///[^>]*>\([^<]*\)</a>|\1|g' \
+			-e 's|<a href="?[1-9]\+[^>]*>\([^<]*\)</a>|\1|g' ;;
+		esac
+		rm -f $tmp
+		;;
 	*)
 		# We may have a toolchain.cgi script for cross cooker's
 		if [ -f "toolchain.cgi" ]; then
 			toolchain='toolchain.cgi'
 		else
-			toolchain='cooker.cgi?pkg=slitaz-toolchain'
+			toolchain='?pkg=slitaz-toolchain'
 		fi
 		# Main page with summary. Count only package include in ARCH,
 		# use 'cooker arch-db' to manually create arch.$ARCH files.
@@ -447,7 +496,7 @@ EOT
 		[ -e $CACHE/cooker-request ] &&
 		[ $CACHE/activity -nt $CACHE/cooker-request ] && cat <<EOT
 <div style="float: right;">
-	<a class="button" href="cooker.cgi?poke">Poke cooker</a>
+	<a class="button" href="?poke">Poke cooker</a>
 </div>
 EOT
 		cat <<EOT
@@ -461,10 +510,10 @@ EOT
 
 <p>
 	Latest:
-	<a href="cooker.cgi?file=cookorder.log">cookorder.log</a>
-	<a href="cooker.cgi?file=commits.log">commits.log</a>
-	<a href="cooker.cgi?file=pkgdb.log">pkgdb.log</a>
-	<a href="cooker.cgi?file=installed.diff">installed.diff</a>
+	<a href="?file=cookorder.log">cookorder.log</a>
+	<a href="?file=commits.log">commits.log</a>
+	<a href="?file=pkgdb.log">pkgdb.log</a>
+	<a href="?file=installed.diff">installed.diff</a>
 	- Architecture $ARCH:
 	<a href="$toolchain">toolchain</a>
 </p>
@@ -503,14 +552,14 @@ EOT
 $(more_button broken "All broken packages" $broken 20)
 <h2 id="broken">Broken</h2>
 <pre>
-$(cat $broken | head -n 20 | sed s"#^[^']*#<a href='cooker.cgi?pkg=\0'>\0</a>#"g)
+$(cat $broken | head -n 20 | sed s"#^[^']*#<a href='?pkg=\0'>\0</a>#"g)
 </pre>
 EOT
 
 		[ -s $blocked ] && cat <<EOT
 <h2 id="blocked">Blocked</h2>
 <pre>
-$(cat $blocked | sed s"#^[^']*#<a href='cooker.cgi?pkg=\0'>\0</a>#"g)
+$(cat $blocked | sed s"#^[^']*#<a href='?pkg=\0'>\0</a>#"g)
 </pre>
 EOT
 
