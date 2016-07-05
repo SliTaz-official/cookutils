@@ -451,8 +451,8 @@ EOT
 		doc)
 			echo '<pre>'
 			case "$page" in
-			*.html*) cat ;;
-			*)	 sed 's/&/\&amp;/g;s/</\&lt;/g;s/>/\&gt;/g'
+			*.htm*)	cat ;;
+			*)	sed 's/&/\&amp;/g;s/</\&lt;/g;s/>/\&gt;/g'
 			esac < "$tmp"
 			echo '</pre>' ;;
 		man)
