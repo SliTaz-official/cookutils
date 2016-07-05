@@ -270,7 +270,7 @@ case "${QUERY_STRING}" in
 					echo "<a href='?download=$PACKAGE-$VERSION$EXTRAVERSION-$ARCH.tazpkg'>download</a>"
 				fi
 			fi
-			if [ -x ./man2html && -d $wok/$pkg/install/usr/share/man ]; then
+			if [ -x ./man2html -a -d $wok/$pkg/install/usr/share/man ]; then
 				echo "<a href='?man=$PACKAGE'>man</a>"
 			fi
 			if [ -d $wok/$pkg/install/usr/share/doc ]; then
