@@ -270,10 +270,11 @@ case "${QUERY_STRING}" in
 					echo "<a href='?download=$PACKAGE-$VERSION$EXTRAVERSION-$ARCH.tazpkg'>download</a>"
 				fi
 			fi
-			if [ -x ./man2html -a -d $wok/$pkg/install/usr/share/man ]; then
+			[ -x ./man2html ] &&
+			if [ -d $wok/$pkg/install/usr/man -o -d $wok/$pkg/install/usr/share/man ]; then
 				echo "<a href='?man=$PACKAGE'>man</a>"
 			fi
-			if [ -d $wok/$pkg/install/usr/share/doc ]; then
+			if [ -d $wok/$pkg/install/usr/doc -o -d $wok/$pkg/install/usr/share/doc ]; then
 				echo "<a href='?doc=$PACKAGE'>doc</a>"
 			fi
 			echo "<a href='ftp://${HTTP_HOST%:*}/$pkg/'>browse</a>"
@@ -435,19 +436,24 @@ EOT
 		type=${QUERY_STRING%%=*}
 		pkg=$(GET $type)
 		dir=$WOK/$pkg/install/usr/share/$type
+		[ -d $dir ] || dir=$WOK/$pkg/install/usr/$type
 		page=$(GET file)
 		if [ -z "$page" ]; then
 			page=$(find $dir -type f | sed q)
 			page=${page#$dir/}
 		fi
 		find $dir -type f | while read file ; do
+			[ -s $file ] || continue
+			case "$file" in
+			*.jp*g|*.png|*.gif|*.svg) continue
+			esac
 			file=${file#$dir/}
 			echo "<a href='?$type=$pkg&amp;file=$file'>$(basename $file)</a>"
 		done
 		echo "<h2>$(basename $page)</h2>"
 		tmp="$(mktemp)"
 		docat "$dir/$page" > $tmp
-		case "$type" in
+		[ -s "$tmp" ] && case "$type" in
 		doc)
 			echo '<pre>'
 			case "$page" in
