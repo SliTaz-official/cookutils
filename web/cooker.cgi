@@ -112,6 +112,20 @@ docat() {
 }
 
 
+# Tiny texinfo browser
+
+info2html() {
+	sed	-e 's|^\* \(.*\)::$|* <a href="#\1">\1</a>|' \
+		-e '/^File: /s|(dir)|Top|g' \
+		-e '/^File: /s|Node: \([^,]*\)|Node: <a name="\1"></a>\1|' \
+		-e '/^File: /s|Next: \([^,]*\)|Next: <a href="#\1">\1</a>|' \
+		-e '/^File: /s|Prev: \([^,]*\)|Prev: <a href="#\1">\1</a>|' \
+		-e '/^File: /s|Up: \([^,]*\)|Up: <a href="#\1">\1</a>|' \
+		-e '/^File: /s|^.*$|<i>&</i>|' \
+		-e '/^Tag Table:$/,/^End Tag Table$/d'
+}
+
+
 # Put some colors in log and DB files.
 
 syntax_highlighter() {
@@ -277,6 +291,9 @@ case "${QUERY_STRING}" in
 			if [ -d $wok/$pkg/install/usr/doc -o -d $wok/$pkg/install/usr/share/doc ]; then
 				echo "<a href='?doc=$PACKAGE'>doc</a>"
 			fi
+			if [ -d $wok/$pkg/install/usr/info -o -d $wok/$pkg/install/usr/share/info ]; then
+				echo "<a href='?info=$PACKAGE'>info</a>"
+			fi
 			echo "<a href='ftp://${HTTP_HOST%:*}/$pkg/'>browse</a>"
 		else
 			if [ $(ls $wok/*$pkg*/receipt 2> /dev/null | wc -l) -eq 0 ]; then
@@ -432,7 +449,7 @@ EOT
 			echo "<pre>No description for: $pkg</pre>"
 		fi ;;
 
-	man=*|doc=*)
+	man=*|doc=*|info=*)
 		type=${QUERY_STRING%%=*}
 		pkg=$(GET $type)
 		dir=$WOK/$pkg/install/usr/share/$type
@@ -454,6 +471,10 @@ EOT
 		tmp="$(mktemp)"
 		docat "$dir/$page" > $tmp
 		[ -s "$tmp" ] && case "$type" in
+		info)
+			echo '<pre>'
+			info2html < "$tmp"
+			echo '</pre>' ;;
 		doc)
 			echo '<pre>'
 			case "$page" in
