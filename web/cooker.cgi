@@ -115,14 +115,20 @@ docat() {
 # Tiny texinfo browser
 
 info2html() {
-	sed	-e 's|^\* \(.*\)::$|* <a href="#\1">\1</a>|' \
+	sed \
+		-e 's|&|\&amp;|g' -e 's|<|\&lt;|g' \
+		-e 's|^\* \(.*\)::|* <a href="#\1">\1</a>  |' \
+		-e 's|\*note \(.*\)::|<a href="#\1">\1</a>|' \
 		-e '/^File: /s|(dir)|Top|g' \
-		-e '/^File: /s|Node: \([^,]*\)|Node: <a name="\1"></a>\1|' \
+		-e '/^File: /s|Node: \([^,]*\)|Node: <a name="\1"></a><u>\1</u>|' \
 		-e '/^File: /s|Next: \([^,]*\)|Next: <a href="#\1">\1</a>|' \
 		-e '/^File: /s|Prev: \([^,]*\)|Prev: <a href="#\1">\1</a>|' \
 		-e '/^File: /s|Up: \([^,]*\)|Up: <a href="#\1">\1</a>|' \
 		-e '/^File: /s|^.*$|<i>&</i>|' \
-		-e '/^Tag Table:$/,/^End Tag Table$/d'
+		-e '/^Tag Table:$/,/^End Tag Table$/d' \
+		-e '/INFO-DIR/,/^END-INFO-DIR/d' \
+		-e "s|https*://[^>),'\"\` ]*|<a href=\"&\">&</a>|g" \
+		-e "s|ftp://[^>),\"\` ]*|<a href=\"&\">&</a>|g"
 }
 
 
