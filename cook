@@ -571,6 +571,8 @@ remove_deps() {
 # Function to compress all man pages
 
 compress_manpages() {
+	# Don't compress man pages for splitted packages
+	[ -n "$WANTED" ] && return
 	local manpath="$install/usr/share/man" dest link
 	[ -d "$manpath" ] || return
 	action 'Compressing man pages...'
