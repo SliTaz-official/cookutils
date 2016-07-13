@@ -344,7 +344,11 @@ EOT
 						syntax_highlighter log
 				echo '</pre>'
 			fi
-			echo '<h3>Cook log</h3>'
+			echo "<h3>Cook log $(stat -c %y $log | sed 's/ .*//')</h3>"
+			for i in $(ls -t $log.*); do
+				echo -n "<a href=\"?log=$(basename $i)\">"
+				echo "$(stat -c %y $i | sed 's/ .*//')</a>"
+			done
 			echo '<pre>'
 			cat $log | syntax_highlighter log
 			echo '</pre>'
@@ -357,6 +361,15 @@ EOT
 			[ "$pkg" ] && echo "<pre>No log: $pkg</pre>"
 		fi ;;
 
+	log=*)
+		log=${QUERY_STRING#log=}
+		if [ -s $log ]; then
+			echo "<h3>Cook log $(stat -c %y $log | sed 's/ .*//')</h3>"
+			echo '<pre>'
+			cat $log | syntax_highlighter log
+			echo '</pre>'
+		fi
+		;;
 	file=*)
 		# Don't allow all files on the system for security reasons.
 		file=${QUERY_STRING#file=}
