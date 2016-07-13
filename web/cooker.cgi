@@ -344,7 +344,7 @@ EOT
 						syntax_highlighter log
 				echo '</pre>'
 			fi
-			echo "<h3>Cook log $(stat -c %y $log | sed 's/ .*//')</h3>"
+			echo "<h3>Cook log $(stat -c %y $log | sed 's/:..\..*//')</h3>"
 			for i in $(ls -t $log.*); do
 				echo -n "<a href=\"?log=$(basename $i)\">"
 				echo "$(stat -c %y $i | sed 's/ .*//')</a>"
@@ -364,7 +364,7 @@ EOT
 	log=*)
 		log=${QUERY_STRING#log=}
 		if [ -s $log ]; then
-			echo "<h3>Cook log $(stat -c %y $log | sed 's/ .*//')</h3>"
+			echo "<h3>Cook log $(stat -c %y $log | sed 's/:..\..*//')</h3>"
 			echo '<pre>'
 			cat $log | syntax_highlighter log
 			echo '</pre>'
