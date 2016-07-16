@@ -1333,6 +1333,7 @@ case "$1" in
 		check_root
 		_ 'Cook: setup environment' | log
 		title 'Setting up your environment'
+		[ -d $SLITAZ ] || mkdir -p $SLITAZ
 		cd $SLITAZ
 		init_db_files
 		_ 'Checking for packages to install...'
