@@ -45,6 +45,16 @@ Location: ${HTTP_REFERER:-${REQUEST_URI%\?*}}
 
 EOT
 	exit ;;
+src*)
+	file=$(busybox httpd -d "$SRC/${QUERY_STRING#*=}")
+	cat <<EOT
+Content-Type: application/octet-stream
+Content-Length: $(stat -c %s "$file")
+Content-Disposition: attachment; filename="$(basename "$file")"
+
+EOT
+	cat "$file"
+	exit ;;
 download*)
 	file=$(busybox httpd -d "$PKGS/${QUERY_STRING#*=}")
 	cat <<EOT
@@ -362,7 +372,7 @@ EOT
 		fi ;;
 
 	log=*)
-		log=${QUERY_STRING#log=}
+		log=$LOGS/${QUERY_STRING#log=}
 		if [ -s $log ]; then
 			echo "<h3>Cook log $(stat -c %y $log | sed 's/:..\..*//')</h3>"
 			echo '<pre>'
@@ -430,6 +440,10 @@ EOT
 		pkg=${QUERY_STRING#receipt=}
 		echo "<h2>Receipt for: $pkg</h2>"
 		if [ -f "$wok/$pkg/receipt" ]; then
+			. $wok/$pkg/receipt
+			[ -n "$TARBALL" ] && [ -s "$SRC/$TARBALL" ] &&
+			echo "<a href='?src=$TARBALL'>source</a>"
+
 			( cd $wok/$pkg ; find stuff -type f 2> /dev/null ) | \
 			while read file ; do
 				echo "<a href=\"?stuff=$pkg/$file\">$file</a>"
@@ -485,7 +499,7 @@ EOT
 			esac
 			file=${file#$dir/}
 			echo "<a href='?$type=$pkg&amp;file=$file'>$(basename $file)</a>"
-		done
+		done | sort
 		echo "<h2>$(basename $page)</h2>"
 		tmp="$(mktemp)"
 		docat "$dir/$page" > $tmp
