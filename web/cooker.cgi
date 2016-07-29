@@ -447,7 +447,7 @@ EOT
 			( cd $wok/$pkg ; find stuff -type f 2> /dev/null ) | \
 			while read file ; do
 				echo "<a href=\"?stuff=$pkg/$file\">$file</a>"
-			done
+			done | sort
 			echo '<pre>'
 			cat $wok/$pkg/receipt | \
 				syntax_highlighter receipt
