@@ -1888,7 +1888,11 @@ EOT
 		_ 'Cook started for: %s' "<a href='cooker.cgi?pkg=$pkg'>$pkg</a>" | log
 		echo "cook:$pkg" > $command
 		[ "$lastcooktime" ] &&
-		echo "cook:$pkg $lastcooktime $(date +%s)" > $cooktime
+		echo "cook:$pkg $lastcooktime $(date +%s)" >> $cooktime
+		while read cmd duration start; do
+			[ $(($start + $duration)) -lt $(date +%s) ] &&
+			echo "sed -i '/^$cmd $duration/d' $cooktime"
+		done < $cooktime | sh
 
 		# Display and log info if cook process stopped.
 		# FIXME: gettext not working (in single quotes) here!
