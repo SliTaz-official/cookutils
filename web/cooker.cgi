@@ -281,8 +281,11 @@ case "${QUERY_STRING}" in
 		if [ -f "$wok/$pkg/receipt" ]; then
 			echo "<a href='?receipt=$pkg'>receipt</a>"
 			unset WEB_SITE
+			unset WANTED
+			bpkg=$pkg
 			. $wok/$pkg/receipt
 
+			[ -n "$WANTED" ] && bpkg="$WANTED"
 			[ -n "$WEB_SITE" ] && # busybox wget -s $WEB_SITE &&
 			echo "<a href='$WEB_SITE'>home</a>"
 
@@ -301,14 +304,14 @@ case "${QUERY_STRING}" in
 				fi
 			fi
 			[ -x ./man2html ] &&
-			if [ -d $wok/$pkg/install/usr/man -o -d $wok/$pkg/install/usr/share/man ]; then
-				echo "<a href='?man=$PACKAGE'>man</a>"
+			if [ -d $wok/$bpkg/install/usr/man -o -d $wok/$bpkg/install/usr/share/man ]; then
+				echo "<a href='?man=$bpkg'>man</a>"
 			fi
-			if [ -d $wok/$pkg/install/usr/doc -o -d $wok/$pkg/install/usr/share/doc ]; then
-				echo "<a href='?doc=$PACKAGE'>doc</a>"
+			if [ -d $wok/$bpkg/install/usr/doc -o -d $wok/$bpkg/install/usr/share/doc ]; then
+				echo "<a href='?doc=$bpkg'>doc</a>"
 			fi
-			if [ -d $wok/$pkg/install/usr/info -o -d $wok/$pkg/install/usr/share/info ]; then
-				echo "<a href='?info=$PACKAGE'>info</a>"
+			if [ -d $wok/$bpkg/install/usr/info -o -d $wok/$bpkg/install/usr/share/info ]; then
+				echo "<a href='?info=$bpkg'>info</a>"
 			fi
 			echo "<a href='ftp://${HTTP_HOST%:*}/$pkg/'>browse</a>"
 		else
