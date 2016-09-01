@@ -60,10 +60,11 @@ check_pkg() {
 
 
 #
-# Commands/help - Support 3.x 2.6 and 2.4 kernels.
+# Commands/help - Support 4.x, 3.x, 2.6 and 2.4 kernels.
 #
 
 case "$1" in
+	4.*)   wgeturl="${srcurl}/v4.x/" ;;
 	3.*)   wgeturl="${srcurl}/v3.0/" ;;
 	2.6.*) wgeturl="${srcurl}/v2.6/" ;;
 	2.4.*) wgeturl="${srcurl}/v2.4/" ;;
@@ -87,7 +88,7 @@ echo -n 'Building Linux kernel:'; colorize 32 " $version"
 echo -n 'Source directory:'; colorize 30 " $cookdir"
 
 # Install needed packages to compile.
-for pkg in slitaz-toolchain perl xz lzma patch tar bc; do
+for pkg in slitaz-toolchain pkg-config perl xz lzma patch tar bc; do
 	check_pkg $pkg
 done
 
@@ -150,7 +151,7 @@ fi
 
 if [ -n "$xconfig" ]; then
 	echo 'Starting Qt configuration tool...'
-	check_pkg qt-4
+	check_pkg Qt4-dev
 	make xconfig
 fi
 
