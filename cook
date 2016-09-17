@@ -340,7 +340,7 @@ extract_source() {
 		*.zip|*.xpi)            unzip -o      $SRC/$TARBALL ;;
 		*.xz)                   unxz  -c      $SRC/$TARBALL | tar -xf - || \
 		                        tar   -xf     $SRC/$TARBALL 2>/dev/null;;
-		*.7z)                   7zr    x      $SRC/$TARBALL ;;
+		*.7z)                   7zr    x      $SRC/$TARBALL 2>/dev/null >&2 ;;
 		*.Z|*.z)                uncompress -c $SRC/$TARBALL | tar -xf - ;;
 		*.rpm)                  rpm2cpio      $SRC/$TARBALL | cpio -idm --quiet ;;
 		*.run)                  /bin/sh       $SRC/$TARBALL $RUN_OPTS ;;
