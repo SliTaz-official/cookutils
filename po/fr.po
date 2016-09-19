@@ -196,7 +196,7 @@ msgstr "URL: %s"
 
 #: cook:244 cook:275
 msgid "Cloning to \"%s\""
-msgstr "Fermeture de \"%s\"""
+msgstr "Fermeture de \"%s\""
 
 #: cook:246
 msgid "Hg branch: %s"
@@ -220,7 +220,7 @@ msgstr "ERREUR: Impossible d'utiliser \"%s\""
 
 #: cook:332
 msgid "Extracting source archive \"%s\""
-msgstr "Desarchivage des sources depuis \"%s\"""
+msgstr "Desarchivage des sources depuis \"%s\""
 
 #. L10n: 'm' is for minutes (approximate cooking time)
 #: cook:367
@@ -323,7 +323,7 @@ msgstr "Sysroot %s : %s"
 
 #: cook:550
 msgid "Adding \"%s\" to PATH"
-msgstr "Ajoute \"%s\" au PATH""
+msgstr "Ajoute \"%s\" au PATH"
 
 #: cook:554
 msgid "Using cross-tools: %s"
@@ -531,7 +531,7 @@ msgstr "Terminé, prêt à cuire des paquets :-)"
 
 #: cook:1221
 msgid "Cook: setup %s cross environment"
-msgstr "Cook: настройка кросс-окружения %s"
+msgstr "Cook: paramétrage de l'environnement croisé %s"
 
 #: cook:1222
 msgid "Setting up your %s cross environment"
