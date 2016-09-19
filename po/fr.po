@@ -251,7 +251,6 @@ msgstr "Généré      : %s"
 #: cook:378
 msgid "Packed      : %s"
 msgstr "Emballé     : %s"
-msgstr "Помещено в пакет     : %s"
 
 #: cook:379
 msgid "Compressed  : %s"
