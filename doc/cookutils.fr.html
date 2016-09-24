@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="fr">
+<head>
+	<meta charset="utf-8" />
+	<title>Documentation de Cookutils</title>
+	<link rel="stylesheet" type="text/css" href="../slitaz-doc.css" />
+	<script type="text/javascript" src="../slitaz-doc.js"></script>
+</head>
+<body>
+
+<header>
+	<h1>Documentation de Cookutils</h1>
+</header>
+
+<!-- Start content -->
+<div id="content">
+
+<h2>SliTaz Cook &amp; Cooker</h2>
+
+<p>
+	Les Cookutils SliTaz fournissent les outils et utilitaires pour 
+	faciliter la construction de paquets SliTaz. Ils sont faciles à
+	utiliser et à apprendre, rapides et légers. Vous pourrez créer
+	des paquets SliTaz avec quelques commandes. Les Cookutils fournissent
+	l'utilitaire 'cook' et le <a href="#cooker">Cooker</a>.
+</p>
+<p>
+	Cook vous permet de créer et de compiler un paquet, fournit un
+	fichier journal et vérifie la qualité du paquet et de la recette.
+	Le Cooker est un robot de fabrication avec plus d'automatismes et
+	peut être utilisé comme outil de fabrication car il fournit
+	une interface CGI/Web qui vous parmet de voir des journaux de 
+	cuisson agréables et coloriés. Cook et le Cooker se servent des
+	mêmes wok et base de fichiers, il partagent les paquets
+	<a href="#blocked">bloqués</a> et cassés tout comme leur activité.
+</p>
+<p>
+	Pour toute information technique, par exemple le style de codage, etc,
+	veuillez vous référer au README qui se trouve dans les fichiers
+	source ou dans /usr/share/doc/cookutils.
+</p>
+
+<h3>Usage de Cook</h3>
+<p>
+	Cook donne une aide intégrée succinte que vous pouvez afficher
+	avec la commande 'usage'. Il a aussi quelques options pour faire
+	des tâches spécifiques avant ou après la cuisson. Pour avoir
+	l'aide et l'usage :
+</p>
+<pre>
+# cook usage
+</pre>
+
+<h3>Comment faire</h3>
+<p>
+	La première chose à faire avant de cuire des paquets est de
+	configurer votre environnement. Les 2 façons recommendées de
+	travailler : cuire directement sur l'hôte ou cuire dans un chroot
+	pour protéger votre hôte. Dans le cas où vous voulez travailler
+	dans un chroot vous pouvez installer et utiliser Tazdev pour en
+	créer un et vous placer à l'intérieur :
+</p>
+<pre>
+# tazdev gen-chroot &amp;&amp; tazdev chroot
+</pre>
+<p>
+	Par défaut Tazdev crée un chroot dans /home/slitaz/cooking/chroot
+	mais vous pouvez spécifier un chemin quelconque en argument. L'endroit
+	du chroot n'est pas important, lorsque vous serez dans le chroot vous
+	utiliserez des chemins standards de SliTaz comme /home/slitaz/wok pour
+	de répertoire du wok ou /home/slitaz/log pour tous les journaux de
+	cuisson. Comme toujours vous pouvez afficher l'aide de tazdev avec :
+	tazdev usage.
+</p>
+<p>
+	Lorsque vous utilisez un chroot il y a 2 répertoires spéciaux montés
+	avec l'option bind : src et packages. Les sources pour tous les paquets
+	sont stockés par défaut dans /home/slitaz/src, ce répertoire est
+	monté dans le chroot pour que les outils puissient l'utiliser.
+	Cette méthode vous permet de partager les sources avec plusieurs
+	chroots par exemple un pour cooking et un pour stable. Le répertoire
+	par défaut est : /home/slitaz/[version]/packages ainsi ils ne sont pas
+	dans le chroot et ne sont pas affectés si le chroot est effacé par
+	erreur.
+</p>
+
+<h3>Pour commencer</h3>
+<p>
+	Donc vous avez décidé de la façon dont vous voulez travailler, alors préparons
+	l'environnement de cuisson. Cook se sert du fichier de configuration cook.conf,
+	si vous voulez utiliser des chemins inhabituels pour les répertoires et fichiers
+	SliTaz, vous devez le modifier. Le paramétrage va créer quelques répertoires
+	et fichiers pour garder une trace de la l'activité et des erreurs, tous les
+	fichiers sont des fichiers textes simples que vous pouvez ouvrir dans un
+	éditeur de texte. Pour préparer votre environnement :
+</p>
+<pre>
+# cook setup
+</pre>
+<p>
+	La commande de paramétrage à une option --wok qui vous permet de cloner un
+	wok SliTaz pendant la creation de l'environnement de cuisson. Même si vous
+	n'êtes pas un développeur officiel vous pouver le cloner et utiliser les
+	paquets existants comme exemple pour créer le vôtre.
+	Pour paramétrer et cloner le wok cooking ou le wok undisgest par défaut ;
+</p>
+<pre>
+# cook setup --wok
+# cook setup --undigest
+</pre>
+
+<h3>Testez votre environnement</h3>
+<p>
+	Cook fournit une commande de test qui crée un paquet et le cuit. Cela vous
+	permet de voir si votre environnement fonctionne et donne un paquet exemple 
+	avec une recette. Le paquet s'appelle 'cooktest' et peut être retiré après
+	avoir été testé. Pour cuire le paquet de test :
+</p>
+<pre>
+# cook test
+</pre>
+
+<h3>Créer et cuire</h3>
+<p>
+	Si votre environnement est correctement paramétré vous pouvez commencer
+	à créer et compiler des paquets SliTaz depuis votre wok. Pour créer un
+	nouveau pqauet avec une recette vide (vous pouvez aussi créer une recette
+	interactivement) :
+</p>
+<pre>
+# cook new pkgname
+# cook new pkgname --interactive
+</pre>
+<p>
+	Si vous venez de créer un nouveau paquet, vous devrez éditer le recette avec
+	votre éditeur de texte favori. Alors la recette est prête ou si vous avez
+	déjà un paquet existant, vous pouvez le cuire :
+</p>
+<pre>
+# cook pkgname
+</pre>
+<p>
+	Si tout c'est bien passé vous trouverez votre paquet dans le répertoire
+	$SLITAZ/packages et tous les fichiers produits dans $SLITAZ/wok/pkgname.
+</p>
+
+<h3>Cuire et installer</h3>
+<p>
+	Si vous voulez cuire et installer le paquet en une commande :
+</p>
+<pre>
+# cook pkgname --install
+</pre>
+
+<h3>Obtenir les sources</h3>
+<p>
+	Si vous voulez ou avez besion de seulement télécharger les sources d'un
+	paquet sans le fabriquer, vous pouvez utiliser l'option --getsrc comme suit :
+</p>
+<pre>
+# cook pkgname --getsrc
+</pre>
+
+<h3>Nettoyer les paquets</h3>
+<p>
+	Après compilation et empaquetage il y a plusieurs fichiers dans le wok qui 
+	prennent de la place disque. Pour nettoyer un pqauet unique :
+</p>
+<pre>
+# cook pkgname --clean
+</pre>
+<p>
+	Vous pouvez aussi nettoyer le wok en entier ou vous pouvez choisir de garder
+	les fichiers SliTaz et seulement retirer les sources :
+</p>
+<pre>
+# cook clean-wok
+# cook clean-src
+</pre>
+
+<h3>Recherche</h3>
+<p>
+	Cook fournit une fonction de recherche simple pour trouver rapidement un
+	paquet dans le wok. Elle utilise grep et supporte des expressions régulières :
+</p>
+<pre>
+# cook search busybox
+</pre>
+
+<h3>Functions de la recette</h3>
+<p>
+	Beaucoup de paquets fournissent le même genre de fichiers comme les
+	paquets *-dev avec les librairies statiques, les fichiers pkgconfig et
+	les entêtes pour includes. Alors cook fournit une fonction à utiliser
+	dans la recette :
+</p>
+<pre>
+get_dev_files     : Install /usr/lib/{lib.*a,pkgconfig} /usr/include
+</pre>
+
+<h3>Liste de paquets</h3>
+<p>
+	Cook peut lister les paquets dans le wok et ainsi créer une liste de paquets
+	adaptée pour Tazpkg. Cela vous permet de créer votre dépôt de paquets assez
+	facilement et c'est utiilisé pour créer la liste offcielle des paquets Slitaz
+	sur les miroirs. Pour lister le wok actuellement utilisé par cook (il n'est
+	pas nécessaire d'être root) :
+</p>
+<pre>
+$ cook list-wok
+</pre>
+<p>
+	En créant la base (ou liste) de paquets, cook va vérifier si vous avez un
+	dépôt de saveurs dans /home/slitaz/flavors ; si c'est la cas il va emballer
+	toutes les saveurs en utilisant la dernière liste de paquets disponible.
+	Pour créer une liste de paquets et les fichers de saveurs :
+</p>
+<pre>
+# cook pkgdb
+</pre>
+
+<h3 id="cooker">Le Cooker</h3>
+<p>
+	Le Cooker est un robot de compilation, sa première fonction est de rechercher
+	les commits dans le wok, créer une liste ordonnée et cuire tous les paquets
+	modifiés. Il peut aussi être utilisé comme interface pour cook car ils
+	utilisent les mêmes fichiers. Le Cooker peut aussi être utilisé pour cuire
+	une longue liste de paquets en une fois comme tous les paquets d'une saveur.
+	Le cooker fournit une interface CGI/Web agréable qui fonctionne par défaut
+	sur n'importe quel système SliTaz car il fournit le support CGI via le serveur
+	httpd de busybox.
+</p>
+<p>
+	Le Cooker fournit une aide intégrée succinte et quelques commandes.
+	Par exemple pour afficher l'usage vous pouvez faire :
+</p>
+<pre>
+# cooker usage
+# cooker -u
+</pre>
+
+<h3>Paramétrage du Cooker</h3>
+<p>
+	Tout comme cook, le Cooker a besoin d'un environnement fonctionnel avant de
+	commencer à l'utiliser. Le principale différence avec l'environnement de 
+	cook est que le Cooker a besoin de 2 woks. Un wok Hg propre comme référence
+	et un wok de fabrication. De cette façon il est facile de comparer les 2 woks
+	et d'obtenir les modifications. SI vous avez déjà un environnement pour cook,
+	vous devez déplacer votre wok avant de paramétrer le Cooker ou il s'en
+	plaindra. Le paramétrage installera aussi un ensemble de paquets de 
+	développement qui peuvent être définis dans le fichiers de configuration
+	cook.conf avec la variable SETUP_PKGS. Pour paramétrer votre environnement
+	cooker :
+</p>
+<pre>
+# cooker setup
+</pre>
+<p>
+	Si tout ce passe correctement vous avez maintenant 2 woks, les paquets de
+	developpement de base installés et tous les fichiers nécessaires créés.
+	Le comportement par défaut est de rechercher les commits, vous pouvez lancer
+	un test :	
+</p>
+<pre>
+# cooker
+</pre>
+
+<h3>Cuire avec le Cooker</h3>
+<p>
+	Encore 2 façons de travailler maintenant : faire des modifications dans
+	le nouveau wok Hg et lancer le cooker sans arguments ou cuire les paquets
+	manuellement. Le cooker vous permet de cuire un paquet unique ou tous les
+	paquets d'un catégorie ou d'une saveur. Vous pouvez aussi essayer de
+	fabriquer tous les paquets non construits, mais sachez que le Cooker n'a
+	pas été fait pour gérer des milliers de paquets. 
+</p>
+<p>
+	Pour cuire un paquet unique comme 'cook pkgname' mais avec un journal en plus :
+</p>
+<pre>
+# cooker pkg pkgname
+</pre>
+<p>
+	Pour cuire plus d'un paquet vous avez différentes possibilités.
+	Vous pouvez utiliser un paquet existant comme ceux des saveurs live,
+	vous pouvez aussi utiliser une liste personnelle avec des noms de paquet
+	à chaque ligne. Enfin vous pouvez construire tous les paquets d'un catégorie.
+</p>
+<pre>
+# cooker flavor [name]
+# cooker list [/path/to/cooklist]
+# cooker cat [category]
+</pre>
+<p>
+	Le cooker vous permet de recuire une révision spécifique de Hg. C'est
+	utile en production ainsi si le robot de fabrication est interrompu
+	pendant des commits en cooking, vous pouvez cuire les paquets à la main :
+</p>
+<pre>
+# cooker rev 9496
+</pre>
+
+<h3 id="blocked">Le paquets bloqués</h3>
+<p>
+	Cook et le Cooker gèrent un fichier contenant la liste des paquets bloqués
+	afin de ne pas les cuire lors de commits ou si une liste de cuission est utilisée.
+	C"est très utile pour un Robot de fabrication en production. Lorsque vous
+	bloquez ou débloquez un paquet vous pouvez ajouter une note dans les cooknotes.
+	Exemple de blocage de paquet :
+</p>
+<pre>
+# cook pkgname --block
+# cooker block pkgname
+# cooker -n "Blocked pkgname note"
+</pre>
+<p>
+	La liste des paquets bloqués est affichée dans l'interface Web du Cooker.
+	Pour débloquer un paquet vous devez utiliser la commande unblock ou l'option
+	cook --unblock :
+</p>
+<pre>
+# cook pkgname --unblock
+# cooker unblock pkgname
+</pre>
+
+<h3>Cooker CGI/Web</h3>
+<p>
+	Pour que vous puissiez voir les journaux de façon agréable, garder une
+	trace de l'activité et vous aider à trouver les erreurs, vous pouvez
+	utiliser l'interface Web du Cooker qui se trouve par défaut dans le dossier
+	/var/www/cooker. Si vous n'utilisez pas un chroot et que le démon httpd de
+	Busybox est lancé, l'interface Web fonctionnera sans configuration et sera
+	visible en <a href="http://localhost/cooker/cooker.cgi">
+		http://localhost/cooker/cooker.cgi</a>
+</p>
+<p>
+	Si vous utilisez un environnement de chroot, vous devriez aussi installer
+	cookutils sur votre hôte et modifier la variable de chemin SLITAZ.
+	Une façon standard est d'avoir un chroot dans :
+</p>
+<pre>
+/home/slitaz/cooking/chroot
+</pre>
+<p>
+	Avec /etc/slitaz/cook.conf modifié comme suit :
+</p>
+<pre>
+SLITAZ="/home/slitaz/cooking/chroot/home/slitaz"
+</pre>
+<p>
+	Note : il n'est pas obligatoire d'installer les cookutils sur votre hôte
+	pour utiliser l'interface Web. Si vous utilisez Lighttpd vous pouvez aussi
+	copier les fichiers cooker.cgi et style.css par exemple dans votre dossier
+	~/Public et utiliser un cook.conf perso avec. L'avantage d'installer
+	cookutils sur l'hôte est d'avoir des mise à jour régulières par le
+	gestionnaire de paquets Tazpkg. Disons que vous avez cloné ou téléchargé
+	les cookutils :
+</p>
+<pre>
+$ cp -a cookutils/web ~/Public/cgi-bin/cooker
+$ cp -f cookutils/cook.conf ~/Public/cgi-bin/cooker
+</pre>
+<p>
+	Editez le fichier de configuration : ~/Public/cgi-bin/cooker/cook.conf pour
+	mettre votre chemin SLITAZ et c'est tout !
+</p>
+
+<h3>Cooknotes</h3>
+<p>
+	Le fonction cooknotes vous permet d'écrire de courtes notes personnelles
+	au sujet de l'emballage et est utile pour travailler en groupe. Les
+	cooknotes ont été codées pour que les mainteneur du Robot de fabrication
+	de SliTaz partagent des informations avec les autres contributeurs.
+	Les cooker peut bloquer la fabrication d'un paquet et recuire des paquets
+	à la main, par exemple il est commode de faire une note si un paquet est
+	bloqué afin que le mainteneur sache pourquoi l'administrateur a fait cela.
+	Les cooknotes sont affichées dans l'interface Web et peuvent être vérifiées
+	depuis la ligne de commande :
+</p>
+<pre>
+# cooker note "Blocked pkgname due to heavy CPU load"
+# cooker notes
+</pre>
+
+<h3>Le Cooker comme robot de fabrication</h3>
+<p>
+	Le Cooker est conçu pour être le robot de fabrication de SliTaz, c'est à
+	dire qu'il contrôle 2 woks, met à jour le wok Hg, obtient les différences
+	et cuit tous les paquets qui ont été commités. La façon la plus sûre
+	et la plus propre de lancer le Cooker comme robot de fabrication avec cron
+	est d'utiliser un environnement de chroot, mais il peut tourner directement
+	sur l'hôte si vous le voulez.
+</p>
+<p>
+	Pour lance de Cooker automatiquement vous devez utiliser crom depuis le chroot
+	et ajouter un ligne dans le crontab de root dans /var/spool/cron/crontabs.
+	Disons que vous souhaitez lancer le Cooker toutes les 2 heures :
+</p>
+<pre>
+* */2 * * * /usr/bin/cooker
+</pre>
+
+<h3>Lancer le Robot Cooker au boot</h3>
+<p>
+	L'environnement du Cooker et la tâche cron peut être automatiquement
+	lancée au démarrage. Vous devez avoir installé le paquet
+	cookutils-daemon sur l'hôte et utiliser une installation standard
+	SliTaz pour qu'il fonctionne correctement (la cooking se trouve
+	dans /home/slitaz/cooking). Ce script va monter les systèmes de
+	fichiers virtuels nécessaires pour les sources et les paquets.
+	Les fichiers sources se trouvent dans /home/slitaz/src et sont
+	reliés au chroot pour que vous puissiez les partager entre plusieurs
+	version  (stable, cooking, undigest). Si ce paquet n'est pas encore
+	installé :
+</p>
+<pre>
+# tazpkg get-install cookutils-daemon
+</pre>
+<p>
+	Pour lancer le daemon vous devez avoir une définition de ficher cron pour
+	root dans le chroot, le script daemon fonctionne comme tous les autres
+	daemons système et peut être controllé avec :
+</p>
+<pre>
+# /etc/init.d/cooker [start|stop|restart]
+</pre>
+
+<!-- End content -->
+</div>
+
+<footer>
+	Copyright © <span class="year"></span> <a href="http://www.slitaz.org/">SliTaz GNU/Linux</a>
+</footer>
+
+</body>
+</html>
