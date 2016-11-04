@@ -1254,6 +1254,25 @@ cook_compress_png() {
 }
 
 
+# Function to use in compile_rules() to compress all svg images
+
+cook_compress_svg() {
+	case "$ARCH" in
+		arm*) return;; # While SliTaz-arm miss `svgcleaner`
+	esac
+
+	action 'Compressing svg images...'
+	local size0=$(find $install -type f -name '*.svg' -exec ls -l \{\} \; | awk '{s+=$5}END{print s}')
+	tazpkg -gi svgcleaner --quiet
+	for i in $(find $install -type f -name '*.svg'); do
+		svgcleaner "$i" "$i" --remove-unresolved-classes false
+	done
+	local size1=$(find $install -type f -name '*.svg' -exec ls -l \{\} \; | awk '{s+=$5}END{print s}')
+	status
+	echo "  Size: $size0 B -> $size1 B"
+}
+
+
 # Function to use in genpkg_rules() to copy specified files from $install to $fs
 
 cook_copy_files() {
