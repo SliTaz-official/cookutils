@@ -478,7 +478,7 @@ copy_generic_files() {
 # Fix common errors and warnings in the .desktop files
 
 fix_desktop_files() {
-	[ -d "$install/usr/share/applications" ] || return
+	[ -z "$(find $install -type f -name '*.desktop')" ] && return
 
 	if [ -n "$QA" -a -z "$(which desktop-file-validate)" ]; then
 		action 'Installing dep (web/cache): %s' 'desktop-file-utils-extra'
@@ -486,7 +486,7 @@ fix_desktop_files() {
 		status
 	fi
 
-	for desktop in $(find $install/usr/share/applications -name '*.desktop'); do
+	for desktop in $(find $install -type f -name '*.desktop'); do
 		cp "$desktop" "$desktop.orig"
 
 		# Sort out .desktop file (is prerequisite to correct working of `fix-desktop-file`)
