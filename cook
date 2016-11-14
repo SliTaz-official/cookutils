@@ -349,6 +349,23 @@ extract_source() {
 }
 
 
+# Display time.
+
+disp_time() {
+	local sec div min
+	sec="$1"
+	div=$(( ($1 + 30) / 60))
+	case $div in
+		0) min='';;
+		# L10n: 'm' is for minutes (approximate cooking time)
+		*) min=$(_n ' ~ %dm' "$div");;
+	esac
+
+	# L10n: 's' is for seconds (cooking time)
+	_ '%ds%s' "$sec" "$min"
+}
+
+
 # Display cooked package summary.
 
 summary() {
@@ -359,14 +376,6 @@ summary() {
 	size=$(du -sh $PKGS/$pkg-${VERSION}*.tazpkg | awk '{print $1}')
 	files=$(cat $WOK/$pkg/taz/$pkg-*/files.list | wc -l)
 	[ -n "$TARBALL" ] && srcsize=$(du -sh $SRC/$TARBALL | awk '{print $1}')
-
-	sec="$time"
-	div=$(( ($time + 30) / 60))
-	case $div in
-		0) min='';;
-		# L10n: 'm' is for minutes (approximate cooking time)
-		*) min=$(_n '~ %dm' "$div");;
-	esac
 
 	_ 'Summary for: %s' "$PACKAGE $VERSION"
 	separator
@@ -380,7 +389,7 @@ summary() {
 	_ 'Compressed  : %s' "$size"
 	_ 'Files       : %s' "$files"
 	# L10n: 's' is for seconds (cooking time)
-	_ 'Cook time   : %ds %s' "$sec" "$min"
+	_ 'Cook time   : %s' "$(disp_time "$time")"
 	_ 'Cook date   : %s' "$(date "$(_ '+%%F %%R')")"
 	_ 'Host arch   : %s' "$ARCH"
 	separator
@@ -428,8 +437,8 @@ copy_generic_files() {
 		fi
 	fi
 
-	# Generic pixmaps copy can be disabled with GENERIC_PIXMAPS="no"
-	if [ "$GENERIC_PIXMAPS" != 'no' ]; then
+	# Generic pixmaps copy can be disabled with COOKOPTS="!pixmaps" (or GENERIC_PIXMAPS="no")
+	if [ "${COOKOPTS/!pixmaps/}" == "$COOKOPTS" -a "$GENERIC_PIXMAPS" != 'no' ]; then
 		if [ -d "$install/usr/share/pixmaps" ]; then
 			mkdir -p $fs/usr/share/pixmaps
 			if [ -f "$install/usr/share/pixmaps/$PACKAGE.png" ]; then
@@ -449,8 +458,8 @@ copy_generic_files() {
 	fi
 
 	# Desktop entry (.desktop).
-	# Generic desktop entry copy can be disabled with GENERIC_MENUS="no"
-	if [ "$GENERIC_MENUS" != 'no' ]; then
+	# Generic desktop entry copy can be disabled with COOKOPTS="!menus" (or GENERIC_MENUS="no")
+	if [ "${COOKOPTS/!menus/}" == "$COOKOPTS" -a "$GENERIC_MENUS" != 'no' ]; then
 		if [ -d "$install/usr/share/applications" ] && [ -z "$WANTED" ]; then
 			mkdir -p $fs/usr/share
 			cp -a $install/usr/share/applications $fs/usr/share
@@ -476,14 +485,14 @@ copy_generic_files() {
 
 
 # Fix common errors and warnings in the .desktop files
+# Fixing can be disabled with COOKOPTS="!fixdesktops"
 
 fix_desktop_files() {
+	[ "${COOKOPTS/!fixdesktops/}" != "$COOKOPTS" ] && return
 	[ -z "$(find $install -type f -name '*.desktop')" ] && return
 
 	if [ -n "$QA" -a -z "$(which desktop-file-validate)" ]; then
-		action 'Installing dep (web/cache): %s' 'desktop-file-utils-extra'
 		tazpkg -gi desktop-file-utils-extra --quiet
-		status
 	fi
 
 	for desktop in $(find $install -type f -name '*.desktop'); do
@@ -508,30 +517,61 @@ fix_desktop_files() {
 }
 
 
+# Compressor mini summary
+
+comp_summary() {
+	local time=$(($2 - $1))
+	local saving=$(( ($3 - $4) / 1024 ))
+	_ '  Time: %s. Size: %s B -> %s B. Save: %s KB' "$(disp_time $time)" "$3" "$4" "$saving"
+}
+
+
 # Find and strip: --strip-all (-s) or --strip-debug on static libs as well
 # as removing unneeded files like in Python packages. Cross compiled binaries
 # must be stripped with cross-tools aka $ARCH-slitaz-*-strip
+# Stripping can be disabled with COOKOPTS="!strip"
 
 strip_package() {
+	[ "${COOKOPTS/!strip/}" != "$COOKOPTS" ] && return
+
 	case "$ARCH" in
 		arm*|x86_64) export STRIP="$HOST_SYSTEM-strip" ;;
 		*)           export STRIP='strip' ;;
 	esac
 	action 'Executing strip on all files...'
+	local size0=0 size1=0 oldsize newsize
+	local time0=$(date +%s)
+
+	# Strip executable files
 	for dir in $fs/bin $fs/sbin $fs/usr/bin $fs/usr/sbin $fs/usr/games; do
 		if [ -d "$dir" ]; then
+			oldsize=$(find $dir -type f -exec ls -l '{}' \; | awk '{s+=$5}END{print s}')
 			find $dir -type f -exec $STRIP -s '{}' 2>/dev/null \;
+			newsize=$(find $dir -type f -exec ls -l '{}' \; | awk '{s+=$5}END{print s}')
+			size0=$((size0 + oldsize)); size1=$((size1 + newsize))
 		fi
 	done
+
+	# Strip shared and static libraries
+	# Remove Python *.pyc and *.pyo, Perl perllocal.pod and .packlist
+	oldsize=$(find $fs -type f \( \
+		-name '*.so*' -o -name '*.a' -o \
+		-name '*.pyc' -o -name '*.pyo' -o \
+		-name 'perllocal.pod' -o -name '.packlist' \) -exec ls -l '{}' \; | awk '{s+=$5}END{print s}')
+
 	find $fs -name '*.so*' -exec $STRIP -s '{}' 2>/dev/null \;
 	find $fs -name '*.a' -exec $STRIP --strip-debug '{}' 2>/dev/null \;
-	status
-
-	# Remove Python .pyc and .pyo from packages.
 	find $fs -type f \( -name '*.pyc' -o -name '*.pyo' \) -delete 2>/dev/null
-
-	# Remove Perl perllocal.pod and .packlist from packages.
 	find $fs -type f \( -name 'perllocal.pod' -o -name '.packlist' \) -delete 2>/dev/null
+
+	newsize=$(find $fs -type f \( \
+		-name '*.so*' -o -name '*.a' -o \) -exec ls -l '{}' \; | awk '{s+=$5}END{print s}')
+
+	size0=$((size0 + oldsize)); size1=$((size1 + newsize))
+
+	local time1=$(date +%s)
+	status
+	comp_summary "$time0" "$time1" "$size0" "$size1"
 }
 
 
@@ -568,9 +608,13 @@ remove_deps() {
 	fi
 }
 
+
 # Function to compress all man pages
+# Compressing can be disabled with COOKOPTS="!manz"
 
 compress_manpages() {
+	[ "${COOKOPTS/!manz/}" != "$COOKOPTS" ] && return
+
 	case "$ARCH" in
 		arm*) return;; # While SliTaz-arm miss `advancecomp`
 	esac
@@ -581,6 +625,8 @@ compress_manpages() {
 
 	action 'Compressing man pages...'
 
+	local size0=$(find $install/usr/share/man -type f -exec ls -l \{\} \; | awk '{s+=$5}END{print s}')
+	local time0=$(date +%s)
 	# We'll use only Gzip compression, so decompress other formats first
 	find $manpath -type f -name '*.bz2' -exec bunzip2 \{\} \;
 	find $manpath -type f -name '*.xz'  -exec unxz    \{\} \;
@@ -601,7 +647,80 @@ compress_manpages() {
 		advdef -z4q $i
 	done
 
+	local size1=$(find $install/usr/share/man -type f -exec ls -l \{\} \; | awk '{s+=$5}END{print s}')
+	local time1=$(date +%s)
 	status
+	comp_summary "$time0" "$time1" "$size0" "$size1"
+}
+
+
+# Function used after compile_rules() to compress all png images
+# Compressing can be disabled with COOKOPTS="!pngz"
+
+cook_compress_png() {
+	[ "${COOKOPTS/!pngz/}" != "$COOKOPTS" ] && return
+	case "$ARCH" in
+		arm*) return;; # While SliTaz-arm miss `pngquant` and `optipng`
+	esac
+	[ -z "$(find $install -type f -name '*.png')" ] && return
+
+	action 'Compressing png images...'
+	local size0=$(find $install -type f -name '*.png' -exec ls -l \{\} \; | awk '{s+=$5}END{print s}')
+	local time0=$(date +%s)
+
+	local use_pq=true use_op=true
+	[ "${COOKOPTS/!pngquant/}" != "$COOKOPTS" ] && use_pq=false
+	[ "${COOKOPTS/!optipng/}"  != "$COOKOPTS" ] && use_op=false
+
+	$use_pq && tazpkg -gi pngquant --quiet
+	$use_op && tazpkg -gi optipng --quiet
+
+	local oplevel=$(echo $COOKOPTS | grep 'op[0-8]' | sed 's|.*op\([0-8]\).*|\1|')
+	[ -z "$oplevel" ]     && oplevel='2'
+	[ "$oplevel" == '8' ] && oplevel='7 -zm1-9'
+
+	for i in $(find $install -type f -name '*.png'); do
+		$use_pq && pngquant -f --skip-if-larger --ext .png --speed 1 "$i"
+		$use_op && optipng -quiet -strip all -o$oplevel "$i"
+	done
+
+	local size1=$(find $install -type f -name '*.png' -exec ls -l \{\} \; | awk '{s+=$5}END{print s}')
+	local time1=$(date +%s)
+	status
+	comp_summary "$time0" "$time1" "$size0" "$size1"
+}
+
+
+# Function used after compile_rules() to compress all svg images
+# Compressing can be disabled with COOKOPTS="!svgz"
+
+cook_compress_svg() {
+	[ "${COOKOPTS/!svgz/}" != "$COOKOPTS" ] && return
+	case "$ARCH" in
+		arm*) return;; # While SliTaz-arm miss `svgcleaner`
+	esac
+	[ -z "$(find $install -type f -name '*.svg')" ] && return
+
+	action 'Compressing svg images...'
+	local size0=$(find $install -type f -name '*.svg' -exec ls -l \{\} \; | awk '{s+=$5}END{print s}')
+	local time0=$(date +%s)
+	tazpkg -gi svgcleaner --quiet
+	cleaner_log="$(mktemp)"
+	for i in $(find $install -type f -name '*.svg'); do
+		echo -n "$i: " >> "$cleaner_log"
+		svgcleaner "$i" "$i" --remove-unresolved-classes false --quiet true >> "$cleaner_log"
+	done
+	local size1=$(find $install -type f -name '*.svg' -exec ls -l \{\} \; | awk '{s+=$5}END{print s}')
+	local time1=$(date +%s)
+	status
+	comp_summary "$time0" "$time1" "$size0" "$size1"
+	sed -i '/: $/d' "$cleaner_log"
+	if [ -s "$cleaner_log" ]; then
+		echo 'Cleaner warnings and errors:'
+		awk '{printf "  %s\n", $0;}' "$cleaner_log"
+		echo
+	fi
+	rm "$cleaner_log"
 }
 
 
@@ -819,7 +938,10 @@ cookit() {
 	fi
 
 	# Actions to do after compiling the package
+	footer
 	compress_manpages
+	cook_compress_png
+	cook_compress_svg
 	footer
 
 	# Execute testsuite.
@@ -830,6 +952,7 @@ cookit() {
 	fi
 
 	fix_desktop_files
+
 	update_installed_cook_diff force
 }
 
@@ -1233,46 +1356,6 @@ cook_pick_manpages() {
 }
 
 
-# Function to use in compile_rules() to compress all png images
-
-cook_compress_png() {
-	case "$ARCH" in
-		arm*) return;; # While SliTaz-arm miss `pngquant` and `optipng`
-	esac
-
-	action 'Compressing png images...'
-	local size0=$(find $install -type f -name '*.png' -exec ls -l \{\} \; | awk '{s+=$5}END{print s}')
-	tazpkg -gi pngquant --quiet
-	tazpkg -gi optipng --quiet
-	for i in $(find $install -type f -name '*.png'); do
-		pngquant -f --skip-if-larger --ext .png --speed 1 "$i"
-		optipng -quiet -strip all -o7 -zm1-9 "$i"
-	done
-	local size1=$(find $install -type f -name '*.png' -exec ls -l \{\} \; | awk '{s+=$5}END{print s}')
-	status
-	echo "  Size: $size0 B -> $size1 B"
-}
-
-
-# Function to use in compile_rules() to compress all svg images
-
-cook_compress_svg() {
-	case "$ARCH" in
-		arm*) return;; # While SliTaz-arm miss `svgcleaner`
-	esac
-
-	action 'Compressing svg images...'
-	local size0=$(find $install -type f -name '*.svg' -exec ls -l \{\} \; | awk '{s+=$5}END{print s}')
-	tazpkg -gi svgcleaner --quiet
-	for i in $(find $install -type f -name '*.svg'); do
-		svgcleaner "$i" "$i" --remove-unresolved-classes false
-	done
-	local size1=$(find $install -type f -name '*.svg' -exec ls -l \{\} \; | awk '{s+=$5}END{print s}')
-	status
-	echo "  Size: $size0 B -> $size1 B"
-}
-
-
 # Function to use in genpkg_rules() to copy specified files from $install to $fs
 
 cook_copy_files() {
@@ -1281,6 +1364,23 @@ cook_copy_files() {
 	local i j
 	for i in $@; do
 		for j in $(find . -name $i ! -type d); do
+			mkdir -p $fs$(dirname ${j#.})
+			cp -a $j $fs/${j#.}
+		done
+	done
+	cd - >/dev/null
+	status
+}
+
+
+# Function to use in genpkg_rules() to copy specified folders from $install to $fs
+
+cook_copy_folders() {
+	action 'Copying folders...'
+	cd $install
+	local i j
+	for i in $@; do
+		for j in $(find . -name $i -type d); do
 			mkdir -p $fs$(dirname ${j#.})
 			cp -a $j $fs/${j#.}
 		done

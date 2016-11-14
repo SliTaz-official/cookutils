@@ -1,0 +1,51 @@
+You can use a variable COOKOPTS in the receipts to adjust certain aspects of the
+preparation of a package. Multiple options are allowed, that can be written
+together or separated by spaces, tabs or any other symbols.
+
+Example of use:
+
+    COOKOPTS="!menus !pngz"
+
+
+Currently, the following options are recognized:
+
+!pixmaps
+    Don't copy icons from a /usr/share/pixmaps folder as well as from stuff
+    folder (the same action that made obsolete option `GENERIC_PIXMAPS="no"`).
+
+!menus
+    Don't copy desktop files from a /usr/share/applications folder (the same
+    action that made obsolete option `GENERIC_MENUS="no"`).
+
+!fixdesktops
+    Don't fix common errors and warnings in the .desktop files.
+
+!strip
+    Don't strip executable files, shared and static libraries, as well as remove
+    Python (*.pyc and *.pyo) and Perl (perllocal.pod and .packlist) files.
+
+!manz
+    Don't compress all man pages.
+
+!pngz
+    Don't compress all png images. Image compression allows you to save some
+    space, but it takes a lot of time.
+
+!pngquant
+    Don't use `pngquant` to compress png images. Note, `pngquant` produces
+    indexed images (max 256 colors) which can be inappropriate in some cases:
+    a few programs (such as SLiM) will not recognize this compressed PNG file
+    format.
+
+!optipng
+    Don't use `optipng` to compress png images. Note, `optipng` is lossless png
+    compressor. Using `pngquant` and `optipng` in conjunction allows to save
+    more space.
+
+op0 to op8
+    Use specified `optipng` optimization level. The higher the level, the slower
+    compression. Note, this option does not have an exclamation mark, because it
+    means "don't" and here is "do" otherwise.
+
+!svgz
+    Don't compress all svg images.
