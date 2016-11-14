@@ -304,13 +304,22 @@ case "${QUERY_STRING}" in
 				fi
 			fi
 			[ -x ./man2html ] &&
-			if [ -d $wok/$bpkg/install/usr/man -o -d $wok/$bpkg/install/usr/share/man ]; then
+			if [ -d $wok/$bpkg/install/usr/man ] ||
+			   [ -d $wok/$bpkg/install/usr/share/man ] ||
+			   [ -d $wok/$bpkg/taz/*/fs/usr/man ] ||
+			   [ -d $wok/$bpkg/taz/*/fs/usr/share/man ]; then
 				echo "<a href='?man=$bpkg'>man</a>"
 			fi
-			if [ -d $wok/$bpkg/install/usr/doc -o -d $wok/$bpkg/install/usr/share/doc ]; then
+			if [ -d $wok/$bpkg/install/usr/doc ] ||
+			   [ -d $wok/$bpkg/install/usr/share/doc ] ||
+			   [ -d $wok/$bpkg/taz/*/fs/usr/doc ] ||
+			   [ -d $wok/$bpkg/taz/*/fs/usr/share/doc ]; then
 				echo "<a href='?doc=$bpkg'>doc</a>"
 			fi
-			if [ -d $wok/$bpkg/install/usr/info -o -d $wok/$bpkg/install/usr/share/info ]; then
+			if [ -d $wok/$bpkg/install/usr/info ] ||
+			   [ -d $wok/$bpkg/install/usr/share/info ] ||
+			   [ -d $wok/$bpkg/taz/*/fs/usr/info ] ||
+			   [ -d $wok/$bpkg/taz/*/fs/usr/share/info ]; then
 				echo "<a href='?info=$bpkg'>info</a>"
 			fi
 			echo "<a href='ftp://${HTTP_HOST%:*}/$pkg/'>browse</a>"
@@ -490,6 +499,8 @@ EOT
 		pkg=$(GET $type)
 		dir=$WOK/$pkg/install/usr/share/$type
 		[ -d $dir ] || dir=$WOK/$pkg/install/usr/$type
+		[ -d $dir ] || dir=$(echo $WOK/$pkg/taz/*/fs/usr/share/$type)
+		[ -d $dir ] || dir=$(echo $WOK/$pkg/taz/*/fs/usr/$type)
 		page=$(GET file)
 		if [ -z "$page" ]; then
 			page=$(find $dir -type f | sed q)
