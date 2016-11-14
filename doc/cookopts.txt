@@ -49,3 +49,7 @@ op0 to op8
 
 !svgz
     Don't compress all svg images.
+
+!uiz
+    Don't compress Glade UI files. Compression means the removal of
+    insignificant spaces and comments.

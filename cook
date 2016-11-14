@@ -373,7 +373,7 @@ summary() {
 	[ -d $WOK/$pkg/install ] && prod=$(du -sh $WOK/$pkg/install | awk '{print $1}' 2>/dev/null)
 	[ -d $WOK/$pkg/source ] && srcdir=$(du -sh $WOK/$pkg/source | awk '{print $1}' 2>/dev/null)
 	fs=$(du -sh $WOK/$pkg/taz/* | awk '{print $1}')
-	size=$(du -sh $PKGS/$pkg-${VERSION}*.tazpkg | awk '{print $1}')
+	size=$(ls -lh $PKGS/$pkg-${VERSION}*.tazpkg | awk '{print $5}')
 	files=$(cat $WOK/$pkg/taz/$pkg-*/files.list | wc -l)
 	[ -n "$TARBALL" ] && srcsize=$(du -sh $SRC/$TARBALL | awk '{print $1}')
 
@@ -388,7 +388,6 @@ summary() {
 	_ 'Packed      : %s' "$fs"
 	_ 'Compressed  : %s' "$size"
 	_ 'Files       : %s' "$files"
-	# L10n: 's' is for seconds (cooking time)
 	_ 'Cook time   : %s' "$(disp_time "$time")"
 	_ 'Cook date   : %s' "$(date "$(_ '+%%F %%R')")"
 	_ 'Host arch   : %s' "$ARCH"
@@ -724,6 +723,34 @@ cook_compress_svg() {
 }
 
 
+# Function used after compile_rules() to shrink all *.ui and *.glade files:
+# remove insignificant spaces and comments
+# Compressing can be disabled with COOKOPTS="!uiz"
+
+compress_ui() {
+	[ "${COOKOPTS/!uiz/}" != "$COOKOPTS" ] && return
+	case "$ARCH" in
+		arm*) return;; # While SliTaz-arm miss `xmlstarlet`
+	esac
+	[ -z "$(find $install -type f \( -name '*.ui' -o -name '*.glade' \) )" ] && return
+
+	action 'Compressing ui files...'
+	local size0=$(find $install -type f \( -name '*.ui' -o -name '*.glade' \) -exec ls -l \{\} \; | awk '{s+=$5}END{print s}')
+	local time0=$(date +%s)
+	tazpkg -gi xmlstarlet --quiet
+	temp_ui="$(mktemp)"
+	for ui in $(find $install -type f \( -name '*.ui' -o -name '*.glade' \) ); do
+		xmlstarlet c14n --without-comments "$ui" | xmlstarlet sel -B -t -c '*' > "$temp_ui"
+		cat "$temp_ui" > "$ui"
+	done
+	local size1=$(find $install -type f \( -name '*.ui' -o -name '*.glade' \) -exec ls -l \{\} \; | awk '{s+=$5}END{print s}')
+	local time1=$(date +%s)
+	status
+	comp_summary "$time0" "$time1" "$size0" "$size1"
+	rm "$temp_ui"
+}
+
+
 # The main cook function.
 
 cookit() {
@@ -942,6 +969,7 @@ cookit() {
 	compress_manpages
 	cook_compress_png
 	cook_compress_svg
+	compress_ui
 	footer
 
 	# Execute testsuite.
