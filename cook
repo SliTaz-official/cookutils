@@ -519,6 +519,7 @@ fix_desktop_files() {
 # Compressor mini summary
 
 comp_summary() {
+	[ "$3" -eq 0 ] && return
 	local time=$(($2 - $1))
 	local saving=$(( ($3 - $4) / 1024 ))
 	_ '  Time: %s. Size: %s B -> %s B. Save: %s KB' "$(disp_time $time)" "$3" "$4" "$saving"
@@ -617,8 +618,6 @@ compress_manpages() {
 	case "$ARCH" in
 		arm*) return;; # While SliTaz-arm miss `advancecomp`
 	esac
-	# Don't compress man pages for splitted packages
-	[ -n "$WANTED" ] && return
 	local manpath="$install/usr/share/man" dest link
 	[ -d "$manpath" ] || return
 
@@ -965,11 +964,15 @@ cookit() {
 	fi
 
 	# Actions to do after compiling the package
-	footer
-	compress_manpages
-	cook_compress_png
-	cook_compress_svg
-	compress_ui
+	# Skip all for splitted packages (already done in main package)
+	if [ -z "$WANTED" ]; then
+		footer
+		compress_manpages
+		cook_compress_png
+		cook_compress_svg
+		compress_ui
+		fix_desktop_files
+	fi
 	footer
 
 	# Execute testsuite.
@@ -978,8 +981,6 @@ cookit() {
 		testsuite $@ || exit 1
 		footer
 	fi
-
-	fix_desktop_files
 
 	update_installed_cook_diff force
 }
@@ -2124,11 +2125,10 @@ EOT
 		# Rotate log
 		for i in $(seq 9 -1 1); do
 			j=$(($i - 1))
-			[ -e $LOGS/$pkg.log.$j ] &&
-			mv -f $LOGS/$pkg.log.$j $LOGS/$pkg.log.$i
+			[ -e $LOGS/$pkg.log.$j ] && mv -f $LOGS/$pkg.log.$j $LOGS/$pkg.log.$i
 		done
-		mv $LOGS/$pkg.log $LOGS/$pkg.log.0
-		
+		[ -e $LOGS/$pkg.log ] && mv $LOGS/$pkg.log $LOGS/$pkg.log.0
+
 		# Check if wanted is built now so we have separate log files.
 		for wanted in $WANTED ; do
 			if grep -q "^$wanted$" $blocked; then
