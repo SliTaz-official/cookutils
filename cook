@@ -483,6 +483,30 @@ copy_generic_files() {
 }
 
 
+# Get list of supported locales...
+
+get_supported_locales() {
+	local lpc='/slitaz-i18n/stuff/locale-pack.conf' LOCALE_PACK
+	if [ -e "$WOK$lpc" ]; then
+		# ... from package in the local wok
+		. "$WOK$lpc"
+	else
+		# ... from Hg
+		temp_conf=$(mktemp)
+		wget -q -O $temp_conf -T 10 "http://hg.slitaz.org/wok/raw-file/tip$lpc"
+		if [ -s $temp_conf ]; then
+			. $temp_conf
+		else
+			# Give up and use hardcoded list
+			LOCALE_PACK="ar ca cs da de el en es fi fr hr hu id is it ja nb nl nn pl pt \
+			pt_BR ro ru sl sv tr uk zh_CN zh_TW"
+		fi
+		rm $temp_conf
+	fi
+	echo $LOCALE_PACK
+}
+
+
 # Fix common errors and warnings in the .desktop files
 # Fixing can be disabled with COOKOPTS="!fixdesktops"
 
@@ -490,9 +514,17 @@ fix_desktop_files() {
 	[ "${COOKOPTS/!fixdesktops/}" != "$COOKOPTS" ] && return
 	[ -z "$(find $install -type f -name '*.desktop')" ] && return
 
+	local size0=$(find $install -type f -name '*.desktop' -exec ls -l \{\} \; | awk '{s+=$5}END{print s}')
+	local time0=$(date +%s)
+
 	if [ -n "$QA" -a -z "$(which desktop-file-validate)" ]; then
 		tazpkg -gi desktop-file-utils-extra --quiet
 	fi
+
+	# The variable $LOCALE is set in cook.conf and may be overridden in the receipt.
+	# Default value is "" (empty). That means for us that we'll use the full
+	# list of supported locales here.
+	[ -z "$LOCALE" ] && LOCALE=$(get_supported_locales)
 
 	for desktop in $(find $install -type f -name '*.desktop'); do
 		cp "$desktop" "$desktop.orig"
@@ -502,6 +534,14 @@ fix_desktop_files() {
 
 		# Fix common errors in .desktop file
 		fix-desktop-file "$desktop"
+
+		# Strip unsupported locales from .desktop file
+		[ "${COOKOPTS/!i18nz/}" == "$COOKOPTS" ] &&
+			sdft "$desktop" -i -k "$LOCALE"
+
+		# Extra-strip
+		[ "${COOKOPTS/!extradesktops/}" == "$COOKOPTS" ] &&
+			sdft "$desktop" -i -g -x -tf -r 'Keywords*' -o
 
 		if [ -n "$QA" ]; then
 			# Check the rest of errors, warnings and tips
@@ -513,6 +553,10 @@ fix_desktop_files() {
 
 		rm "$desktop.orig"
 	done
+
+	local size1=$(find $install -type f -name '*.desktop' -exec ls -l \{\} \; | awk '{s+=$5}END{print s}')
+	local time1=$(date +%s)
+	comp_summary "$time0" "$time1" "$size0" "$size1"
 }
 
 
@@ -569,6 +613,44 @@ strip_package() {
 
 	size0=$((size0 + oldsize)); size1=$((size1 + newsize))
 
+	local time1=$(date +%s)
+	status
+	comp_summary "$time0" "$time1" "$size0" "$size1"
+}
+
+
+# Strip unsupported locales (.mo files)
+
+strip_mo_i18n() {
+	[ "${COOKOPTS/!i18nz/}" != "$COOKOPTS" ] && return
+
+	[ -z "$(find $fs -type f -name '*.mo')" ] && return
+
+	action 'Stripping translations files...'
+	local size0=$(find $fs -type f -name '*.mo' -exec ls -l \{\} \; | awk '{s+=$5}END{print s}')
+	local time0=$(date +%s)
+
+	# The variable $LOCALE is set in cook.conf and may be overridden in the receipt.
+	# Default value is "" (empty). That means for us that we'll use the full
+	# list of supported locales here.
+	[ -z "$LOCALE" ] && LOCALE=$(get_supported_locales)
+
+	# Existing locales
+	elocales=" $(ls -1 "$fs/usr/share/locale" | tr '\n' ' ') "
+
+	# Thin out the list of existing locales. At the end there will be only locales that need
+	# to delete (and the garbage like '_AU', _US', '_BR' leaving from 'en_AU', 'en_US', 'pt_BR'...)
+	for keep_locale in $LOCALE; do
+		elocales=${elocales//$keep_locale}
+	done
+
+	# Remove the unsupported locales
+	for rem_locale in $elocales; do
+		[ -d "$fs/usr/share/locale/$rem_locale" ] &&
+			rm -r "$fs/usr/share/locale/$rem_locale"
+	done
+
+	local size1=$(find $fs -type f -name '*.mo' -exec ls -l \{\} \; | awk '{s+=$5}END{print s}')
 	local time1=$(date +%s)
 	status
 	comp_summary "$time0" "$time1" "$size0" "$size1"
@@ -1042,6 +1124,7 @@ packit() {
 
 	# Strip and stuff files.
 	strip_package
+	strip_mo_i18n
 
 	# Create files.list with redirecting find output.
 	action 'Creating the list of files...'

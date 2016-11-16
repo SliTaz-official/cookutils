@@ -10,46 +10,95 @@ Example of use:
 Currently, the following options are recognized:
 
 !pixmaps
-    Don't copy icons from a /usr/share/pixmaps folder as well as from stuff
-    folder (the same action that made obsolete option `GENERIC_PIXMAPS="no"`).
+    Default action is to copy icons from a /usr/share/pixmaps folder as well as
+    from stuff folder (the same action that made obsolete option
+    `GENERIC_PIXMAPS="no"`).
+    The presence of this option overrides the default action: files will not be
+    automatically copied.
 
 !menus
-    Don't copy desktop files from a /usr/share/applications folder (the same
-    action that made obsolete option `GENERIC_MENUS="no"`).
+    Default action is to copy desktop files from a /usr/share/applications
+    folder (the same action that made obsolete option `GENERIC_MENUS="no"`).
+    The presence of this option overrides the default action: files will not be
+    automatically copied.
 
 !fixdesktops
-    Don't fix common errors and warnings in the .desktop files.
+    Default action is to fix common errors and warnings in the .desktop files.
+    The presence of this option overrides the default action: .desktop files
+    will not be changed.
+
+!i18nz
+    1. Default action is to delete locales that are not currently supported by
+    the SliTaz while processing desktop files.
+    The presence of this option overrides the default action: .desktop files
+    will contain the original set of locales.
+    Please note, this option does not have any action if the `!fixdesktops`
+    option provided: desktop files in any way not change.
+    2. Default action is to keep only supported translations provided by the
+    *.mo files.
+    The presence of this option overrides the default action: all existing *.mo
+    files will remain.
+    Please note, you can add all translations to the package, for example, using
+    command: `cook_copy_files *.mo`, and then by default only supported locales
+    will be left.
+
+!extradesktops
+    Default action is to remove extra information from the desktop files: such
+    entries as 'GenericName', 'X-GNOME-FullName' (all X-* are exposed),
+    'Terminal=false', Keywords, other sections. This extra information just not
+    supported in the current (LXDE) environment.
+    The presence of this option overrides the default action: extra information
+    will not be removed from the .desktop files.
 
 !strip
-    Don't strip executable files, shared and static libraries, as well as remove
-    Python (*.pyc and *.pyo) and Perl (perllocal.pod and .packlist) files.
+    Default action is to strip executable files, shared and static libraries,
+    as well as remove Python (*.pyc and *.pyo) and Perl (perllocal.pod and
+    .packlist) files.
+    The presence of this option overrides the default action: executable files
+    and libraries will not be stripped, and Python and Perl files all will be
+    left.
 
 !manz
-    Don't compress all man pages.
+    Default action is to compress all man pages.
+    The presence of this option overrides the default action: all man pages will
+    be left "as is". Please note that these files may be installed in compressed
+    form.
 
 !pngz
-    Don't compress all png images. Image compression allows you to save some
-    space, but it takes a lot of time.
+    Default action is to compress all PNG images. Image compression allows you
+    to save some space, but it takes a lot of time.
+    The presence of this option overrides the default action: all PNG images
+    will be left "as is".
 
 !pngquant
-    Don't use `pngquant` to compress png images. Note, `pngquant` produces
-    indexed images (max 256 colors) which can be inappropriate in some cases:
-    a few programs (such as SLiM) will not recognize this compressed PNG file
-    format.
+    Default action is to use `pngquant` while compressing PNG images. Please
+    note, `pngquant` produces indexed images (max 256 colors) which can be
+    inappropriate in some cases: a few programs (such as SLiM) will not
+    recognize this PNG file format.
+    The presence of this option overrides the default action: `pngquant` will
+    not be used.
 
 !optipng
-    Don't use `optipng` to compress png images. Note, `optipng` is lossless png
-    compressor. Using `pngquant` and `optipng` in conjunction allows to save
-    more space.
+    Default action is to use `optipng` to compress PNG images. Please note,
+    `optipng` is lossless PNG compressor. Using `pngquant` and `optipng` in
+    conjunction allows to save more space.
+    The presence of this option overrides the default action: `optipng` will not
+    be used.
 
 op0 to op8
-    Use specified `optipng` optimization level. The higher the level, the slower
-    compression. Note, this option does not have an exclamation mark, because it
-    means "don't" and here is "do" otherwise.
+    Default action is to use opimization level 2 while processing PNG images by
+    `optipng`. Using this option you can set desired `optipng` optimization
+    level. The higher the level, the slower compression and the smaller file
+    size. Please note that this option has no exclamation mark, because it means
+    "don't do", and here, on the contrary, "to do".
 
 !svgz
-    Don't compress all svg images.
+    Default action is to compress all SVG images.
+    The presence of this option overrides the default action: all SVG images
+    will be left "as is".
 
 !uiz
-    Don't compress Glade UI files. Compression means the removal of
-    insignificant spaces and comments.
+    Default action is to compress Glade UI files. Compression means the removal
+    of insignificant spaces and comments.
+    The presence of this option overrides the default action: all *.ui and
+    *.glade files will be left "as is".
