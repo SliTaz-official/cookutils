@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SliTaz Tools\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-09-18 19:14+0100\n"
+"POT-Creation-Date: 2016-11-19 22:31+0200\n"
 "PO-Revision-Date: 2016-09-18 19:14+0100\n"
 "Last-Translator: Pascal Bellard <pascal.bellard@slitaz.org>\n"
 "Language-Team: French\n"
@@ -17,822 +17,887 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: cook:32
+#: cook:33
 msgid "Usage:"
 msgstr "Usage :"
 
-#: cook:32
+#: cook:33
 msgid "cook [package|command] [list|--option]"
 msgstr "cook [paquet|commande] [liste|--option]"
 
-#: cook:34
+#: cook:35
 msgid "Commands:"
 msgstr "Commandes :"
 
-#: cook:35
+#: cook:36
 msgid "Display this short usage."
 msgstr "Affiche ce message succin."
 
-#: cook:36
+#: cook:37
 msgid "Setup your build environment."
 msgstr "Configure votre environnement de construction."
 
-#: cook:37
+#: cook:38
 msgid "Setup a cross environment."
 msgstr "Configure un environnement croisé."
 
-#: cook:39
+#: cook:40
 msgid "Test environment and cook a package."
 msgstr "Environnement de test et cuisson d'un paquet."
 
-#: cook:40
+#: cook:41
 msgid "List packages in the wok."
 msgstr "Liste les paquets dans le wok."
 
-#: cook:41
+#: cook:42
 msgid "Simple packages search function."
 msgstr "Recherche simple de paquets."
 
-#: cook:42
+#: cook:43
 msgid "Create a new package with a receipt."
 msgstr "Crée un nouveau paquet avec une recette."
 
-#: cook:43
+#: cook:44
 msgid "Cook a list of packages."
 msgstr "Cuit une liste de paquets."
 
-#: cook:44
+#: cook:45
 msgid "Clean-up all packages files."
 msgstr "Nettoie tous les fichiers de paquets."
 
-#: cook:45
+#: cook:46
 msgid "Clean-up all packages sources."
 msgstr "Nettoie tous les fichiers sources de paquets."
 
-#: cook:46
+#: cook:47
 msgid "Check for uncooked packages"
 msgstr "Recharche les paquets non cuits"
 
-#: cook:47
+#: cook:48
 msgid "Create packages DB lists and flavors."
 msgstr "Crée la base de listes de paquets et de saveurs."
 
-#: cook:49
+#: cook:50
 msgid "Options:"
 msgstr "Options :"
 
-#: cook:51
+#: cook:52
 msgid "clean the package in the wok."
 msgstr "nettoie le paquet dans le wok."
 
-#: cook:52
+#: cook:53
 msgid "cook and install the package."
 msgstr "cuit et installe le paquet."
 
-#: cook:53
+#: cook:54
 msgid "get the package source tarball."
 msgstr "obtient l'archive des sources du paquet."
 
-#: cook:54
+#: cook:55
 msgid "block a package so cook will skip it."
 msgstr "bloque un paquet pour qu'il ne soit pas cuit."
 
-#: cook:55
+#: cook:56
 msgid "unblock a blocked package."
 msgstr "débloque un paquet bloqué."
 
-#: cook:56
+#: cook:57
 msgid "check dependencies of cooked package."
 msgstr "vérifie les dépendances du paquet cuit."
 
-#: cook:57
+#: cook:58
 msgid "repack an already built package."
 msgstr "réemballe un paquet déjà cuit."
 
-#: cook:58
+#: cook:59
 msgid "display debugging messages."
 msgstr "affiche les messages de debug."
 
-#: cook:59
+#: cook:60
 msgid "continue running compile_rules."
 msgstr "continue l'exécution de compile_rules."
 
-#: cook:61
+#: cook:62
 msgid "create a receipt interactively."
 msgstr "crée une recette interactivement."
 
-#: cook:63
+#: cook:64
 msgid "clone the cooking wok from Hg repo."
 msgstr "clone le wok cooking depuis le dépot Hg."
 
-#: cook:64
+#: cook:65
 msgid "clone the stable wok from Hg repo."
 msgstr "clone le wok stable depuis le dépot Hg."
 
-#: cook:65
+#: cook:66
 msgid "clone the undigest wok from Hg repo."
 msgstr "clone le wok undigest depuis le dépot Hg."
 
-#: cook:66
+#: cook:67
 msgid "clone the tiny SliTaz wok from Hg repo."
 msgstr "clone le wok tiny SliTaz depuis le dépot Hg."
 
-#: cook:67
+#: cook:68
 msgid "force reinstall of chroot packages."
 msgstr "forcer la réinstallation des paquets du chroot."
 
-#: cook:69
+#: cook:70
 msgid "create up-to-date flavors files."
 msgstr "crée des fichiers de saveurs à jour."
 
-#: cook:88
+#: cook:89
 msgid "Unable to find package \"%s\" in the wok"
 msgstr "Paquet \"%s\" introuvable dans le wok"
 
 #. L10n: QA is quality assurance
-#: cook:97
+#: cook:98
 msgid "QA: empty variable: %s"
 msgstr "QA: variable vide: %s"
 
-#: cook:106
+#: cook:107
 msgid "Creating directories structure in \"%s\""
 msgstr "Création de l'arborescence dans \"%s\""
 
-#: cook:108
+#: cook:109
 msgid "Creating DB files in \"%s\""
 msgstr "Création de la base de fichies dans \"%s\""
 
-#: cook:118
+#: cook:119
 msgid "QA: checking package receipt..."
 msgstr "QA: vérification de la recette du paquet..."
 
-#: cook:133
+#: cook:134
 msgid "QA: unknown category \"%s\""
 msgstr "QA: catégorie inconnue \"%s\""
 
-#: cook:134
+#: cook:135
 msgid "Please, use one of: %s"
 msgstr "Vieullez l'un des : %s"
 
-#: cook:144
+#: cook:145
 msgid "QA: unable to reach \"%s\""
 msgstr "QA: ne peut joindre \"%s\""
 
-#: cook:204
+#: cook:205
 msgid "Creating tarball \"%s\""
 msgstr "Création de l'archive \"%s\""
 
-#: cook:229 cook:234 cook:248 cook:250 cook:260 cook:330
+#: cook:230 cook:235 cook:249 cook:251 cook:261 cook:331
 msgid "ERROR: %s"
 msgstr "ERREUR: %s"
 
-#: cook:242 cook:257 cook:272 cook:285 cook:296 cook:328
+#: cook:243 cook:258 cook:273 cook:286 cook:297 cook:329
 msgid "Getting source from %s..."
 msgstr "Récupération des sources depuis %s..."
 
-#: cook:243 cook:258 cook:273 cook:286 cook:329
+#: cook:244 cook:259 cook:274 cook:287 cook:330
 msgid "URL: %s"
 msgstr "URL: %s"
 
-#: cook:244 cook:275
+#: cook:245 cook:276
 msgid "Cloning to \"%s\""
 msgstr "Fermeture de \"%s\""
 
-#: cook:246
+#: cook:247
 msgid "Hg branch: %s"
 msgstr "Branche Hg : %s"
 
-#: cook:262
+#: cook:263
 msgid "Git branch: %s"
 msgstr "Branche Git : %s"
 
-#: cook:274
+#: cook:275
 msgid "CVS module: %s"
 msgstr "Module CVS : %s"
 
-#: cook:306
+#: cook:307
 msgid "Don't forget to add to receipt:"
 msgstr "N'oubliez pas d'ajouter à la recette :"
 
-#: cook:314
+#: cook:315
 msgid "ERROR: Unable to handle \"%s\""
 msgstr "ERREUR: Impossible d'utiliser \"%s\""
 
-#: cook:332
+#: cook:333
 msgid "Extracting source archive \"%s\""
 msgstr "Desarchivage des sources depuis \"%s\""
 
 #. L10n: 'm' is for minutes (approximate cooking time)
-#: cook:367
-msgid "~ %dm"
-msgstr "~ %dm"
+#: cook:361
+msgid " ~ %dm"
+msgstr " ~ %dm"
 
-#: cook:370
+#. L10n: 's' is for seconds (cooking time)
+#: cook:365
+msgid "%ds%s"
+msgstr "%ds%s"
+
+#: cook:380
 msgid "Summary for: %s"
 msgstr "Résumé pour: %s"
 
 #. L10n: keep the same width of translations to get a consistent view
-#: cook:374
+#: cook:384
 msgid "Source dir  : %s"
 msgstr "Dossier Src : %s"
 
-#: cook:375
+#: cook:385
 msgid "Src file    : %s"
 msgstr "Fichier Src : %s"
 
-#: cook:376
+#: cook:386
 msgid "Src size    : %s"
 msgstr "Taille Src  : %s"
 
-#: cook:377
+#: cook:387
 msgid "Produced    : %s"
 msgstr "Généré      : %s"
 
-#: cook:378
+#: cook:388
 msgid "Packed      : %s"
 msgstr "Emballé     : %s"
 
-#: cook:379
+#: cook:389
 msgid "Compressed  : %s"
 msgstr "Compressé   : %s"
 
-#: cook:380
+#: cook:390
 msgid "Files       : %s"
 msgstr "Fichiers    : %s"
 
-#. L10n: 's' is for seconds (cooking time)
-#: cook:382
-msgid "Cook time   : %ds %s"
-msgstr "Durée cuis. : %d %s"
+#: cook:391
+msgid "Cook time   : %s"
+msgstr "Durée cuis. : %s"
 
-#: cook:383
+#: cook:392
 msgid "Cook date   : %s"
 msgstr "Date cuis.  : %s"
 
-#: cook:383 cook:395 cook:1448 cook:1602
+#: cook:392 cook:404 cook:1851 cook:2062
 msgid "+%%F %%R"
 msgstr "+%%F %%R"
 
-#: cook:384
+#: cook:393
 msgid "Host arch   : %s"
 msgstr "Archi. hôte : %s"
 
-#: cook:392
+#: cook:401
 msgid "Debug information"
 msgstr "Information de débug"
 
 #. L10n: specify your format of date and time (to help: man date)
 #. L10n: not bad one is '+%x %R'
-#: cook:395
+#: cook:404
 msgid "Cook date: %s"
 msgstr "Date cuisson : %s"
 
+#: cook:405
+msgid "Cook time: %ds"
+msgstr "Durée cuis. : %ds"
+
 #. L10n: Please, translate all messages beginning with ERROR in a same way
-#: cook:397 cook:661 cook:765 cook:799 cook:889 cook:1766
+#: cook:407 cook:966 cook:1078 cook:1112 cook:1203 cook:2242
 msgid "ERROR"
 msgstr "ERREUR"
 
-#: cook:484
+#: cook:548
+#, fuzzy
+msgid "QA: Checking %s..."
+msgstr "QA: vérification de la recette du paquet..."
+
+#: cook:569
+msgid "  Time: %s. Size: %s B -> %s B. Save: %s KB"
+msgstr ""
+
+#: cook:585
 msgid "Executing strip on all files..."
 msgstr "Ecécute strip sur tous des fichiers..."
 
-#: cook:496
-msgid "Removing Python compiled files..."
-msgstr "Retire les fichiers compilés Python..."
+#: cook:629
+#, fuzzy
+msgid "Stripping translations files..."
+msgstr "Ecécute strip sur tous des fichiers..."
 
-#: cook:503
-msgid "Removing Perl compiled files..."
-msgstr "Retire les fichiers compilés Perl..."
-
-#: cook:518 cook:647
+#: cook:680 cook:952
 msgid "Build dependencies to remove:"
 msgstr "Dépendances de fabrication à enlever :"
 
-#: cook:520 cook:648
+#: cook:682 cook:953
 msgid "Removing:"
 msgstr "Enlève :"
 
-#: cook:535
+#: cook:706
+#, fuzzy
+msgid "Compressing man pages..."
+msgstr "Conpression de FS..."
+
+#: cook:747
+#, fuzzy
+msgid "Compressing png images..."
+msgstr "Conpression de FS..."
+
+#: cook:784
+#, fuzzy
+msgid "Compressing svg images..."
+msgstr "Conpression de FS..."
+
+#: cook:818
+#, fuzzy
+msgid "Compressing ui files..."
+msgstr "Conpression de FS..."
+
+#: cook:838
 msgid "Cook: %s"
 msgstr "Cuit : %s"
 
-#: cook:549
+#: cook:852
 msgid "%s sysroot: %s"
 msgstr "Sysroot %s : %s"
 
-#: cook:550
+#: cook:853
 msgid "Adding \"%s\" to PATH"
 msgstr "Ajoute \"%s\" au PATH"
 
-#: cook:554
+#: cook:857
 msgid "Using cross-tools: %s"
 msgstr "Utilise les outils de fabrication croisée : %s"
 
-#: cook:578
+#: cook:881
 msgid "Disabling -pipe compile flag: %d RAM free"
 msgstr "Désactivation de l'option de compilation -pipe ; RAM libre : %d"
 
-#: cook:594
+#: cook:897
 msgid "Checking build dependencies..."
 msgstr "Vérifie les dépendances de fabrication... "
 
-#: cook:595
+#: cook:898
 msgid "Using packages DB: %s"
 msgstr "Utilisation de base de paquets : %s"
 
-#: cook:619
+#: cook:924
 msgid "Missing dep (wok/pkg): %s"
 msgstr "Dépendance manquante (wok/pkg) : %s"
 
-#: cook:627
+#: cook:932
 msgid "ERROR: unknown dep \"%s\""
 msgstr "ERREUR: dépendance inconnue \"%s\""
 
-#: cook:641
+#: cook:946
 msgid "Auto cook config is set: %s"
 msgstr "La cuisson automatique est activé : %s"
 
-#: cook:644
+#: cook:949
 msgid "Building dep (wok/pkg)    : %s"
 msgstr "Dépendance de fabrication (wok/pkg) : %s"
 
-#: cook:649
+#: cook:954
 msgid "ERROR: can't cook dep \"%s\""
 msgstr "ERREUR: ne peut cuire la dépendance \"%s\""
 
-#: cook:664
+#: cook:969
 msgid "ERROR: missing %d dependency"
 msgid_plural "ERROR: missing %d dependencies"
 msgstr[0] "ERREUR: %d dépendance manque"
 msgstr[1] "ERREUR: %d dépendances manquent"
 
-#: cook:671
+#: cook:976
 msgid "Installing dep (pkg/local): %s"
 msgstr "Installe la dépendance (pkg/local) : %s"
 
-#: cook:678
+#: cook:983
 msgid "Installing dep (web/cache): %s"
 msgstr "Installe la dépendance (web/cache) : %s"
 
-#: cook:734 cook:789
+#: cook:1034 cook:1102
 msgid "Executing: %s"
 msgstr "Exécute : %s"
 
-#: cook:751
+#: cook:1062
 msgid "Running testsuite"
 msgstr "Lance la suite de test"
 
-#: cook:762
+#: cook:1075
 msgid "ERROR: cook failed"
 msgstr "ERREUR: échec de la cuisson"
 
-#: cook:786
+#: cook:1099
 msgid "Pack: %s"
 msgstr "Emballe : %s"
 
-#: cook:791
+#: cook:1104
 msgid "ERROR: genpkg_rules failed"
 msgstr "ERREUR: échec de genpkg_rules"
 
-#: cook:794
+#: cook:1107
 msgid "No packages rules: meta package"
 msgstr "Pas de règles dans la recette : méta paquet"
 
-#: cook:807
+#: cook:1120
 msgid "Copying \"%s\"..."
 msgstr "Copie de \"%s\"..."
 
-#: cook:816
+#: cook:1130
 msgid "Creating the list of files..."
 msgstr "Crée la liste de fichiers..."
 
-#: cook:824
+#: cook:1138
 msgid "Creating md5sum of files..."
 msgstr "Crée le md5sum de chaque fichier..."
 
-#: cook:839
+#: cook:1153
 msgid "Compressing the FS..."
 msgstr "Conpression de FS..."
 
-#: cook:847
+#: cook:1161
 msgid "Updating receipt sizes..."
 msgstr "Mise à jour des tailles dans la recette..."
 
-#: cook:855
+#: cook:1169
 msgid "Updating receipt EXTRAVERSION: %s"
 msgstr "Mise à jour de EXTRAVERSION dans la recette : %s"
 
-#: cook:862
+#: cook:1176
 msgid "Creating full cpio archive..."
 msgstr "Crée l'archive cpio..."
 
-#: cook:867
+#: cook:1181
 msgid "Restoring original package tree..."
 msgstr "Restore l'arborescence originale..."
 
-#: cook:876
+#: cook:1190
 msgid "Package \"%s\" created"
 msgstr "Paquet \"%s\" crée"
 
-#: cook:895
+#: cook:1209
 msgid "QA: checking for empty package..."
 msgstr "QA: vérifie que le paquet n'est pas vide..."
 
-#: cook:898
+#: cook:1212
 msgid "ERROR: empty package"
 msgstr "ERREUR: paquet vide"
 
-#: cook:906
+#: cook:1225
 msgid "Removing old package \"%s\""
 msgstr "Retire l'ancien paquet \"%s\""
 
-#: cook:940
+#: cook:1262
 msgid "Unable to install package, build has failed."
 msgstr "Impossible d'installer le paquet, la cuisson a échoué."
 
-#: cook:949
+#: cook:1271
 msgid "Updating %s chroot environment..."
 msgstr "Mise à jour de l'environnement du chroot..."
 
-#: cook:950
+#: cook:1272
 msgid "Updating chroot: %s"
 msgstr "Mise à jour du chroot : %s"
 
-#: cook:982
+#: cook:1304
 msgid "Setup aufs chroot..."
 msgstr "Paramètrage du chroot aufs"
 
-#: cook:994
+#: cook:1316
 msgid "Aufs mount failure"
 msgstr "Echec du montage aufs"
 
-#: cook:1006
+#: cook:1328
 msgid "Leaving aufs chroot..."
 msgstr "Quitte le chroot aufs..."
 
-#: cook:1075
+#: cook:1397
 msgid "Multiple choice:"
 msgstr "Plusieurs choix :"
 
-#: cook:1076
+#: cook:1398
 msgid "Select one [%s]: "
 msgstr "Choisissez [%s] : "
 
-#: cook:1117
+#: cook:1446
 msgid "Getting standard devel files..."
 msgstr "Obtient les fichiers de developpement standards..."
 
-#: cook:1134
+#: cook:1459
+#, fuzzy
+msgid "Copying man pages..."
+msgstr "Copie de \"%s\"..."
+
+#: cook:1474
+#, fuzzy
+msgid "Copying files..."
+msgstr "Copie de \"%s\"..."
+
+#: cook:1491
+#, fuzzy
+msgid "Copying folders..."
+msgstr "Copie de \"%s\"..."
+
+#: cook:1510
+#, fuzzy
+msgid "Copying hicolor icons..."
+msgstr "Copie de \"%s\"..."
+
+#: cook:1534
 msgid "List of %s packages in \"%s\""
 msgstr "Liste des paquets %s dans \"%s\""
 
-#: cook:1150
+#: cook:1549
 msgid "%s package"
 msgid_plural "%s packages"
 msgstr[0] "paquet %s"
 msgstr[1] "paquets %s"
 
-#: cook:1159
+#: cook:1558
 msgid "Search results for \"%s\""
 msgstr "Recharche des résultats pour \"%s\""
 
-#: cook:1166
+#: cook:1565
 msgid "Cook: setup environment"
 msgstr "Cook: paramétrage de l'environnement"
 
-#: cook:1167
+#: cook:1566
 msgid "Setting up your environment"
 msgstr "Paramétrage de l'environnement"
 
-#: cook:1170
+#: cook:1570
 msgid "Checking for packages to install..."
 msgstr "Recherche les paquets à installer..."
 
-#: cook:1176
+#: cook:1576
 msgid "ERROR: %s is not installed"
 msgstr "ERREUR: %s n'est pas installé"
 
-#: cook:1179
+#: cook:1579
 msgid "Using config file: %s"
 msgstr "Utilise le fichier de configuration : %s"
 
-#: cook:1200
+#: cook:1600
 msgid "Adding group \"%s\""
 msgstr "Ajoute le groupe \"%s\""
 
-#: cook:1203
+#: cook:1603
 msgid "Setting permissions for group \"%s\"..."
 msgstr "Détermine les permissions pour le groupe \"%s\"..."
 
-#: cook:1206
+#: cook:1606
 msgid "All done, ready to cook packages :-)"
 msgstr "Terminé, prêt à cuire des paquets :-)"
 
-#: cook:1221
+#: cook:1621
 msgid "Cook: setup %s cross environment"
 msgstr "Cook: paramétrage de l'environnement croisé %s"
 
-#: cook:1222
+#: cook:1622
 msgid "Setting up your %s cross environment"
 msgstr "Paramétrage de votre environnement croisé %s"
 
 #. L10n: keep the same width of translations to get a consistent view
-#: cook:1251
+#: cook:1651
 msgid "Target arch     : %s"
 msgstr "Archi. cible    : %s"
 
-#: cook:1252
+#: cook:1652
 msgid "Configure args  : %s"
 msgstr "Configure args  : %s"
 
-#: cook:1253
+#: cook:1653
 msgid "Build flags     : %s"
 msgstr "Build flags     : %s"
 
-#: cook:1254
+#: cook:1654
 msgid "Arch sysroot    : %s"
 msgstr "Sysroot archi.  : %s"
 
-#: cook:1255
+#: cook:1655
 msgid "Tools prefix    : %s"
 msgstr "Préfixe outils  : %s"
 
-#: cook:1257
+#: cook:1657
 msgid "Packages DB     : %s"
 msgstr "Base de paquets : %s"
 
-#: cook:1268
+#: cook:1668
 msgid "WARNING: %s is not installed in sysroot"
 msgstr "ATTENTION: %s n'est pas installé dans sysroot"
 
-#: cook:1272
+#: cook:1672
 msgid "Cross compiler  : %s"
 msgstr "Compilateur croisé : %s"
 
-#: cook:1274
+#: cook:1674
 msgid "C compiler \"%s\" is missing"
 msgstr "Le compilateur C \"%s\" est absent"
 
-#: cook:1275
+#: cook:1675
 msgid "Run \"%s\" to cook a toolchain"
 msgstr "Lancez \"%s\" pour cuire une toolchain"
 
-#: cook:1281
+#: cook:1681
 msgid "Cook test: testing the cook environment"
 msgstr "Cuisson de test : test de l'environnement de cuisson"
 
-#: cook:1292
+#: cook:1692
 msgid "Package \"%s\" already exists."
 msgstr "Le paquet \"%s\" existe déjà."
 
-#: cook:1296
+#: cook:1696
 msgid "Creating folder \"%s\""
 msgstr "Création du dossier \"%s\""
 
-#: cook:1299
+#: cook:1699
 msgid "Preparing the package receipt..."
 msgstr "Préparation de la recette du paquet..."
 
-#: cook:1307
+#: cook:1707
 msgid "Entering interactive mode..."
 msgstr "Entrée dans le mode interactif..."
 
-#: cook:1309
+#: cook:1709
 msgid "Package       : %s"
 msgstr "Paquet        : %s"
 
-#: cook:1311
+#: cook:1711
 msgid "Version       : "
 msgstr "Version       : "
 
-#: cook:1314
+#: cook:1714
 msgid "Category      : "
 msgstr "Catégorie     : "
 
 #. L10n: Short description
-#: cook:1318
+#: cook:1718
 msgid "Short desc    : "
 msgstr "Mini desc.    : "
 
-#: cook:1321
+#: cook:1721
 msgid "Maintainer    : "
 msgstr "Mainteneur    : "
 
-#: cook:1324
+#: cook:1724
 msgid "License       : "
 msgstr "Licence       : "
 
-#: cook:1327
+#: cook:1727
 msgid "Web site      : "
 msgstr "Site Web      : "
 
-#: cook:1332
+#: cook:1732
 msgid "Wget URL to download source tarball."
 msgstr "URL Wget pour charger l'archive source."
 
-#: cook:1333
+#: cook:1733
 msgid "Example  : "
 msgstr "Exemple  : "
 
-#: cook:1334
+#: cook:1734
 msgid "Wget url : "
 msgstr "URL Wget : "
 
-#: cook:1338
+#: cook:1738
 msgid "Do you need a stuff directory? (y/N)"
 msgstr "Avez vous besoin d'un répertoire stuff ? (y/N)"
 
-#: cook:1340
+#: cook:1740
 msgid "Creating the stuff directory..."
 msgstr "Création du répertoire stuff..."
 
-#: cook:1345
+#: cook:1745
 msgid "Are you going to write a description? (y/N)"
 msgstr "Allez vous écrire une description ? (y/N)"
 
-#: cook:1347
+#: cook:1747
 msgid "Creating the \"%s\" file..."
 msgstr "Crée le fichier \"%s\" ..."
 
-#: cook:1351
+#: cook:1751
 msgid "Receipt is ready to use."
 msgstr "La recette est prête à utiliser."
 
-#: cook:1359
+#: cook:1759
 msgid "No list in argument."
 msgstr "Pas de liste en argument."
 
-#: cook:1363
+#: cook:1763
 msgid "List \"%s\" not found."
 msgstr "Liste \"%s\" introuvable."
 
-#: cook:1367
+#: cook:1767
 msgid "Starting cooking the list \"%s\""
 msgstr "Commence la cuisson de la liste \"%s\""
 
-#: cook:1375
+#: cook:1775
 msgid "Cleaning all packages files..."
 msgstr "Nettoie tous les fichiers de paquets"
 
-#: cook:1381
+#: cook:1781
 msgid "Cleaning all packages sources..."
 msgstr "Nettoie tous les fichiers source des paquets"
 
-#: cook:1388
+#: cook:1788
 msgid "Checking for uncooked packages"
 msgstr "Vérifie les paquets non cuits"
 
-#: cook:1401
+#: cook:1801
 msgid "Package \"%s\""
 msgstr "Paquet \"%s\""
 
-#: cook:1420
+#: cook:1819
 msgid "%s uncooked package"
 msgid_plural "%s uncooked packages"
 msgstr[0] "%s paquet non cuit"
 msgstr[1] "%s paquets non cuits"
 
-#: cook:1422
+#: cook:1821
 msgid "All packages are cooked :-)"
 msgstr "Tous les paquets sont cuits :-)"
 
-#: cook:1435
+#: cook:1838
 msgid "Packages directory \"%s\" doesn't exist"
 msgstr "Répertoire de paquets \"%s\" inexistant"
 
-#: cook:1445
+#: cook:1848
 msgid "Cook pkgdb: Creating all packages lists"
 msgstr "Cook pkgdb: crée toutes les listes de paquets"
 
-#: cook:1446
-msgid "Creating lists for \"%s\""
-msgstr "Crée les listes pour \"%s\""
-
-#: cook:1448
-msgid "Cook pkgdb started: %s"
-msgstr "Démarre cook pkgdb : %s"
-
-#: cook:1454 cook:1457 cook:1523 cook:1535 cook:1540
+#: cook:1857 cook:1861 cook:1869 cook:1967 cook:1974 cook:1985 cook:1991
 msgid "Creating file \"%s\""
 msgstr "Crée le fichier \"%s\""
 
-#: cook:1463
+#: cook:1881
 msgid "Creating lists from \"%s\""
 msgstr "Crée les listes depuis \"%s\""
 
-#: cook:1516 cook:1517 cook:1518 cook:1529 cook:1547
+#: cook:1937
+#, fuzzy
+msgid "  - absent: %s (%s)"
+msgstr "Fait : %s (%s)"
+
+#: cook:1943 cook:1944 cook:1945 cook:1946
 msgid "Done: %s (%s)"
 msgstr "Fait : %s (%s)"
 
-#. L10n: 's' is for seconds (cooking time)
-#: cook:1554
-msgid "Packages: %s - Time: %ss"
-msgstr "Paquets : %s - Durée : %ss"
+#: cook:1954
+#, fuzzy
+msgid "Removing duplicates:"
+msgstr "Retire l'ancien paquet \"%s\""
 
-#: cook:1563
-msgid "Missing flavors folder \"%s\""
-msgstr "Dossier saveurs manquent \"%s\""
-
-#: cook:1568
+#: cook:2028
 msgid "Creating flavors files in \"%s\""
 msgstr "Crée les fichiers saveurs dans \"%s\""
 
-#: cook:1569
+#: cook:2029
 msgid "Cook pkgdb: Creating all flavors"
 msgstr "Cook pkgdb: Crée toutes les saveurs"
 
-#: cook:1572
+#: cook:2032
 msgid "Recharging lists to use latest packages..."
 msgstr "Recharge les listes pour utiliser les derniers paquets..."
 
-#: cook:1577
+#: cook:2037
 msgid "Creating configuration file \"%s\""
 msgstr "Crée le fichier de configuration \"%s\""
 
-#: cook:1589
+#: cook:2049
 msgid "Starting to generate flavors..."
 msgstr "Commence à générer les saveurs..."
 
-#: cook:1593
+#: cook:2053
 msgid "Packing flavor \"%s\""
 msgstr "Emballe la saveur \"%s\""
 
-#: cook:1599
-msgid "Total flavors size: %s"
-msgstr "Taille totale des saveurs : %s"
-
-#: cook:1602
+#: cook:2062
 msgid "Cook pkgdb end: %s"
 msgstr "Fin de Cook pkgdb : %s"
 
-#: cook:1622
+#: cook:2085
 msgid "cook: HOST_ARCH is not set in \"%s\" receipt"
 msgstr "cook: HOST_ARCH n'est pas défini dans \"%s\""
 
-#: cook:1623
-msgid "package \"%s\" is not included inin %s"
+#: cook:2086
+#, fuzzy
+msgid "package \"%s\" is not included in %s"
 msgstr "Le paquet \"%s\" n'est pas inclu dans %s"
 
-#: cook:1624 cook:1637 cook:1639
+#: cook:2087 cook:2100 cook:2102
 msgid "cook: %s"
 msgstr "cook: %s"
 
-#: cook:1625 cook:1640
+#: cook:2088 cook:2103
 msgid "bugs: %s"
 msgstr "bugs: %s"
 
-#: cook:1626 cook:1641
+#: cook:2089 cook:2104
 msgid "Cook skip: %s"
 msgstr "Cook passe : %s"
 
-#: cook:1634
+#: cook:2097
 msgid "Host arch %s"
 msgstr "Archi. hôte %s"
 
-#: cook:1638
+#: cook:2101
 msgid "package \"%s\" doesn't cook or is not included in %s"
 msgstr "Le paquet \"%s\" ne cuit pas ou n'est pas inclu dans %s"
 
-#: cook:1649
+#: cook:2112
 msgid "Package \"%s\" is blocked"
 msgstr "Le paquet \"%s\" est bloqué"
 
-#: cook:1656
+#: cook:2119
 msgid "Cook started for: %s"
 msgstr "Début de cuisson : %s"
 
-#: cook:1667
+#: cook:2136
 msgid "Cleaning \"%s\""
 msgstr "Nettoyage de \"%s\""
 
-#: cook:1676
+#: cook:2145
 msgid "Getting source for \"%s\""
 msgstr "Obtient les sources pour \"%s\""
 
-#: cook:1678
+#: cook:2147
 msgid "Tarball: %s"
 msgstr "Tarball: %s"
 
-#: cook:1682
+#: cook:2151
 msgid "Blocking package \"%s\""
 msgstr "Bloque le paquet \"%s\""
 
-#: cook:1688
+#: cook:2157
 msgid "Unblocking package \"%s\""
 msgstr "Débloque le paquet \"%s\""
 
-#: cook:1700 cook:1707
+#: cook:2169 cook:2176
 msgid "Need to build \"%s\""
 msgstr "Il faut cuire \"%s\""
 
-#: cook:1711
+#: cook:2180
 msgid "Checking depends"
 msgstr "Recherche des dépendances"
 
-#: cook:1742
+#: cook:2218
 msgid "WANTED package \"%s\" is blocked"
 msgstr "Le paquet WANTED \"%s\" est bloqué"
 
-#: cook:1748
+#: cook:2224
 msgid "WANTED package \"%s\" is broken"
 msgstr "Le paquet WANTED \"%s\" est cassé"
+
+#~ msgid "Removing Python compiled files..."
+#~ msgstr "Retire les fichiers compilés Python..."
+
+#~ msgid "Removing Perl compiled files..."
+#~ msgstr "Retire les fichiers compilés Perl..."
+
+#~ msgid "Creating lists for \"%s\""
+#~ msgstr "Crée les listes pour \"%s\""
+
+#~ msgid "Cook pkgdb started: %s"
+#~ msgstr "Démarre cook pkgdb : %s"
+
+#~ msgid "Packages: %s - Time: %ss"
+#~ msgstr "Paquets : %s - Durée : %ss"
+
+#~ msgid "Missing flavors folder \"%s\""
+#~ msgstr "Dossier saveurs manquent \"%s\""
+
+#~ msgid "Total flavors size: %s"
+#~ msgstr "Taille totale des saveurs : %s"
