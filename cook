@@ -626,11 +626,11 @@ strip_package() {
 strip_mo_i18n() {
 	[ "${COOKOPTS/!i18nz/}" != "$COOKOPTS" ] && return
 
-	[ -d "$fs/usr/share/locale" ] || return
+	[ ! -d "$fs/usr/share/locale" ] && return
 	[ -z "$(find $fs/usr/share/locale -type f -name '*.mo')" ] && return
 
 	action 'Stripping translations files...'
-	local size0=$(find $fs$fs/usr/share/locale -type f -name '*.mo' -exec ls -l \{\} \; | awk '{s+=$5}END{print s}')
+	local size0=$(find $fs/usr/share/locale -type f -name '*.mo' -exec ls -l \{\} \; | awk '{s+=$5}END{print s}')
 	local time0=$(date +%s)
 
 	# The variable $LOCALE is set in cook.conf and may be overridden in the receipt.
