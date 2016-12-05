@@ -715,7 +715,7 @@ compress_manpages() {
 	find $manpath -type f -name '*.xz'  -exec unxz    \{\} \;
 
 	# Fast compress with gzip
-	find $manpath -type f -name '*.[1-9]' -exec gzip \{\} \;
+	find $manpath -type f -name '*.[1-9]*' -exec gzip \{\} \;
 
 	# Fix symlinks
 	for i in $(find $install/usr/share/man -type l); do
