@@ -112,7 +112,7 @@ case "${QUERY_STRING}" in
 	log=*)
 		log=$iso/${QUERY_STRING#log=}
 		if [ -s $log ]; then
-			echo "<h3>Cook log $(stat -c %y $log | sed 's/ .*//')</h3>"
+			echo "<h3>Cook log $(stat -c %y $log | sed 's/:..\..*//')</h3>"
 			echo '<pre>'
 			cat $log | syntax_highlighter log
 			echo '</pre>'
