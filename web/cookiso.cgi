@@ -100,10 +100,23 @@ case "${QUERY_STRING}" in
 		fgrep "Rootfs size" $log
 		fgrep "ISO image size" $log
 		echo '</pre>'
-		echo '<h3>Cookiso log</h3>'
+		echo "<h3>Cookiso log $(stat -c %y $log | sed 's/:..\..*//')</h3>"
+		for i in $(ls -t $log.*); do
+			echo -n "<a href=\"?log=$(basename $i)\">"
+			echo "$(stat -c %y $i | sed 's/ .*//')</a>"
+		done
 		echo '<pre>'
 		cat $log | syntax_highlighter log
 		echo '</pre>' ;;
+
+	log=*)
+		log=$iso/${QUERY_STRING#log=}
+		if [ -s $log ]; then
+			echo "<h3>Cook log $(stat -c %y $log | sed 's/ .*//')</h3>"
+			echo '<pre>'
+			cat $log | syntax_highlighter log
+			echo '</pre>'
+		fi ;;
 
 	*)
 		# Main page with summary.

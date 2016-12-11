@@ -124,7 +124,12 @@ gen_flavors() {
 			name="slitaz-$string"
 		fi
 		log="$iso/$name.log"
-		rm -f $log; touch $log
+		for i in $(seq 9 -1 1); do # Rotate log
+			j=$(($i - 1))
+			[ -e $log.$j ] && mv -f $log.$j $log.$i
+		done
+		[ -e $log ] && mv $log $log.0
+		touch $log
 		echo "Building $string <a href='?distro=$string-$flavor'>$flavor</a>" | log
 		echo "Cookiso started: $(date '+%F %R')" | tee -a $log
 		tazlito pack-flavor $flavor | tee -a $log
@@ -153,7 +158,7 @@ push_iso() {
 	for flavor in $flavors; do
 		distro="slitaz-${string}-$flavor"
 		file="${distro%-core-4in1}"
-		rsync $BWLIMIT -vtP -e "$SSH_CMD" $iso/$file.* \
+		rsync $BWLIMIT -vtP -e "$SSH_CMD" $iso/$file.??? \
 			${SSH_HOST}:$SSH_ISO/$string 2>&1 | tee $synclog
 	done
 }
