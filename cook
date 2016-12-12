@@ -660,8 +660,8 @@ strip_mo_i18n() {
 }
 
 
-# Normalize all *.mo files: unconditionally convert to UTF-8; remove strings that are really not add
-# translation (msgid = msgstr)
+# Normalize all *.mo files: unconditionally convert to UTF-8; remove strings that are not really added
+# to the translation (msgid = msgstr)
 # Normalization can be disabled with COOKOPTS="!monorm"
 
 normalize_mo() {

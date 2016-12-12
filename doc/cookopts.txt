@@ -104,8 +104,8 @@ op0 to op8
 
 !monorm
     Default action is to normalize *.mo files. Normalization means the
-    unconditional conversion to UTF-8, removal of accidental duplicates, the
-    most of the header lines as well as catalog entries that are not added the
-    translation (when string in msgid equals to string in msgstr).
+    unconditional conversion to UTF-8, removal of accidental duplicates and
+    most of the header lines as well as catalog entries that are not added to
+    the translation (when string in msgid equals to string in msgstr).
     The presence of this option overrides the default action (all *.mo files
     will be left "as is").
