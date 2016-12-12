@@ -37,15 +37,15 @@ Currently, the following options are recognized:
     *.mo files.
     The presence of this option overrides the default action (all existing *.mo
     files will remain).
-    Please note, you can add all the translations to the package, for example, using
-    the command: `cook_copy_files *.mo` (then by default only the supported locales
-    will be left).
+    Please note, you can add all the translations to the package, for example,
+    using the command: `cook_copy_files *.mo` (then by default only the
+    supported locales will be left).
 
 !extradesktops
-    Default action is to remove extra information from the desktop files: entries
-    such as 'GenericName', 'X-GNOME-FullName' (all X-* are exposed),
-    'Terminal=false', Keywords and other sections. This extra information just isn't
-    supported in the current (LXDE) environment.
+    Default action is to remove extra information from the desktop files:
+    entries such as 'GenericName', 'X-GNOME-FullName' (all X-* are exposed),
+    'Terminal=false', Keywords and other sections. This extra information just
+    isn't supported in the current (LXDE) environment.
     The presence of this option overrides the default action (extra information
     will not be removed from the .desktop files).
 
@@ -60,8 +60,8 @@ Currently, the following options are recognized:
 !manz
     Default action is to compress all man pages.
     The presence of this option overrides the default action (all man pages will
-    be left "as is"). Please note that these files may be installed in a compressed
-    format.
+    be left "as is"). Please note that these files may be installed in a
+    compressed format.
 
 !pngz
     Default action is to compress all PNG images. Image compression allows you
@@ -87,9 +87,9 @@ Currently, the following options are recognized:
 op0 to op8
     Default action is to use optimization level 2 while processing PNG images by
     `optipng`. Using this option you can set the desired `optipng` optimization
-    level. The higher the level, the slower the compression and the smaller the file
-    size. Please note that this option has no exclamation mark, because it means
-    "don't do", and here, on the contrary, "to do".
+    level. The higher the level, the slower the compression and the smaller the
+    file size. Please note that this option has no exclamation mark, because it
+    means "don't do", and here, on the contrary, "to do".
 
 !svgz
     Default action is to compress all SVG images.
@@ -101,3 +101,11 @@ op0 to op8
     of insignificant spaces and comments.
     The presence of this option overrides the default action (all *.ui and
     *.glade files will be left "as is").
+
+!monorm
+    Default action is to normalize *.mo files. Normalization means the
+    unconditional conversion to UTF-8, removal of accidental duplicates, the
+    most of the header lines as well as catalog entries that are not added the
+    translation (when string in msgid equals to string in msgstr).
+    The presence of this option overrides the default action (all *.mo files
+    will be left "as is").

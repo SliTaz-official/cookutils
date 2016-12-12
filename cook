@@ -629,7 +629,7 @@ strip_mo_i18n() {
 	[ ! -d "$fs/usr/share/locale" ] && return
 	[ -z "$(find $fs/usr/share/locale -type f -name '*.mo')" ] && return
 
-	action 'Stripping translations files...'
+	action 'Thin out translation files...'
 	local size0=$(find $fs/usr/share/locale -type f -name '*.mo' -exec ls -l \{\} \; | awk '{s+=$5}END{print s}')
 	local time0=$(date +%s)
 
@@ -654,6 +654,136 @@ strip_mo_i18n() {
 	done
 
 	local size1=$(find $fs -type f -name '*.mo' -exec ls -l \{\} \; | awk '{s+=$5}END{print s}')
+	local time1=$(date +%s)
+	status
+	comp_summary "$time0" "$time1" "$size0" "$size1"
+}
+
+
+# Normalize all *.mo files: unconditionally convert to UTF-8; remove strings that are really not add
+# translation (msgid = msgstr)
+# Normalization can be disabled with COOKOPTS="!monorm"
+
+normalize_mo() {
+	[ "${COOKOPTS/!monorm/}" != "$COOKOPTS" ] && return
+	[ -z "$(find $install -type f -name '*.mo')" ] && return
+
+	action 'Normalizing mo files...'
+	local size0=$(find $install -type f -name '*.mo' -exec ls -l \{\} \; | awk '{s+=$5}END{print s}')
+	local time0=$(date +%s)
+
+	# Gettext functions: msgunfmt, msguniq, msgconv, msgfmt
+	tazpkg -gi gettext      --quiet
+	# Gconv modules (convert to UTF-8)
+	tazpkg -gi glibc-locale --quiet
+
+	# Process all existing *.mo files
+	for mo in $(find "$install" -type f -name '*.mo'); do
+		tmpfile="$(mktemp)"
+
+		msgunfmt "$mo" | msguniq | msgconv -o "$tmpfile" -t 'UTF-8'
+		# add newline
+		echo >> "$tmpfile"
+
+		# get Plural-Forms
+		awk '
+		BEGIN { skip = ""; }
+		{
+			if (! skip) {
+				s = $0;
+				gsub(/^[^\"]*\"/, "", s);
+				gsub(/\"$/, "", s);
+				printf("%s", s);
+			}
+			if (! $0) skip = "yes";
+		}
+		' "$tmpfile" | sed 's|\\n|\n|g' | grep "^Plural-Forms:" > "$tmpfile.pf"
+
+		if ! grep -q 'msgid_plural' "$tmpfile"; then
+			echo > "$tmpfile.pf"
+		fi
+
+		# main
+		awk -v pf="$(cat "$tmpfile.pf")" '
+		function clean() {
+			mode = msgctxt = msgid = msgid_plural = msgstr = msgstr0 = msgstr1 = msgstr2 = msgstr3 = msgstr4 = msgstr5 = "";
+		}
+
+		function getstring() {
+			# Skip unquoted words at the beginning (msgid, msgstr...) and get string from inside quotes
+			s = $0;
+			gsub(/^[^\"]*\"/, "", s);
+			gsub(/\"$/, "", s);
+			return s;
+		}
+
+		BEGIN {
+			printf("msgid \"\"\nmsgstr \"\"\n\"Content-Type: text/plain; charset=UTF-8\\n\"\n");
+			if (pf)
+				printf("\"%s\\n\"\n", pf);
+			printf("\n");
+			skip = 1;
+			clean();
+		}
+
+		{
+			# Skip the entire header
+			if (!skip) {
+				if ($1 == "msgctxt" || $1 == "msgid" || $1 == "msgstr" || $1 == "msgid_plural")
+					mode = $1;
+				if ($1 == "msgstr[0]") mode = "msgstr0";
+				if ($1 == "msgstr[1]") mode = "msgstr1";
+				if ($1 == "msgstr[2]") mode = "msgstr2";
+				if ($1 == "msgstr[3]") mode = "msgstr3";
+				if ($1 == "msgstr[4]") mode = "msgstr4";
+				if ($1 == "msgstr[5]") mode = "msgstr5";
+
+				if (mode == "msgctxt")      msgctxt      = msgctxt      getstring();
+				if (mode == "msgid")        msgid        = msgid        getstring();
+				if (mode == "msgstr")       msgstr       = msgstr       getstring();
+				if (mode == "msgid_plural") msgid_plural = msgid_plural getstring();
+				if (mode == "msgstr0")      msgstr0      = msgstr0      getstring();
+				if (mode == "msgstr1")      msgstr1      = msgstr1      getstring();
+				if (mode == "msgstr2")      msgstr2      = msgstr2      getstring();
+				if (mode == "msgstr3")      msgstr3      = msgstr3      getstring();
+				if (mode == "msgstr4")      msgstr4      = msgstr4      getstring();
+				if (mode == "msgstr5")      msgstr5      = msgstr5      getstring();
+
+				if (! $0) {
+					if (msgid != msgstr) {
+						if (msgctxt)      printf("msgctxt \"%s\"\n",      msgctxt);
+						                  printf("msgid \"%s\"\n",        msgid);
+						if (msgid_plural) printf("msgid_plural \"%s\"\n", msgid_plural);
+						if (msgstr)       printf("msgstr \"%s\"\n",       msgstr);
+						if (msgstr0)      printf("msgstr[0] \"%s\"\n",    msgstr0);
+						if (msgstr1)      printf("msgstr[1] \"%s\"\n",    msgstr1);
+						if (msgstr2)      printf("msgstr[2] \"%s\"\n",    msgstr2);
+						if (msgstr3)      printf("msgstr[3] \"%s\"\n",    msgstr3);
+						if (msgstr4)      printf("msgstr[4] \"%s\"\n",    msgstr4);
+						if (msgstr5)      printf("msgstr[5] \"%s\"\n",    msgstr5);
+						                  printf("\n");
+					}
+					clean();
+				}
+			}
+			if ($0 == "") skip = "";
+		}
+		' "$tmpfile" > "$tmpfile.awk"
+
+		msgfmt "$tmpfile.awk" -o "$tmpfile.mo"
+
+		if [ -s "$tmpfile.mo" ]; then
+			rm "$mo"; mv "$tmpfile.mo" "$mo"
+		else
+			_ 'Error processing %s' "$mo"
+			[ -e "$tmpfile.mo" ] && rm "$tmpfile.mo"
+		fi
+
+		# Clean
+		rm "$tmpfile" "$tmpfile.pf" "$tmpfile.awk"
+	done
+
+	local size1=$(find $install -type f -name '*.mo' -exec ls -l \{\} \; | awk '{s+=$5}END{print s}')
 	local time1=$(date +%s)
 	status
 	comp_summary "$time0" "$time1" "$size0" "$size1"
@@ -740,7 +870,7 @@ compress_manpages() {
 # Function used after compile_rules() to compress all png images
 # Compressing can be disabled with COOKOPTS="!pngz"
 
-cook_compress_png() {
+compress_png() {
 	[ "${COOKOPTS/!pngz/}" != "$COOKOPTS" ] && return
 	case "$ARCH" in
 		arm*) return;; # While SliTaz-arm miss `pngquant` and `optipng`
@@ -777,7 +907,7 @@ cook_compress_png() {
 # Function used after compile_rules() to compress all svg images
 # Compressing can be disabled with COOKOPTS="!svgz"
 
-cook_compress_svg() {
+compress_svg() {
 	[ "${COOKOPTS/!svgz/}" != "$COOKOPTS" ] && return
 	case "$ARCH" in
 		arm*) return;; # While SliTaz-arm miss `svgcleaner`
@@ -1053,10 +1183,11 @@ cookit() {
 	if [ -z "$WANTED" ]; then
 		footer
 		compress_manpages
-		cook_compress_png
-		cook_compress_svg
+		compress_png
+		compress_svg
 		compress_ui
 		fix_desktop_files
+		normalize_mo
 	fi
 	footer
 
