@@ -16,6 +16,7 @@ Currently, the following options are recognized:
     The presence of this option overrides the default action (files will not be
     automatically copied).
 
+!menus
     Default action is to copy desktop files from a /usr/share/applications
     folder (the same action that made obsolete option `GENERIC_MENUS="no"`).
     The presence of this option overrides the default action (files will not be

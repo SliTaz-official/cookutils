@@ -110,14 +110,14 @@ fi
 #
 
 
-# Unpack to stdout 
+# Unpack to stdout
 
 docat() {
 	case "$1" in
-	*gz) zcat ;;
-	*bz2) bzcat ;;
-	*xz) xzcat ;;
-	*) cat
+		*gz)   zcat ;;
+		*bz2) bzcat ;;
+		*xz)  xzcat ;;
+		*)      cat
 	esac < $1
 }
 
@@ -152,7 +152,7 @@ syntax_highlighter() {
 			: ${_install=#_#_#}
 			: ${_fs=#_#_#}
 			: ${_stuff=#_#_#}
-			sed	-e 's/&/\&amp;/g;s/</\&lt;/g;s/>/\&gt;/g' \
+			sed	-e 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g' \
 				-e 's#OK$#<span class="span-ok">OK</span>#g' \
 				-e 's#Done$#<span class="span-ok">Done</span>#g' \
 				-e 's#yes$#<span class="span-ok">yes</span>#g' \
@@ -160,15 +160,22 @@ syntax_highlighter() {
 				-e 's#error$#<span class="span-red">error</span>#g' \
 				-e 's#ERROR:#<span class="span-red">ERROR:</span>#g' \
 				-e 's#WARNING:#<span class="span-red">WARNING:</span>#g' \
-				-e s"#^Executing:\([^']*\).#<span class='sh-val'>\0</span>#"g \
-				-e s"#^====\([^']*\).#<span class='span-line'>\0</span>#"g \
-				-e s"#^[a-zA-Z0-9]\([^']*\) :: #<span class='span-sky'>\0</span>#"g \
-				-e s"#ftp://[^ '\"]*#<a href='\0'>\0</a>#"g	\
-				-e s"#http://[^ '\"]*#<a href='\0'>\0</a>#"g | \
-			sed "s|$_src|<span class='var'>\${src}</span>|g;
-				 s|$_install|<span class='var'>\${install}</span>|g;
-				 s|$_fs|<span class='var'>\${fs}</span>|g;
-				 s|$_stuff|<span class='var'>\${stuff}</span>|g"
+				-e "s#^Executing:\([^']*\).#<span class='sh-val'>\0</span>#g" \
+				-e "s#^====\([^']*\).#<span class='span-line'>\0</span>#g" \
+				-e "s#^[a-zA-Z0-9]\([^']*\) :: #<span class='span-sky'>\0</span>#g" \
+				-e "s#ftp://[^ '\"]*#<a href='\0'>\0</a>#g" \
+				-e "s#http://[^ '\"]*#<a href='\0'>\0</a>#g" \
+				-e "s|$_src|<span class='var'>\${src}</span>|g;
+					s|$_install|<span class='var'>\${install}</span>|g;
+					s|$_fs|<span class='var'>\${fs}</span>|g;
+					s|$_stuff|<span class='var'>\${stuff}</span>|g" \
+				-e "s|\[91m|<span style='color: #F00'>|;
+					s|\[92m|<span style='color: #080'>|;
+					s|\[93m|<span style='color: #FF0'>|;
+					s|\[94m|<span style='color: #00F'>|;
+					s|\[95m|<span style='color: #808'>|;
+					s|\[96m|<span style='color: #0CC'>|;
+					s|\[39m|</span>|;"
 				;;
 
 		receipt)
