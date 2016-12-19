@@ -51,7 +51,6 @@ $(boldify "$(_ 'Options:')")
 cook <pkg>
     --clean       -c   $(_ 'clean the package in the wok.')
     --install     -i   $(_ 'cook and install the package.')
-    --wsplit      -ws  $(_ 'cook the package and then all the splitted ones.')
     --getsrc      -gs  $(_ 'get the package source tarball.')
     --block       -b   $(_ 'block a package so cook will skip it.')
     --unblock     -ub  $(_ 'unblock a blocked package.')
@@ -2416,17 +2415,9 @@ EOT
 		[ -s /aufs-umount.sh ] ||
 		install_package
 
-		rm -f $command
-
-		# Cook splitted packages that builds from the files of just builded package
-		if [ "$2" == '--wsplit' -o "$2" == '-ws' ]; then
-			splitted=$(SPLIT=''; . $WOK/$pkg/receipt; echo $SPLIT)
-			[ "${splitted/$pkg-dev/}" == "$splitted" ] && splitted="$pkg-dev $splitted"
-			for i in $splitted; do
-				[ -d "$WOK/$i" ] && cook $i
-			done
-		fi
-		;;
+		# Finally we DON'T WANT to build the *-dev or packages with WANTED="$pkg"
+		# You want automation: use the Cooker Build Bot.
+		rm -f $command ;;
 esac
 
 exit 0

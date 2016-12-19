@@ -1,0 +1,36 @@
+#!/bin/sh
+# Cook specified package and then cook all the splitted packages
+# that builds from the files of just builded package
+
+case "$1" in
+	--help|-h)
+		cat <<EOT
+Usage: cooks <package>
+
+Cook the specified package and then cook all the packages defined in the
+SPLIT variable in the package receipt.
+Note, *-dev packages are implicit and usually omitted.
+
+EOT
+		exit 0
+		;;
+esac
+
+pkg="$1"
+. /etc/slitaz/cook.conf
+
+cook "$pkg"
+
+# Get the list
+splitted=$(SPLIT=''; . $WOK/$pkg/receipt; echo $SPLIT)
+
+# $SPLIT may contain the "*-dev" somewhere already if cooking order is significant.
+# Cook the "*-dev" first if order is unsignificant.
+[ "${splitted/$pkg-dev/}" == "$splitted" ] && splitted="$pkg-dev $splitted"
+
+# (re-)cook all existed packages
+for i in $splitted; do
+	[ -d "$WOK/$i" ] && cook $i
+done
+
+exit 0
