@@ -521,7 +521,7 @@ EOT
 			esac
 			file=${file#$dir/}
 			echo "<a href='?$type=$pkg&amp;file=$file'>$(basename $file)</a>"
-		done | sort
+		done | sort -t \> -k 2
 		echo "<h2>$(basename $page)</h2>"
 		tmp="$(mktemp)"
 		docat "$dir/$page" > $tmp
