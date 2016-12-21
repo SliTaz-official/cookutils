@@ -642,7 +642,7 @@ strip_mo_i18n() {
 	elocales=" $(ls -1 "$fs/usr/share/locale" | tr '\n' ' ') "
 
 	# Thin out the list of existing locales. At the end there will be only locales that need
-	# to delete (and the garbage like '_AU', _US', '_BR' leaving from 'en_AU', 'en_US', 'pt_BR'...)
+	# deleting (and the garbage like '_AU', _US', '_BR' leaving from 'en_AU', 'en_US', 'pt_BR'...)
 	for keep_locale in $LOCALE; do
 		elocales=${elocales//$keep_locale}
 	done
@@ -790,7 +790,7 @@ normalize_mo() {
 }
 
 
-# Remove files provided by splitted packages
+# Remove files provided by split packages
 # For example:
 #   1. Package "pkg-main":
 #      SPLIT="pkg-1 pkg-2 pkg-extra"
@@ -802,7 +802,7 @@ normalize_mo() {
 
 cook_split_rm() {
 	for i in $@; do
-		action 'Remove files provided by splitted package %s...' "$i"
+		action 'Remove files provided by split package %s...' "$i"
 		while read j; do
 			[ -f "$fs$j" -o -h "$fs$j" ] && rm $fs$j
 			rmdir "$(dirname "$fs$j")" 2>/dev/null
@@ -1201,7 +1201,7 @@ cookit() {
 	fi
 
 	# Actions to do after compiling the package
-	# Skip all for splitted packages (already done in main package)
+	# Skip all for split packages (already done in main package)
 	if [ -z "$WANTED" ]; then
 		footer
 		compress_manpages
