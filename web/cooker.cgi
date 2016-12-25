@@ -329,7 +329,7 @@ case "${QUERY_STRING}" in
 			   [ -d $wok/$bpkg/taz/*/fs/usr/share/info ]; then
 				echo "<a href='?info=$bpkg'>info</a>"
 			fi
-			[ -n "${REQUEST_URI%/$(basename $SCRIPT_NAME)*}" ] ||
+			[ -n "$(echo $REQUEST_URI | sed 's|/[^/]*?pkg.*||')" ] ||
 			echo "<a href='ftp://${HTTP_HOST%:*}/$pkg/'>browse</a>"
 		else
 			if [ $(ls $wok/*$pkg*/receipt 2> /dev/null | wc -l) -eq 0 ]; then
