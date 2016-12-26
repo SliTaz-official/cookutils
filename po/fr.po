@@ -301,22 +301,20 @@ msgid "ERROR"
 msgstr "ERREUR"
 
 #: cook:548
-#, fuzzy
 msgid "QA: Checking %s..."
-msgstr "QA: vérification de la recette du paquet..."
+msgstr "QA: vérification de %s..."
 
 #: cook:569
 msgid "  Time: %s. Size: %s B -> %s B. Save: %s KB"
-msgstr ""
+msgstr "  Durée: %s. Taille: %s B -> %s B. Gain: %s KB"
 
 #: cook:585
 msgid "Executing strip on all files..."
 msgstr "Ecécute strip sur tous des fichiers..."
 
 #: cook:629
-#, fuzzy
 msgid "Stripping translations files..."
-msgstr "Ecécute strip sur tous des fichiers..."
+msgstr "Réduction des fichiers de translation..."
 
 #: cook:680 cook:952
 msgid "Build dependencies to remove:"
@@ -327,24 +325,20 @@ msgid "Removing:"
 msgstr "Enlève :"
 
 #: cook:706
-#, fuzzy
 msgid "Compressing man pages..."
-msgstr "Conpression de FS..."
+msgstr "Compression des pages de manuel..."
 
 #: cook:747
-#, fuzzy
 msgid "Compressing png images..."
-msgstr "Conpression de FS..."
+msgstr "Compression des images png..."
 
 #: cook:784
-#, fuzzy
 msgid "Compressing svg images..."
-msgstr "Conpression de FS..."
+msgstr "Compression des images svg..."
 
 #: cook:818
-#, fuzzy
 msgid "Compressing ui files..."
-msgstr "Conpression de FS..."
+msgstr "Compression desfichiers ui..."
 
 #: cook:838
 msgid "Cook: %s"
@@ -446,7 +440,7 @@ msgstr "Crée le md5sum de chaque fichier..."
 
 #: cook:1153
 msgid "Compressing the FS..."
-msgstr "Conpression de FS..."
+msgstr "Compression de FS..."
 
 #: cook:1161
 msgid "Updating receipt sizes..."
@@ -517,24 +511,20 @@ msgid "Getting standard devel files..."
 msgstr "Obtient les fichiers de developpement standards..."
 
 #: cook:1459
-#, fuzzy
 msgid "Copying man pages..."
-msgstr "Copie de \"%s\"..."
+msgstr "Copie des pages de manuel..."
 
 #: cook:1474
-#, fuzzy
 msgid "Copying files..."
-msgstr "Copie de \"%s\"..."
+msgstr "Copie des fichiers..."
 
 #: cook:1491
-#, fuzzy
 msgid "Copying folders..."
-msgstr "Copie de \"%s\"..."
+msgstr "Copie des répertoires..."
 
 #: cook:1510
-#, fuzzy
 msgid "Copying hicolor icons..."
-msgstr "Copie de \"%s\"..."
+msgstr "Copie des icônes hicolor..."
 
 #: cook:1534
 msgid "List of %s packages in \"%s\""
@@ -767,18 +757,16 @@ msgid "Creating lists from \"%s\""
 msgstr "Crée les listes depuis \"%s\""
 
 #: cook:1937
-#, fuzzy
 msgid "  - absent: %s (%s)"
-msgstr "Fait : %s (%s)"
+msgstr "  - absent : %s (%s)"
 
 #: cook:1943 cook:1944 cook:1945 cook:1946
 msgid "Done: %s (%s)"
 msgstr "Fait : %s (%s)"
 
 #: cook:1954
-#, fuzzy
 msgid "Removing duplicates:"
-msgstr "Retire l'ancien paquet \"%s\""
+msgstr "Retire les doublons :"
 
 #: cook:2028
 msgid "Creating flavors files in \"%s\""
@@ -813,9 +801,8 @@ msgid "cook: HOST_ARCH is not set in \"%s\" receipt"
 msgstr "cook: HOST_ARCH n'est pas défini dans \"%s\""
 
 #: cook:2086
-#, fuzzy
 msgid "package \"%s\" is not included in %s"
-msgstr "Le paquet \"%s\" n'est pas inclu dans %s"
+msgstr "le paquet \"%s\" n'est pas compris dans %s"
 
 #: cook:2087 cook:2100 cook:2102
 msgid "cook: %s"
