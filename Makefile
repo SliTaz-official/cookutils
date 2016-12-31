@@ -1,10 +1,10 @@
 # Makefile for SliTaz Cooker.
 #
 
-PREFIX?=/usr
-DESTDIR?=
-LINGUAS?=fr pt_BR ru zh_CN zh_TW
-VERSION:=$(shell grep ^VERSION cook | cut -d'=' -f2)
+PREFIX  ?= /usr
+DESTDIR ?=
+LINGUAS ?= fr pt_BR ru zh_CN zh_TW
+VERSION := $(shell grep ^VERSION cook | cut -d'=' -f2)
 
 all:
 
@@ -17,27 +17,30 @@ install-cook:
 	install -m 0755 -d $(DESTDIR)/etc/slitaz
 	install -m 0755 -d $(DESTDIR)/etc/init.d
 	install -m 0755 -d $(DESTDIR)$(PREFIX)/bin
+	install -m 0755 -d $(DESTDIR)$(PREFIX)/libexec/cookutils
 	install -m 0755 -d $(DESTDIR)/var/www/cgi-bin/cooker
 	install -m 0755 -d $(DESTDIR)$(PREFIX)/share/applications
 	install -m 0755 -d $(DESTDIR)$(PREFIX)/share/cook/cooktest
 	install -m 0755 -d $(DESTDIR)$(PREFIX)/share/doc/cookutils
-	install -m 0755 cook $(DESTDIR)$(PREFIX)/bin
-	install -m 0755 cooks $(DESTDIR)$(PREFIX)/bin
+	install -m 0755 cook             $(DESTDIR)$(PREFIX)/bin
+	install -m 0755 cooks            $(DESTDIR)$(PREFIX)/bin
 	install -m 0755 fix-desktop-file $(DESTDIR)$(PREFIX)/bin
-	install -m 0755 cooker $(DESTDIR)$(PREFIX)/bin
-	install -m 0755 cookiso $(DESTDIR)$(PREFIX)/bin
-	install -m 0755 cooklinux $(DESTDIR)$(PREFIX)/bin
-	install -m 0644 cook.conf $(DESTDIR)/etc/slitaz
-	install -m 0644 cook.site $(DESTDIR)/etc/slitaz
-	install -m 0644 web/* $(DESTDIR)/var/www/cgi-bin/cooker
-	install -m 0644 data/*.desktop $(DESTDIR)$(PREFIX)/share/applications
-	install -m 0644 data/cooklist $(DESTDIR)$(PREFIX)/share/cook
-	install -m 0644 data/receipt $(DESTDIR)$(PREFIX)/share/cook
-	install -m 0644 data/cooktest/* $(DESTDIR)$(PREFIX)/share/cook/cooktest
-	install -m 0644 doc/* $(DESTDIR)$(PREFIX)/share/doc/cookutils
-	install -m 0644 README $(DESTDIR)$(PREFIX)/share/doc/cookutils
-	install -m 0755 init.d/cooker $(DESTDIR)/etc/init.d
+	install -m 0755 cooker           $(DESTDIR)$(PREFIX)/bin
+	install -m 0755 cookiso          $(DESTDIR)$(PREFIX)/bin
+	install -m 0755 cooklinux        $(DESTDIR)$(PREFIX)/bin
+	install -m 0755 modules/pkgdb    $(DESTDIR)$(PREFIX)/libexec/cookutils
+	install -m 0644 cook.conf        $(DESTDIR)/etc/slitaz
+	install -m 0644 cook.site        $(DESTDIR)/etc/slitaz
+	install -m 0644 web/*            $(DESTDIR)/var/www/cgi-bin/cooker
+	install -m 0644 data/*.desktop   $(DESTDIR)$(PREFIX)/share/applications
+	install -m 0644 data/cooklist    $(DESTDIR)$(PREFIX)/share/cook
+	install -m 0644 data/receipt     $(DESTDIR)$(PREFIX)/share/cook
+	install -m 0644 data/cooktest/*  $(DESTDIR)$(PREFIX)/share/cook/cooktest
+	install -m 0644 doc/*            $(DESTDIR)$(PREFIX)/share/doc/cookutils
+	install -m 0644 README           $(DESTDIR)$(PREFIX)/share/doc/cookutils
+	install -m 0755 init.d/cooker    $(DESTDIR)/etc/init.d
 	chmod 0755 $(DESTDIR)/var/www/cgi-bin/cooker/*.cgi
+	find $(DESTDIR)$(PREFIX)/libexec/cookutils -type f -exec sed -i "s|@@PREFIX@@|$(PREFIX)|g" \{\} \;
 
 uninstall-cook:
 	rm -rf \
@@ -47,6 +50,7 @@ uninstall-cook:
 		$(DESTDIR)$(PREFIX)/bin/cooker \
 		$(DESTDIR)$(PREFIX)/bin/cookiso \
 		$(DESTDIR)$(PREFIX)/bin/cooklinux \
+		$(DESTDIR)$(PREFIX)/libexec/cookutils \
 		$(DESTDIR)$(PREFIX)/share/cook \
 		$(DESTDIR)/etc/slitaz/cook.* \
 		$(DESTDIR)/var/www/cooker
@@ -66,8 +70,8 @@ install-cross:
 	install -m 0755 -d $(DESTDIR)$(PREFIX)/bin
 	install -m 0755 -d $(DESTDIR)$(PREFIX)/share/cross
 	install -m 0755 -d $(DESTDIR)$(PREFIX)/share/doc/cookutils
-	install -m 0755 cross $(DESTDIR)$(PREFIX)/bin
-	install -m 0644 doc/cross.txt $(DESTDIR)$(PREFIX)/share/doc/cookutils
+	install -m 0755 cross             $(DESTDIR)$(PREFIX)/bin
+	install -m 0644 doc/cross.txt     $(DESTDIR)$(PREFIX)/share/doc/cookutils
 	install -m 0644 data/cross-*.conf $(DESTDIR)$(PREFIX)/share/cross
 
 uninstall-cross:
@@ -83,7 +87,7 @@ pot:
 		--copyright-holder="SliTaz Association" \
 		--package-name="Cook" \
 		--package-version="$(VERSION)" \
-		./cook
+		./cook ./modules.pkgdb
 
 msgmerge:
 	@for l in $(LINGUAS); do \

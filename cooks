@@ -1,6 +1,6 @@
 #!/bin/sh
 # Cook specified package and then cook all the split packages
-# that build from the files of just built packages
+# that build from the files of just built package
 
 case "$1" in
 	--help|-h)
@@ -9,7 +9,7 @@ Usage: cooks <package>
 
 Cook the specified package and then cook all the packages defined in the
 SPLIT variable in the package receipt.
-Note, *-dev packages are implicit and usually omitted.
+Note, *-dev packages are implicit and usually omitted in the SPLIT.
 
 EOT
 		exit 0
