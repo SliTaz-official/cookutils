@@ -155,12 +155,35 @@ syntax_highlighter() {
 			sed	-e 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g' \
 				-e 's#OK$#<span class="span-ok">OK</span>#g' \
 				-e 's#Done$#<span class="span-ok">Done</span>#g' \
-				-e 's#yes$#<span class="span-ok">yes</span>#g' \
-				-e 's#no$#<span class="span-no">no</span>#g' \
+				-e 's#done$#<span class="span-ok">done</span>#g' \
+				-e 's#\([^a-z]\)ok$#\1<span class="span-ok">ok</span>#g' \
+				-e 's#\([^a-z]\)yes$#\1<span class="span-ok">yes</span>#g' \
+				-e 's#\([^a-z]\)no$#\1<span class="span-no">no</span>#g' \
+				\
+				-e 's#\( \[Y[nm/]\?\] n\)$# <span class="span-no">\1</span>#g' \
+				-e 's#\( \[N[ym/]\?\] y\)$# <span class="span-ok">\1</span>#g' \
+				-e 's#(NEW) $#<span class="span-red">(NEW) </span>#g' \
+				\
 				-e 's#error$#<span class="span-red">error</span>#g' \
 				-e 's#ERROR:#<span class="span-red">ERROR:</span>#g' \
+				-e 's#Error#<span class="span-red">Error</span>#g' \
+				\
+				-e 's#^.*[Ff]ailed.*#<span class="span-red">\0</span>#g' \
+				-e 's#^.*[Ff]atal.*#<span class="span-red">\0</span>#g' \
+				-e 's#^.*[Nn]ot found.*#<span class="span-red">\0</span>#g' \
+				-e 's#^.*[Nn]o such file.*#<span class="span-red">\0</span>#g' \
+				\
 				-e 's#WARNING:#<span class="span-red">WARNING:</span>#g' \
-				-e "s#^Executing:\([^']*\).#<span class='sh-val'>\0</span>#g" \
+				-e 's#warning:#<span class="span-no">warning:</span>#g' \
+				-e 's#error:#<span class="span-no">error:</span>#g' \
+				-e 's#missing#<span class="span-no">missing</span>#g' \
+				\
+				-e 's#^.* will not .*#<span class="span-no">\0</span>#' \
+				-e 's!^Hunk .* succeeded at .*!<span class="span-no">\0</span>!' \
+				-e 's#^.* Warning: .*#<span class="span-no">\0</span>#' \
+				\
+				-e "s#^Executing:\([^']*\).#<span class='sh-val'>\0</span>#" \
+				-e "s#^Making.*#<span class='sh-val'>\0</span>#" \
 				-e "s#^====\([^']*\).#<span class='span-line'>\0</span>#g" \
 				-e "s#^[a-zA-Z0-9]\([^']*\) :: #<span class='span-sky'>\0</span>#g" \
 				-e "s#ftp://[^ '\"]*#<a href='\0'>\0</a>#g" \
