@@ -1264,6 +1264,18 @@ packit() {
 		mkdir -p $fs
 	fi
 
+	# Check CONFIG_FILES
+	if [ -n "$CONFIG_FILES" ]; then
+		for i in $CONFIG_FILES; do
+			if [ ! -e $fs$i ]; then
+				case $i in
+					*/) mkdir -p $fs$i ;;
+					*)  mkdir -p $fs$(dirname $i); touch $fs$i ;;
+				esac
+			fi
+		done
+	fi
+
 	# First QA check to stop now if genpkg_rules failed.
 	lerror=$(_n 'ERROR')
 	if fgrep -q ^$lerror $LOGS/$pkg.log; then
