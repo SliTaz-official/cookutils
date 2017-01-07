@@ -364,8 +364,8 @@ msgid "Using cross-tools: %s"
 msgstr "正使用cross-tools：%s"
 
 #: cook:881
-msgid "Disabling -pipe compile flag: %d RAM free"
-msgstr "正在禁用 -pipe 编译标志：%d RAM"
+msgid "Disabling -pipe compile flag: %d MB RAM free"
+msgstr "正在禁用 -pipe 编译标志：%d MB RAM"
 
 #: cook:897
 msgid "Checking build dependencies..."

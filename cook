@@ -1030,10 +1030,10 @@ cookit() {
 	[ -z "$continue" ] && rm -rf source 2>/dev/null
 	rm -rf install taz 2>/dev/null
 
-	# Disable -pipe if less than 512Mb free RAM.
-	free=$(free | awk '/buffers:/{print $4}')
-	if [ "$free" -lt 524288 ] && [ "$CFLAGS" != "${CFLAGS/-pipe}" ]; then
-		_ 'Disabling -pipe compile flag: %d RAM free' "$free"
+	# Disable -pipe if less than 512 MB free RAM.
+	free=$(awk '/^MemFree|^Buffers|^Cached/{s+=$2}END{print int(s/1024)}' /proc/meminfo)
+	if [ "$free" -lt 512 ] && [ "$CFLAGS" != "${CFLAGS/-pipe}" ]; then
+		_ 'Disabling -pipe compile flag: %d MB RAM free' "$free"
 		CFLAGS="${CFLAGS/-pipe}"; CFLAGS=$(echo "$CFLAGS" | tr -s ' ')
 		CXXFLAGS="${CXXFLAGS/-pipe}"; CXXFLAGS=$(echo "$CXXFLAGS" | tr -s ' ')
 	fi

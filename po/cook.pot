@@ -358,7 +358,7 @@ msgid "Using cross-tools: %s"
 msgstr ""
 
 #: cook:881
-msgid "Disabling -pipe compile flag: %d RAM free"
+msgid "Disabling -pipe compile flag: %d MB RAM free"
 msgstr ""
 
 #: cook:897

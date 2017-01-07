@@ -357,8 +357,8 @@ msgid "Using cross-tools: %s"
 msgstr "Utilise les outils de fabrication croisée : %s"
 
 #: cook:881
-msgid "Disabling -pipe compile flag: %d RAM free"
-msgstr "Désactivation de l'option de compilation -pipe ; RAM libre : %d"
+msgid "Disabling -pipe compile flag: %d MB RAM free"
+msgstr "Désactivation de l'option de compilation -pipe ; RAM libre : %d MB"
 
 #: cook:897
 msgid "Checking build dependencies..."
