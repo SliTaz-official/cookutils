@@ -15,10 +15,10 @@ case "$i" in
 				echo "Starting $version cooker..."
 				rootfs=$SLITAZ/$version/chroot
 				if [ ! -d $rootfs/proc/1 ]; then
-					mount -t proc proc $rootfs/proc
-					mount -t sysfs sysfs $rootfs/sys
+					mount -t proc   proc   $rootfs/proc
+					mount -t sysfs  sysfs  $rootfs/sys
 					mount -t devpts devpts $rootfs/dev/pts
-					mount -t tmpfs shm $rootfs/dev/shm
+					mount -t tmpfs  shm    $rootfs/dev/shm
 				fi
 				if [ ! $(mount | grep -q ${rootfs}$SLITAZ/src) ]; then
 					mount -o bind $SLITAZ/src ${rootfs}$SLITAZ/src

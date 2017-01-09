@@ -222,7 +222,7 @@ syntax_highlighter() {
 
 list_packages() {
 	cd $PKGS
-	ls -1t *.tazpkg | head -20 | \
+	ls -1t *.tazpkg | head -n 20 | \
 	while read file; do
 		echo -n $(TZ=UTC stat -c '%y' $PKGS/$file | cut -d . -f 1 | sed s/:[0-9]*$//)
 		echo " : $file"
@@ -267,10 +267,10 @@ else
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<meta charset="utf-8"/>
+	<meta charset="UTF-8">
 	<title>SliTaz Cooker</title>
-	<link rel="shortcut icon" href="favicon.ico"/>
-	<link rel="stylesheet" type="text/css" href="style.css"/>
+	<link rel="shortcut icon" href="favicon.ico">
+	<link rel="stylesheet" href="style.css">
 	<meta name="robots" content="nofollow">
 </head>
 <body>
@@ -355,7 +355,7 @@ case "${QUERY_STRING}" in
 			[ -n "$(echo $REQUEST_URI | sed 's|/[^/]*?pkg.*||')" ] ||
 			echo "<a href='ftp://${HTTP_HOST%:*}/$pkg/'>browse</a>"
 		else
-			if [ $(ls $wok/*$pkg*/receipt 2> /dev/null | wc -l) -eq 0 ]; then
+			if [ $(ls $wok/*$pkg*/receipt 2>/dev/null | wc -l) -eq 0 ]; then
 				echo "No package named: $pkg"
 			else
 				ls $wok/$pkg/receipt >/dev/null 2>&1 || pkg="*$pkg*"
@@ -689,8 +689,7 @@ cat <<EOT
 <div id="footer">
 	<a href="http://www.slitaz.org/">SliTaz Website</a>
 	<a href="cooker.cgi">Cooker</a>
-	<a href="http://hg.slitaz.org/cookutils/raw-file/tip/doc/cookutils.en.html">
-		Documentation</a>
+	<a href="doc/cookutils/cookutils.en.html">Documentation</a>
 </div>
 
 </body>

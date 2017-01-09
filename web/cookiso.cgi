@@ -63,10 +63,10 @@ else
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<meta charset="utf-8"/>
+	<meta charset="UTF-8">
 	<title>SliTaz ISO Cooker</title>
-	<link rel="shortcut icon" href="favicon.ico"/>
-	<link rel="stylesheet" type="text/css" href="style.css"/>
+	<link rel="shortcut icon" href="favicon.ico">
+	<link rel="stylesheet" href="style.css">
 </head>
 <body>
 
@@ -169,8 +169,7 @@ cat <<EOT
 <div id="footer">
 	<a href="http://www.slitaz.org/">SliTaz Website</a>
 	<a href="cookiso.cgi">Cookiso</a>
-	<a href="http://hg.slitaz.org/cookutils/raw-file/tip/doc/cookutils.en.html">
-		Documentation</a>
+	<a href="doc/cookutils/cookutils.en.html">Documentation</a>
 </div>
 
 </body>

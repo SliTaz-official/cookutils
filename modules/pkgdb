@@ -8,7 +8,6 @@
 
 export output=raw
 
-echo "flavors='$flavors' rmpkg='$rmpkg' 1='$1' 2='$2'"
 
 # Internationalization.
 
@@ -68,7 +67,7 @@ echo " ($(filesize $PKGS/packages.list))" | dblog
 _n 'Creating file "%s"' 'packages.md5' | dblog
 md5sum *.tazpkg > $PKGS/packages.md5
 echo " ($(filesize $PKGS/packages.md5))" | dblog
-cp $PKGS/packages.md5 $PKGS/packages.toremove			# list of duplicates
+cp $PKGS/packages.md5 $PKGS/packages.toremove			# list of unnecessary packages
 
 md5sum packages.md5 | cut -d' ' -f1 > ID
 ( cat ./ID | tr $'\n' ' '; date -ur ./ID +%s ) > IDs	# md5 and timestamp
@@ -136,7 +135,7 @@ EOT
 		cat $pkg/taz/*/files.list | sed s/^/"$pkg: \0"/ >> \
 			$PKGS/files.list
 
-		# list of duplicates
+		# list of unnecessary packages
 		sed -i "/ $PACKAGE-$VERSION$EXTRAVERSION.tazpkg/d" $PKGS/packages.toremove
 	else
 		# if receipt variable HOST_ARCH absent/empty or contains ARCH
@@ -155,10 +154,13 @@ _ 'Done: %s (%s)' 'packages.equiv' "$(filesize $PKGS/packages.equiv)" | dblog
 cd $PKGS
 
 
-# Check package duplicates
+# Check for unnecessary packages
 if [ -s "$PKGS/packages.toremove" ]; then
 	newline | dblog
-	_ 'Removing duplicates:' | dblog
+	case x$rmpkg in
+		x) _ 'Found unnecessary packages (use `cook pkgdb --rmpkg` to remove):' | dblog;;
+		*) _ 'Removing unnecessary packages:' | dblog;;
+	esac
 	while read pkgsum pkgfile; do
 		echo "  - $pkgfile" | dblog
 		sed -i "/${pkgfile%.tazpkg}/d" $PKGS/packages.list
@@ -186,13 +188,6 @@ echo " ($(filesize $PKGS/files-list.lzma))" | dblog
 
 [ -e files.list.md5 ] && rm files.list.md5
 md5sum files-list.lzma | cut -d' ' -f1 | tr -d $'\n' > files-list.md5
-
-# packages.info.lzma
-PI=packages.info
-_n 'Creating file "%s"' 'packages.info.lzma' | dblog
-touch $PI
-lzma e $PI $PI.lzma
-echo " ($(filesize $PKGS/packages.info.lzma))" | dblog
 
 # Make bundle to fast recharge
 _n 'Creating file "%s"' 'bundle.tar.lzma' | dblog

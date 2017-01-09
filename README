@@ -33,7 +33,7 @@ Cook does not:
     * Do complex work like compiling the whole system from source in
       one command (but it can rebuild the full system step by step)
     * Check build deps for you, use: BUILD_DEPENDS
-    * The work of a Build Bot, unix philosophy: one tool for one task
+    * The work of a Build Bot, UNIX philosophy: one tool for one task
     * Cook a package if your receipt is crappy :-)
 
 Cook paths variables used in receipt:
