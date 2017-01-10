@@ -1,0 +1,869 @@
+# Japanese translations for the cookutils package.
+# Copyright (C) 2017 SliTaz Association
+# This file is distributed under the same license as the cookutils package.
+# BALLOON a.k.a. Fu-sen. (Keiichi SHIGA) <balloonakafusen AT gmail DOT com>, 2017.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Cook 3.2\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2017-01-05 10:38+0900\n"
+"PO-Revision-Date: 2017-01-08 13:29+0900\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Generator: Poedit 1.8.7.1\n"
+"Last-Translator: BALLOON a.k.a. Fu-sen. (Keiichi SHIGA) <balloonakafusen　AT gmail DOT com>\n"
+"Language: ja_JP\n"
+
+#: cook:33
+msgid "Usage:"
+msgstr "用途"
+
+#: cook:33
+msgid "cook [package|command] [list|--option]"
+msgstr "cook [パッケージ|コマンド] [list|--オプション]"
+
+#: cook:35
+msgid "Commands:"
+msgstr "コマンド:"
+
+#: cook:36
+msgid "Display this short usage."
+msgstr "この短い使用法を表示します。"
+
+#: cook:37
+msgid "Setup your build environment."
+msgstr "ビルド環境をセットアップします。"
+
+#: cook:38
+msgid "Setup a cross environment."
+msgstr "クロス環境をセットアップします。"
+
+#: cook:40
+msgid "Test environment and cook a package."
+msgstr "環境をテストし、パッケージを生成します。"
+
+#: cook:41
+msgid "List packages in the wok."
+msgstr "wok 内のパッケージを一覧表示します。"
+
+#: cook:42
+msgid "Simple packages search function."
+msgstr "シンプルなパッケージ検索機能です。"
+
+#: cook:43
+msgid "Create a new package with a receipt."
+msgstr " receipt で新しいパッケージを作成します。"
+
+#: cook:44
+msgid "Cook a list of packages."
+msgstr "パッケージのリストを作成します。"
+
+#: cook:45
+msgid "Clean-up all packages files."
+msgstr "すべてのパッケージファイルをクリーンアップします。"
+
+#: cook:46
+msgid "Clean-up all packages sources."
+msgstr "すべてのパッケージソースをクリーンアップします。"
+
+#: cook:47
+msgid "Check for uncooked packages"
+msgstr "未作成のパッケージを確認します。"
+
+#: cook:48
+msgid "Create packages DB lists and flavors."
+msgstr "パッケージ DB リストとフレーバーを作成します。"
+
+#: cook:50
+msgid "Options:"
+msgstr "オプション:"
+
+#: cook:52
+msgid "clean the package in the wok."
+msgstr "wok でパッケージをきれいにします。"
+
+#: cook:53
+msgid "cook and install the package."
+msgstr "パッケージを作成しインストールします。"
+
+#: cook:54
+msgid "get the package source tarball."
+msgstr "パッケージソースtarballを入手します。"
+
+#: cook:55
+msgid "block a package so cook will skip it."
+msgstr "パッケージをブロックし生成をスキップします。"
+
+#: cook:56
+msgid "unblock a blocked package."
+msgstr "パッケージのブロックを解除します。"
+
+#: cook:57
+msgid "check dependencies of cooked package."
+msgstr "作成されたパッケージの依存関係を確認します。"
+
+#: cook:58
+msgid "repack an already built package."
+msgstr "すでにビルドされたパッケージを再パックします。"
+
+#: cook:59
+msgid "display debugging messages."
+msgstr "デバッグメッセージを表示します。"
+
+#: cook:60
+msgid "continue running compile_rules."
+msgstr "compile_rules を実行し続けます。"
+
+#: cook:62
+msgid "create a receipt interactively."
+msgstr "インタラクティブに receipt を作成します。"
+
+#: cook:64
+msgid "clone the cooking wok from Hg repo."
+msgstr "Hg レポから cooking wok を複製します。"
+
+#: cook:65
+msgid "clone the stable wok from Hg repo."
+msgstr "Hg レポから stable wok を複製します。"
+
+#: cook:66
+msgid "clone the undigest wok from Hg repo."
+msgstr "Hg レポから undigest wok を複製します。"
+
+#: cook:67
+msgid "clone the tiny SliTaz wok from Hg repo."
+msgstr "Hg レポから tiny SliTaz wok を複製します。"
+
+#: cook:68
+msgid "force reinstall of chroot packages."
+msgstr "chroot パッケージを強制的に再インストールします。"
+
+#: cook:70
+msgid "create up-to-date flavors files."
+msgstr "最新のフレーバーファイルを作成します。"
+
+#: cook:89
+msgid "Unable to find package \"%s\" in the wok"
+msgstr "wok 内のパッケージ \"%s\"　を見つけることができません"
+
+#. L10n: QA is quality assurance
+#: cook:98
+msgid "QA: empty variable: %s"
+msgstr "QA: 変数が空です: %s"
+
+#: cook:107
+msgid "Creating directories structure in \"%s\""
+msgstr "\"%s\" にディレクトリ構造を作成中"
+
+#: cook:109
+msgid "Creating DB files in \"%s\""
+msgstr "\"%s\" で DB ファイルを作成中"
+
+#: cook:119
+msgid "QA: checking package receipt..."
+msgstr "QA: パッケージの receipt を確認しています..."
+
+#: cook:134
+msgid "QA: unknown category \"%s\""
+msgstr "QA: 不明なカテゴリ \"%s\""
+
+#: cook:135
+msgid "Please, use one of: %s"
+msgstr "次のいずれかを使用して下さい: %s"
+
+#: cook:145
+msgid "QA: unable to reach \"%s\""
+msgstr "QA： \"%s\" へ到達できません"
+
+#: cook:205
+msgid "Creating tarball \"%s\""
+msgstr "tarball \"%s\" を作成中"
+
+#: cook:230 cook:235 cook:249 cook:251 cook:261 cook:331
+msgid "ERROR: %s"
+msgstr "エラー: %s"
+
+#: cook:243 cook:258 cook:273 cook:286 cook:297 cook:329
+msgid "Getting source from %s..."
+msgstr "%s からソースを取得中..."
+
+#: cook:244 cook:259 cook:274 cook:287 cook:330
+msgid "URL: %s"
+msgstr "URL: %s"
+
+#: cook:245 cook:276
+msgid "Cloning to \"%s\""
+msgstr "\"%s\" へ複製中"
+
+#: cook:247
+msgid "Hg branch: %s"
+msgstr "Hg ブランチ: %s"
+
+#: cook:263
+msgid "Git branch: %s"
+msgstr "Git ブランチ: %s"
+
+#: cook:275
+msgid "CVS module: %s"
+msgstr "CVS モジュール: %s"
+
+#: cook:307
+msgid "Don't forget to add to receipt:"
+msgstr "receipt に追加することを忘れないで下さい:"
+
+#: cook:315
+msgid "ERROR: Unable to handle \"%s\""
+msgstr "エラー: \"%s\" を処理できません"
+
+#: cook:333
+msgid "Extracting source archive \"%s\""
+msgstr "ソースアーカイブ \"%s\" を抽出しています"
+
+#. L10n: 'm' is for minutes (approximate cooking time)
+#: cook:361
+msgid " ~ %dm"
+msgstr " 〜 %d 分"
+
+#. L10n: 's' is for seconds (cooking time)
+#: cook:365
+msgid "%ds%s"
+msgstr "%d 秒 %s"
+
+#: cook:380
+msgid "Summary for: %s"
+msgstr "概要: %s"
+
+#. L10n: keep the same width of translations to get a consistent view
+#: cook:384
+msgid "Source dir  : %s"
+msgstr "元の dir 　 : %s"
+
+#: cook:385
+msgid "Src file    : %s"
+msgstr "元のファイル: %s"
+
+#: cook:386
+msgid "Src size    : %s"
+msgstr "元のサイズ  : %s"
+
+#: cook:387
+msgid "Produced    : %s"
+msgstr "生産者      : %s"
+
+#: cook:388
+msgid "Packed      : %s"
+msgstr "パック      : %s"
+
+#: cook:389
+msgid "Compressed  : %s"
+msgstr "圧縮        : %s"
+
+#: cook:390
+msgid "Files       : %s"
+msgstr "ファイル    : %s"
+
+#: cook:391
+msgid "Cook time   : %s"
+msgstr "生成時間    : %s"
+
+#: cook:392
+msgid "Cook date   : %s"
+msgstr "生成日      : %s"
+
+#: cook:392 cook:404 cook:1851 cook:2062
+msgid "+%%F %%R"
+msgstr "+%%F %%R"
+
+#: cook:393
+msgid "Host arch   : %s"
+msgstr "ホスト arch : %s"
+
+#: cook:401
+msgid "Debug information"
+msgstr "デバック情報"
+
+#. L10n: specify your format of date and time (to help: man date)
+#. L10n: not bad one is '+%x %R'
+#: cook:404
+msgid "Cook date: %s"
+msgstr "生成日: %s"
+
+#: cook:405
+msgid "Cook time: %ds"
+msgstr "生成時間: %ds"
+
+#. L10n: Please, translate all messages beginning with ERROR in a same way
+#: cook:407 cook:966 cook:1078 cook:1112 cook:1203 cook:2242
+msgid "ERROR"
+msgstr "エラー"
+
+#: cook:548
+msgid "QA: Checking %s..."
+msgstr "QA: %s　を確認中..."
+
+#: cook:569
+msgid "  Time: %s. Size: %s B -> %s B. Save: %s KB"
+msgstr "  時間: %s. サイズ: %s バイト → %s バイト, 保存: %s KB"
+
+#: cook:585
+msgid "Executing strip on all files..."
+msgstr "すべてのファイルに strip を実行中..."
+
+#: cook:629
+msgid "Stripping translations files..."
+msgstr "翻訳ファイルを削除しています..."
+
+#: cook:680 cook:952
+msgid "Build dependencies to remove:"
+msgstr "削除する依存関係を構築します："
+
+#: cook:682 cook:953
+msgid "Removing:"
+msgstr "削除中:"
+
+#: cook:706
+msgid "Compressing man pages..."
+msgstr "マニュアルページを圧縮中..."
+
+#: cook:747
+msgid "Compressing png images..."
+msgstr "png イメージを圧縮中..."
+
+#: cook:784
+msgid "Compressing svg images..."
+msgstr "svg イメージを圧縮中..."
+
+#: cook:818
+msgid "Compressing ui files..."
+msgstr "ui ファイルを圧縮中..."
+
+#: cook:838
+msgid "Cook: %s"
+msgstr "作成: %s"
+
+#: cook:852
+msgid "%s sysroot: %s"
+msgstr "%s sysroot: %s"
+
+#: cook:853
+msgid "Adding \"%s\" to PATH"
+msgstr "PATH へ \"%s\" を追加中"
+
+#: cook:857
+msgid "Using cross-tools: %s"
+msgstr "cross-tools を使用中: %s"
+
+#: cook:881
+msgid "Disabling -pipe compile flag: %d RAM free"
+msgstr "-pipe コンパイルフラグを無効にします: %d RAM 空き"
+
+#: cook:897
+msgid "Checking build dependencies..."
+msgstr "ビルドの依存関係の確認中..."
+
+#: cook:898
+msgid "Using packages DB: %s"
+msgstr "パッケージ DB を使用中: %s"
+
+#: cook:924
+msgid "Missing dep (wok/pkg): %s"
+msgstr "dep (wok/pkg) が欠けています: %s"
+
+#: cook:932
+msgid "ERROR: unknown dep \"%s\""
+msgstr "エラー: dep \"%s\" が不明です"
+
+#: cook:946
+msgid "Auto cook config is set: %s"
+msgstr "自動生成が設定されています: %s"
+
+#: cook:949
+msgid "Building dep (wok/pkg)    : %s"
+msgstr "dep (wok/pkg) 生成中      : %s"
+
+#: cook:954
+msgid "ERROR: can't cook dep \"%s\""
+msgstr "エラー: dep \"%s\" を生成できません"
+
+#: cook:969
+msgid "ERROR: missing %d dependency"
+msgid_plural "ERROR: missing %d dependencies"
+msgstr[0] "エラー:  %d 依存が欠けています"
+
+#: cook:976
+msgid "Installing dep (pkg/local): %s"
+msgstr "dep (pkg/ローカル) インストール中: %s"
+
+#: cook:983
+msgid "Installing dep (web/cache): %s"
+msgstr "dep (web/キャッシュ) インストール中: %s"
+
+#: cook:1034 cook:1102
+msgid "Executing: %s"
+msgstr "実行中: %s"
+
+#: cook:1062
+msgid "Running testsuite"
+msgstr "testsuite　を実行中"
+
+#: cook:1075
+msgid "ERROR: cook failed"
+msgstr "エラー: 生成に失敗しました"
+
+#: cook:1099
+msgid "Pack: %s"
+msgstr "パック: %s"
+
+#: cook:1104
+msgid "ERROR: genpkg_rules failed"
+msgstr "エラー: genpkg_rules に失敗しました"
+
+#: cook:1107
+msgid "No packages rules: meta package"
+msgstr "パッケージルールなし: メタパッケージ"
+
+#: cook:1120
+msgid "Copying \"%s\"..."
+msgstr "\"%s\" をコピー中..."
+
+#: cook:1130
+msgid "Creating the list of files..."
+msgstr "ファイルリストを生成中..."
+
+#: cook:1138
+msgid "Creating md5sum of files..."
+msgstr "ファイルの md5sum を生成中..."
+
+#: cook:1153
+msgid "Compressing the FS..."
+msgstr "マニュアルページを圧縮中..."
+
+#: cook:1161
+msgid "Updating receipt sizes..."
+msgstr "receipt サイズを更新中..."
+
+#: cook:1169
+msgid "Updating receipt EXTRAVERSION: %s"
+msgstr "receipt EXTRAVERSION　を更新中: %s"
+
+#: cook:1176
+msgid "Creating full cpio archive..."
+msgstr "完全 cpio アーカイブを作成中..."
+
+#: cook:1181
+msgid "Restoring original package tree..."
+msgstr "オリジナルパッケージツリーを復元中..."
+
+#: cook:1190
+msgid "Package \"%s\" created"
+msgstr "パッケージ \"%s\"  を生成しました"
+
+#: cook:1209
+msgid "QA: checking for empty package..."
+msgstr "QA: 空のパッケージを確認しています..."
+
+#: cook:1212
+msgid "ERROR: empty package"
+msgstr "エラー: パッケージが空です"
+
+#: cook:1225
+msgid "Removing old package \"%s\""
+msgstr "古いパッケージ \"%s\" を削除中"
+
+#: cook:1262
+msgid "Unable to install package, build has failed."
+msgstr ""
+"44/5000\n"
+"パッケージをインストールできません。ビルドに失敗しました。"
+
+#: cook:1271
+msgid "Updating %s chroot environment..."
+msgstr "%s chroot 環境を更新中..."
+
+#: cook:1272
+msgid "Updating chroot: %s"
+msgstr "chroot 更新中: %s"
+
+#: cook:1304
+msgid "Setup aufs chroot..."
+msgstr "aufs chroot 設定..."
+
+#: cook:1316
+msgid "Aufs mount failure"
+msgstr "Aufs マウントに失敗しました"
+
+#: cook:1328
+msgid "Leaving aufs chroot..."
+msgstr "aufs chroot を残しています..."
+
+#: cook:1397
+msgid "Multiple choice:"
+msgstr "複数の選択肢:"
+
+#: cook:1398
+msgid "Select one [%s]: "
+msgstr "一つを選択 [%s]:"
+
+#: cook:1446
+msgid "Getting standard devel files..."
+msgstr "標準 devel ファイルを取得中..."
+
+#: cook:1459
+msgid "Copying man pages..."
+msgstr "マニュアルページをコピー中..."
+
+#: cook:1474
+msgid "Copying files..."
+msgstr "ファイルをコピー中..."
+
+#: cook:1491
+msgid "Copying folders..."
+msgstr "フォルダーをコピー中..."
+
+#: cook:1510
+msgid "Copying hicolor icons..."
+msgstr "ハイカラーアイコンをコピー中..."
+
+#: cook:1534
+msgid "List of %s packages in \"%s\""
+msgstr "%s パッケージ \"%s\" 内のリスト"
+
+#: cook:1549
+msgid "%s package"
+msgid_plural "%s packages"
+msgstr[0] "%s パッケージ"
+
+#: cook:1558
+msgid "Search results for \"%s\""
+msgstr "\"%s\" の検索結果"
+
+#: cook:1565
+msgid "Cook: setup environment"
+msgstr "生成: 環境設定"
+
+#: cook:1566
+msgid "Setting up your environment"
+msgstr "環境を設定中"
+
+#: cook:1570
+msgid "Checking for packages to install..."
+msgstr "パッケージインストールを確認中..."
+
+#: cook:1576
+msgid "ERROR: %s is not installed"
+msgstr "エラー: %s はインストールされていません"
+
+#: cook:1579
+msgid "Using config file: %s"
+msgstr "使用する設定ファイル:%s "
+
+#: cook:1600
+msgid "Adding group \"%s\""
+msgstr "グループ \"%s\" を追加中"
+
+#: cook:1603
+msgid "Setting permissions for group \"%s\"..."
+msgstr "グループ \"%s\" にパーティションを設定中..."
+
+#: cook:1606
+msgid "All done, ready to cook packages :-)"
+msgstr "すべて完了しました。生成パッケージを使用できます。"
+
+#: cook:1621
+msgid "Cook: setup %s cross environment"
+msgstr "生成: %s クロス環境の設定"
+
+#: cook:1622
+msgid "Setting up your %s cross environment"
+msgstr "%s クロス環境の設定中"
+
+#. L10n: keep the same width of translations to get a consistent view
+#: cook:1651
+msgid "Target arch     : %s"
+msgstr "対象の arch     : %s"
+
+#: cook:1652
+msgid "Configure args  : %s"
+msgstr "args の設定     : %s"
+
+#: cook:1653
+msgid "Build flags     : %s"
+msgstr "ビルドフラグ    : %s"
+
+#: cook:1654
+msgid "Arch sysroot    : %s"
+msgstr "Arch sysroot    : %s"
+
+#: cook:1655
+msgid "Tools prefix    : %s"
+msgstr "ツールの接頭辞  : %s"
+
+#: cook:1657
+msgid "Packages DB     : %s"
+msgstr "パッケージ DB   : %s"
+
+#: cook:1668
+msgid "WARNING: %s is not installed in sysroot"
+msgstr "警告: %s は sysroot にインストールされていません"
+
+#: cook:1672
+msgid "Cross compiler  : %s"
+msgstr "クロスコンパイラ: %s"
+
+#: cook:1674
+msgid "C compiler \"%s\" is missing"
+msgstr "C コンパイラ \"%s\" が見つかりません"
+
+#: cook:1675
+msgid "Run \"%s\" to cook a toolchain"
+msgstr "\"%s\" を実行してツールチェーンを生成する"
+
+#: cook:1681
+msgid "Cook test: testing the cook environment"
+msgstr "生成テスト: 生成環境のテスト"
+
+#: cook:1692
+msgid "Package \"%s\" already exists."
+msgstr "パッケージ \"%s\" はすでに存在します。"
+
+#: cook:1696
+msgid "Creating folder \"%s\""
+msgstr "フォルダ \"%s\" を生成中"
+
+#: cook:1699
+msgid "Preparing the package receipt..."
+msgstr "パッケージ receipt の準備中..."
+
+#: cook:1707
+msgid "Entering interactive mode..."
+msgstr "インタラクティブモードに入る..."
+
+#: cook:1709
+msgid "Package       : %s"
+msgstr "パッケージ    : %s"
+
+#: cook:1711
+msgid "Version       : "
+msgstr "バージョン    : "
+
+#: cook:1714
+msgid "Category      : "
+msgstr "カテゴリー    : "
+
+#. L10n: Short description
+#: cook:1718
+msgid "Short desc    : "
+msgstr "短い解説      : "
+
+#: cook:1721
+msgid "Maintainer    : "
+msgstr "メンテナー    : "
+
+#: cook:1724
+msgid "License       : "
+msgstr "ライセンス    : "
+
+#: cook:1727
+msgid "Web site      : "
+msgstr "Web サイト    : "
+
+#: cook:1732
+msgid "Wget URL to download source tarball."
+msgstr "ソース tarball をダウンロードするための Wget URL。"
+
+#: cook:1733
+msgid "Example  : "
+msgstr "例       : "
+
+#: cook:1734
+msgid "Wget url : "
+msgstr "Wget url : "
+
+#: cook:1738
+msgid "Do you need a stuff directory? (y/N)"
+msgstr "stuff ディレクトリを使いますか？ (y/N)"
+
+#: cook:1740
+msgid "Creating the stuff directory..."
+msgstr "stuff ディレクトリを作成しています..."
+
+#: cook:1745
+msgid "Are you going to write a description? (y/N)"
+msgstr "説明を入れますか？ (y/N)"
+
+#: cook:1747
+msgid "Creating the \"%s\" file..."
+msgstr "\"%s\" ファイルの作成中..."
+
+#: cook:1751
+msgid "Receipt is ready to use."
+msgstr "Receipt は使用可能です。"
+
+#: cook:1759
+msgid "No list in argument."
+msgstr "引数のリストはありません。"
+
+#: cook:1763
+msgid "List \"%s\" not found."
+msgstr "リスト \"%s\" が見つかりません。"
+
+#: cook:1767
+msgid "Starting cooking the list \"%s\""
+msgstr "リスト \"%s\" の生成を開始します"
+
+#: cook:1775
+msgid "Cleaning all packages files..."
+msgstr "すべてのパッケージファイルをクリーニング中..."
+
+#: cook:1781
+msgid "Cleaning all packages sources..."
+msgstr "すべてのパッケージソースをクリーニング中..."
+
+#: cook:1788
+msgid "Checking for uncooked packages"
+msgstr "未生成パッケージの確認"
+
+#: cook:1801
+msgid "Package \"%s\""
+msgstr "パッケージ \"%s\""
+
+#: cook:1819
+msgid "%s uncooked package"
+msgid_plural "%s uncooked packages"
+msgstr[0] "%s パッケージが生成されていません"
+
+#: cook:1821
+msgid "All packages are cooked :-)"
+msgstr "すべてのパッケージは生成されています"
+
+#: cook:1838
+msgid "Packages directory \"%s\" doesn't exist"
+msgstr "パッケージディレクトリ \"%s\" は存在しません"
+
+#: cook:1848
+msgid "Cook pkgdb: Creating all packages lists"
+msgstr "pkgdb 生成：すべてのパッケージリストを作成中"
+
+#: cook:1857 cook:1861 cook:1869 cook:1967 cook:1974 cook:1985 cook:1991
+msgid "Creating file \"%s\""
+msgstr "ファイル \"%s\" を生成中"
+
+#: cook:1881
+msgid "Creating lists from \"%s\""
+msgstr "\"%s\" からリストを生成中"
+
+#: cook:1937
+msgid "  - absent: %s (%s)"
+msgstr "  - 不在: %s (%s)"
+
+#: cook:1943 cook:1944 cook:1945 cook:1946
+msgid "Done: %s (%s)"
+msgstr "完了: %s (%s)"
+
+#: cook:1954
+msgid "Removing duplicates:"
+msgstr "重複を削除中:"
+
+#: cook:2028
+msgid "Creating flavors files in \"%s\""
+msgstr "\"%s\" でフレーバファイルを作成中"
+
+#: cook:2029
+msgid "Cook pkgdb: Creating all flavors"
+msgstr "pkgdb 生成：すべてのフレーバを作成中"
+
+#: cook:2032
+msgid "Recharging lists to use latest packages..."
+msgstr "最新パッケージを使用するためリストを再生成中..."
+
+#: cook:2037
+msgid "Creating configuration file \"%s\""
+msgstr "設定ファイル \"%s\" を生成中"
+
+#: cook:2049
+msgid "Starting to generate flavors..."
+msgstr "フレーバーの生成を開始します..."
+
+#: cook:2053
+msgid "Packing flavor \"%s\""
+msgstr "フレーバー \"%s\" をパック中"
+
+#: cook:2062
+msgid "Cook pkgdb end: %s"
+msgstr "pkgdb 生成終了: %s"
+
+#: cook:2085
+msgid "cook: HOST_ARCH is not set in \"%s\" receipt"
+msgstr "生成： \"%s\" receipt に HOST_ARCH が設定されていません"
+
+#: cook:2086
+msgid "package \"%s\" is not included in %s"
+msgstr "パッケージ \"%s\" は %s に含まれていません"
+
+#: cook:2087 cook:2100 cook:2102
+msgid "cook: %s"
+msgstr "作成: %s"
+
+#: cook:2088 cook:2103
+msgid "bugs: %s"
+msgstr "バグ: %s"
+
+#: cook:2089 cook:2104
+msgid "Cook skip: %s"
+msgstr "作成のスキップ: %s"
+
+#: cook:2097
+msgid "Host arch %s"
+msgstr "ホスト arch %s"
+
+#: cook:2101
+msgid "package \"%s\" doesn't cook or is not included in %s"
+msgstr "パッケージ \"%s\" は生成していないか、%s に含まれていません"
+
+#: cook:2112
+msgid "Package \"%s\" is blocked"
+msgstr "パッケージ \"%s\" はブロックされています"
+
+#: cook:2119
+msgid "Cook started for: %s"
+msgstr "生成開始: %s"
+
+#: cook:2136
+msgid "Cleaning \"%s\""
+msgstr "\"%s\" をクリーン中 "
+
+#: cook:2145
+msgid "Getting source for \"%s\""
+msgstr "\"%s\" のソースを取得中"
+
+#: cook:2147
+msgid "Tarball: %s"
+msgstr "Tarball: %s"
+
+#: cook:2151
+msgid "Blocking package \"%s\""
+msgstr "パッケージ \"%s\" はブロックしています"
+
+#: cook:2157
+msgid "Unblocking package \"%s\""
+msgstr "パッケージ \"%s\" はブロックを解除しています"
+
+#: cook:2169 cook:2176
+msgid "Need to build \"%s\""
+msgstr "\"%s\" をビルドする必要があります"
+
+#: cook:2180
+msgid "Checking depends"
+msgstr "依存を確認中"
+
+#: cook:2218
+msgid "WANTED package \"%s\" is blocked"
+msgstr "WANTED パッケージ \"%s\" がブロックされています"
+
+#: cook:2224
+msgid "WANTED package \"%s\" is broken"
+msgstr "WANTED pパッケージ \"%s\" が壊れています"
