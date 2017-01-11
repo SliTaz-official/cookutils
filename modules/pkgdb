@@ -6,13 +6,6 @@
 
 . /usr/lib/slitaz/libcook.sh
 
-export output=raw
-
-
-# Internationalization.
-
-export TEXTDOMAIN='cook'
-
 
 #
 # Functions

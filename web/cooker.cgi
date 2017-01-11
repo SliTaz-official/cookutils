@@ -16,7 +16,7 @@ activity="$CACHE/activity"
 commits="$CACHE/commits"
 cooklist="$CACHE/cooklist"
 cookorder="$CACHE/cookorder"
-command="$CACHE/command"
+command="$CACHE/command"; touch $command
 blocked="$CACHE/blocked"
 broken="$CACHE/broken"
 cooknotes="$CACHE/cooknotes"
@@ -315,7 +315,7 @@ case "${QUERY_STRING}" in
 			bpkg=$pkg
 			. $wok/$pkg/receipt
 
-			[ -n "$WANTED" ] && bpkg="$WANTED"
+			[ -n "$WANTED" ] && bpkg="${WANTED%% *}" # see locale-* with multiple WANTED
 			[ -n "$WEB_SITE" ] && # busybox wget -s $WEB_SITE &&
 			echo "<a href='$WEB_SITE'>home</a>"
 
