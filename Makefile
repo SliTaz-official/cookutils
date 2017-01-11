@@ -41,7 +41,7 @@ install-cook:
 	install -m 0644 README           $(DESTDIR)$(PREFIX)/share/doc/cookutils
 	install -m 0755 init.d/cooker    $(DESTDIR)/etc/init.d
 	chmod 0755 $(DESTDIR)/var/www/cgi-bin/cooker/*.cgi
-	find $(DESTDIR)$(PREFIX)/libexec/cookutils -type f -exec sed -i "s|@@PREFIX@@|$(PREFIX)|g" \{\} \;
+	sed -i "s|@@PREFIX@@|$(PREFIX)|g" $(DESTDIR)$(PREFIX)/bin/cook
 
 uninstall-cook:
 	rm -rf \
