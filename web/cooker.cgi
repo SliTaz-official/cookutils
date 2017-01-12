@@ -138,7 +138,8 @@ info2html() {
 		-e '/^Tag Table:$/,/^End Tag Table$/d' \
 		-e '/INFO-DIR/,/^END-INFO-DIR/d' \
 		-e "s|https*://[^>),'\"\` ]*|<a href=\"&\">&</a>|g" \
-		-e "s|ftp://[^>),\"\` ]*|<a href=\"&\">&</a>|g"
+		-e "s|ftp://[^>),\"\` ]*|<a href=\"&\">&</a>|g" \
+		-e "s|^|</pre><pre>|"
 }
 
 
@@ -163,6 +164,9 @@ syntax_highlighter() {
 				-e 's#\( \[Y[nm/]\?\] n\)$# <span class="span-no">\1</span>#g' \
 				-e 's#\( \[N[ym/]\?\] y\)$# <span class="span-ok">\1</span>#g' \
 				-e 's#(NEW) $#<span class="span-red">(NEW) </span>#g' \
+				\
+				-e 's#.*(pkg/local).*#<span class="span-ok">\0</span>#g' \
+				-e 's#.*(web/cache).*#<span class="span-no">\0</span>#g' \
 				\
 				-e 's#error$#<span class="span-red">error</span>#g' \
 				-e 's#ERROR:#<span class="span-red">ERROR:</span>#g' \

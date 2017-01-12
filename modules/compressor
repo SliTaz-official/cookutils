@@ -66,6 +66,8 @@ compress_manpages() {
 	[ -d "$manpath" ] || return
 	size0=$(sizes man); [ -z "$size0" ] && return
 
+	tazpkg -gi advancecomp --quiet --cookmode
+
 	action 'Compressing man pages...'
 
 	# We'll use only Gzip compression, so decompress other formats first
@@ -83,7 +85,6 @@ compress_manpages() {
 	done
 
 	# Recompress with advdef (it can't compress, only recompress)
-	tazpkg -gi advancecomp --quiet
 	for i in $(find $install/usr/share/man -type f); do
 		advdef -z4q $i
 	done
@@ -100,15 +101,14 @@ compress_png() {
 	[ "${COOKOPTS/!pngz/}" != "$COOKOPTS" ] && return
 	size0=$(sizes png); [ -z "$size0" ] && return
 
-	action 'Compressing png images...'
-
 	use_pq=true
 	use_op=true
 	[ "${COOKOPTS/!pngquant/}" != "$COOKOPTS" ] && use_pq=false
 	[ "${COOKOPTS/!optipng/}"  != "$COOKOPTS" ] && use_op=false
+	$use_pq && tazpkg -gi pngquant --quiet --cookmode
+	$use_op && tazpkg -gi optipng  --quiet --cookmode
 
-	$use_pq && tazpkg -gi pngquant --quiet
-	$use_op && tazpkg -gi optipng --quiet
+	action 'Compressing png images...'
 
 	oplevel=$(echo $COOKOPTS | grep 'op[0-8]' | sed 's|.*op\([0-8]\).*|\1|')
 	[ -z "$oplevel" ]     && oplevel='2'
@@ -131,9 +131,10 @@ compress_svg() {
 	[ "${COOKOPTS/!svgz/}" != "$COOKOPTS" ] && return
 	size0=$(sizes svg); [ -z "$size0" ] && return
 
+	tazpkg -gi svgcleaner --quiet --cookmode
+
 	action 'Compressing svg images...'
 
-	tazpkg -gi svgcleaner --quiet
 	cleaner_log="$(mktemp)"
 	for i in $(find $install -type f -name '*.svg'); do
 		echo -n "$i: " >> "$cleaner_log"
@@ -160,10 +161,12 @@ compress_ui() {
 	[ "${COOKOPTS/!uiz/}" != "$COOKOPTS" ] && return
 	[ -z "$(find $install -type f \( -name '*.ui' -o -name '*.glade' \) )" ] && return
 
+	tazpkg -gi xmlstarlet --quiet --cookmode
+
 	action 'Compressing ui files...'
+
 	size0=$(sizes xml)
 	time0=$(date +%s)
-	tazpkg -gi xmlstarlet --quiet
 	temp_ui="$(mktemp)"
 	for ui in $(find $install -type f \( -name '*.ui' -o -name '*.glade' \) ); do
 		xmlstarlet c14n --without-comments "$ui" | xmlstarlet sel -B -t -c '*' > "$temp_ui"
@@ -210,7 +213,7 @@ fix_desktop_files() {
 	time0=$(date +%s)
 
 	if [ -n "$QA" -a -z "$(which desktop-file-validate)" ]; then
-		tazpkg -gi desktop-file-utils-extra --quiet
+		tazpkg -gi desktop-file-utils-extra --quiet --cookmode
 	fi
 
 	# The variable $LOCALE is set in cook.conf and may be overridden in the receipt.
@@ -258,14 +261,15 @@ normalize_mo() {
 	[ "${COOKOPTS/!monorm/}" != "$COOKOPTS" ] && return
 	[ -z "$(find $install -type f -name '*.mo')" ] && return
 
+	# Gettext functions: msgunfmt, msguniq, msgconv, msgfmt
+	tazpkg -gi gettext      --quiet --cookmode
+	# Gconv modules (convert to UTF-8)
+	tazpkg -gi glibc-locale --quiet --cookmode
+
 	action 'Normalizing mo files...'
+
 	size0=$(sizes mo1)
 	time0=$(date +%s)
-
-	# Gettext functions: msgunfmt, msguniq, msgconv, msgfmt
-	tazpkg -gi gettext      --quiet
-	# Gconv modules (convert to UTF-8)
-	tazpkg -gi glibc-locale --quiet
 
 	# Process all existing *.mo files
 	for mo in $(find "$install" -type f -name '*.mo'); do
