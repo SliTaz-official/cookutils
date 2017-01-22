@@ -7,6 +7,20 @@
 . /usr/lib/slitaz/libcook.sh
 
 
+# Compressor cache stuff
+
+comp_cache_root='/var/cache/cook'
+cache_stat=$(mktemp)
+
+# Cache notes.
+# Do not do the same job twice. Getting the file from the cache is much faster
+# than compressing the file one more time. In addition, this cache is trying not
+# to take extra space, using the hardlinks. Although the files from the cache
+# without reference to himself should be removed periodically (to be done).
+
+
+
+
 #
 # Functions
 #
@@ -36,7 +50,13 @@ comp_summary() {
 	[ "$2" -eq 0 ] && return
 	time=$(($time1 - $1))
 	saving=$(( ($2 - $3) / 1024 ))
-	_ '  Time: %s. Size: %s B -> %s B. Save: %s KB' "$(disp_time $time)" "$2" "$3" "$saving"
+	cache_msg=''
+	if [ -s "$cache_stat" ]; then
+		cache_msg=$(_n ' Cache hit: %d/%d.' "$(fgrep '+' $cache_stat | wc -l)" "$(wc -l < $cache_stat)")
+		echo -n > $cache_stat
+	fi
+	_ '  Time: %s. Size: %s B -> %s B. Save: %s KB.%s' \
+		"$(disp_time $time)" "$2" "$3" "$saving" "$cache_msg"
 }
 
 
@@ -53,6 +73,34 @@ sizes() {
 		loc) find $install/usr/share/i18n/locales -type f                                       -exec ls -l \{\} \; ;;
 		mo2) find $fs/usr/share/locale            -type f -name '*.mo'                          -exec ls -l \{\} \; ;;
 	esac | awk '{s+=$5}END{print s}'
+}
+
+
+# Query cache for already existing compressed file; substitute original file with the cached
+# compressed one if so.
+# $1: cache section (gz, mangz, png, etc.); $2: path to original file
+
+query_cache() {
+	md5=$(md5sum "$2")
+	cachefile="$comp_cache_root/$1/${md5%% *}"
+	echo "$cachefile"
+	if [ -f "$cachefile" ]; then
+		ln -f "$cachefile" "$2"
+		echo '+' >> "$cache_stat"
+	else
+		echo '-' >> "$cache_stat"
+		false
+	fi
+}
+
+
+# Store compressed file to the cache
+# $1: path to cache entry to be stored; $2: path to compressed file to be stored
+
+store_cache() {
+	mkdir -p "${1%/*}"
+	mv "$2" "$1"
+	ln "$1" "$2"
 }
 
 
@@ -86,7 +134,10 @@ compress_manpages() {
 
 	# Recompress with advdef (it can't compress, only recompress)
 	for i in $(find $install/usr/share/man -type f); do
-		advdef -z4q $i
+		if ! cached_path=$(query_cache mangz "$i"); then
+			advdef -z4q "$i"
+			store_cache "$cached_path" "$i"
+		fi
 	done
 
 	comp_summary "$time0" "$size0" "$(sizes man)"
@@ -111,12 +162,20 @@ compress_png() {
 	action 'Compressing png images...'
 
 	oplevel=$(echo $COOKOPTS | grep 'op[0-8]' | sed 's|.*op\([0-8]\).*|\1|')
-	[ -z "$oplevel" ]     && oplevel='2'
+	[ -z "$oplevel" ] && oplevel='2'
+
+	cache_section="png$oplevel"
+	$use_pq && cache_section="${cache_section}p"
+	$use_op && cache_section="${cache_section}o"
+
 	[ "$oplevel" == '8' ] && oplevel='7 -zm1-9'
 
 	for i in $(find $install -type f -name '*.png'); do
-		$use_pq && pngquant -f --skip-if-larger --ext .png --speed 1 "$i"
-		$use_op && optipng -quiet -strip all -o$oplevel "$i"
+		if ! cached_path=$(query_cache $cache_section "$i"); then
+			$use_pq && pngquant -f --skip-if-larger --ext .png --speed 1 "$i"
+			$use_op && optipng -quiet -strip all -o$oplevel "$i"
+			store_cache "$cached_path" "$i"
+		fi
 	done
 
 	comp_summary "$time0" "$size0" "$(sizes png)"
@@ -508,3 +567,6 @@ case $1 in
 		strip_mo_i18n
 		;;
 esac
+
+# Clean
+rm "$cache_stat"
