@@ -10,13 +10,14 @@
 # Compressor cache stuff
 
 comp_cache_root='/var/cache/cook'
+mkdir -p "$comp_cache_root"
 cache_stat=$(mktemp)
 
 # Cache notes.
 # Do not do the same job twice. Getting the file from the cache is much faster
 # than compressing the file one more time. In addition, this cache is trying not
 # to take extra space, using the hardlinks. Although the files from the cache
-# without reference to himself should be removed periodically (to be done).
+# without reference to himself should be removed periodically.
 
 
 
@@ -570,3 +571,4 @@ esac
 
 # Clean
 rm "$cache_stat"
+find $comp_cache_root -type f -links -2 -delete
