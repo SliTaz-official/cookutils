@@ -64,6 +64,12 @@ Currently, the following options are recognized:
     be left "as is"). Please note that these files may be installed in a
     compressed format.
 
+!gz
+    Default action is to recompress all *.gz files (excluding man pages) with
+    the better compression ratio.
+    The presence of this option overrides the default action (all *.gzip files
+    will be left "as is").
+
 !pngz
     Default action is to compress all PNG images. Image compression allows you
     to save some space, but it takes a lot of time.

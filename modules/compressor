@@ -73,6 +73,7 @@ sizes() {
 		mo1) find $install                        -type f -name '*.mo'                          -exec ls -l \{\} \; ;;
 		loc) find $install/usr/share/i18n/locales -type f                                       -exec ls -l \{\} \; ;;
 		mo2) find $fs/usr/share/locale            -type f -name '*.mo'                          -exec ls -l \{\} \; ;;
+		gz)  find $install                        -type f -name '*.gz' ! -path '*/share/man/*'  -exec ls -l \{\} \; ;;
 	esac | awk '{s+=$5}END{print s}'
 }
 
@@ -142,6 +143,30 @@ compress_manpages() {
 	done
 
 	comp_summary "$time0" "$size0" "$(sizes man)"
+}
+
+
+# Function to recompress all gzip archives
+# Recompressing can be disabled with COOKOPTS="!gz"
+
+recompress_gz() {
+	time0=$(date +%s)
+	[ "${COOKOPTS/!gz/}" != "$COOKOPTS" ] && return
+	size0=$(sizes gz); [ -z "$size0" ] && return
+
+	tazpkg -gi advancecomp --quiet --cookmode
+
+	action 'Recompressing gzip files...'
+
+	# Recompress with advdef
+	for i in $(find $install -type f -name '*.gz' ! -path '*/share/man/*'); do
+		if ! cached_path=$(query_cache gz "$i"); then
+			advdef -z4q "$i"
+			store_cache "$cached_path" "$i"
+		fi
+	done
+
+	comp_summary "$time0" "$size0" "$(sizes gz)"
 }
 
 
@@ -551,6 +576,7 @@ case $1 in
 		case "$ARCH" in
 			arm*) ;;
 			*)
+				recompress_gz
 				compress_manpages
 				compress_png
 				compress_svg
