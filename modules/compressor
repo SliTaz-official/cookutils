@@ -9,7 +9,7 @@
 
 # Compressor cache stuff
 
-comp_cache_root='/var/cache/cook'
+comp_cache_root='/home/slitaz/cache/cook'
 mkdir -p "$comp_cache_root"
 cache_stat=$(mktemp)
 
