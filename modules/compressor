@@ -112,7 +112,7 @@ store_cache() {
 compress_manpages() {
 	time0=$(date +%s)
 	[ "${COOKOPTS/!manz/}" != "$COOKOPTS" ] && return
-	manpath="$install/usr/share/man" 
+	manpath="$install/usr/share/man"
 	[ -d "$manpath" ] || return
 	size0=$(sizes man); [ -z "$size0" ] && return
 
@@ -125,17 +125,17 @@ compress_manpages() {
 	find $manpath -type f -name '*.xz'  -exec unxz    \{\} \;
 
 	# Fast compress with gzip
-	find $manpath -type f -name '*.[1-9]*' -exec gzip \{\} \;
+	find $manpath -type f ! -name '*.gz' -exec gzip \{\} \;
 
 	# Fix symlinks
-	for i in $(find $install/usr/share/man -type l); do
+	for i in $(find $manpath -type l); do
 		dest=$(readlink $i | sed 's|\.[gbx]z2*$||')
 		link=$(echo $i | sed 's|\.[gbx]z2*$||')
 		rm $i; ln -s $dest.gz $link.gz
 	done
 
 	# Recompress with advdef (it can't compress, only recompress)
-	for i in $(find $install/usr/share/man -type f); do
+	for i in $(find $manpath -type f); do
 		if ! cached_path=$(query_cache mangz "$i"); then
 			advdef -z4q "$i"
 			store_cache "$cached_path" "$i"
