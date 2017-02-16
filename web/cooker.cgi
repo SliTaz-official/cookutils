@@ -422,6 +422,12 @@ EOT
 		log=$LOGS/${QUERY_STRING#log=}
 		if [ -s $log ]; then
 			echo "<h3>Cook log $(stat -c %y $log | sed 's/:..\..*//')</h3>"
+			if fgrep -q "Summary" $log; then
+				echo '<pre>'
+				grep -A 20 "^Summary" $log | sed /^$/d | \
+					syntax_highlighter log
+				echo '</pre>'
+			fi
 			echo '<pre>'
 			cat $log | syntax_highlighter log
 			echo '</pre>'
