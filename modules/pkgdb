@@ -252,9 +252,10 @@ done
 cp -f $live/*.flavor $live/flavors.list $PKGS
 separator | dblog
 { _ 'Total flavors size: %s' "$(du -sh $live | awk '{print $1}')"; newline; } | dblog
-rm -f $command
 separator | dblog
 _ 'Cook pkgdb end: %s' "$(date "$(_ '+%%F %%R')")" | dblog
+
+> $command
 
 
 exit 0

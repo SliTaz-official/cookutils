@@ -135,6 +135,7 @@ compress_manpages() {
 	done
 
 	# Recompress with advdef (it can't compress, only recompress)
+	IFS=$'\n'
 	for i in $(find $manpath -type f); do
 		if ! cached_path=$(query_cache mangz "$i"); then
 			advdef -z4q "$i"
@@ -159,6 +160,7 @@ recompress_gz() {
 	action 'Recompressing gzip files...'
 
 	# Recompress with advdef
+	IFS=$'\n'
 	for i in $(find $install -type f -name '*.gz' ! -path '*/share/man/*'); do
 		if ! cached_path=$(query_cache gz "$i"); then
 			advdef -z4q "$i"
@@ -196,6 +198,7 @@ compress_png() {
 
 	[ "$oplevel" == '8' ] && oplevel='7 -zm1-9'
 
+	IFS=$'\n'
 	for i in $(find $install -type f -name '*.png'); do
 		if ! cached_path=$(query_cache $cache_section "$i"); then
 			$use_pq && pngquant -f --skip-if-larger --ext .png --speed 1 "$i"
@@ -221,6 +224,7 @@ compress_svg() {
 	action 'Compressing svg images...'
 
 	cleaner_log="$(mktemp)"
+	IFS=$'\n'
 	for i in $(find $install -type f -name '*.svg'); do
 		echo -n "$i: " >> "$cleaner_log"
 		svgcleaner "$i" "$i" --remove-unresolved-classes false --quiet true >> "$cleaner_log"
@@ -253,6 +257,7 @@ compress_ui() {
 	size0=$(sizes xml)
 	time0=$(date +%s)
 	temp_ui="$(mktemp)"
+	IFS=$'\n'
 	for ui in $(find $install -type f \( -name '*.ui' -o -name '*.glade' \) ); do
 		xmlstarlet c14n --without-comments "$ui" | xmlstarlet sel -B -t -c '*' > "$temp_ui"
 		cat "$temp_ui" > "$ui"
@@ -292,7 +297,9 @@ get_supported_locales() {
 
 fix_desktop_files() {
 	[ "${COOKOPTS/!fixdesktops/}" != "$COOKOPTS" ] && return
-	[ -z "$(find $install -type f -name '*.desktop')" ] && return
+	deskpath="$install/usr/share/applications"
+	[ -d "$deskpath" ] || return
+	[ -z "$(find $deskpath -type f -name '*.desktop')" ] && return
 
 	size0=$(sizes des)
 	time0=$(date +%s)
@@ -306,7 +313,8 @@ fix_desktop_files() {
 	# list of supported locales here.
 	[ -z "$LOCALE" ] && LOCALE=$(get_supported_locales)
 
-	for desktop in $(find $install -type f -name '*.desktop'); do
+	IFS=$'\n'
+	for desktop in $(find $deskpath -type f -name '*.desktop'); do
 		cp "$desktop" "$desktop.orig"
 
 		# Sort out .desktop file (is prerequisite to correct working of `fix-desktop-file`)
@@ -357,6 +365,7 @@ normalize_mo() {
 	time0=$(date +%s)
 
 	# Process all existing *.mo files
+	IFS=$'\n'
 	for mo in $(find "$install" -type f -name '*.mo'); do
 		tmpfile="$(mktemp)"
 
