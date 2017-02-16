@@ -88,7 +88,8 @@ echo -n 'Building Linux kernel:'; colorize 32 " $version"
 echo -n 'Source directory:'; colorize 30 " $cookdir"
 
 # Install needed packages to compile.
-for pkg in slitaz-toolchain pkg-config perl xz lzma patch tar bc; do
+for pkg in slitaz-toolchain pkg-config perl xz lzma patch tar bc flex
+do
 	check_pkg $pkg
 done
 
