@@ -1179,10 +1179,11 @@ cook_copy_files() {
 	action 'Copying files...'
 	cd $install
 	local i j
+	IFS=$'\n'
 	for i in $@; do
 		for j in $(find . -name $i ! -type d); do
-			mkdir -p $fs$(dirname ${j#.})
-			cp -a $j $fs/${j#.}
+			mkdir -p  $fs$(dirname ${j#.})
+			cp -al $j $fs$(dirname ${j#.})
 		done
 	done
 	cd - >/dev/null
@@ -1196,10 +1197,11 @@ cook_copy_folders() {
 	action 'Copying folders...'
 	cd $install
 	local i j
+	IFS=$'\n'
 	for i in $@; do
 		for j in $(find . -name $i -type d); do
-			mkdir -p $fs$(dirname ${j#.})
-			cp -a $j $fs/${j#.}
+			mkdir -p  $fs$(dirname ${j#.})
+			cp -al $j $fs$(dirname ${j#.})
 		done
 	done
 	cd - >/dev/null
