@@ -346,7 +346,7 @@ fix_desktop_files() {
 }
 
 
-# Normalize all *.mo files: unconditionally convert to UTF-8; remove strings that are not really added
+# Normalize all *.mo files: unconditionally convert to UTF-8; remove strings that are not really necessary
 # to the translation (msgid = msgstr)
 # Normalization can be disabled with COOKOPTS="!monorm"
 

@@ -205,7 +205,7 @@ glibc_headers() {
 	mkdir -p $sysroot/usr/include/gnu
 	touch $sysroot/usr/include/gnu/stubs.h
 
-	# Fixe error: bits/stdio_lim.h not found
+	# Fix error: bits/stdio_lim.h not found
 	#cp bits/stdio_lim.h $sysroot/usr/include/bits
 	cp /usr/include/bits/stdio_lim.h $sysroot/usr/include/bits
 }

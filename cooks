@@ -33,6 +33,6 @@ for i in $splitted; do
 	[ -d "$WOK/$i" ] && cook $i
 done
 
-# TODO: check the "split quality": whether the file belongs to a few (or no one) packages
+# TODO: check the "split quality": whether the file belongs to a few (or not one) packages
 
 exit 0
