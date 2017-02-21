@@ -27,18 +27,22 @@ cache_stat=$(mktemp)
 #
 
 
-# Display time.
+# Working with time (with hundredths precision)
 
-disp_time() {
-	div=$(( ($1 + 30) / 60))
-	case $div in
-		0) min='';;
-		# L10n: 'm' is for minutes (approximate time)
-		*) min=$(_n ' ~ %dm' "$div");;
-	esac
+get_time() {
+	cut -d" " -f2 /proc/uptime
+}
 
-	# L10n: 's' is for seconds (cooking time)
-	_ '%ds%s' "$1" "$min"
+calc_time() {
+	# L10n: 's' is for seconds, 'm' is for minutes
+	awk -va="$1" -vb="$(get_time)" -vs="$(_ 's')" -vm="$(_ 'm')" '
+	BEGIN{
+		time = b - a;
+		if (time < 30)
+			printf("%.2f%s\n", time, s);
+		else
+			printf("%.2f%s ~ %.0f%s\n", time, s, time / 60, m);
+	}'
 }
 
 
@@ -46,18 +50,16 @@ disp_time() {
 
 comp_summary() {
 	# "$time0" "$size0" "$size1"
-	time1=$(date +%s)
 	status
 	[ "$2" -eq 0 ] && return
-	time=$(($time1 - $1))
-	saving=$(( ($2 - $3) / 1024 ))
+	saving=$(awk -va="$2" -vb="$3" 'BEGIN{ printf("%.0f\n", (a - b) / 1024) }')
 	cache_msg=''
 	if [ -s "$cache_stat" ]; then
 		cache_msg=$(_n ' Cache hit: %d/%d.' "$(fgrep '+' $cache_stat | wc -l)" "$(wc -l < $cache_stat)")
 		echo -n > $cache_stat
 	fi
 	_ '  Time: %s. Size: %s B -> %s B. Save: %s KB.%s' \
-		"$(disp_time $time)" "$2" "$3" "$saving" "$cache_msg"
+		"$(calc_time $1)" "$2" "$3" "$saving" "$cache_msg"
 }
 
 
@@ -110,7 +112,7 @@ store_cache() {
 # Compressing can be disabled with COOKOPTS="!manz"
 
 compress_manpages() {
-	time0=$(date +%s)
+	time0=$(get_time)
 	[ "${COOKOPTS/!manz/}" != "$COOKOPTS" ] && return
 	manpath="$install/usr/share/man"
 	[ -d "$manpath" ] || return
@@ -151,7 +153,7 @@ compress_manpages() {
 # Recompressing can be disabled with COOKOPTS="!gz"
 
 recompress_gz() {
-	time0=$(date +%s)
+	time0=$(get_time)
 	[ "${COOKOPTS/!gz/}" != "$COOKOPTS" ] && return
 	size0=$(sizes gz); [ -z "$size0" ] && return
 
@@ -176,7 +178,7 @@ recompress_gz() {
 # Compressing can be disabled with COOKOPTS="!pngz"
 
 compress_png() {
-	time0=$(date +%s)
+	time0=$(get_time)
 	[ "${COOKOPTS/!pngz/}" != "$COOKOPTS" ] && return
 	size0=$(sizes png); [ -z "$size0" ] && return
 
@@ -215,7 +217,7 @@ compress_png() {
 # Compressing can be disabled with COOKOPTS="!svgz"
 
 compress_svg() {
-	time0=$(date +%s)
+	time0=$(get_time)
 	[ "${COOKOPTS/!svgz/}" != "$COOKOPTS" ] && return
 	size0=$(sizes svg); [ -z "$size0" ] && return
 
@@ -255,7 +257,7 @@ compress_ui() {
 	action 'Compressing ui files...'
 
 	size0=$(sizes xml)
-	time0=$(date +%s)
+	time0=$(get_time)
 	temp_ui="$(mktemp)"
 	IFS=$'\n'
 	for ui in $(find $install -type f \( -name '*.ui' -o -name '*.glade' \) ); do
@@ -302,7 +304,7 @@ fix_desktop_files() {
 	[ -z "$(find $deskpath -type f -name '*.desktop')" ] && return
 
 	size0=$(sizes des)
-	time0=$(date +%s)
+	time0=$(get_time)
 
 	if [ -n "$QA" -a -z "$(which desktop-file-validate)" ]; then
 		tazpkg -gi desktop-file-utils-extra --quiet --cookmode
@@ -362,7 +364,7 @@ normalize_mo() {
 	action 'Normalizing mo files...'
 
 	size0=$(sizes mo1)
-	time0=$(date +%s)
+	time0=$(get_time)
 
 	# Process all existing *.mo files
 	IFS=$'\n'
@@ -485,7 +487,7 @@ strip_locale_def() {
 
 	action 'Stripping locale definitions...'
 	size0=$(sizes loc)
-	time0=$(date +%s)
+	time0=$(get_time)
 
 	for i in $(find $install/usr/share/i18n/locales -type f); do
 		sed -i 's|	| |g; s|  *| |g; s|^ ||; /^%/d' $i
@@ -510,7 +512,7 @@ strip_package() {
 	action 'Executing strip on all files...'
 	size0=0
 	size1=0
-	time0=$(date +%s)
+	time0=$(get_time)
 
 	# Strip executable files
 	for dir in $fs/bin $fs/sbin $fs/usr/bin $fs/usr/sbin $fs/usr/games; do
@@ -551,7 +553,7 @@ strip_mo_i18n() {
 
 	action 'Thin out translation files...'
 	size0=$(sizes mo2)
-	time0=$(date +%s)
+	time0=$(get_time)
 
 	# The variable $LOCALE is set in cook.conf and may be overridden in the receipt.
 	# Default value is "" (empty). That means for us that we'll use the full
