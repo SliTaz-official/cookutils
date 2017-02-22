@@ -541,8 +541,8 @@ remove_deps() {
 cookit() {
 	if [ -n "$SETUP_MD5" ] && [ "$SETUP_MD5" != "$(ls $root$INSTALLED | \
 			md5sum | cut -c1-32)" ]; then
-		_ 'Broken setup. Abort.'
-		exit 1
+		_ 'ERROR: Broken setup. Abort.'
+		return
 	fi
 
 	title 'Cook: %s' "$PACKAGE $VERSION"
