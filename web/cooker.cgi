@@ -253,7 +253,7 @@ running_command()
 	if [ -s "$command" ]; then
 		state="$(cat $command)"
 		set -- $(grep "^$state" $cooktime)
-		if [ -n "$1" ]; then
+		if [ -n "$1" -a $2 -ne 0 ]; then
 			state="$state $((($(date +%s)-$3)*100/$2))%"
 			[ $2 -gt 300 ] && state="$state (should end $(date -u -d @$(($2+$3))))"
 		fi
