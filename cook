@@ -1189,7 +1189,9 @@ cook_copy_files() {
 	for i in $@; do
 		for j in $(find . -name $i ! -type d); do
 			mkdir -p  $fs$(dirname ${j#.})
-			cp -a $j $fs$(dirname ${j#.})
+			# Option -l used here to prevent hardinked files to become individual files,
+			# please don't remove it: package with individual files becomes bigger.
+			[ -e "$fs${j#.}" ] || cp -al $j $fs$(dirname ${j#.})
 		done
 	done
 	cd - >/dev/null
@@ -1207,7 +1209,9 @@ cook_copy_folders() {
 	for i in $@; do
 		for j in $(find . -name $i -type d); do
 			mkdir -p  $fs$(dirname ${j#.})
-			cp -a $j $fs$(dirname ${j#.})
+			# Option -l used here to prevent hardinked folders to become individual folders,
+			# please don't remove it: package with individual folders becomes bigger.
+			[ -d "$fs${j#.}" ] || cp -al $j $fs$(dirname ${j#.})
 		done
 	done
 	cd - >/dev/null
