@@ -417,6 +417,17 @@ debug_info() {
 }
 
 
+# A bit smarter function than the classic `cp` command
+
+copy() {
+	if [ "$(stat -c %h -- "$1")" -gt 1 ]; then
+		cp -al "$1" "$2"	# copy hardlinks
+	else
+		cp -a  "$1" "$2"	# copy generic files
+	fi
+}
+
+
 # Copy all generic files (locale, pixmaps, .desktop). We use standard paths,
 # so some packages need to copy these files with the receipt and genpkg_rules.
 
@@ -427,7 +438,7 @@ copy_generic_files() {
 			mkdir -p $fs/usr/share/locale
 			for i in $LOCALE; do
 				if [ -d "$install/usr/share/locale/$i" ]; then
-					cp -a $install/usr/share/locale/$i $fs/usr/share/locale
+					copy $install/usr/share/locale/$i $fs/usr/share/locale
 				fi
 			done
 		fi
@@ -438,10 +449,10 @@ copy_generic_files() {
 		if [ -d "$install/usr/share/pixmaps" ]; then
 			mkdir -p $fs/usr/share/pixmaps
 			if [ -f "$install/usr/share/pixmaps/$PACKAGE.png" ]; then
-				cp -a $install/usr/share/pixmaps/$PACKAGE.png \
+				copy $install/usr/share/pixmaps/$PACKAGE.png \
 					$fs/usr/share/pixmaps
 			elif [ -f "$install/usr/share/pixmaps/$PACKAGE.xpm" ]; then
-				cp -a $install/usr/share/pixmaps/$PACKAGE.xpm \
+				copy   $install/usr/share/pixmaps/$PACKAGE.xpm \
 					$fs/usr/share/pixmaps
 			fi
 		fi
@@ -449,7 +460,7 @@ copy_generic_files() {
 		# Custom or homemade PNG pixmap can be in stuff.
 		if [ -f "$stuff/$PACKAGE.png" ]; then
 			mkdir -p $fs/usr/share/pixmaps
-			cp -a $stuff/$PACKAGE.png $fs/usr/share/pixmaps
+			copy $stuff/$PACKAGE.png $fs/usr/share/pixmaps
 		fi
 	fi
 
@@ -458,24 +469,24 @@ copy_generic_files() {
 	if [ "${COOKOPTS/!menus/}" == "$COOKOPTS" -a "$GENERIC_MENUS" != 'no' ]; then
 		if [ -d "$install/usr/share/applications" ] && [ -z "$WANTED" ]; then
 			mkdir -p $fs/usr/share
-			cp -a $install/usr/share/applications $fs/usr/share
+			copy $install/usr/share/applications $fs/usr/share
 		fi
 	fi
 
 	# Homemade desktop file(s) can be in stuff.
 	if [ -d "$stuff/applications" ]; then
 		mkdir -p $fs/usr/share
-		cp -a $stuff/applications $fs/usr/share
+		copy $stuff/applications $fs/usr/share
 	fi
 	if [ -f "$stuff/$PACKAGE.desktop" ]; then
 		mkdir -p $fs/usr/share/applications
-		cp -a $stuff/$PACKAGE.desktop $fs/usr/share/applications
+		copy $stuff/$PACKAGE.desktop $fs/usr/share/applications
 	fi
 
 	# Add custom licenses
 	if [ -d "$stuff/licenses" ]; then
 		mkdir -p $fs/usr/share/licenses
-		cp -a $stuff/licenses $fs/usr/share/licenses/$PACKAGE
+		copy $stuff/licenses $fs/usr/share/licenses/$PACKAGE
 	fi
 }
 
@@ -532,7 +543,7 @@ remove_deps() {
 		newline; newline
 		# Keep the last diff for debug and info.
 		mv -f $diff $CACHE/installed.diff
-	fi
+	fi | fold -sw80
 }
 
 
@@ -1173,7 +1184,7 @@ cook_pick_manpages() {
 		name=$(echo $i | sed 's|\.[gbx]z2*$||')
 		section=${name##*/}; section=${section##*.}
 		mkdir -p $install/usr/share/man/man$section
-		cp -a $i $install/usr/share/man/man$section
+		copy $i  $install/usr/share/man/man$section
 	done
 	status
 }
@@ -1189,9 +1200,7 @@ cook_copy_files() {
 	for i in $@; do
 		for j in $(find . -name $i ! -type d); do
 			mkdir -p  $fs$(dirname ${j#.})
-			# Option -l used here to prevent hardinked files to become individual files,
-			# please don't remove it: package with individual files becomes bigger.
-			[ -e "$fs${j#.}" ] || cp -al $j $fs$(dirname ${j#.})
+			copy $j $fs$(dirname ${j#.})
 		done
 	done
 	cd - >/dev/null
@@ -1209,9 +1218,7 @@ cook_copy_folders() {
 	for i in $@; do
 		for j in $(find . -name $i -type d); do
 			mkdir -p  $fs$(dirname ${j#.})
-			# Option -l used here to prevent hardinked folders to become individual folders,
-			# please don't remove it: package with individual folders becomes bigger.
-			[ -d "$fs${j#.}" ] || cp -al $j $fs$(dirname ${j#.})
+			copy $j $fs$(dirname ${j#.})
 		done
 	done
 	cd - >/dev/null
@@ -1227,8 +1234,8 @@ cook_copy_icons() {
 	action 'Copying hicolor icons...'
 	mkdir -p $fs/usr/share/icons/hicolor
 	for i in ${sizes:-16 48}; do
-		[ -e "$install/usr/share/icons/hicolor/${i}x$i" ] &&
-		cp -a $install/usr/share/icons/hicolor/${i}x$i \
+		[ ! -e "$install/usr/share/icons/hicolor/${i}x$i" ] ||
+		copy $install/usr/share/icons/hicolor/${i}x$i \
 			$fs/usr/share/icons/hicolor
 	done
 	status
