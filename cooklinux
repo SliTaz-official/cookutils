@@ -4,7 +4,7 @@
 # No patches, aufs and co, keep it simple. The goal is to let users build
 # a custom and optimized kernel in a few commands
 #
-# Copyright (C) 2014-15 SliTaz GNU/Linux - BSD License
+# Copyright (C) 2014-17 SliTaz GNU/Linux - BSD License
 #
 # Author: Christophe Lincoln <pankso@slitaz.org>
 #
@@ -33,6 +33,7 @@ $(boldify 'Options:')
   --mrproper     Remove all generated files + config + backup files
   --defconfig    New config with default from ARCH supplied defconfig
   --tazconfig    New config using current SliTaz /proc/config.gz
+  --allno        New minimal config answering no to everything
   --localmod     Update config removing all unloaded modules
   --config       Update current config with a text based front-end
   --menuconfig   Update current config with a menu based program
@@ -90,7 +91,7 @@ echo -n 'Source directory:'; colorize 30 " $cookdir"
 # Install needed packages to compile.
 for pkg in slitaz-toolchain pkg-config perl xz lzma patch tar bc flex
 do
-	check_pkg $pkg
+	check_pkg ${pkg}
 done
 
 # Get the source and extract tarball.
@@ -127,6 +128,11 @@ fi
 # Create a new default config.
 if [ -n "$defconfig" ]; then
 	make defconfig
+fi
+
+# Create a minimal config file.
+if [ -n "$allno" ]; then
+	make allnoconfig
 fi
 
 # Update config and wipe out unloaded modules.
