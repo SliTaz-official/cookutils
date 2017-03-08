@@ -64,6 +64,7 @@ Commands:
   gcc-final       Compile final GCC
   compile         Compile everything at once
   libtool         Cross GNU Libtool (test in receipt LIBTOOL=)
+  libhack         Fix libxx.la files with libdir='/usr/lib'
   clean           Clean-up build environment
   clean-tools     Clean: $tools
   gen-prebuilt    Create a prebuilt toolchain archive
