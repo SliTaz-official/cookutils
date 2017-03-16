@@ -1,46 +1,67 @@
 /* CSS style for SliTaz Cooker */
 
-html { min-height: 102%; }
-body { font: 13px sans-serif, vernada, arial; margin: 0; }
-h1 { margin: 0; padding: 8px; color: #fff; font-size: 20px; }
-h1 a { color: #fff; text-decoration: none; }
-h2 { color: #444; }
+body {
+	font-family: sans-serif;
+	font-size: 13px;
+	margin: 0;
+	min-height: 100%;
+/*	position: absolute;*/
+	left: 0;
+	right: 0;
+}
+#content2 h2 {
+	color: #444;
+	border-bottom: 2px solid #CCC;
+	height: 100%;
+}
 h3 { color: #666; font-size: 140%; }
-a { text-decoration: underline; color: #215090; }
-a:hover { text-decoration: none; }
-hr { margin: 0; border: 1px solid #cfcfcf; }
+a { text-decoration: none; color: #215090; }
+a:hover { text-decoration: underline; }
+.files a { text-decoration: none; color: inherit; }
+.files a:hover { text-decoration: underline; }
+hr { margin: 0; border: 1px solid #CFCFCF; }
 pre {
-	background-color: #f8f8f8;
-	border: 1px solid #ddd;
-	padding: 10px;
+	background-color: #F8F8F8;
+	border: 1px solid #DDD;
+	padding: 8px;
 	overflow: auto;
-	font-size: 96%;
 }
 
 /* Header */
 
 #header {
-	color: #fff;
+	color: #FFF;
 	background: #222;
 	height: 40px;
-	border-bottom: 4px solid #afafaf;
+	border-bottom: 3px solid #AAA;
 }
 
 #header h1 {
 	margin: 0;
-	/* padding: 8px 0 0 42px; */
+	padding: 8px 0 0 42px;
+	color: #FFF;
+	font-size: 20px;
 	width: 250px;
+}
+#logo {
+	background: url(/images/logo.png) no-repeat left;
+	position: absolute;
+	float: left;
+	left: 0px;
+	top: 0px;
+	width: 40px;
+	height: 40px;
 }
 
 #header h1 a {
-	color: #fff;
+	color: #FFF;
 	text-decoration: none;
 	font-size: 20px;
 	font-style: italic;
 }
 
 #header h1 a:hover, #network a:hover {
-	color: #afafaf;
+	color: #AFAFAF;
 }
 
 /* Header links */
@@ -53,7 +74,7 @@ pre {
 
 #network a {
 	padding: 0 4px;
-	color: #fff;
+	color: #FFF;
 	font-weight: bold;
 	text-decoration: none;
 }
@@ -61,26 +82,33 @@ pre {
 /* Content */
 
 #content {
-	margin: 40px 80px;
-	text-align: justify;
+	margin: auto;
+	padding: 0.5em;
+}
+#content2 {
+	width: 100%;
+	max-width: 700px;
+	margin: auto;
+	padding: 0.5em;
 }
 
-.span-ok    { color: #0a0; }
+
+.span-ok    { color: #0A0; }
 .span-red   { color: red; }
 .span-sky   { color: blue; }
-.span-no    { color: #d90; }
+.span-no    { color: #D90; }
 .span-line  { color: #888; }
 .log-date   { color: #666; font-size: 95%; }
-.sh-comment { color: #a00; }
-.sh-val     { color: #e50; font-weight: bold; }
-.var        { color: #05a; }
+.sh-comment { color: #A00; }
+.sh-val     { color: #E50; font-weight: bold; }
+.var        { color: #05A; }
 
 /* Buttons */
 
 .button {
-	cursor: pointer;
+	display: inline-block;
 	padding: 4px;
-	margin: 4px 0px;
+	margin: 2px 0;
 }
 
 a.button, .pctbar  {
@@ -88,39 +116,81 @@ a.button, .pctbar  {
 	color: #666;
 }
 
-.button:hover {
-	border: 1px solid #999;
+.pct {
+	background: #9DFF4A;
+	background-image: -webkit-linear-gradient(#CDFFA3, #9DFF4A 40%, #87DB40);
+	background-image:    -moz-linear-gradient(#CDFFA3, #9DFF4A 40%, #87DB40);
+	padding: 2px 4px;
 }
-
-.pct { background: #9dff4a; padding: 2px 4px; }
 .pctbar { overflow: hidden; }
 
-.button, .pctbar {
-	border: 1px solid #cccccc;
+.button {
+	text-decoration: none;
+	color: #444;
+	border: 1px solid #666;
 	font-size: 14px;
 	line-height: 1.2em;
-	background-image: -webkit-linear-gradient(#FAFAFA, #F4F4F4 40%, #E5E5E5);
-	background-image: -moz-linear-gradient(#FAFAFA, #F4F4F4 40%, #E5E5E5);
-	-webkit-box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1);
-	-moz-box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1);
-	box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1);
+}
+.button:hover {
+	color: #000;
+	border-color: #000;
+}
+.button.active {
+	/*outline: 1px solid #999;
+	outline-offset: 1px;*/
+	color: #000;
+	border-color: #000;
 }
 
+.pctbar {
+	border: 1px solid #AAA;
+	font-size: 14px;
+	line-height: 1.2em;
+	background-image: -webkit-linear-gradient(#E5E5E5, #F4F4F4 40%, #FAFAFA);
+	background-image: -moz-linear-gradient(#E5E5E5, #F4F4F4 40%, #FAFAFA);
+}
 /* Round corner */
 
 pre, .button, .pctbar {
-	-moz-border-radius: 4px;
-	-webkit-border-radius: 4px;
-	border-radius: 4px;
+	border-radius: 2px;
 }
 
 /* Footer */
 
 #footer {
 	text-align: center;
-	padding: 20px;
-	border-top: 1px solid #ddd;
+	padding: 20px 0;
+	border-top: 1px solid #DDD;
 	font-size: 90%;
+/*	position: absolute;*/
+	bottom: 0;
+	left: 0;
+	right: 0;
 }
 
 #footer a { padding: 0 2px; }
+
+.log a { text-decoration: none; color: #666; }
+.log a:hover { color: #000; }
+
+.activity { padding-left: 0.5em; }
+.activity li { list-style-type: none; }
+.activity li::before { color: #666; content: "•"; padding-right: 0.5em; }
+
+.r { float: right; }
+
+.zebra tr:nth-child(odd)  { background-color: #FFFFFF; }
+.zebra tr:nth-child(even) { background-color: #ECECEC; }
+
+.gray   { background-color: lightgray; }
+.gold   { background-color: gold; }
+.green  { background-color: greenyellow; }
+.sky    { background-color: skyblue; }
+.plum   { background-color: plum; }
+.yellow { background-color: yellow; }
+.khaki  { background-color: khaki; }
+.brown  { background-color: sandybrown; }
+
+a:target {background-color: yellow; }
+
+pre.info { color: #FFF; background-color: #272822; }
