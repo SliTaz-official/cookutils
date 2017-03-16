@@ -1,0 +1,71 @@
+#!/bin/sh
+#
+# qa - module of the SliTaz Cook
+# Copyright (C) SliTaz GNU/Linux - GNU GPL v3
+#
+
+. /usr/lib/slitaz/libcook.sh
+
+
+result() {
+	# using external $rule, $check
+	[ -n "$check" ] || return
+	echo "$rule:"
+	echo "$check" | awk '{printf("  %s\n", $0)}'
+	echo
+}
+
+# FHS: http://refspecs.linuxfoundation.org/FHS_3.0/fhs-3.0.html
+
+# FHS 3.16.2
+rule='Subdirectories in /sbin'
+check="$(find $root/sbin -mindepth 1 -type d 2>/dev/null | sed "s|^$root||")"
+result
+
+# FHS 4.2, 4.3
+rule='Non-standard directories in /usr'
+check="$(ls $root/usr 2>/dev/null | sed '/^bin$/d; /^lib$/d; /^local$/d; /^sbin$/d; /^share$/d; /^games$/d; /^include$/d; /^libexec$/d; /^lib[0-9][0-9]*$/d; /^src$/d' | sed 's|^|/usr/|')"
+result
+
+# FHS 4.4.2
+rule='Subdirectories in /usr/bin'
+check="$(find $root/usr/bin -mindepth 1 -type d 2>/dev/null | sed "s|^$root||")"
+result
+
+# FHS 4.9.1
+rule='Using /usr/local for system packages'
+check="$(ls -d $root/usr/local 2>/dev/null | sed "s|^$root||")"
+result
+
+# FHS 4.10.2
+rule='Subdirectories in /usr/sbin'
+check="$(find $root/usr/sbin -mindepth 1 -type d 2>/dev/null | sed "s|^$root||")"
+result
+
+
+
+exit 0
+
+echo 'Check extra folders'
+
+for i in /bin /sbin /usr/bin /usr/sbin; do
+	find $i -mindepth 1 -type d
+done
+
+
+echo 'Check bad folders'
+
+for i in /usr/etc /usr/man; do
+	find $i -type d -maxdepth 0
+done
+
+
+echo ''
+
+
+case dir in
+	bin)		user='root'; maskf='+022'; maskd='+777';;
+	etc/init.d)	user='root'; maskf='!755'
+	etc)		user='root'; maskf='+133'; permd='';;
+	/usr/share/applications) find /usr/share/applications -maxdepth 1 \( -type d -o ! -user root -o ! -perm 644 \) -exec ls -land {} \;
+esac

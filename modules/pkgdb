@@ -109,7 +109,7 @@ EOT
 		DEPENDS=$(echo $DEPENDS) # remove newlines from some receipts
 		MD5="$(fgrep " $PACKAGE-$VERSION$EXTRAVERSION.tazpkg" $PKGS/packages.md5 | awk '{print $1}')"
 		cat >> $PKGS/packages.info <<EOT
-$PACKAGE	$VERSION$EXTRAVERSION	$CATEGORY	$SHORT_DESC	$WEB_SITE	$TAGS	$SIZES	$DEPENDS	$MD5
+$PACKAGE	$VERSION$EXTRAVERSION	$CATEGORY	$SHORT_DESC	$WEB_SITE	$TAGS	$SIZES	$DEPENDS	$MD5	$PROVIDE
 EOT
 
 		# packages.equiv is used by tazpkg install to check depends.
@@ -125,8 +125,7 @@ EOT
 		done
 
 		# files.list provides a list of all packages files.
-		cat $pkg/taz/*/files.list | sed s/^/"$pkg: \0"/ >> \
-			$PKGS/files.list
+		[ -d $pkg/taz ] && cat $pkg/taz/*/files.list | sed s/^/"$pkg: \0"/ >> $PKGS/files.list
 
 		# list of unnecessary packages
 		sed -i "/ $PACKAGE-$VERSION$EXTRAVERSION.tazpkg/d" $PKGS/packages.toremove

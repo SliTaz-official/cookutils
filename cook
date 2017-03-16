@@ -80,19 +80,13 @@ clean_log() {
 # Be sure package exists in wok.
 
 check_pkg_in_wok() {
-	if [ ! -d "$WOK/$pkg" ]; then
-		newline; _ 'Unable to find package "%s" in the wok' "$pkg"; newline
-		exit 1
-	fi
+	[ -d "$WOK/$pkg" ] || die 'Unable to find package "%s" in the wok' "$pkg"
 }
 
 
 if_empty_value() {
-	if [ -z "$value" ]; then
-		# L10n: QA is quality assurance
-		_ 'QA: empty variable: %s' "$var=\"\""; newline
-		exit 1
-	fi
+	# L10n: QA is quality assurance
+	[ -n "$value" ] || die 'QA: empty variable: %s' "$var=\"\""
 }
 
 
@@ -102,9 +96,7 @@ init_db_files() {
 	_ 'Creating directories structure in "%s"' "$SLITAZ"
 	mkdir -p $WOK $PKGS $SRC $CACHE $LOGS $FEEDS
 	_ 'Creating DB files in "%s"' "$CACHE"
-	for f in $activity $command $broken $blocked; do
-		touch $f
-	done
+	touch $activity $command $broken $blocked
 }
 
 
@@ -121,16 +113,16 @@ receipt_quality() {
 		value="$(. $receipt; eval echo \$$var)"
 		case "$var" in
 			PACKAGE|VERSION|SHORT_DESC)
-				if_empty_value ;;
+				if_empty_value
+				;;
 			CATEGORY)
 				value="${value:-empty}"
 				valid="$(echo $PKGS_CATEGORIES)" # avoid newlines
 				if ! echo " $valid " | grep -q " $value "; then
 					_ 'QA: unknown category "%s"' "$value"
-					longline "$(_ 'Please, use one of: %s' "$valid")"
-					newline
-					exit 1
-				fi ;;
+					die 'Please, use one of: %s' "$valid"
+				fi
+				;;
 			WEB_SITE)
 				# We don't check WGET_URL since if dl is needed it will fail.
 				# Break also if we're not online. Here error is not fatal.
@@ -138,7 +130,8 @@ receipt_quality() {
 				[ -z "$online" ] && break
 				if ! busybox wget -T 12 -s $value 2>/dev/null; then
 					_ 'QA: unable to reach "%s"' "$value"
-				fi ;;
+				fi
+				;;
 		esac
 	done
 }
@@ -215,55 +208,46 @@ create_tarball() {
 
 get_source() {
 	local url
-	url="$MIRROR_URL/sources/packages/${TARBALL:0:1}/$TARBALL"
+	url=${WGET_URL#*|}
 	set_paths
 	pwd=$(pwd)
 	case "$WGET_URL" in
-		http://*|ftp://*)
-			# Busybox Wget is better!
-			busybox wget -T 60 -c -O $SRC/$TARBALL $WGET_URL || \
-			busybox wget -T 60 -c -O $SRC/$TARBALL $url || \
-				(_ 'ERROR: %s' "wget $WGET_URL" && exit 1) ;;
-
-		https://*)
-			wget -c --no-check-certificate -O $SRC/$TARBALL $WGET_URL || \
-			busybox wget -T 60 -c -O $SRC/$TARBALL $url || \
-				(_ 'ERROR: %s' "wget $WGET_URL" && exit 1) ;;
+		http://*|ftp://*|https://*)
+			url="$MIRROR_URL/sources/packages/${TARBALL:0:1}/$TARBALL"
+			wget -T 60 -c -O $SRC/$TARBALL $WGET_URL ||
+			wget -T 60 -c -O $SRC/$TARBALL $url ||
+			die 'ERROR: %s' "wget $WGET_URL"
+			;;
 
 		hg*|mercurial*)
-			if $(echo "$WGET_URL" | fgrep -q 'hg|'); then
-				url=${WGET_URL#hg|}
-			else
-				url=${WGET_URL#mercurial|}
-			fi
 			_ 'Getting source from %s...' 'Hg'
 			_ 'URL: %s' "$url"
 			_ 'Cloning to "%s"' "$pwd/$pkgsrc"
 			if [ -n "$BRANCH" ]; then
 				_ 'Hg branch: %s' "$BRANCH"
-				hg clone $url --rev $BRANCH $pkgsrc || \
-					(_ 'ERROR: %s' "hg clone $url --rev $BRANCH" && exit 1)
+				hg clone $url --rev $BRANCH $pkgsrc ||
+				die 'ERROR: %s' "hg clone $url --rev $BRANCH"
 			else
-				hg clone $url $pkgsrc || (_ 'ERROR: %s' "hg clone $url" && exit 1)
+				hg clone $url $pkgsrc || die 'ERROR: %s' "hg clone $url"
 			fi
 			rm -rf $pkgsrc/.hg
-			create_tarball ;;
+			create_tarball
+			;;
 
 		git*)
-			url=${WGET_URL#git|}
 			_ 'Getting source from %s...' 'Git'
 			_ 'URL: %s' "$url"
 			cd $SRC
-			git clone $url $pkgsrc || (_ 'ERROR: %s' "git clone $url" && exit 1)
+			git clone $url $pkgsrc || die 'ERROR: %s' "git clone $url"
 			if [ -n "$BRANCH" ]; then
 				_ 'Git branch: %s' "$BRANCH"
 				cd $pkgsrc; git checkout $BRANCH; cd ..
 			fi
 			cd $SRC
-			create_tarball ;;
+			create_tarball
+			;;
 
 		cvs*)
-			url=${WGET_URL#cvs|}
 			mod=$PACKAGE
 			[ -n "$CVS_MODULE" ] && mod=$CVS_MODULE
 			_ 'Getting source from %s...' 'CVS'
@@ -271,14 +255,10 @@ get_source() {
 			[ -n "$CVS_MODULE" ] && _ 'CVS module: %s' "$mod"
 			_ 'Cloning to "%s"' "$pwd/$mod"
 			cvs -d:$url co $mod && mv $mod $pkgsrc
-			create_tarball ;;
+			create_tarball
+			;;
 
 		svn*|subversion*)
-			if $(echo "$WGET_URL" | fgrep -q "svn|"); then
-				url=${WGET_URL#svn|}
-			else
-				url=${WGET_URL#subversion|}
-			fi
 			_ 'Getting source from %s...' 'SVN'
 			_ 'URL: %s' "$url"
 			if [ -n "$BRANCH" ]; then
@@ -286,10 +266,10 @@ get_source() {
 			else
 				echo t | svn co $url $pkgsrc
 			fi
-			create_tarball ;;
+			create_tarball
+			;;
 
 		bzr*)
-			url=${WGET_URL#bzr|}
 			_ 'Getting source from %s...' 'bazaar'
 			cd $SRC
 			pkgsrc=${url#*:}
@@ -371,7 +351,7 @@ summary() {
 	[ -d $WOK/$pkg/source ] && srcdir=$(du -sh $WOK/$pkg/source | awk '{print $1}' 2>/dev/null)
 	fs=$(du -sh $WOK/$pkg/taz/* | awk '{print $1}')
 	size=$(ls -lh $PKGS/$pkg-${VERSION}*.tazpkg | awk '{print $5}')
-	files=$(cat $WOK/$pkg/taz/$pkg-*/files.list | wc -l)
+	files=$(cat $WOK/$pkg/taz/$pkg-*/files.list | wc -l)		# please keep cat here, otherwise it'll not work
 	[ -n "$TARBALL" ] && srcsize=$(du -sh $SRC/$TARBALL | awk '{print $1}')
 
 	_ 'Summary for: %s' "$PACKAGE $VERSION"
@@ -399,19 +379,22 @@ debug_info() {
 	# L10n: specify your format of date and time (to help: man date)
 	# L10n: not bad one is '+%x %R'
 	_ 'Cook date: %s' "$(date "$(_ '+%%F %%R')")"
-	[ "$time" ] && _ 'Cook time: %ds' "$(($(date +%s) - $time))"
-	# L10n: Please, translate all messages beginning with ERROR in a same way
-	lerror=$(_n 'ERROR')
+	if [ -n "$time" ]; then
+		times="$(($(date +%s) - $time))"
+		_ 'Cook time   : %s' "$(disp_time "$times")"
+	fi
 	for error in \
-		ERROR $lerror 'No package' "cp: can't" "can't open" "can't cd" \
+		ERROR 'No package' "cp: can't" "can't open" "can't cd" \
 		'error:' 'fatal error:' 'undefined reference to' \
 		'Unable to connect to' 'link: cannot find the library' \
 		'CMake Error' ': No such file or directory' \
 		'Could not read symbols: File in wrong format'
 	do
-		fgrep "$error" $LOGS/$pkg.log
+		# format "line number:line content"
+		fgrep -n "$error" $LOGS/$pkg.log
 	done > $LOGS/$pkg.log.debug_info 2>&1
-	cat $LOGS/$pkg.log.debug_info
+	# sort by line number, remove duplicates
+	sort -gk1,1 -t: -u $LOGS/$pkg.log.debug_info
 	rm -f $LOGS/$pkg.log.debug_info
 	footer
 }
@@ -448,13 +431,10 @@ copy_generic_files() {
 	if [ "${COOKOPTS/!pixmaps/}" == "$COOKOPTS" -a "$GENERIC_PIXMAPS" != 'no' ]; then
 		if [ -d "$install/usr/share/pixmaps" ]; then
 			mkdir -p $fs/usr/share/pixmaps
-			if [ -f "$install/usr/share/pixmaps/$PACKAGE.png" ]; then
-				copy $install/usr/share/pixmaps/$PACKAGE.png \
-					$fs/usr/share/pixmaps
-			elif [ -f "$install/usr/share/pixmaps/$PACKAGE.xpm" ]; then
-				copy   $install/usr/share/pixmaps/$PACKAGE.xpm \
-					$fs/usr/share/pixmaps
-			fi
+			for i in png xpm; do
+				[ -f "$install/usr/share/pixmaps/$PACKAGE.$i" ] &&
+				copy $install/usr/share/pixmaps/$PACKAGE.$i $fs/usr/share/pixmaps
+			done
 		fi
 
 		# Custom or homemade PNG pixmap can be in stuff.
@@ -1096,70 +1076,6 @@ loglimit() {
 }
 
 
-# Search file in mirrored packages
-
-search_file_mirror() {
-	busybox unlzma -c $DB/files.list.lzma | grep $1\$ | cut -d: -f1 | sort -u
-}
-
-
-# Search file in local wok packages
-
-search_file_local() {
-	# existing packages have precedence over the package/taz folder
-	srch=$1
-	{ for package in $(find $PKGS -name '*.tazpkg'); do
-		if [ -n "$(busybox cpio --to-stdout --quiet -i files.list < $package | \
-			grep /$srch\$)" ]; then
-			busybox cpio -i receipt < $package | fgrep PACKAGE | cut -d\" -f2
-		fi
-	done } | sort -u
-}
-
-
-# Ask in multiple choice
-
-ask_multiple() {
-	local multiples first my_choice
-	multiples="$1"
-	first=$(echo "$multiples" | head -n1)
-	newline; _ 'Multiple choice:'; echo "$multiples"; newline
-	_ 'Select one [%s]: ' "$first"; read my_choice
-	found="${my_choice:-$first}"
-}
-
-
-# Search file in local cache (fast), local wok packages, mirrored packages
-
-search_file() {
-	local srch cache missing
-	srch="$1"
-	cache='/var/cache/ldsearch.cache'
-	missing='/var/cache/missing.file'
-	touch $cache $missing
-	found=$(grep $srch $cache | cut -d$'\t' -f2)
-	if [ -z "$found" ]; then
-		found=$(search_file_local $srch)
-		if [ -n "$found" ]; then
-			if [ $(echo "$found" | wc -l) -gt 1 ]; then
-				ask_multiple "$found"
-			fi
-			echo -e "$srch\t$found" >> $cache
-		else
-			found=$(search_file_mirror $srch)
-			if [ -n "$found" ]; then
-				if [ $(echo "$found" | wc -l) -gt 1 ]; then
-					ask_multiple "$found"
-				fi
-				echo -e "$srch\t$found" >> $cache
-			else
-				echo "$srch" >> $missing
-			fi
-		fi
-	fi
-}
-
-
 #
 # Receipt functions to ease packaging
 #
@@ -1662,37 +1578,7 @@ case "$1" in
 				exit 0 ;;
 
 			--cdeps)
-				if [ ! -d $WOK/$pkg/taz ]; then
-					_ 'Need to build "%s"' "$pkg"
-					exit 0
-				fi
-
-				title 'Checking depends'
-				lddlist='/tmp/lddlist'; touch $lddlist
-				missing='/var/cache/missing.file'
-
-				# find all deps using ldd
-				for exe in $(find $WOK/$pkg/taz -type f -perm +111); do
-					[ "x$(dd if=$exe bs=4 count=1 2>/dev/null)" == "xELF" ] &&
-						ldd $exe | sed 's|	||' | cut -d' ' -f1 >> $lddlist
-				done #"
-
-				# remove exe/so duplicates
-				sort -u $lddlist > $lddlist.sorted
-
-				# search packages
-				for exefile in $(cat $lddlist.sorted); do
-					search_file $exefile
-					echo "$found" >> $lddlist.pkgs
-					echo -n '.'
-				done
-				echo
-
-				# remove packages duplicates
-				sort -u $lddlist.pkgs > $lddlist.final
-				sort -u $missing > $missing.final
-				rm -f $lddlist $lddlist.sorted $lddlist.pkgs $missing
-				exit 0 ;;
+				@@PREFIX@@/libexec/cookutils/cdeps $pkg
 		esac
 
 		# Rotate log

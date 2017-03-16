@@ -1,0 +1,108 @@
+#!/bin/sh
+#
+# cdeps - module of the SliTaz Cook
+# Copyright (C) SliTaz GNU/Linux - GNU GPL v3
+#
+
+. /usr/lib/slitaz/libcook.sh
+
+
+# Search file in mirrored packages
+
+search_file_mirror() {
+	busybox unlzma -c $DB/files.list.lzma | grep $1\$ | cut -d: -f1 | sort -u
+}
+
+
+# Search file in local wok packages
+
+search_file_local() {
+	# existing packages have precedence over the package/taz folder
+	srch=$1
+	{ for package in $(find $PKGS -name '*.tazpkg'); do
+		if [ -n "$(busybox cpio --to-stdout --quiet -i files.list < $package | \
+			grep /$srch\$)" ]; then
+			busybox cpio -i receipt < $package | fgrep PACKAGE | cut -d\" -f2
+		fi
+	done } | sort -u
+}
+
+
+# Ask in multiple choice
+
+ask_multiple() {
+	local multiples first my_choice
+	multiples="$1"
+	first=$(echo "$multiples" | head -n1)
+	newline; _ 'Multiple choice:'; echo "$multiples"; newline
+	_ 'Select one [%s]: ' "$first"; read my_choice
+	found="${my_choice:-$first}"
+}
+
+
+# Search file in local cache (fast), local wok packages, mirrored packages
+
+search_file() {
+	local srch cache missing
+	srch="$1"
+	cache='/var/cache/ldsearch.cache'
+	missing='/var/cache/missing.file'
+	touch $cache $missing
+	found=$(grep $srch $cache | cut -d$'\t' -f2)
+	if [ -z "$found" ]; then
+		found=$(search_file_local $srch)
+		if [ -n "$found" ]; then
+			if [ $(echo "$found" | wc -l) -gt 1 ]; then
+				ask_multiple "$found"
+			fi
+			echo -e "$srch\t$found" >> $cache
+		else
+			found=$(search_file_mirror $srch)
+			if [ -n "$found" ]; then
+				if [ $(echo "$found" | wc -l) -gt 1 ]; then
+					ask_multiple "$found"
+				fi
+				echo -e "$srch\t$found" >> $cache
+			else
+				echo "$srch" >> $missing
+			fi
+		fi
+	fi
+}
+
+
+
+
+
+
+if [ ! -d $WOK/$pkg/taz ]; then
+	_ 'Need to build "%s"' "$pkg"
+	exit 0
+fi
+
+title 'Checking depends'
+lddlist='/tmp/lddlist'; touch $lddlist
+missing='/var/cache/missing.file'
+
+# find all deps using ldd
+for exe in $(find $WOK/$pkg/taz -type f -perm +111); do
+	[ "x$(dd if=$exe bs=4 count=1 2>/dev/null)" == "xELF" ] &&			#"
+		ldd $exe | sed 's|	||' | cut -d' ' -f1 >> $lddlist
+done
+
+# remove exe/so duplicates
+sort -u $lddlist > $lddlist.sorted
+
+# search packages
+for exefile in $(cat $lddlist.sorted); do
+	search_file $exefile
+	echo "$found" >> $lddlist.pkgs
+	echo -n '.'
+done
+echo
+
+# remove packages duplicates
+sort -u $lddlist.pkgs > $lddlist.final
+sort -u $missing > $missing.final
+rm -f $lddlist $lddlist.sorted $lddlist.pkgs $missing
+exit 0
