@@ -335,7 +335,7 @@ summary() {
 			sed '/^Debug information/,$!d' $log | sed /^$/d | \
 			if [ -n "$2" ]; then
 				syntax_highlighter log | \
-				sed 's|\([0-9][0-9]*\):|<a href="#n\1">\1</a>:|'
+				sed 's|\([0-9][0-9]*\):|<a href="#l\1">\1</a>:|'
 			else
 				sed 's|^[0-9][0-9]*:||' | syntax_highlighter log
 			fi
@@ -770,7 +770,7 @@ EOT
 			find $dir -type f | sort | while read i ; do
 				[ -s $i ] || continue
 				case "$i" in
-					*.jp*g|*.png|*.gif|*.svg) continue
+					*.jp*g|*.png|*.gif|*.svg|*.css) continue
 				esac
 				i=${i#$dir/}
 				class=''; [ "$page" == "$i" ] && class=" plum"
