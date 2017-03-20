@@ -23,15 +23,123 @@ cooknotes="$CACHE/cooknotes"
 cooktime="$CACHE/cooktime"
 wokrev="$CACHE/wokrev"
 
-# Path to sundown (markdown to html convertor)
-if [ -n "$(which sundown 2>/dev/null)" ]; then
-	SUNDOWN=$(which sundown)
+# Path to markdown to html convertor
+if [ -n "$(which cmark 2>/dev/null)" ]; then
+	md2html="$(which cmark) --smart"
+elif [ -x "./cmark" ]; then
+	md2html="./cmark --smart"
+elif [ -n "$(which sundown 2>/dev/null)" ]; then
+	md2html=$(which sundown)
 elif [ -x "./sundown" ]; then
-	SUNDOWN="./sundown"
+	md2html="./sundown"
 fi
 
 # We're not logged and want time zone to display correct server date.
 export TZ=$(cat /etc/TZ)
+
+
+# HTML page header. Pages can be customized with a separated header.html file
+
+page_header() {
+	echo -e 'Content-Type: text/html; charset=UTF-8\n'
+	if [ -f "header.html" ]; then
+		cat header.html
+	else
+		cat <<EOT
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>SliTaz Cooker</title>
+	<link rel="shortcut icon" href="favicon.ico">
+	<link rel="stylesheet" href="style.css">
+	<script src="prism.js"></script>
+	<link rel="stylesheet" href="prism.css">
+	<link rel="alternate" type="application/rss+xml" title="Cooker Feed" href="?rss">
+	<meta name="robots" content="nofollow">
+</head>
+<body>
+
+<div id="header">
+	<div id="logo"></div>
+	<h1><a href="cooker.cgi">SliTaz Cooker</a></h1>
+</div>
+EOT
+	fi
+}
+
+
+# HTML page footer. Pages can be customized with a separated footer.html file
+
+page_footer() {
+	if [ -f "footer.html" ]; then
+		cat footer.html
+	else
+		cat <<EOT
+</div>
+
+<div id="footer">
+	<a href="http://www.slitaz.org/">SliTaz Website</a>
+	<a href="cooker.cgi">Cooker</a>
+	<a href="doc/cookutils/cookutils.html">Documentation</a>
+</div>
+
+</body>
+</html>
+EOT
+	fi
+}
+
+
+not_found() {
+	local file="${1#$PKGS/}"; file="${file#$LOGS/}"; file="${file#$WOK/}"
+	echo "HTTP/1.1 404 Not Found"
+	page_header
+	echo "<div id='content'><h2>Not Found</h2>"
+	case $2 in
+		pkg)
+			echo "<p>The requested package <b>$(basename "$(dirname "$file")")</b> was not found on this server.</p>" ;;
+		*)
+			echo "<p>The requested file <b>$file</b> was not found on this server.</p>" ;;
+	esac
+	page_footer
+}
+
+
+manage_modified() {
+	local file="$1" option="$2" nul day mon year time hh mm ss date_s
+	if [ ! -f "$file" ]; then
+		if [ "$option" == 'silently-absent' ]; then
+			echo "HTTP/1.1 404 Not Found"
+			return
+		else
+			not_found "$file" "$2"
+			exit
+		fi
+	fi
+	[ "$option" == 'no-last-modified' ] && return
+	if [ -n "$HTTP_IF_MODIFIED_SINCE" ]; then
+		echo "$HTTP_IF_MODIFIED_SINCE" | \
+		while read nul day mon year time nul; do
+			case $mon in
+				Jan) mon='01';; Feb) mon='02';; Mar) mon='03';; Apr) mon='04';;
+				May) mon='05';; Jun) mon='06';; Jul) mon='07';; Aug) mon='08';;
+				Sep) mon='09';; Oct) mon='10';; Nov) mon='11';; Dec) mon='12';;
+			esac
+			hh=$(echo $time | cut -d: -f1)
+			mm=$(echo $time | cut -d: -f2)
+			ss=$(echo $time | cut -d: -f3)
+			date_s=$(date -ud "$year$mon$day$hh$mm.$ss" +%s)
+			if [ "$date_s" -ge "$(date -ur "$file" +%s)" ]; then
+				echo -e 'HTTP/1.1 304 Not Modified\n'
+				exit
+			fi
+		done
+	fi
+	echo "Last-Modified: $(date -Rur "$file" | sed 's|UTC|GMT|')"
+}
+
 
 case "$QUERY_STRING" in
 	recook=*)
@@ -40,36 +148,39 @@ case "$QUERY_STRING" in
 				grep -qs "^${QUERY_STRING#recook=}$" $CACHE/recook-packages ||
 				echo ${QUERY_STRING#recook=} >> $CACHE/recook-packages
 		esac
-		cat <<EOT
-Location: ${HTTP_REFERER:-${REQUEST_URI%\?*}}
-
-EOT
+		echo -e "Location: ${HTTP_REFERER:-${REQUEST_URI%\?*}}\n"
 		exit
 		;;
 
 	poke)
 		touch $CACHE/cooker-request
-		cat <<EOT
-Location: ${HTTP_REFERER:-${REQUEST_URI%\?*}}
-
-EOT
+		echo -e "Location: ${HTTP_REFERER:-${REQUEST_URI%\?*}}\n"
 		exit
 		;;
 
 	src*)
 		file=$(busybox httpd -d "$SRC/${QUERY_STRING#*=}")
-		cat <<EOT
-Content-Type: application/octet-stream
-Content-Length: $(stat -c %s "$file")
-Content-Disposition: attachment; filename="$(basename "$file")"
+		manage_modified "$file"
+		content_type='application/octet-stream'
+		case $file in
+			*.tar.gz)   content_type='application/x-compressed-tar' ;;
+			*.tar.bz2)  content_type='application/x-bzip-compressed-tar' ;;
+			*.tar.xz)   content_type='application/x-xz-compressed-tar' ;;
+			*.tar.lzma) content_type='application/x-lzma-compressed-tar' ;;
+			*.zip)      content_type='application/zip' ;;
+		esac
+		echo "Content-Type: $content_type"
+		echo "Content-Length: $(stat -c %s "$file")"
+		echo "Content-Disposition: attachment; filename=\"$(basename "$file")\""
+		echo
 
-EOT
 		cat "$file"
 		exit
 		;;
 
 	download*)
 		file=$(busybox httpd -d "$PKGS/${QUERY_STRING#*=}")
+		manage_modified "$file"
 		content_type='application/octet-stream'
 		case $file in
 			*.txt|*.conf|*/README|*/receipt)
@@ -79,17 +190,18 @@ EOT
 			*.js)         content_type='application/javascript; charset=UTF-8' ;;
 			*.desktop)    content_type='application/x-desktop; charset=UTF-8' ;;
 			*.png)        content_type='image/png' ;;
+			*.gif)        content_type='image/gif' ;;
 			*.svg)        content_type='image/svg+xml' ;;
 			*.jpg|*.jpeg) content_type='image/jpeg' ;;
 			*.sh|*.cgi)   content_type='application/x-shellscript' ;;
 			*.gz)         content_type='application/gzip' ;;
 			*.ico)        content_type='image/vnd.microsoft.icon' ;;
+			*.tazpkg)     content_type='application/x-tazpkg' ;;
 		esac
+
 		echo "Content-Type: $content_type"
 		echo "Content-Length: $(stat -c %s "$file")"
-		[ "$content_type" == 'application/octet-stream' ] &&
-		echo "Content-Disposition: attachment; filename=\"$(basename "$file")\""
-
+		echo "Content-Disposition: inline; filename=\"$(basename "$file")\""
 		echo
 
 		cat "$file"
@@ -100,8 +212,27 @@ EOT
 		echo -e 'Content-Type: application/rss+xml\n'
 		;;
 
-	*)
-		echo -e 'Content-Type: text/html; charset=UTF-8\n'
+	stuff*)
+		file="$wok/${QUERY_STRING#stuff=}"
+		manage_modified "$file"
+		;;
+
+	pkg=*|receipt=*|description=*|files=*|log=*|man=*|doc=*|info=*)
+		type=${QUERY_STRING%%=*}
+		pkg=$(GET $type)
+		case "$type" in
+			description)
+				manage_modified "$wok/$pkg/receipt" 'no-last-modified'
+				manage_modified "$wok/$pkg/description.txt" 'silently-absent'
+				;;
+			log)
+				manage_modified "$wok/${pkg%%.log*}/receipt" 'no-last-modified'
+				manage_modified "$LOGS/$pkg"
+				;;
+			*)
+				manage_modified "$wok/$pkg/receipt" pkg
+				;;
+		esac
 		;;
 
 esac
@@ -169,10 +300,6 @@ info2html() {
 		-e "s|^|</pre><pre class='info'>|"
 }
 
-
-htmlize() {
-	sed -e 's|&|\&amp;|g; s|<|\&lt;|g; s|>|\&gt;|g'
-}
 
 # Put some colors in log and DB files.
 
@@ -248,23 +375,17 @@ syntax_highlighter() {
 					s|\[0m|</span>|g;"
 			;;
 
-		receipt)
-			sed	-e s'|&|\&amp;|g' -e 's|<|\&lt;|g' -e 's|>|\&gt;|'g \
-				-e s"#^\#\([^']*\)#<span class='sh-comment'>\0</span>#"g \
-				-e s"#\"\([^']*\)\"#<span class='sh-val'>\0</span>#"g
-			;;
-
-		diff)
-			sed -e 's|&|\&amp;|g' -e 's|<|\&lt;|g' -e 's|>|\&gt;|g' \
-				-e s"#^-\([^']*\).#<span class='span-red'>\0</span>#"g \
-				-e s"#^+\([^']*\).#<span class='span-ok'>\0</span>#"g \
-				-e s"#@@\([^']*\)@@#<span class='span-sky'>@@\1@@</span>#"g
-			;;
-
 		activity)
 			sed s"#^\([^']* : \)#<span class='log-date'>\0</span>#"g
 			;;
 	esac
+}
+
+
+show_code() {
+	echo "<pre><code class=\"language-$1\">"
+	sed 's|&|\&amp;|g; s|<|\&lt;|g; s|>|\&gt;|g'
+	echo '</code></pre>'
 }
 
 
@@ -426,45 +547,17 @@ pkg_info() {
 
 
 
-# xHTML header. Pages can be customized with a separated html.header file.
-
-if [ -f "header.html" ]; then
-	cat header.html
-else
-	cat <<EOT
-<!DOCTYPE html>
-<html lang="en">
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>SliTaz Cooker</title>
-	<link rel="shortcut icon" href="favicon.ico">
-	<link rel="stylesheet" href="style.css">
-	<script src="prism.js"></script>
-	<link rel="stylesheet" href="prism.css">
-	<link rel="alternate" type="application/rss+xml" title="Cooker Feed" href="?rss">
-	<meta name="robots" content="nofollow">
-</head>
-<body>
-
-<div id="header">
-	<div id="logo"></div>
-	<h1><a href="cooker.cgi">SliTaz Cooker</a></h1>
-</div>
-EOT
-fi
-
 
 #
 # Load requested page
 #
 
+page_header
+
 case "${QUERY_STRING}" in
 	pkg=*)
 		pkg=${QUERY_STRING#pkg=}
 		log=$LOGS/$pkg.log
-		echo "<div id='content'>"
-		echo "<h2>Package: $pkg</h2>"
 
 		# Define cook variables for syntax highlighter
 		if [ -s "$WOK/$pkg/receipt" ]; then
@@ -478,11 +571,15 @@ case "${QUERY_STRING}" in
 
 		# Package info.
 		if [ -f "$wok/$pkg/receipt" ]; then
+			echo "<div id='content'>"
+			echo "<h2>Package: $pkg</h2>"
 			pkg_info
 		else
 			if [ $(ls $wok/*$pkg*/receipt 2>/dev/null | wc -l) -eq 0 ]; then
-				echo "No package named: $pkg"
+				echo "<div id='content'><h2>Not Found</h2>"
+				echo "<p>The requested package <b>$pkg</b> was not found on this server.</p>"
 			else
+				echo "<div id='content'>"
 				ls $wok/$pkg/receipt >/dev/null 2>&1 || pkg="*$pkg*"
 				echo '<table class="zebra" style="width:100%">'
 				for i in $(cd $wok ; ls $pkg/receipt); do
@@ -504,6 +601,8 @@ EOT
 
 		# Check for a log file and display summary if it exists.
 		summary "$log"
+
+		# Display <Recook> button only for SliTaz web browser
 		if [ -f "$log" ]; then
 			case "$HTTP_USER_AGENT" in
 				*SliTaz*)
@@ -571,17 +670,6 @@ EOT
 				echo '</ul></div>'
 				;;
 
-			*.diff)
-				diff=$CACHE/$file
-				echo "<h2>Diff for: ${file%.diff}</h2>"
-				[ "$file" == "installed.diff" ] && echo \
-					"<p>This is the latest diff between installed packages \
-					and installed build dependencies to cook.</p>"
-				echo '<pre>'
-				cat $diff | syntax_highlighter diff
-				echo '</pre>'
-				;;
-
 			*.log)
 				log=$LOGS/$file
 				name=$(basename $log)
@@ -619,9 +707,9 @@ EOT
 			done
 
 			case $file in
-				*.desktop|*.theme) class="ini" ;;
+				*.desktop|*.theme)   class="ini" ;;
 				*.patch|*.diff|*.u)  class="diff" ;;
-				*.sh)         class="bash" ;;
+				*.sh)                class="bash" ;;
 				*.conf*)
 					class="bash"
 					[ -n "$(cut -c1 < $wok/$file | fgrep '[')" ] && class="ini"
@@ -658,23 +746,19 @@ EOT
 					;;
 			esac
 
-			# Display colored listing (also for *.svg)
+			# Display colored listing for all text-based documents (also for *.svg)
 			case $file in
 				*.png|*.jpg|*.jpeg|*.ico) ;;
 				*)
 					if [ -z "$raw" ]; then
-						echo -n "<pre><code class='language-$class'>"
-						cat $wok/$file | sed 's|&|\&amp;|g; s|<|\&lt;|g; s|>|\&gt;|g'
-						echo '</code></pre>'
+						cat $wok/$file | show_code $class
 					fi
 					;;
 			esac
 
 			# Display hex dump for binary files
 			if [ -n "$raw" ]; then
-				echo -n "<pre><code class='language-$class'>"
-				hexdump -C $wok/$file | sed 's|&|\&amp;|g; s|<|\&lt;|g; s|>|\&gt;|g'
-				echo '</code></pre>'
+				hexdump -C $wok/$file | show_code $class
 			fi
 		else
 			echo "<pre>File '$file' absent!</pre>"
@@ -684,67 +768,52 @@ EOT
 	receipt=*)
 		echo "<div id='content'>"
 		pkg=${QUERY_STRING#receipt=}
-		if [ -f "$wok/$pkg/receipt" ]; then
-			echo "<h2>Receipt for: $pkg</h2>"
-			pkg_info
-			echo "<a class='button green' href='?receipt=$pkg'>receipt</a>"
-			. $wok/$pkg/receipt
+		echo "<h2>Receipt for: $pkg</h2>"
+		pkg_info
+		echo "<a class='button green' href='?receipt=$pkg'>receipt</a>"
+		. $wok/$pkg/receipt
 
-			( cd $wok/$pkg; find stuff -type f 2> /dev/null ) | sort | \
-			while read file; do
-				echo "<a class='button' href='?stuff=$pkg/$file'>$file</a>"
-			done | sort
-			echo -n '<pre><code class="language-bash">'
-			cat $wok/$pkg/receipt | htmlize
-			echo '</code></pre>'
-		else
-			echo "<pre>No receipt for: $pkg</pre>"
-		fi
+		( cd $wok/$pkg; find stuff -type f 2> /dev/null ) | sort | \
+		while read file; do
+			echo "<a class='button' href='?stuff=$pkg/$file'>$file</a>"
+		done | sort
+		cat $wok/$pkg/receipt | show_code bash
 		;;
 
 	files=*)
 		echo "<div id='content'>"
 		pkg=${QUERY_STRING#files=}
 		dir=$(ls -d $WOK/$pkg/taz/$pkg-* 2>/dev/null)
-		if [ -d "$dir/fs" ]; then
-			size=$(du -hs $dir/fs | awk '{ print $1 }')
-			echo "<h2>Files installed by the package \"$pkg\" ($size)</h2>"
-			pkg_info
-			#echo "<a class='button gray' href='?pkg=$pkg'>‹ back</a>"
+		size=$(du -hs $dir/fs | awk '{ print $1 }')
+		echo "<h2>Files installed by the package \"$pkg\" ($size)</h2>"
+		pkg_info
 
-			echo '<pre class="files">'
+		echo '<pre class="files">'
 
-			find $dir/fs -not -type d -print0 | \
-			xargs -0 ls -ld --color=always | \
-			syntax_highlighter files | \
-			sed "s|\([^/]*\)/.*\(${dir#*wok}/fs\)\([^<]*\)\(<.*\)$|\1<a href=\"?download=../wok\2\3\">\3</a>\4|"
+		find $dir/fs -not -type d -print0 | sort -z | \
+		xargs -0 ls -ld --color=always | \
+		syntax_highlighter files | \
+		sed "s|\([^/]*\)/.*\(${dir#*wok}/fs\)\([^<]*\)\(<.*\)$|\1<a href=\"?download=../wok\2\3\">\3</a>\4|"
 
-			echo '</pre>'
-		else
-			echo "<h2>No files list for \"$pkg\"</h2>"
-			echo "<a class='button gray' href='?pkg=$pkg'>‹ back</a>"
-		fi
+		echo '</pre>'
 		;;
 
 	description=*)
 		echo "<div id='content'>"
 		pkg=${QUERY_STRING#description=}
 		dir=$(ls -d $WOK/$pkg/taz/$pkg-* 2>/dev/null)
+		echo "<h2>Description of $pkg</h2>"
+		pkg_info
 		if [ -s "$dir/description.txt" ]; then
-			echo "<h2>Description of $pkg</h2>"
-			pkg_info
-			if [ -x "$SUNDOWN" ]; then
+			if [ -n "$md2html" ]; then
 				echo '<div id="content2">'
-				$SUNDOWN $dir/description.txt
+				$md2html $dir/description.txt
 				echo '</div>'
 			else
-				echo '<pre><code class="language-markdown">'
-				cat $dir/description.txt | \
-					sed 's/&/\&amp;/g;s/</\&lt;/g;s/>/\&gt;/g'
-				echo '</code></pre>'
+				cat $dir/description.txt | show_code markdown
 			fi
 		else
-			echo "<pre>No description for: $pkg</pre>"
+			echo "<pre>No description of $pkg</pre>"
 		fi
 		;;
 
@@ -752,93 +821,99 @@ EOT
 		echo '<div id="content">'
 		type=${QUERY_STRING%%=*}
 		pkg=$(GET $type)
-		if [ -d "$wok/$pkg" ]; then
-			dir=$WOK/$pkg/install/usr/share/$type
-			[ -d $dir ] || dir=$WOK/$pkg/install/usr/$type
-			[ -d $dir ] || dir=$(echo $WOK/$pkg/taz/*/fs/usr/share/$type)
-			[ -d $dir ] || dir=$(echo $WOK/$pkg/taz/*/fs/usr/$type)
-			page=$(GET file)
-			if [ -z "$page" ]; then
-				page=$(find $dir -type f | sed q)
-				page=${page#$dir/}
-			fi
+		dir=$WOK/$pkg/install/usr/share/$type
+		[ -d $dir ] || dir=$WOK/$pkg/install/usr/$type
+		[ -d $dir ] || dir=$(echo $WOK/$pkg/taz/*/fs/usr/share/$type)
+		[ -d $dir ] || dir=$(echo $WOK/$pkg/taz/*/fs/usr/$type)
+		page=$(GET file)
+		if [ -z "$page" ]; then
+			page=$(find $dir -type f | sed q)
+			page=${page#$dir/}
+		fi
 
-			echo "<h2>$(basename $page)</h2>"
+		echo "<h2>$(basename $page)</h2>"
 
-			pkg_info
-			echo '<div style="max-height: 5em; overflow: auto">'
-			find $dir -type f | sort | while read i ; do
-				[ -s $i ] || continue
-				case "$i" in
-					*.jp*g|*.png|*.gif|*.svg|*.css) continue
-				esac
-				i=${i#$dir/}
-				class=''; [ "$page" == "$i" ] && class=" plum"
-				echo "<a class='button$class' href='?$type=$pkg&amp;file=$i'>$(basename $i .gz)</a>"
-			done | sort -t \> -k 2
-			echo '</div>'
+		pkg_info
+		echo '<div style="max-height: 5em; overflow: auto">'
+		find $dir -type f | sort | while read i ; do
+			[ -s $i ] || continue
+			case "$i" in
+				*.jp*g|*.png|*.gif|*.svg|*.css) continue
+			esac
+			i=${i#$dir/}
+			class=''; [ "$page" == "$i" ] && class=" plum"
+			case "$type" in
+				man)
+					man=$(basename $i .gz)
+					echo "<a class='button$class' href='?$type=$pkg&amp;file=$i'>${man%.*} (${man##*.})</a>"
+					;;
+				info)
+					info=$(basename $i)
+					echo "<a class='button$class' href='?$type=$pkg&amp;file=$i'>${info/.info/}</a>"
+					;;
+				*)
+					echo "<a class='button$class' href='?$type=$pkg&amp;file=$i'>$(basename $i .gz)</a>"
+					;;
+			esac
+		done
+		echo '</div>'
 
-			if [ -f "$dir/$page" ]; then
-				tmp="$(mktemp)"
-				docat "$dir/$page" > $tmp
-				[ -s "$tmp" ] &&
-				case "$type" in
-					info)
-						echo '<div id="content2">'
-						echo '<pre class="info">'
-						info2html < "$tmp"
-						echo '</pre></div>'
-						;;
-					doc)
-						case "$page" in
-							*.sgml) class='xml';;
-							*)      class='asciidoc';;
-						esac
-						case "$page" in
-							*.htm*)
-								echo '<div id="content2">'
-								cat
-								echo '</div>'
-								;;
-							*)
-								echo "<pre><code class=\"language-$class\">"
-								sed 's/&/\&amp;/g;s/</\&lt;/g;s/>/\&gt;/g'
-								echo '</code></pre>'
-								;;
-						esac < "$tmp"
-						;;
-					man)
-						export TEXTDOMAIN='man2html'
-						echo "<div id='content2'>"
+		if [ -f "$dir/$page" ]; then
+			tmp="$(mktemp)"
+			docat "$dir/$page" > $tmp
+			[ -s "$tmp" ] &&
+			case "$type" in
+				info)
+					echo '<div id="content2">'
+					echo '<pre class="info">'
+					info2html < "$tmp"
+					echo '</pre></div>'
+					;;
+				doc)
+					case "$page" in
+						*.sgml) class='xml';;
+						*)      class='asciidoc';;
+					esac
+					case "$page" in
+						*.htm*)
+							echo '<div id="content2">'
+							cat
+							echo '</div>'
+							;;
+						*)
+							show_code $class
+							;;
+					esac < "$tmp"
+					;;
+				man)
+					export TEXTDOMAIN='man2html'
+					echo "<div id='content2'>"
 
-						html=$(./man2html "$tmp" | sed -e '1,/<header>/d' \
-						-e 's|<a href="file:///[^>]*>\([^<]*\)</a>|\1|g' \
-						-e 's|<a href="?[1-9]\+[^>]*>\([^<]*\)</a>|\1|g')
+					html=$(./man2html "$tmp" | sed -e '1,/<header>/d' \
+					-e 's|<a href="file:///[^>]*>\([^<]*\)</a>|\1|g' \
+					-e 's|<a href="?[1-9]\+[^>]*>\([^<]*\)</a>|\1|g')
 
-						if [ -n "$(echo "$html" | fgrep 'The requested file /tmp/tmp.')" ]; then
-							# Process the pre-formatted man-cat page
-							echo '<pre>'
-							sed '
-								s|M-bM-^@M-^S|—|g;
-								s|M-bM-^@M-^\\|<b>|g;
-								s|M-bM-^@M-^]|</b>|g
-								s|M-bM-^@M-^X|<u>|g;
-								s|M-bM-^@M-^Y|</u>|g;
-								s|M-BM-||g;
-								' "$tmp"
-							echo '</pre>'
-						else
-							echo "$html"
-						fi
-						echo "</div>"
-						;;
-				esac
-				rm -f $tmp
-			else
-				echo "<pre>File '$page' not exists!</pre>"
-			fi
+					if [ -n "$(echo "$html" | fgrep 'The requested file /tmp/tmp.')" ]; then
+						# Process the pre-formatted man-cat page
+						echo '<pre>'
+						sed '
+							s|M-bM-^@M-^S|—|g;
+							s|M-bM-^@M-^\\|<b>|g;
+							s|M-bM-^@M-^]|</b>|g
+							s|M-bM-^@M-^X|<u>|g;
+							s|M-bM-^@M-^Y|</u>|g;
+							s|M-BM-||g;
+							' "$tmp"
+						echo '</pre>'
+					else
+						echo "$html"
+					fi
+					echo "</div>"
+					;;
+			esac
+			rm -f $tmp
 		else
-			echo "<pre>Package '$pkg' not exists!</pre>"
+			echo "<pre>File '$page' not exists!</pre>"
 		fi
 		;;
 
@@ -958,19 +1033,5 @@ EOT
 esac
 
 
-# Close xHTML page
-
-cat <<EOT
-</div>
-
-<div id="footer">
-	<a href="http://www.slitaz.org/">SliTaz Website</a>
-	<a href="cooker.cgi">Cooker</a>
-	<a href="doc/cookutils/cookutils.html">Documentation</a>
-</div>
-
-</body>
-</html>
-EOT
-
+page_footer
 exit 0
