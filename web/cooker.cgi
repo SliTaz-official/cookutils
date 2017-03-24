@@ -25,9 +25,9 @@ wokrev="$CACHE/wokrev"
 
 # Path to markdown to html convertor
 if [ -n "$(which cmark 2>/dev/null)" ]; then
-	md2html="$(which cmark) --smart"
+	md2html="$(which cmark) --smart -e table -e strikethrough -e autolink -e tagfilter"
 elif [ -x "./cmark" ]; then
-	md2html="./cmark --smart"
+	md2html="./cmark --smart -e table -e strikethrough -e autolink -e tagfilter"
 elif [ -n "$(which sundown 2>/dev/null)" ]; then
 	md2html=$(which sundown)
 elif [ -x "./sundown" ]; then
@@ -131,13 +131,15 @@ manage_modified() {
 			mm=$(echo $time | cut -d: -f2)
 			ss=$(echo $time | cut -d: -f3)
 			date_s=$(date -ud "$year$mon$day$hh$mm.$ss" +%s)
-			if [ "$date_s" -ge "$(date -ur "$file" +%s)" ]; then
-				echo -e 'HTTP/1.1 304 Not Modified\n'
-				exit
-			fi
+#			if [ "$date_s" -ge "$(date -ur "$file" +%s)" ]; then
+#				echo -e 'HTTP/1.1 304 Not Modified\n'
+#				exit
+#			fi
+# TODO: improve caching control
 		done
 	fi
 	echo "Last-Modified: $(date -Rur "$file" | sed 's|UTC|GMT|')"
+	echo "Cache-Control: public, max-age=3600"
 }
 
 
@@ -145,8 +147,8 @@ case "$QUERY_STRING" in
 	recook=*)
 		case "$HTTP_USER_AGENT" in
 			*SliTaz*)
-				grep -qs "^${QUERY_STRING#recook=}$" $CACHE/recook-packages ||
-				echo ${QUERY_STRING#recook=} >> $CACHE/recook-packages
+				grep -qs "^$(GET recook)$" $CACHE/recook-packages ||
+				echo "$(GET recook)" >> $CACHE/recook-packages
 		esac
 		echo -e "Location: ${HTTP_REFERER:-${REQUEST_URI%\?*}}\n"
 		exit
@@ -159,7 +161,7 @@ case "$QUERY_STRING" in
 		;;
 
 	src*)
-		file=$(busybox httpd -d "$SRC/${QUERY_STRING#*=}")
+		file=$(busybox httpd -d "$SRC/$(GET src)")
 		manage_modified "$file"
 		content_type='application/octet-stream'
 		case $file in
@@ -171,7 +173,8 @@ case "$QUERY_STRING" in
 		esac
 		echo "Content-Type: $content_type"
 		echo "Content-Length: $(stat -c %s "$file")"
-		echo "Content-Disposition: attachment; filename=\"$(basename "$file")\""
+		filename=$(basename "$file")
+		echo "Content-Disposition: attachment; filename=\"$filename\"" # Note, no conversion '+' -> '%2B' here
 		echo
 
 		cat "$file"
@@ -179,7 +182,7 @@ case "$QUERY_STRING" in
 		;;
 
 	download*)
-		file=$(busybox httpd -d "$PKGS/${QUERY_STRING#*=}")
+		file="$PKGS/$(GET download)"
 		manage_modified "$file"
 		content_type='application/octet-stream'
 		case $file in
@@ -201,7 +204,8 @@ case "$QUERY_STRING" in
 
 		echo "Content-Type: $content_type"
 		echo "Content-Length: $(stat -c %s "$file")"
-		echo "Content-Disposition: inline; filename=\"$(basename "$file")\""
+		filename=$(basename "$file")
+		echo "Content-Disposition: inline; filename=\"$filename\"" # Note, no conversion '+' -> '%2B' here
 		echo
 
 		cat "$file"
@@ -213,7 +217,7 @@ case "$QUERY_STRING" in
 		;;
 
 	stuff*)
-		file="$wok/${QUERY_STRING#stuff=}"
+		file="$wok/$(GET stuff)"
 		manage_modified "$file"
 		;;
 
@@ -284,20 +288,21 @@ docat() {
 
 info2html() {
 	sed \
-		-e 's|&|\&amp;|g' -e 's|<|\&lt;|g' \
+		-e 's|&|\&amp;|g; s|<|\&lt;|g; s|>|\&gt;|g' \
 		-e 's|^\* \(.*\)::|* <a href="#\1">\1</a>  |' \
 		-e 's|\*note \(.*\)::|<a href="#\1">\1</a>|' \
-		-e '/^File: /s|(dir)|Top|g' \
-		-e '/^File: /s|Node: \([^,]*\)|Node: <a name="\1"></a><u>\1</u>|' \
-		-e '/^File: /s|Next: \([^,]*\)|Next: <a href="#\1">\1</a>|' \
-		-e '/^File: /s|Prev: \([^,]*\)|Prev: <a href="#\1">\1</a>|' \
-		-e '/^File: /s|Up: \([^,]*\)|Up: <a href="#\1">\1</a>|' \
-		-e '/^File: /s|^.*$|<i>&</i>|' \
+		-e '/^File: / s|(dir)|Top|g' \
+		-e '/^File: / s|Next: \([^,]*\)|<a class="button" href="#\1">Next: \1</a>|' \
+		-e '/^File: / s|Prev: \([^,]*\)|<a class="button" href="#\1">Prev: \1</a>|' \
+		-e '/^File: / s|Up: \([^,]*\)|<a class="button" href="#\1">Up: \1</a>|' \
+		-e '/^File: / s|^.* Node: \([^,]*\), *\(.*\)$|<pre id="\1">\2|' \
+		-e '/^<pre id=/ s|^\([^>]*>\)\(<a[^>]*>Next: [^,]*\), *\(<a[^>]*>Prev: [^,]*\), *\(<a[^>]*>Up: .*\)|\1 \3 \4 \2|' \
 		-e '/^Tag Table:$/,/^End Tag Table$/d' \
 		-e '/INFO-DIR/,/^END-INFO-DIR/d' \
-		-e "s|https*://[^>),'\"\` ]*|<a href=\"&\">&</a>|g" \
+		-e "s|https*://[^>),'\"\`’ ]*|<a href=\"&\">&</a>|g" \
 		-e "s|ftp://[^>),\"\` ]*|<a href=\"&\">&</a>|g" \
-		-e "s|^|</pre><pre class='info'>|"
+		-e 's|^\* Menu:|<b>Menu:</b>|' \
+		-e "s|^|</pre>|"
 }
 
 
@@ -474,7 +479,7 @@ pkg_info() {
 	cmd=${QUERY_STRING%%=*}
 	echo '<div id="info">'
 	active=''; [ "$cmd" == 'receipt' -o "$cmd" == 'stuff' ] && active=' active'
-	echo "<a class='button green$active' href='?receipt=$pkg'>receipt &amp; stuff</a>"
+	echo "<a class='button green$active' href='?receipt=${pkg//+/%2B}'>receipt &amp; stuff</a>"
 
 	unset WEB_SITE WANTED
 	bpkg=$pkg
@@ -487,27 +492,27 @@ pkg_info() {
 
 	if [ -f "$wok/$pkg/taz/$PACKAGE-$VERSION/receipt" ]; then
 		active=''; [ "$cmd" == 'files' ] && active=' active'
-		echo "<a class='button khaki$active' href='?files=$pkg'>files</a>"
+		echo "<a class='button khaki$active' href='?files=${pkg//+/%2B}'>files</a>"
 
 		unset EXTRAVERSION
 		. $wok/$pkg/taz/$PACKAGE-$VERSION/receipt
 
 		if [ -f $wok/$pkg/taz/$PACKAGE-$VERSION/description.txt ]; then
 			active=''; [ "$cmd" == 'description' ] && active=' active'
-			echo "<a class='button brown$active' href='?description=$pkg'>description</a>"
+			echo "<a class='button brown$active' href='?description=${pkg//+/%2B}'>description</a>"
 		fi
 
 		if [ -f $PKGS/$PACKAGE-$VERSION$EXTRAVERSION.tazpkg ]; then
-			echo "<a class='button gold' href='?download=$PACKAGE-$VERSION$EXTRAVERSION.tazpkg'>download</a>"
+			echo "<a class='button gold' href='?download=${PACKAGE//+/%2B}-${VERSION//+/%2B}${EXTRAVERSION//+/%2B}.tazpkg'>download</a>"
 		fi
 
 		if [ -f $PKGS/$PACKAGE-$VERSION$EXTRAVERSION-$ARCH.tazpkg ]; then
-			echo "<a class='button gold' href='?download=$PACKAGE-$VERSION$EXTRAVERSION-$ARCH.tazpkg'>download</a>"
+			echo "<a class='button gold' href='?download=${PACKAGE//+/%2B}-${VERSION//+/%2B}${EXTRAVERSION//+/%2B}-${ARCH//+/%2B}.tazpkg'>download</a>"
 		fi
 	fi
 
 	[ -n "$TARBALL" ] && [ -s "$SRC/$TARBALL" ] &&
-	echo "<a class='button yellow' href='?src=$TARBALL'>source</a>"
+	echo "<a class='button yellow' href='?src=${TARBALL//+/%2B}'>source</a>"
 
 	[ -x ./man2html ] &&
 	if [ -d $wok/$bpkg/install/usr/man ] ||
@@ -515,7 +520,7 @@ pkg_info() {
 	   [ -d $wok/$bpkg/taz/*/fs/usr/man ] ||
 	   [ -d $wok/$bpkg/taz/*/fs/usr/share/man ]; then
 		active=''; [ "$cmd" == 'man' ] && active=' active'
-		echo "<a class='button plum$active' href='?man=$bpkg'>man</a>"
+		echo "<a class='button plum$active' href='?man=${bpkg//+/%2B}'>man</a>"
 	fi
 
 	if [ -d $wok/$bpkg/install/usr/doc ] ||
@@ -523,7 +528,7 @@ pkg_info() {
 	   [ -d $wok/$bpkg/taz/*/fs/usr/doc ] ||
 	   [ -d $wok/$bpkg/taz/*/fs/usr/share/doc ]; then
 		active=''; [ "$cmd" == 'doc' ] && active=' active'
-		echo "<a class='button plum$active' href='?doc=$bpkg'>doc</a>"
+		echo "<a class='button plum$active' href='?doc=${bpkg//+/%2B}'>doc</a>"
 	fi
 
 	if [ -d $wok/$bpkg/install/usr/info ] ||
@@ -531,15 +536,15 @@ pkg_info() {
 	   [ -d $wok/$bpkg/taz/*/fs/usr/info ] ||
 	   [ -d $wok/$bpkg/taz/*/fs/usr/share/info ]; then
 		active=''; [ "$cmd" == 'info' ] && active=' active'
-		echo "<a class='button plum$active' href='?info=$bpkg'>info</a>"
+		echo "<a class='button plum$active' href='?info=${bpkg//+/%2B}#Top'>info</a>"
 	fi
 
 	[ -n "$(echo $REQUEST_URI | sed 's|/[^/]*?pkg.*||')" ] ||
-	echo "<a class='button' href='ftp://${HTTP_HOST%:*}/$pkg/'>browse</a>"
+	echo "<a class='button' href='ftp://${HTTP_HOST%:*}/${pkg//+/%2B}/'>browse</a>"
 
 	if [ -s "$log" ]; then
 		active=''; [ "$cmd" == 'log' ] && active=' active'
-		echo "<a class='button gray$active' href='?log=$pkg.log'>logs</a>"
+		echo "<a class='button gray$active' href='?log=${pkg//+/%2B}.log'>logs</a>"
 	fi
 
 	echo '</div>'
@@ -556,7 +561,7 @@ page_header
 
 case "${QUERY_STRING}" in
 	pkg=*)
-		pkg=${QUERY_STRING#pkg=}
+		pkg=$(GET pkg)
 		log=$LOGS/$pkg.log
 
 		# Define cook variables for syntax highlighter
@@ -614,7 +619,7 @@ EOT
 		;;
 
 	log=*)
-		log=${QUERY_STRING#log=}
+		log=$(GET log)
 		logfile=$LOGS/$log
 		pkg=${log%.log*}
 		if [ -s "$logfile" ]; then
@@ -629,7 +634,8 @@ EOT
 			esac
 			for i in $(ls -t $baselog $baselog.* 2>/dev/null); do
 				class=''; [ $i == $logfile ] && class=' gray'
-				echo -n "<a class='button$class' href=\"?log=$(basename $i)\">"
+				j=$(basename "$i")
+				echo -n "<a class='button$class' href=\"?log=${j//+/%2B}\">"
 				echo "$(stat -c %y $i | cut -d: -f1,2)</a>"
 			done
 
@@ -646,7 +652,7 @@ EOT
 	file=*)
 		echo "<div id='content'>"
 		# Don't allow all files on the system for security reasons.
-		file=${QUERY_STRING#file=}
+		file=$(GET file)
 		case "$file" in
 			activity|cooknotes|cooklist)
 				[ "$file" == "cooklist" ] && \
@@ -693,17 +699,17 @@ EOT
 
 	stuff=*)
 		echo "<div id='content'>"
-		file=${QUERY_STRING#stuff=}
+		file=$(GET stuff)
 		pkg=${file%%/*}
 		if [ -f "$wok/$file" ]; then
 			echo "<h2>$file</h2>"
 			pkg_info
-			echo "<a class='button' href='?receipt=$pkg'>receipt</a>"
+			echo "<a class='button' href='?receipt=${pkg//+/%2B}'>receipt</a>"
 
 			( cd $wok/$pkg ; find stuff -type f 2> /dev/null ) | sort | \
 			while read i ; do
 				class=''; [ "$pkg/$i" == "$file" ] && class=" green"
-				echo "<a class='button$class' href='?stuff=$pkg/$i'>$i</a>"
+				echo "<a class='button$class' href='?stuff=${pkg//+/%2B}/${i//+/%2B}'>$i</a>"
 			done
 
 			case $file in
@@ -742,7 +748,7 @@ EOT
 			# Display image
 			case $file in
 				*.png|*.svg|*.jpg|*.jpeg|*.ico)
-					echo "<img src='?download=../wok/$file' style='display: block; max-width: 100%; margin: auto'/>"
+					echo "<img src='?download=../wok/${file//+/%2B}' style='display: block; max-width: 100%; margin: auto'/>"
 					;;
 			esac
 
@@ -767,22 +773,22 @@ EOT
 
 	receipt=*)
 		echo "<div id='content'>"
-		pkg=${QUERY_STRING#receipt=}
+		pkg=$(GET receipt)
 		echo "<h2>Receipt for: $pkg</h2>"
 		pkg_info
-		echo "<a class='button green' href='?receipt=$pkg'>receipt</a>"
+		echo "<a class='button green' href='?receipt=${pkg//+/%2B}'>receipt</a>"
 		. $wok/$pkg/receipt
 
 		( cd $wok/$pkg; find stuff -type f 2> /dev/null ) | sort | \
 		while read file; do
-			echo "<a class='button' href='?stuff=$pkg/$file'>$file</a>"
+			echo "<a class='button' href='?stuff=${pkg//+/%2B}/${file//+/%2B}'>$file</a>"
 		done | sort
 		cat $wok/$pkg/receipt | show_code bash
 		;;
 
 	files=*)
 		echo "<div id='content'>"
-		pkg=${QUERY_STRING#files=}
+		pkg=$(GET files)
 		dir=$(ls -d $WOK/$pkg/taz/$pkg-* 2>/dev/null)
 		size=$(du -hs $dir/fs | awk '{ print $1 }')
 		echo "<h2>Files installed by the package \"$pkg\" ($size)</h2>"
@@ -793,14 +799,18 @@ EOT
 		find $dir/fs -not -type d -print0 | sort -z | \
 		xargs -0 ls -ld --color=always | \
 		syntax_highlighter files | \
-		sed "s|\([^/]*\)/.*\(${dir#*wok}/fs\)\([^<]*\)\(<.*\)$|\1<a href=\"?download=../wok\2\3\">\3</a>\4|"
+		sed "s|\([^/]*\)/.*\(${dir#*wok}/fs\)\([^<]*\)\(<.*\)$|\1<a href=\"?download=../wok\2\3\">\3</a>\4|" |\
+		awk '
+			BEGIN { FS="\""; }
+			{ gsub("+", "%2B", $2); print; }
+			'
 
 		echo '</pre>'
 		;;
 
 	description=*)
 		echo "<div id='content'>"
-		pkg=${QUERY_STRING#description=}
+		pkg=$(GET description)
 		dir=$(ls -d $WOK/$pkg/taz/$pkg-* 2>/dev/null)
 		echo "<h2>Description of $pkg</h2>"
 		pkg_info
@@ -849,7 +859,7 @@ EOT
 					;;
 				info)
 					info=$(basename $i)
-					echo "<a class='button$class' href='?$type=$pkg&amp;file=$i'>${info/.info/}</a>"
+					echo "<a class='button$class' href='?$type=$pkg&amp;file=$i#Top'>${info/.info/}</a>"
 					;;
 				*)
 					echo "<a class='button$class' href='?$type=$pkg&amp;file=$i'>$(basename $i .gz)</a>"
@@ -864,14 +874,14 @@ EOT
 			[ -s "$tmp" ] &&
 			case "$type" in
 				info)
-					echo '<div id="content2">'
-					echo '<pre class="info">'
+					echo '<div id="content2" class="texinfo"><pre class="first">'
 					info2html < "$tmp"
 					echo '</pre></div>'
 					;;
 				doc)
 					case "$page" in
 						*.sgml) class='xml';;
+						*.py)   class='python';; # pycurl package
 						*)      class='asciidoc';;
 					esac
 					case "$page" in
@@ -979,7 +989,7 @@ $(more_button activity "More activity" $CACHE/activity 12)
 EOT
 
 		tac $CACHE/activity | head -n 12 | syntax_highlighter activity | \
-		sed 's|cooker.cgi||; s|^|<li>|; s|$|</li>|'
+		sed 's|cooker.cgi||; s|^|<li>|; s|$|</li>|;'
 
 		echo '</ul>'
 
@@ -1024,7 +1034,8 @@ EOT
 		cat <<EOT
 <h2 id="lastcook">Latest cook</h2>
 <ul class="activity">
-$(list_packages | sed "s|^.* :|<span class='log-date'>\0</span> <span style='white-space:nowrap'>|g; s|^|<li>|; s|$|</span></li>|")
+$(list_packages | sed 's|.tazpkg$||' | \
+sed "s|^.* :|<span class='log-date'>\0</span> <span style='white-space:nowrap'>|g; s|^|<li>|; s|$|</span></li>|")
 </ul>
 
 EOT

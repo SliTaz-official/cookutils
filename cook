@@ -403,10 +403,10 @@ debug_info() {
 # A bit smarter function than the classic `cp` command
 
 copy() {
-	if [ "$(stat -c %h -- "$1")" -gt 1 ]; then
-		cp -al "$1" "$2"	# copy hardlinks
+	if [ -d "$1" -o "$(stat -c %h -- "$1")" -eq 1 ]; then
+		cp -a  "$1" "$2"	# copy folders and generic files
 	else
-		cp -a  "$1" "$2"	# copy generic files
+		cp -al "$1" "$2"	# copy hardlinks
 	fi
 }
 
@@ -779,6 +779,68 @@ cookit_quality() {
 		rm -f $command
 		exit 1
 	fi
+}
+
+
+# Receipt used for cooking the package is redundant to be included into package.
+# This script will strip the original receipt to bare minimum: variables,
+# {pre,post}_{install,remove} functions.
+
+mk_pkg_receipt() {
+	orig_receipt="$1"
+	# $pkg is package name
+
+	# Receipt's signature is important, although some receipts may miss it
+	signature=$(head -n1 "$orig_receipt")
+	[ "${signature:0:1}" == '#' ] || signature='# SliTaz package receipt.'
+
+	. "$orig_receipt"
+
+	# Is package splitted one?
+	[ -n "$SPLIT" -a "${SPLIT/$pkg/}" != "$SPLIT" ]; splitted=$?
+
+	# Manage splitted packages
+	if $splitted; then
+		# For packages with empty $DEPENDS
+		[ -n "$DEPENDS" ] || DEPENDS="$PACKAGE"
+
+		# Default $CAT
+		[ -z "$CAT" ] &&
+		case $pkg in
+			*-dev) CAT="development|development files" ;;
+		esac
+
+		# Manage $CAT
+		CATEGORY="${CAT%|*}"
+		SHORT_DESC="$SHORT_DESC (${CAT#*|})"
+	fi
+
+	# Mandatory variables
+	cat <<EOF
+$signature
+
+PACKAGE="$PACKAGE"
+VERSION="$VERSION"
+CATEGORY="$CATEGORY"
+SHORT_DESC="$SHORT_DESC"
+MAINTAINER="$MAINTAINER"
+LICENSE="$LICENSE"
+WEB_SITE="$WEB_SITE"
+EOF
+
+	# Optional variables
+	[ -n "$TAGS" ]    && echo "TAGS=\"$TAGS\""
+	[ -n "$DEPENDS" ] && echo "DEPENDS=\"$DEPENDS\""
+
+	# Extract {pre,post}_{install,remove} functions
+	for i in pre post; do
+		for j in install remove; do
+			if grep -q "^${i}_$j()"; then
+				echo
+				sed "/^${i}_$j()/,/}/!d" "$orig_receipt"
+			fi
+		done
+	done
 }
 
 
