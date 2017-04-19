@@ -1,0 +1,871 @@
+# German translations for Cook package.
+# Copyright (C) 2017 SliTaz
+# This file is distributed under the same license as the Cook package.
+# Hans-Günter Theisgen, 2017.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Cook 3.2\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2016-11-19 22:31+0200\n"
+"PO-Revision-Date: 2017-04-19 15:00+0100\n"
+"Last-Translator: Hans-Günter Theisgen\n"
+"Language-Team: German\n"
+"Language: de\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#: cook:33
+msgid "Usage:"
+msgstr "Anwendung"
+
+#: cook:33
+msgid "cook [package|command] [list|--option]"
+msgstr ""
+
+#: cook:35
+msgid "Commands:"
+msgstr "Kommandos:"
+
+#: cook:36
+msgid "Display this short usage."
+msgstr "Diese Kurzanleitung ausgeben."
+
+#: cook:37
+msgid "Setup your build environment."
+msgstr "Richten Sie Ihre Konstruktionsumgebung ein."
+
+#: cook:38
+msgid "Setup a cross environment."
+msgstr "Eine Fremdsystemumgebung einrichten."
+
+#: cook:40
+msgid "Test environment and cook a package."
+msgstr "Die Umgebung testen und ein Paket erzeugen."
+
+#: cook:41
+msgid "List packages in the wok."
+msgstr "Pakete im Wok anzeigen."
+
+#: cook:42
+msgid "Simple packages search function."
+msgstr "Einfache Suchfunktion für Pakete."
+
+#: cook:43
+msgid "Create a new package with a receipt."
+msgstr "Ein neues Paket mit einem Rezept erzeugen."
+
+#: cook:44
+msgid "Cook a list of packages."
+msgstr "Pakete gemäß einer Liste erzeugen."
+
+#: cook:45
+msgid "Clean-up all packages files."
+msgstr "Alle Dateien von Paketen erntfernen."
+
+#: cook:46
+msgid "Clean-up all packages sources."
+msgstr "Alle Paketquellen erntfernen."
+
+#: cook:47
+msgid "Check for uncooked packages"
+msgstr "Auf nicht erstellte Pakete prüfen"
+
+#: cook:48
+msgid "Create packages DB lists and flavors."
+msgstr "Listen der Paket-Datenbank und Varianten erstellen."
+
+#: cook:50
+msgid "Options:"
+msgstr "Optionen:"
+
+#: cook:52
+msgid "clean the package in the wok."
+msgstr "Paket aus dem Wok entfernen."
+
+#: cook:53
+msgid "cook and install the package."
+msgstr "Paket erzeugen und installieren."
+
+#: cook:54
+msgid "get the package source tarball."
+msgstr "Das Quellarchiv des Pakets transferieren."
+
+#: cook:55
+msgid "block a package so cook will skip it."
+msgstr "Ein Paket sperren, so dass es bei der Erzeugung übergangen wird."
+
+#: cook:56
+msgid "unblock a blocked package."
+msgstr "Ein gesperrtes Paket entsperren."
+
+#: cook:57
+msgid "check dependencies of cooked package."
+msgstr "Die Abhängigkeiten eines erstellten Pakets prüfen."
+
+#: cook:58
+msgid "repack an already built package."
+msgstr "Ein bereits erstellten Paket erneut packen."
+
+#: cook:59
+msgid "display debugging messages."
+msgstr "Diagnosemeldungen ausgeben."
+
+#: cook:60
+msgid "continue running compile_rules."
+msgstr "Mit \"compile_rules\" fortfahren."
+
+#: cook:62
+msgid "create a receipt interactively."
+msgstr "Ein Rezept interaktiv erstellen."
+
+#: cook:64
+msgid "clone the cooking wok from Hg repo."
+msgstr "Den Entwicklungswok aus dem Mercurial-Depot duplizieren."
+
+#: cook:65
+msgid "clone the stable wok from Hg repo."
+msgstr "Den Wok der stabilen Version aus dem Mercurial-Depot duplizieren."
+
+#: cook:66
+msgid "clone the undigest wok from Hg repo."
+msgstr "Den inoffiziellen Wok aus dem Mercurial-Depot duplizieren."
+
+#: cook:67
+msgid "clone the tiny SliTaz wok from Hg repo."
+msgstr "Den \"tiny SliTaz\"-Wok aus dem Mercurial-Depot duplizieren."
+
+#: cook:68
+msgid "force reinstall of chroot packages."
+msgstr "Die erneute Installation der \"chroot\"-Pakete veranlassen."
+
+#: cook:70
+msgid "create up-to-date flavors files."
+msgstr "Aktuelle \"flavor\"-Dateien erzeugen."
+
+#: cook:89
+msgid "Unable to find package \"%s\" in the wok"
+msgstr "Das Paket \"%s\" befindet sich nicht im Wok"
+
+#. L10n: QA is quality assurance
+# QS ist Abkürzung für Qualitätssicherung
+#: cook:98
+msgid "QA: empty variable: %s"
+msgstr "QS: leere Variable: %s"
+
+#: cook:107
+msgid "Creating directories structure in \"%s\""
+msgstr "Verzeichnisstruktur wird in \"%s\" erstellt"
+
+#: cook:109
+msgid "Creating DB files in \"%s\""
+msgstr "Datenbankdateien werden in \"%s\" erstellt"
+
+#: cook:119
+msgid "QA: checking package receipt..."
+msgstr "QS: Paket-Rezept wird geprüft..."
+
+#: cook:134
+msgid "QA: unknown category \"%s\""
+msgstr "QS: unbekannte Kategorie \"%s\""
+
+#: cook:135
+msgid "Please, use one of: %s"
+msgstr "Bitte verwenden Sie eine von: %s"
+
+#: cook:145
+msgid "QA: unable to reach \"%s\""
+msgstr "QS: \"%s\" kann nicht erreicht werden"
+
+#: cook:205
+msgid "Creating tarball \"%s\""
+msgstr "Archivdatei \"%s\" wird erzeugt"
+
+#: cook:230 cook:235 cook:249 cook:251 cook:261 cook:331
+msgid "ERROR: %s"
+msgstr "FEHLER: %s"
+
+#: cook:243 cook:258 cook:273 cook:286 cook:297 cook:329
+msgid "Getting source from %s..."
+msgstr "Quellen werden von %s transferiert..."
+
+#: cook:244 cook:259 cook:274 cook:287 cook:330
+msgid "URL: %s"
+msgstr "URL: %s"
+
+#: cook:245 cook:276
+msgid "Cloning to \"%s\""
+msgstr "Dupliziere nach \"%s\""
+
+#: cook:247
+msgid "Hg branch: %s"
+msgstr "Hg-Zweig: %s"
+
+#: cook:263
+msgid "Git branch: %s"
+msgstr "Git-Zweig: %s"
+
+#: cook:275
+msgid "CVS module: %s"
+msgstr "CVS-Modul: %s"
+
+#: cook:307
+msgid "Don't forget to add to receipt:"
+msgstr "Denken Sie daran, dem Rezept hinzuzufügen:"
+
+#: cook:315
+msgid "ERROR: Unable to handle \"%s\""
+msgstr "FEHLER: \"%s\" kann nicht bearbeitet werden"
+
+#: cook:333
+msgid "Extracting source archive \"%s\""
+msgstr "Das Quell-Archiv \"%s\" wird entpackt"
+
+#. L10n: 'm' is for minutes (approximate cooking time)
+#: cook:361
+msgid " ~ %dm"
+msgstr " ~ %dm"
+
+#. L10n: 's' is for seconds (cooking time)
+#: cook:365
+msgid "%ds%s"
+msgstr "%ds%s"
+
+#: cook:380
+msgid "Summary for: %s"
+msgstr "Zusammenfassung für: %s"
+
+#. L10n: keep the same width of translations to get a consistent view
+#: cook:384
+msgid "Source dir  : %s"
+msgstr "Quellverzeichnis: %s"
+
+#: cook:385
+msgid "Src file    : %s"
+msgstr "Quelldatei      : %s"
+
+#: cook:386
+msgid "Src size    : %s"
+msgstr "Größe der Quelle: %s"
+
+#: cook:387
+msgid "Produced    : %s"
+msgstr "Erzeugt         : %s"
+
+#: cook:388
+msgid "Packed      : %s"
+msgstr "Gepackt         : %s"
+
+#: cook:389
+msgid "Compressed  : %s"
+msgstr "Komprimiert     : %s"
+
+#: cook:390
+msgid "Files       : %s"
+msgstr "Dateien         : %s"
+
+#: cook:391
+msgid "Cook time   : %s"
+msgstr "Zubereitungszeit: %s"
+
+#: cook:392
+msgid "Cook date   : %s"
+msgstr "Bereitungsdatum : %s"
+
+#: cook:392 cook:404 cook:1851 cook:2062
+msgid "+%%F %%R"
+msgstr "+%%F %%R"
+
+#: cook:393
+msgid "Host arch   : %s"
+msgstr "Architektur     : %s"
+
+#: cook:401
+msgid "Debug information"
+msgstr "Testhile-Information"
+
+#. L10n: specify your format of date and time (to help: man date)
+#. L10n: not bad one is '+%x %R'
+#: cook:404
+msgid "Cook date: %s"
+msgstr "Zubereitungsdatum: %s"
+
+#: cook:405
+msgid "Cook time: %ds"
+msgstr "Zubereitungszeit: %ds"
+
+#. L10n: Please, translate all messages beginning with ERROR in a same way
+#: cook:407 cook:966 cook:1078 cook:1112 cook:1203 cook:2242
+msgid "ERROR"
+msgstr "FEHLER"
+
+#: cook:548
+msgid "QA: Checking %s..."
+msgstr "QS: Prüfe %s..."
+
+# HGT: Was bedeutet Save?
+#: cook:569
+msgid "  Time: %s. Size: %s B -> %s B. Save: %s KB"
+msgstr "  Zeit: %s. Größe: %s B -> %s B. Save: %s KB"
+
+#: cook:585
+msgid "Executing strip on all files..."
+msgstr "Symbolinformation wird aus allen Dateien entfernt..."
+
+#: cook:629
+msgid "Stripping translations files..."
+msgstr ""
+
+#: cook:680 cook:952
+msgid "Build dependencies to remove:"
+msgstr "Zum Erzeugen benötigte Pakete, die entfernt werden:"
+
+#: cook:682 cook:953
+msgid "Removing:"
+msgstr "Entferne:"
+
+#: cook:706
+msgid "Compressing man pages..."
+msgstr "Handbuchseiten (man) werden komprimiert..."
+
+#: cook:747
+msgid "Compressing png images..."
+msgstr "Bilder vom Typ \"png\" werden komprimiert..."
+
+#: cook:784
+msgid "Compressing svg images..."
+msgstr "Bilder vom Typ \"svg\" werden komprimiert..."
+
+#: cook:818
+msgid "Compressing ui files..."
+msgstr "Dateien vom Typ \"ui\" werden komprimiert..."
+
+#: cook:838
+msgid "Cook: %s"
+msgstr "Erzeugen: %s"
+
+#: cook:852
+msgid "%s sysroot: %s"
+msgstr ""
+
+#: cook:853
+msgid "Adding \"%s\" to PATH"
+msgstr "PATH wird um \"%s\" erweitert"
+
+#: cook:857
+msgid "Using cross-tools: %s"
+msgstr "Für Fremdsystem verwendet: %s"
+
+#: cook:881
+msgid "Disabling -pipe compile flag: %d MB RAM free"
+msgstr "Deaktiviere Übersetzeroption \"-pipe\": %d MiB Arbeitsspeicher frei"
+
+#: cook:897
+msgid "Checking build dependencies..."
+msgstr "Kompilierungsabhängigkeiten werden geprüft..."
+
+#: cook:898
+msgid "Using packages DB: %s"
+msgstr "Die Paket-Datenbank %s wird verwendet"
+
+#: cook:924
+msgid "Missing dep (wok/pkg): %s"
+msgstr "Fehlende benötigte Pakete (wok/pkg): %s"
+
+#: cook:932
+msgid "ERROR: unknown dep \"%s\""
+msgstr "FEHLER: unbekanntes benötigtes Paket \"%s\""
+
+#: cook:946
+msgid "Auto cook config is set: %s"
+msgstr "Automatisches Erzeugen ist konfiguriert: %s"
+
+#: cook:949
+msgid "Building dep (wok/pkg)    : %s"
+msgstr "Benötigtes Paket wird erzeugt (wok/pkg): %s"
+
+#: cook:954
+msgid "ERROR: can't cook dep \"%s\""
+msgstr "FEHLER: Benötigtes Paket \"%s\" kann nicht erzeugt werden"
+
+#: cook:969
+msgid "ERROR: missing %d dependency"
+msgid_plural "ERROR: missing %d dependencies"
+msgstr[0] "FEHLER: %d benötigtes Paket fehlt"
+msgstr[1] "FEHLER: %d benötigte Pakete fehlen"
+
+#: cook:976
+msgid "Installing dep (pkg/local): %s"
+msgstr "Benötigtes Paket wird installiert (pkg/local): %s"
+
+#: cook:983
+msgid "Installing dep (web/cache): %s"
+msgstr "Benötigtes Paket wird installiert (web/cache): %s"
+
+#: cook:1034 cook:1102
+msgid "Executing: %s"
+msgstr "Ausgeführt wird: %s"
+
+#: cook:1062
+msgid "Running testsuite"
+msgstr "Testsammlung wird ausgeführt"
+
+#: cook:1075
+msgid "ERROR: cook failed"
+msgstr "FEHLER: Erstellung gescheitert"
+
+#: cook:1099
+msgid "Pack: %s"
+msgstr "Packen: %s"
+
+#: cook:1104
+msgid "ERROR: genpkg_rules failed"
+msgstr "FEHLER: \"genpkg_rules\" gescheitert"
+
+#: cook:1107
+msgid "No packages rules: meta package"
+msgstr "Keine Regeln zum Packen: Meta-Paket"
+
+#: cook:1120
+msgid "Copying \"%s\"..."
+msgstr "\"%s\" wird kopiert..."
+
+#: cook:1130
+msgid "Creating the list of files..."
+msgstr "Dateiliste wird erstellt..."
+
+#: cook:1138
+msgid "Creating md5sum of files..."
+msgstr "md5-Prüfsumme der Dateien wird berechnet..."
+
+#: cook:1153
+msgid "Compressing the FS..."
+msgstr "Das Dateisystem wird komprimiert..."
+
+#: cook:1161
+msgid "Updating receipt sizes..."
+msgstr "Die Rezeptgrößen werden aktualisiert..."
+
+#: cook:1169
+msgid "Updating receipt EXTRAVERSION: %s"
+msgstr "Das Rezept EXTRAVERSION wird aktualisiert: %s"
+
+#: cook:1176
+msgid "Creating full cpio archive..."
+msgstr "Ein cpio-Archiv wird erzeugt..."
+
+#: cook:1181
+msgid "Restoring original package tree..."
+msgstr "Der Original-Verzeichnisbaum des Pakets wird wiederhergestellt..."
+
+#: cook:1190
+msgid "Package \"%s\" created"
+msgstr "Paket \"%s\" wurde erzeugt"
+
+#: cook:1209
+msgid "QA: checking for empty package..."
+msgstr "QS: Prüfen, ob das Paket leer ist..."
+
+#: cook:1212
+msgid "ERROR: empty package"
+msgstr "FEHLER: leeres Paket"
+
+#: cook:1225
+msgid "Removing old package \"%s\""
+msgstr "Das alte Paket \"%s\" wird entfernt"
+
+#: cook:1262
+msgid "Unable to install package, build has failed."
+msgstr "Das Paket kann nicht installiert werden, da die Erzeugung gescheitert ist."
+
+#: cook:1271
+msgid "Updating %s chroot environment..."
+msgstr "Die \"chroot\"-Umgebung %s wird aktualisiert..."
+
+#: cook:1272
+msgid "Updating chroot: %s"
+msgstr "Aktualisiere \"chroot\": %s"
+
+#: cook:1304
+msgid "Setup aufs chroot..."
+msgstr "Die \"chroot\"-Umgebung aufs wird eingerichtet..."
+
+#: cook:1316
+msgid "Aufs mount failure"
+msgstr "Aufs-Einhängen gescheitert"
+
+#: cook:1328
+msgid "Leaving aufs chroot..."
+msgstr "Die \"chroot\"-Umgebung aufs wird verlassen..."
+
+#: cook:1397
+msgid "Multiple choice:"
+msgstr "Mehrfachauswahl:"
+
+#: cook:1398
+msgid "Select one [%s]: "
+msgstr "Wählen Sie eine [%s]: "
+
+#: cook:1446
+msgid "Getting standard devel files..."
+msgstr "Die Standard-Dateien für die Entwicklung werden kopiert..."
+
+#: cook:1459
+msgid "Copying man pages..."
+msgstr "Handbuchseiten werden kopiert..."
+
+#: cook:1474
+msgid "Copying files..."
+msgstr "Dateien werden kopiert..."
+
+#: cook:1491
+msgid "Copying folders..."
+msgstr "Verzeichnisse werden kopiert..."
+
+#: cook:1510
+msgid "Copying hicolor icons..."
+msgstr "Farbige Symbole werden kopiert..."
+
+#: cook:1534
+msgid "List of %s packages in \"%s\""
+msgstr "Liste von %s Paketen in \"%s\""
+
+#: cook:1549
+msgid "%s package"
+msgid_plural "%s packages"
+msgstr[0] "%s Paket"
+msgstr[1] "%s Pakete"
+
+#: cook:1558
+msgid "Search results for \"%s\""
+msgstr "Suchergebnisse für \"%s\""
+
+#: cook:1565
+msgid "Cook: setup environment"
+msgstr "Cook: Umgebung einrichten"
+
+#: cook:1566
+msgid "Setting up your environment"
+msgstr "Ihre Umgebung wird eingerichtet"
+
+#: cook:1570
+msgid "Checking for packages to install..."
+msgstr "Prüfen, ob Pakete installiert werden müssen..."
+
+#: cook:1576
+msgid "ERROR: %s is not installed"
+msgstr "FEHLER: %s ist nicht installiert"
+
+#: cook:1579
+msgid "Using config file: %s"
+msgstr "Die Konfigurationsdatei %s wird verwendet"
+
+#: cook:1600
+msgid "Adding group \"%s\""
+msgstr "Die Benutzergruppe \"%s\" wird eingerichtet"
+
+#: cook:1603
+msgid "Setting permissions for group \"%s\"..."
+msgstr "Die Berechtigungen für die Benutzergruppe \"%s\" werden eingerichtet..."
+
+#: cook:1606
+msgid "All done, ready to cook packages :-)"
+msgstr "Alles erledigt, bereit für die Erstellung von Paketen :-)"
+
+#: cook:1621
+msgid "Cook: setup %s cross environment"
+msgstr "Cook: Umgebung für Fremdsystem %s einrichten"
+
+#: cook:1622
+msgid "Setting up your %s cross environment"
+msgstr "Ihre Fremdsystemumgebung %s wird eingerichtet"
+
+#. L10n: keep the same width of translations to get a consistent view
+#: cook:1651
+msgid "Target arch     : %s"
+msgstr "Zielarchitektur       : %s"
+
+#: cook:1652
+msgid "Configure args  : %s"
+msgstr "Konfigurationsoptionen: %s"
+
+#: cook:1653
+msgid "Build flags     : %s"
+msgstr "Erstellungsoptionen   : %s"
+
+#: cook:1654
+msgid "Arch sysroot    : %s"
+msgstr "Architektur-Wurzel    : %s"
+
+#: cook:1655
+msgid "Tools prefix    : %s"
+msgstr "Präfix der Werkzeuge  : %s"
+
+#: cook:1657
+msgid "Packages DB     : %s"
+msgstr "Paketdatenbank        : %s"
+
+#: cook:1668
+msgid "WARNING: %s is not installed in sysroot"
+msgstr "WARNUNG: %s ist im Wurzeldateisystem nicht installiert"
+
+#: cook:1672
+msgid "Cross compiler  : %s"
+msgstr "Fremdsystem-Übersetzer: %s"
+
+#: cook:1674
+msgid "C compiler \"%s\" is missing"
+msgstr "C-Übersetzer \"%s\" nicht vorhanden"
+
+#: cook:1675
+msgid "Run \"%s\" to cook a toolchain"
+msgstr "\"%s\" ausführen, um eine Werkzeugkiste zu erzeugen"
+
+#: cook:1681
+msgid "Cook test: testing the cook environment"
+msgstr "Cook test: die Erzeugungsumgebung testen"
+
+#: cook:1692
+msgid "Package \"%s\" already exists."
+msgstr "Das Paket \"%s\" existiert bereits."
+
+#: cook:1696
+msgid "Creating folder \"%s\""
+msgstr "Verzeichnis \"%s\" wird erzeugt"
+
+#: cook:1699
+msgid "Preparing the package receipt..."
+msgstr "Das Rezept für das Paket wird vorbereitet..."
+
+#: cook:1707
+msgid "Entering interactive mode..."
+msgstr "Es wird in den interaktiven Modus verzweigt..."
+
+#: cook:1709
+msgid "Package       : %s"
+msgstr "Paket         : %s"
+
+#: cook:1711
+msgid "Version       : "
+msgstr "Version       : "
+
+#: cook:1714
+msgid "Category      : "
+msgstr "Kategorie     : "
+
+#. L10n: Short description
+#: cook:1718
+msgid "Short desc    : "
+msgstr "Kurzbeschreib.: "
+
+#: cook:1721
+msgid "Maintainer    : "
+msgstr "Betreuer      : "
+
+#: cook:1724
+msgid "License       : "
+msgstr "Lizenz        : "
+
+#: cook:1727
+msgid "Web site      : "
+msgstr "Internetpräs. : "
+
+#: cook:1732
+msgid "Wget URL to download source tarball."
+msgstr "URL, vom dem mit \"wget\" ein Quellarchiv transferiert werden kann."
+
+#: cook:1733
+msgid "Example  : "
+msgstr "Beispiel : "
+
+#: cook:1734
+msgid "Wget url : "
+msgstr "Wget URL : "
+
+#: cook:1738
+msgid "Do you need a stuff directory? (y/N)"
+msgstr "Wird das Verzeichnis \"stuff\" benötigt? (j/N)"
+
+#: cook:1740
+msgid "Creating the stuff directory..."
+msgstr "Das Verzeichnis \"stuff\" wird erstellt..."
+
+#: cook:1745
+msgid "Are you going to write a description? (y/N)"
+msgstr "Möchten Sie eine Beschreibung erstellen? (j/N)"
+
+#: cook:1747
+msgid "Creating the \"%s\" file..."
+msgstr "Die Datei \"%s\" wird erstellt..."
+
+#: cook:1751
+msgid "Receipt is ready to use."
+msgstr "Das Rezept ist fertig."
+
+#: cook:1759
+msgid "No list in argument."
+msgstr "Keine Liste angegeben."
+
+#: cook:1763
+msgid "List \"%s\" not found."
+msgstr "Listendatei \"%s\" nicht vorhanden."
+
+#: cook:1767
+msgid "Starting cooking the list \"%s\""
+msgstr "Die Pakete aus der Listendatei \"%s\" werden erzeugt"
+
+#: cook:1775
+msgid "Cleaning all packages files..."
+msgstr "Alle Paketdateien werden entfernt..."
+
+#: cook:1781
+msgid "Cleaning all packages sources..."
+msgstr "Alle Paketquellen werden entfernt..."
+
+#: cook:1788
+msgid "Checking for uncooked packages"
+msgstr "Auf nicht erstellte Pakete prüfen"
+
+#: cook:1801
+msgid "Package \"%s\""
+msgstr "Paket \"%s\""
+
+#: cook:1819
+msgid "%s uncooked package"
+msgid_plural "%s uncooked packages"
+msgstr[0] "%s nicht erstelltes Paket"
+msgstr[1] "%s nicht erstellte Pakete"
+
+#: cook:1821
+msgid "All packages are cooked :-)"
+msgstr "Alle Pakete sind erstellt :-)"
+
+#: cook:1838
+msgid "Packages directory \"%s\" doesn't exist"
+msgstr "Paket-Verzeichnis \"%s\" existiert nicht"
+
+#: cook:1848
+msgid "Cook pkgdb: Creating all packages lists"
+msgstr "Cook pkgdb: Liste alle Pakete wird erstellt"
+
+#: cook:1857 cook:1861 cook:1869 cook:1967 cook:1974 cook:1985 cook:1991
+msgid "Creating file \"%s\""
+msgstr "Datei \"%s\" wird erzeugt"
+
+#: cook:1881
+msgid "Creating lists from \"%s\""
+msgstr "Listen von \"%s\" werden erstellt"
+
+#: cook:1937
+msgid "  - absent: %s (%s)"
+msgstr "  - fehlen: %s (%s)"
+
+#: cook:1943 cook:1944 cook:1945 cook:1946
+msgid "Done: %s (%s)"
+msgstr "Fertig: %s (%s)"
+
+#: cook:1954
+msgid "Removing duplicates:"
+msgstr "Duplikate werden entfernt:"
+
+#: cook:2028
+msgid "Creating flavors files in \"%s\""
+msgstr "\"flavor\"-dateien werden in \"%s\" erzeugt"
+
+#: cook:2029
+msgid "Cook pkgdb: Creating all flavors"
+msgstr "Cook pkgdb: Alle Varianten werden erzeugt"
+
+#: cook:2032
+msgid "Recharging lists to use latest packages..."
+msgstr "Neuladen der Listen mit den neuesten Paketinformationen..."
+
+#: cook:2037
+msgid "Creating configuration file \"%s\""
+msgstr "Konfigurationsdatei \"%s\" wird erzeugt"
+
+#: cook:2049
+msgid "Starting to generate flavors..."
+msgstr "Varianten werden erzeugt..."
+
+#: cook:2053
+msgid "Packing flavor \"%s\""
+msgstr "Variante \"%s\" wird gepackt"
+
+#: cook:2062
+msgid "Cook pkgdb end: %s"
+msgstr "Cook pkgdb Ende: %s"
+
+#: cook:2085
+msgid "cook: HOST_ARCH is not set in \"%s\" receipt"
+msgstr "cook: im Rezept \"%s\" ist HOST_ARCH nicht definiert"
+
+#: cook:2086
+msgid "package \"%s\" is not included in %s"
+msgstr "Das Paket \"%s\" ist nicht in %s enthalten"
+
+#: cook:2087 cook:2100 cook:2102
+msgid "cook: %s"
+msgstr "cook: %s"
+
+#: cook:2088 cook:2103
+msgid "bugs: %s"
+msgstr "Fehler: %s"
+
+#: cook:2089 cook:2104
+msgid "Cook skip: %s"
+msgstr "Erzeugen überspringen: %s"
+
+#: cook:2097
+msgid "Host arch %s"
+msgstr "Zielarchitektur %s"
+
+#: cook:2101
+msgid "package \"%s\" doesn't cook or is not included in %s"
+msgstr "Paket \"%s\" wird nicht erzeugt oder ist nicht in %s enthalten"
+
+#: cook:2112
+msgid "Package \"%s\" is blocked"
+msgstr "Das Paket \"%s\" ist gesperrt"
+
+#: cook:2119
+msgid "Cook started for: %s"
+msgstr "Erzeugen gestartet für: %s"
+
+#: cook:2136
+msgid "Cleaning \"%s\""
+msgstr "Lösche \"%s\""
+
+#: cook:2145
+msgid "Getting source for \"%s\""
+msgstr "Transferiere die Quellen für \"%s\""
+
+#: cook:2147
+msgid "Tarball: %s"
+msgstr "Archivdatei: %s"
+
+#: cook:2151
+msgid "Blocking package \"%s\""
+msgstr "Paket \"%s\" wird gesperrt"
+
+#: cook:2157
+msgid "Unblocking package \"%s\""
+msgstr "Paket \"%s\" wird entsperrt"
+
+#: cook:2169 cook:2176
+msgid "Need to build \"%s\""
+msgstr "Zum Erstellen benötigt \"%s\""
+
+#: cook:2180
+msgid "Checking depends"
+msgstr "Prüfe Abhängigkeiten"
+
+#: cook:2218
+msgid "WANTED package \"%s\" is blocked"
+msgstr "Das benötigte Paket \"%s\" ist gesperrt"
+
+#: cook:2224
+msgid "WANTED package \"%s\" is broken"
+msgstr "Das benötigte Paket \"%s\" ist defekt"
