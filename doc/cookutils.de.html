@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+	<meta charset="utf-8" />
+	<title>Kochwerkzeuge-Handbuch</title>
+	<link rel="stylesheet" type="text/css" href="../slitaz-doc.css" />
+	<script type="text/javascript" src="../slitaz-doc.js"></script>
+</head>
+<body>
+
+<header>
+	<h1>Kochwerkzeuge-Handbuch</h1>
+</header>
+
+<!-- Start content -->
+<div id="content">
+
+<h2>SliTaz „Cook“ &amp; „Cooker“</h2>
+
+<p>
+	Die SliTaz-Kochwerkzeuge dienen zum Erzeugen von Paketen im SliTaz-eigenen Format. Sie
+	sind schnell, genügsam, leicht zu erlernen und zu benutzen. Das Erstellen von Paketen für SliTaz
+	erfordert nur wenige Kommandos. Die Kochwerkzeuge enthalten „Cook“ und 
+	<a href="#cooker">„Cooker“</a>.
+</p>
+<p>
+	Mit <code>cook</code> kann ein Paket aus den Quellen übersetzt und gepackt werden; dabei wird eine
+	Protokolldatei erstellt. Die Qualität des Rezeptes und des Paketes kann geprüft werden.
+	„Cooker“ ist ein Kompilierungsautomat, der als Benutzerschnittstelle mit einer Weboberfläche
+	für <code>cook</code> verwendet werden kann. Damit können auch die Protokolldateien
+	farbig aufbereitet angesehen werden. „Cook“ und „Cooker“
+	greifen auf dieselben Datenbankdateien und denselben Wok zu, sie haben <a href="#blocked">gesperrte</a>
+	und defekte Pakete wie auch alle Aktivitäten gemeinsam.
+</p>
+<p>
+	Technische Details, wie etwa die Programmierung usw., sind in der Datei
+	<code>/usr/share/doc/cookutils/README</code> beschrieben.
+</p>
+
+<h3>„Cook“-Anwendung</h3>
+<p>
+	„Cook“ enthält eine Kurzanleitung, die mit
+	<code>cook usage</code> ausgegeben werden kann. Es können auch Optionen angegeben werden, mit
+	denen besondere Arbeiten vor oder nach der Paketerzeugung ausgeführt werden.
+	Anzeige der Kurzanleitung:
+</p>
+<pre>
+# cook usage
+</pre>
+
+<h3>Praktische Anleitung</h3>
+<p>
+	Bevor Pakete erzeugt werden können, muss zunächst die Umgebung dafür eingerichtet werden.
+	Es gibt zwei Möglichkeiten für die Paketerzeugung: direkt auf dem Rechner, an dem Sie
+	angemeldet sind oder in einer „chroot“-Umgebung zum Schutz der Dateien Ihres Rechners vor
+	ungewollten Veränderungen. Wenn Sie in einer „chroot“-Umgebung arbeiten wollen,
+	können Sie <code>tazdev</code> installieren und benutzen: 
+</p>
+<pre>
+# tazdev gen-chroot &amp;&amp; tazdev chroot
+</pre>
+<p>
+	Standardmäßig erzeugt tazdev eine „chroot“-Umgebung in <code>/home/slitaz/cooking/chroot</code>,
+	aber Sie können auch einen Pfad als Parameter angeben. Der Ort für die „chroot“-Umgebung ist
+	unwichtig; wenn in die „chroot“-Umgebung gewechselt wurde, werden Standard-SliTaz-Pfade
+	wie z.B. <code>/home/slitaz/wok</code> für den Wok oder <code>/home/slitaz/log</code>
+	für die Generierungsprotokolle verwendet. Wie üblich kann eine Kurzanleitung ausgegeben werden mit:
+<pre>
+$ tazdev usage
+</pre>
+</p>
+<p>
+	Wenn Sie eine „chroot“-Umgebung verwenden, gibt es zwei besondere Verzeichnisse, die mit der
+	bind-Option eingehängt sind: <code>src</code> und <code>packages</code>. Die Quellarchive aller Pakete
+	werden standardmäßig im Verzeichnis <code>/home/slitaz/src</code> abgelegt. Dieses Verzeichnis
+	wird in der „chroot“-Umgebung eingehängt, so dass die Programme darauf zugreifen können.
+	Dadurch können Quellprogramme von mehreren „chroot“-Umgebungen gemeinsam benutzt werden,
+	etwa einer für die Entwicklungsversion und einer für die stabile Version. Das Verzeichnis für die
+	fertigen Pakete ist standardmäßig <code>/home/slitaz/[version]/packages</code>, also nicht in einer
+	„chroot“-Umgebung, wo sie sicher aufbewahrt sind für den Fall, dass die „chroot“-Umgebung
+	versehentlich verlassen wird.
+</p>
+
+<h3>Einrichten der Umgebung</h3>
+<p>
+	Wenn Sie sich für eine der Möglichkeiten entschieden haben, kann die Umgebung für <code>cook</code>
+	eingerichtet werden.
+	„Cook“ verwendet die Konfigurationsdatei <code>cook.conf</code>. Wenn andere als die Standardpfade
+	der Verzeichnisse und Dateien verwendet werden sollen, müssen diese dort eingetragen werden.
+	Mit <code>setup</code> werden einige Verzeichnisse und Dateien erzeugt,
+	in denen Aktivitäten und Fehler festgehalten werden. Alle Dateien sind einfache Textdateien,
+	die mit einem Texteditor betrachtet werden können. Die Umgebung wird eingerichtet mit:
+</p>
+<pre>
+# cook setup
+</pre>
+<p>
+	Bei <code>setup</code> kann mit der Option <code>--wok</code> bestimmt werden, dass beim Einrichten
+	der Umgebung der Wok <code>wok</code> aus dem SliTaz-Mercurial-Depot dupliziert werden soll.
+	Auch wenn Sie kein offizieller Entwickler sind, können Sie den Wok duplizieren und darin
+	enthaltene Pakete als Muster für Ihre eigenen Pakete verwenden.
+	Mit den folgenden Kommandos wird die Umgebung eingerichtet und der Entwicklungswok bzw. der
+	inoffizielle Wok dupliziert:
+</p>
+<pre>
+# cook setup --wok
+# cook setup --undigest
+</pre>
+
+<h3>Testen der Umgebung</h3>
+<p>
+	„Cook“ bietet die Möglichkeit, die Umgebung zu testen, indem ein Paket erzeugt wird. Damit können
+	Sie feststellen, ob Ihre Umgebung funktionsfähig ist, und Sie haben ein Beispielpaket mit einem
+	Rezept. Dieses Pseudo-Paket heisst <code>cooktest</code> und kann nach dem Test entfernt werden.
+	Der Test wird ausgeführt mit:
+</p>
+<pre>
+# cook test
+</pre>
+
+<h3>Paket erzeugen</h3>
+<p>
+	Wenn die Umgebung korrekt eingerichtet ist, können neue Pakete für SliTaz aus dem Wok erzeugt werden.
+	Mit dem folgenden Kommando wird ein neues Paket mit einem leeren Rezept definiert:
+<pre>
+# cook new <em>pkgname</em>
+</pre>
+	Mit dem folgenden Kommando wird ein neues Paket definiert, wobei das Rezept interaktiv erstellt wird:
+<pre>
+# cook new <em>pkgname</em> --interactive
+</pre>
+</p>
+<p>
+	Wenn Sie ein neues Paket mit leerem Rezept definiert haben, muss das Rezept mit einem Texteditor
+	bearbeitet werden. Wenn das Rezept fertig ist, oder wenn das Paket schon existierte, kann es
+	anschließend erstellt werden:
+</p>
+<pre>
+# cook <em>pkgname</em>
+</pre>
+<p>
+	Wenn alles gut ging, befindet sich das Paket im Verzeichnis <code>$SLITAZ/packages</code>
+	und weitere erzeugte Dateien im Verzeichnis <code>$SLITAZ/wok/<em>pkgname</em></code>.
+</p>
+
+<h3>Paket erzeugen und installieren</h3>
+<p>
+	Wenn das Paket erzeugt und anschließend auch installiert werden soll, geht das mit:
+</p>
+<pre>
+# cook <em>pkgname</em> --install
+</pre>
+
+<h3>Paketquellen transferieren</h3>
+<p>
+	Wenn Sie nur die Quelldateien eines Paketes benötigen, aber das Paket nicht erstellen wollen,
+	können Sie die Option <code>getsrc</code> verwenden:
+</p>
+<pre>
+# cook <em>pkgname</em> --getsrc
+</pre>
+
+<h3>Wok aufräumen</h3>
+<p>
+	Nach dem Erzeugen und Packen eines Paketes enthält der Wok verschiedene Dateien, die
+	Plattenplatz belegen. Diese Dateien eines einzelnen Paketes können gelöscht werden mit:
+</p>
+<pre>
+# cook <em>pkgname</em> --clean
+</pre>
+<p>
+	Es können auch die Dateien aller Pakete aus dem Wok entfernt werden, oder nur die Quelldateien:
+</p>
+<pre>
+# cook clean-wok
+# cook clean-src
+</pre>
+
+<h3>Suchen im Wok</h3>
+<p>
+	„Cook“ bietet auch eine einfache Suchfunktion, um schnell ein Paket im Wok zu finden.
+	Diese verwendet <code>grep</code> und unterstützt damit reguläre Ausdrücke:
+</p>
+<pre>
+# cook search busybox
+</pre>
+
+<h3>Rezept-Funktionen</h3>
+<p>
+	Viele Pakete, so wie die *-dev-Pakete, enthalten gleichartige Dateien wie
+	statische Bibliotheken, pkgconfig-Dateien und include-Dateien. Dafür bietet <code>cook</code>
+	eine Funktion, die im Rezept verwendet werden kann:
+</p>
+<pre>
+get_dev_files     : Install /usr/lib/{lib.*a,pkgconfig} /usr/include
+</pre>
+
+<h3>Liste der Paket-Datenbank</h3>
+<p>
+	„Cook“ kann eine Liste der Pakete im Wok ausgeben, und zwar in einem für Tazpkg geeigneten Format.
+	Damit kann sehr einfach ein lokales Paket-Depot erstellt werden; damit wird auch die offizielle
+	SliTaz-Paketliste aller Spiegel-Depots erstellt.
+	Eine Liste der Pakete im aktuellen Wok erhält auch ein nicht privilegierter Benutzer mit:
+</p>
+<pre>
+$ cook list-wok
+</pre>
+<p>
+	Wenn die Paket-Datenbank erstellt wird, prüft <code>cook</code>, ob ein Varianten-Depot im
+	Verzeichnis <code>/home/slitaz/flavors</code> vorhanden ist. Ist dies der Fall, so werden alle
+	Varianten gemäß der letzten verfügbaren Paketliste gepackt. Das Kommando dafür ist:
+</p>
+<pre>
+# cook pkgdb
+</pre>
+
+<h3 id="cooker">„Cooker“</h3>
+<p>
+	„Cooker“ ist ein Kompilierungsautomat, der zunächst nach Übergaben in einem Wok sucht,
+	eine geordnete Liste zu erzeugender Pakete erstellt und schließlich alle geänderten Pakete erzeugt.
+	„Cooker“ kann auch als Benutzeroberfläche für <code>cook</code> verwendet werden, da beide
+	dieselben Dateien benutzen. „Cooker“ kann auch eine lange Liste von Paketen abarbeiten,
+	wie etwa alle Pakete einer Variante. „Cooker“ bietet eine gefällige Web-Oberfläche, die
+	standardmäßig auf jedem SliTaz verwendet werden kann, da die benötigte CGI-Unterstützung von dem
+	Busybox-Webserver <code>httpd</code> bereitgestellt wird.
+</p>
+<p>
+	„Cooker“ enthält eine Kurzanleitung, die mit folgenden Kommandos ausgegeben werden kann:
+</p>
+<pre>
+# cooker usage
+# cooker -u
+</pre>
+
+<h3>„Cooker“-Einrichtung</h3>
+<p>
+	Wie „Cook“ benötigt auch „Cooker“ eine Arbeitsumgebung für seinen Einsatz.
+	Der wesentliche Unterschied zur Umgebung von „Cook“ ist, dass „Cooker“ zwei Woks benötigt.
+	Ein sauberer, aus einem Mercurial-Depot duplizierter Wok als Referenz und einen Wok für die
+	Paketerzeugung. Damit ist es einfach, beide Woks zu vergleichen und Änderungen festzustellen.
+	Wenn schon eine Umgebung für <code>cook</code> vorhanden ist, muss der Wok umbenannt werden,
+	bevor die Umgebung für „Cooker“ eingerichtet wird, sonst meckert „Cooker“. Bei der Einrichtung wird
+	auch eine Reihe von Entwickler-Paketen installiert, die über die Variable <code>SETUP_PKGS</code> in der
+	Konfigurationsdatei <code>cook.conf</code> angegeben werden können.
+	Das Kommando lautet:
+</p>
+<pre>
+# cooker setup
+</pre>
+<p>
+	Wenn alles gut gegangen ist, sind jetzt zwei Woks vorhanden, die Basis-Entwickler-Pakete installiert
+	und alle benötigten Dateien erstellt. Da zunächst nach Übergaben in einem Wok gesucht wird,
+	können Sie testweise eingeben:
+</p>
+<pre>
+# cooker
+</pre>
+
+<h3>„Cooker“-Paketerzeugung</h3>
+<p>
+	Auch hier gibt es wieder zwei Möglichkeiten: Änderungen in dem sauberen, aus einem Mercurial-Depot
+	duplizierten Wok vornehmen und „Cooker“ ohne Parameter starten oder Pakete manuell erzeugen.
+	Mit „Cooker“ können ein einzelnes Paket oder alle Pakete einer Kategorie oder einer Variante erzeugt
+	werden. Sie können auch versuchen, alle noch nicht erzeugten Pakete zu erzeugen. Beachten Sie aber,
+	dass „Cooker“ nicht dafür eingerichtet ist, tausende von Paketen zu verarbeiten.
+</p>
+<p>
+	Ein einzelnes Paket wird (wie mit <code>cook <em>pkgname</em></code>, aber mit erweiterter
+	Protokollierung) erzeugt mit:
+</p>
+<pre>
+# cooker pkg <em>pkgname</em>
+</pre>
+<p>
+	Es gibt verschiedene Möglichkeiten, mehrere Pakete mit einem Kommando zu erzeugen:
+	Sie können ein existierendes Paket angeben, wie es für eine Variante eines ISO-Abbildes verwendet wird,
+	oder Sie können eine Datei angeben, die je Zeile den Namen eines Paketes enthält.
+	Schließlich können Sie auch eine Kategorie angeben.
+</p>
+<pre>
+# cooker flavor [<em>name</em>]
+# cooker list [<em>/path/to/cooklist</em>]
+# cooker cat [<em>category</em>]
+</pre>
+<p>
+	„Cooker“ ermöglicht es auch, einen bestimmten Änderungsstand aus einem Mercurial-Depot anzugeben.
+	Das ist nützlich, wenn der Kompilierungsautomat bei der Paketerzeugung unterbrochen wurde: Sie
+	können dann bestimmte Pakete manuell erzeugen:
+</p>
+<pre>
+# cooker rev 9496
+</pre>
+
+<h3 id="blocked">Gesperrte Pakete</h3>
+<p>
+	„Cook“ und „Cooker“ benutzen eine Datei, die eine Liste gesperrter Pakete enthält, die nicht erzeugt
+	werden, wenn Übergaben erfolgen oder eine Liste zu erzeugender Pakete verwendet wird.
+	Dies ist sehr nützlich, wenn ein Kompilierungsautomat „Cooker“ in einer Produktivumgebung eingesetzt
+	wird. Beim Sperren oder Entsperren eines Paketes kann eine Bemerkung angegeben werden.
+	Beispiel:
+</p>
+<pre>
+# cook <em>pkgname</em> --block
+# cooker block <em>pkgname</em>
+# cooker -n "<em>pkgname</em> gesperrt, weil..."
+</pre>
+<p>
+	Eine Liste der gesperrten Pakete kann auch in der Web-Oberfläche von „Cooker“ angezeigt werden.
+	Zum Entsperren eines Paketes kann <code>cooker unblock</code> oder <code>cook --unblock</code>
+	verwendet werden:
+</p>
+<pre>
+# cook <em>pkgname</em> --unblock
+# cooker unblock <em>pkgname</em>
+</pre>
+
+<h3>„Cooker“-Web-Oberfläche</h3>
+<p>
+	Mit der „Cooker“-Web-Oberfläche können Protokolldateien	farbig aufbereitet angesehen,
+	Aktivitäten verfolgt und Fehler gesucht werden.
+	Die dazu benötigten Dateien befinden sich im Verzeichnis <code>/var/www/cooker</code>.
+	Wenn Sie keine „chroot“-Umgebung verwenden und der Busybox-Webserver <code>httpd</code>
+	läuft, kann die Web-Oberfläche ohne weitere Konfigurierung verwendet werden und sollte über
+	<a href="http://localhost/cooker/cooker.cgi">http://localhost/cooker/cooker.cgi</a>
+	erreichbar sein. 
+</p>
+<p>
+	Wenn Sie eine „chroot“-Umgebung verwenden, sollten Sie <code>cookutils</code> ebenfalls auf
+	Ihrem Rechner installieren und die Pfadvariable SLITAZ anpassen. Ein Standardverfahren ist es,
+	eine chroot-Umgebung in:
+<pre>
+/home/slitaz/cooking/chroot
+</pre>
+	zu haben und <code>/etc/slitaz/cook.conf</code> wie folgt zu ändern:
+</p>
+<pre>
+SLITAZ="/home/slitaz/cooking/chroot/home/slitaz"
+</pre>
+<p>
+	Beachten Sie: Um die Web-Oberfläche zu verwenden ist es nicht erforderlich, <code>cookutils</code>
+	auf Ihrem Rechner zu installieren.
+	Wenn Sie Lighttpd verwenden, können Sie die Dateien <code>cooker.cgi</code> und
+	<code>style.css</code> beispielsweise in Ihr Verzeichnis ~/Public kopieren und eine eigene
+	Datei <code>cook.conf</code> dafür verwenden. Die Installation von <code>cookutils</code> auf Ihrem
+	Rechner hat den Vorteil, dass Sie über die Paketverwaltung Tazpkg regelmäßig Aktualisierungen
+	erhalten. Wenn Sie <code>cookutils</code> aus einem Mercurial-Depot dupliziert oder aus einem
+	Paket-Depot transferiert haben:
+</p>
+<pre>
+$ cp -a cookutils/web ~/Public/cgi-bin/cooker
+$ cp -f cookutils/cook.conf ~/Public/cgi-bin/cooker
+</pre>
+<p>
+	Ändern Sie in der Konfigurationsdatei <code>~/Public/cgi-bin/cooker/cook.conf</code> in der Variablen
+	SLITAZ den Pfad und alles ist erledigt!
+</p>
+
+<h3>Erzeugungsnotizen</h3>
+<p>
+	Die Notizfunktion ermöglicht es, kleine persönliche Bemerkungen über die Paketerzeugung
+	zu hinterlegen und nutzt der Zusammenarbeit mit anderen Entwicklern.
+	Diese Funktion ist implementiert worden, um Informationen zwischen den Betreuern des
+	Kompilierungsautomaten „Cooker“ und Entwicklern	auszutauschen.
+	„Cooker“ kann ein Paket sperren, so dass es nicht mehr erzeugt wird. Dann ist es hilfreich, beim
+	Sperren eine Notiz zu hinterlegen, warum das Paket gesperrt wurde.
+	Die Erzeugungsnotizen werden an der Web-Oberfläche angezeigt und können per Kommando erstellt und
+	abgerufen werden:
+</p>
+<pre>
+# cooker note "<em>pkgname</em> wegen hoher CPU-Last gesperrt"
+# cooker notes
+</pre>
+
+<h3>„Cooker“ als Kompilierungsautomat</h3>
+<p>
+	„Cooker“ ist als Kompilierungsautomat für SliTaz gestaltet, das heißt er überwacht
+	zwei Woks, aktualisiert den Mercurial-Wok, stellt die Unterschiede fest und erzeugt alle
+	übergebenen Pakete. Die sicherere und sauberere Art, „Cooker“ als Kompilierungsautomat einzusetzen,
+	stellt die Nutzung einer „chroot“-Umgebung dar; aber auch der direkte Ablauf auf Ihrem Rechner ist
+	möglich.
+</p>
+<p>
+	Mit <code>cron</code> in der „chroot“-Umgebung kann „Cooker“ automatisch gestartet werden, indem in
+	die Datei <code>/var/spool/cron/crontabs/root</code> eine entsprechende Zeile eingefügt wird. Wenn
+	„Cooker“ alle zwei Stunden gestartet werden soll zum Beispiel:
+</p>
+<pre>
+* */2 * * * /usr/bin/cooker
+</pre>
+
+<h3>„Cooker“-Kompilierungsautomat bei der Systemeinleitung starten</h3>
+<p>
+	Bei der Systemeinleitung kann die Umgebung für „Cooker“ eingerichtet werden und der cron-Prozess
+	gestartet werden. Damit dies richtig funktioniert, muss das Paket <code>cookutils-daemon</code>
+	installiert sein und eine Standard-SliTaz-Installation verwendet werden (die Paketerzeugung spielt sich
+	in <code>/home/slitaz/cooking</code> ab). Die Kommandoprozedur von <code>cookutils-daemon</code>
+	hängt alle benötigten virtuellen Dateisysteme ein wie auch <code>source</code> und <code>packages</code>.
+	Quelldateien befinden sich im Verzeichnis <code>/home/slitaz/src</code> und werden in die
+	„chroot“-Umgebung eingebunden, so dass Paketquellen in verschiedenen Versionen (stabil, Entwicklung,
+	inoffiziell) gemeinsam benutzt werden können. So wird <code>cookutils-daemon</code> installiert:
+</p>
+<pre>
+# tazpkg get-install cookutils-daemon
+</pre>
+<p>
+	Damit der Hintergrundprozess gestartet werden kann, muss in der „chroot“-Umgebung eine cron-Datei
+	für root vorhanden sein. Die Kommandoprozedur funktioniert wie die aller anderen Hintergrundprozesse
+	und wird aufgerufen mit:
+</p>
+<pre>
+# /etc/init.d/cooker [start|stop|restart]
+</pre>
+
+<!-- End content -->
+</div>
+
+<footer>
+	Copyright © <span class="year"></span> <a href="http://www.slitaz.org/">SliTaz GNU/Linux</a>
+</footer>
+
+</body>
+</html>
