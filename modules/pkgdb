@@ -27,6 +27,13 @@ filesize() { busybox ls -lh "$1" | awk '{print $5 "B"}'; }
 # as well as flavors files for TazLiTo. We don't need logs since we do it
 # manually to ensure everything is fine before syncing the mirror.
 
+lastcooktime=$(sed '/Time:/!d; s|.*: *\([0-9]*\)s.*|\1|' $LOGS/pkgdb.log 2>/dev/null | sed '$!d')
+[ -n "$lastcooktime" ] && echo "cook:pkgdb $lastcooktime $(date +%s)" >> $cooktime
+while read cmd duration start; do
+	[ $(($start + $duration)) -lt $(date +%s) ] &&
+	echo "sed -i '/^$cmd $duration/d' $cooktime"
+done < $cooktime | sh
+
 rm $LOGS/pkgdb.log 2>/dev/null
 
 case "$1" in
@@ -211,10 +218,11 @@ time=$(($(date +%s) - $time))
 # Create all flavors files at once. Do we really need code to monitor
 # flavors changes? Let's just build them with packages lists before
 # syncing the mirror.
-[ "$1" != '--flavors' ] && exit 1
+[ "$1" != '--flavors' ] && rm $command && exit 1
 
 if [ ! -d "$flavors" ]; then
 	{ _ 'Missing flavors folder "%s"' "$flavors"; newline; } | dblog
+	rm $command
 	exit 1
 fi
 
@@ -254,7 +262,7 @@ separator | dblog
 separator | dblog
 _ 'Cook pkgdb end: %s' "$(date "$(_ '+%%F %%R')")" | dblog
 
-> $command
+rm $command
 
 
 exit 0

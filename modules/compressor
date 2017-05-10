@@ -76,6 +76,8 @@ sizes() {
 		loc) find $install/usr/share/i18n/locales -type f                                       -exec ls -l \{\} \; ;;
 		mo2) find $fs/usr/share/locale            -type f -name '*.mo'                          -exec ls -l \{\} \; ;;
 		gz)  find $install                        -type f -name '*.gz' ! -path '*/share/man/*'  -exec ls -l \{\} \; ;;
+		str) find $fs -type f \( -name '*.so*' -o -name '*.a' -o -name '*.pyc' -o -name '*.pyo' \
+				-o -name '.packlist' -o -name '*.pm' -o -name '*.pl' -o -name '*.pod' \) -exec ls -l \{\} \; ;;
 	esac | awk '{s+=$5}END{print s}'
 }
 
@@ -524,20 +526,29 @@ strip_package() {
 		fi
 	done
 
-	# Strip shared and static libraries
-	# Remove Python *.pyc and *.pyo, Perl perllocal.pod and .packlist
-	oldsize=$(find $fs -type f \( \
-		-name '*.so*' -o -name '*.a' -o \
-		-name '*.pyc' -o -name '*.pyo' -o \
-		-name 'perllocal.pod' -o -name '.packlist' \) -exec ls -l '{}' \; | awk '{s+=$5}END{print s}')
+	oldsize=$(sizes str)
 
+	# Strip shared and static libraries
 	find $fs -name '*.so*' -exec $STRIP -s '{}' 2>/dev/null \;
 	find $fs -name '*.a' -exec $STRIP --strip-debug '{}' 2>/dev/null \;
-	find $fs -type f \( -name '*.pyc' -o -name '*.pyo' \) -delete 2>/dev/null
-	find $fs -type f \( -name 'perllocal.pod' -o -name '.packlist' \) -delete 2>/dev/null
 
-	newsize=$(find $fs -type f \( \
-		-name '*.so*' -o -name '*.a' -o \) -exec ls -l '{}' \; | awk '{s+=$5}END{print s}')
+	# Remove Python *.pyc and *.pyo
+	find $fs -type f \( -name '*.pyc' -o -name '*.pyo' \) -delete 2>/dev/null
+
+	# Remove both with the empty subfolders:
+	# 1. Perl perllocal.pod and .packlist (unconditionally)
+	local perlfiles="$(find $fs -type f \( -name 'perllocal.pod' -o -name '.packlist' \))"
+	# 2. Perl *.pod (if not disabled)
+	[ "${COOKOPTS/!rmpod/}" == "$COOKOPTS" ] &&
+		perlfiles="$perlfiles $(find $fs -type f -name '*.pod')"
+	echo "$perlfiles" | xargs rm -f 2>/dev/null
+	echo "$perlfiles" | awk 'BEGIN{FS=OFS="/"}{$NF="";print}' | xargs rmdir -p 2>/dev/null
+
+	# Strip Perl files (*.pm and *.pl) from documentation inside (if not disabled)
+	[ "${COOKOPTS/!perlz/}" == "$COOKOPTS" ] &&
+		find $fs -type f \( -name '*.pm' -o -name '*.pl' \) -exec sed -i '/^=/,/^=cut/d' '{}' \;
+
+	newsize=$(sizes str)
 
 	comp_summary "$time0" "$((size0 + oldsize))" "$((size1 + newsize))"
 }

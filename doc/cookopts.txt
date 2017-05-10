@@ -58,6 +58,22 @@ Currently, the following options are recognized:
     and libraries will not be stripped, and Python and Perl files will all be
     left).
 
+!perlz
+    Default action is to strip POD (plain old documentation) from the Perl
+    modules (*.pm) and programs (*.pl) files.
+    The presence of this option overrides the default action (Perl files will
+    not be stripped).
+    Note, if you disabled the cleaning by using the higher !strip option, Perl
+    files also will not be stripped.
+
+!rmpod
+    Default action is to remove Perl's POD (plain old documentation) (*.pod)
+    files.
+    The presence of this option overrides the default action (*.pod files will
+    all be left).
+    Note, if you disabled the cleaning by using the higher !strip option, *.pod
+    files also will all be left.
+
 !manz
     Default action is to compress all man pages.
     The presence of this option overrides the default action (all man pages will
