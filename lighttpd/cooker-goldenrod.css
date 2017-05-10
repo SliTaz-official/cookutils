@@ -1,0 +1,7 @@
+@import url("cooker.css");
+html,body{background-color:palegoldenrod}
+progress::-moz-progress-bar{background-color:hsla(30,60%,40%,.7)}
+progress::-webkit-progress-value{background-color:hsla(30,60%,40%,.7)}
+header{background-color:hsla(40,70%,50%,.7);color:#000;box-shadow:0 -3px 0 rgba(0,0,0,.3) inset}
+header a{color:rgba(0,0,0,.7)}
+header a:hover{color:rgba(0,0,0,.8);text-shadow:0 0 4px rgba(0,0,0,.5)}

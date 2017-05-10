@@ -1,0 +1,279 @@
+/* CSS style for SliTaz Cooker */
+
+*{font:14px/18px monospace;margin:0;padding:0}
+html,body{height:100%;color:#888;background-color:#000}
+#container {
+	position: relative;
+	min-height: 100%;
+	margin: 0 auto;
+}
+
+
+/* HEADER */
+
+header,body>h2{background-color:#333}
+header h1{display:inline-block;padding:18px 0}
+header h1,body>h2{white-space:nowrap}
+body>h2{padding:1rem 0}
+header h1::before{content:'#! '}
+header a,body>h2{color:#CCC}
+.network{float:right}
+.network a{padding:18px 8px 18px 0}
+header select, header option {
+	background-color: transparent;
+	color: inherit;
+	border: none;
+}
+
+
+/* FOOTER */
+
+footer, div.foot {
+	padding: 18px 0;
+	clear: both;
+	text-align: center;
+	color: #CCC;
+	background-color: #333;
+
+	position: absolute;
+	bottom: 0;
+	width: 100%;
+}
+footer a+a::before {
+	display: inline-block;
+	content: ' • ';
+	color: #E81;
+}
+
+
+/* CONTENT */
+
+h2,h3{font-weight:bold;background-color:#333}
+h2::before,h3::before{content:'#'}
+h2{color:#F0F}
+h3{color:#FF0}
+a{display:inline-block;text-decoration:none;color:#00F}
+a:hover,body>h2:hover{text-decoration:underline}
+pre {
+	background-color: rgba(0,0,0,0.03);
+	border: 1px solid rgba(0,0,0,0.1);
+	margin: 18px 0 0;
+	overflow: auto;
+	font: 13px/18px monospace;
+}
+li::before{content:'  * '}
+p{margin-top:18px}
+
+main{margin:auto;padding:0 0 54px}
+section{margin-bottom:18px}
+#content2, div.list {
+	width: 100%; box-sizing: border-box;
+	max-width: 700px;
+	margin: auto;
+	padding: 18px 0;
+}
+#info{margin:18px 0}
+
+.btnList{margin-bottom:18px}
+
+.span-ok    { color: #0a0; }
+.span-red   { color: red; }
+.span-sky   { color: blue; }
+.span-no    { color: #d90; }
+.span-line  { color: #888; }
+.log-date   { color: #666; font-size: 95%; }
+.sh-comment { color: #a00; }
+.sh-val     { color: #e50; font-weight: bold; }
+.var        { color: #05a; }
+
+
+/* Colored log */
+
+.log b  { font-weight: normal;   color: red; }
+.log u  { text-decoration: none; color: darkorange; }
+.log i  { font-style: normal;    color: green; }
+.log em { font-style: normal;    background-color: lightsteelblue; font-weight: bold; display: inline-block; width: 100%; }
+
+
+
+/* Buttons */
+
+.button,button{color:#888}
+.button::before,button::before{content:'['}
+.button::after,button::after{content:']'}
+.button.active {
+	color: inherit;
+	border: none;
+	text-decoration: none;
+}
+.button:hover, button:hover, input:hover {
+	color: #FFF;
+	text-decoration: none;
+}
+.button[data-acc]::before {
+	content: attr(data-acc);
+	padding:0 8px;
+	background-color: orange;
+	color: #000;
+	display: inline-block;
+	text-transform: uppercase;
+}
+.btnList .button::after{content:''}
+
+
+/* Search box */
+
+.search input{font-size:inherit;font-family:inherit;color:inherit;border:none;height:inherit}
+.search button{border:0;height:inherit;float:right;background:transparent;cursor:pointer}
+
+
+
+
+
+.log a[name]{text-decoration:none;color:#666}
+.log a[name]:hover{color:#FFF}
+
+.r{float:right}
+
+[class*="bigicon-"] {
+	margin: 0.5rem 0;
+	padding: 1rem 0.8rem 1rem 3rem;
+	background-color: hsla(0,0%,100%,0.8);
+	box-shadow: 0 0 3px rgba(0,0,0,0.4);
+}
+
+
+a:target { background-color: yellow; }
+
+
+/* Table */
+
+table{width:100%;box-sizing:border-box;border-collapse:collapse}
+td{vertical-align:top}
+td:first-child{white-space:nowrap;width:5rem}
+td+td,th+th { border-left: 1px solid rgba(0,0,0,0.1); }
+.activity td:first-child, .cooknotes td:first-child, td.m { color: #444; }
+table td:nth-child(2)::before{content:': '}
+.activity .r.c20::after{content:'  '}
+
+div.list td, div.list th { padding: 5px 2px; }
+
+.texinfo pre { display: none; }
+.texinfo pre:target { display: block; }
+
+
+/* HTML5 progress */
+
+.meter{height:18px}
+.meter progress {
+	height: inherit;
+	width: 100%;
+	display: inline-block;
+	vertical-align: middle;
+	border: none;
+}
+progress {
+	border: 1px solid rgba(0,0,0,0.2);
+	background-color: hsla(0,0%,100%,0.6);
+	box-shadow: inset 0 0 4px rgba(0,0,0,0.1);
+	-webkit-transition: all .5s; transition: all .5s;
+}
+progress::-webkit-progress-bar {
+	background-color: hsla(0,0%,100%,0.6);
+	box-shadow: inset 0 0 4px rgba(0,0,0,0.1);
+}
+progress::-webkit-progress-value {
+	background-color: hsla(100,100%,40%,0.7);
+	-webkit-transition: all .5s; transition: all .5s;
+}
+progress::-moz-progress-bar {
+	background-color: hsla(100,100%,40%,0.7);
+	transition: all .5s;
+}
+.meter span {
+	display: block;
+	white-space: nowrap;
+	position: relative;
+	margin-top: -18px;
+	text-align: center;
+	color: #000;
+}
+
+
+
+
+/* Documents iframe */
+
+iframe {
+	border: none;
+}
+
+
+/* Terminal colors */
+
+pre.files { background-color: hsla(0,0%,0%,0.8); color: hsla(0,0%,100%,0.9); }
+pre.files a { text-decoration: none; }
+.c00 { color: #d3d7cf; } .c01 { color: #555753; }
+.c10 { color: #cc0000; } .c11 { color: #ef2929; }
+.c20 { color: #4e9a06; } .c21 { color: #8ae234; }
+.c30 { color: #c4a000; } .c31 { color: #fce94f; }
+.c40 { color: #3465a4; } .c41 { color: #729fcf; }
+.c50 { color: #75507b; } .c51 { color: #ad7fa8; }
+.c60 { color: #06989a; } .c61 { color: #34e2e2; }
+.c70 { color: #2e3436; } .c71 { color: #eeeeec; }
+.c01,.c11,.c21,.c31,.c41,.c51,.c61,.c71 { font-weight: bold; }
+
+/* Old webkit-gtk compatibility */
+
+header, footer, main {
+	display: block;
+}
+
+
+/* FOLLOWING CSS HAS SOME CHANGES FOR SLITAZ COOKER! */
+
+/* http://prismjs.com/download.html?themes=prism-okaidia&languages=markup+css+clike+javascript+asciidoc+bash+c+css-extras+diff+ini+markdown+perl+python */
+/**
+ * okaidia theme for JavaScript, CSS and HTML
+ * Loosely based on Monokai textmate theme by http://www.monokai.nl/
+ * @author ocodia
+ */
+code[class*="language-"], pre[class*="language-"] {
+	color: #f8f8f2;
+	background: none;
+	text-shadow: 0 1px rgba(0,0,0,0.3);
+	text-align: left;
+	white-space: pre;
+	word-spacing: normal;
+	word-break: normal;
+	word-wrap: normal;
+	-moz-tab-size: 4; -o-tab-size: 4; tab-size: 4;
+	-webkit-hyphens: none; -moz-hyphens: none; hyphens: none;
+}
+/* Code blocks */
+pre[class*="language-"] {
+	padding: 1em;
+	margin: .5em 0;
+	overflow: auto;
+}
+:not(pre) > code[class*="language-"], pre[class*="language-"] {
+	background: #272822;
+}
+/* Inline code */
+:not(pre) > code[class*="language-"] {
+	padding: .1em;
+	white-space: normal;
+}
+.token.comment,.token.prolog,.token.doctype,.token.cdata{color:slategray;}
+.token.punctuation{color:#f8f8f2;}
+.namespace{opacity:.7;}
+.token.property,.token.tag,.token.constant,.token.symbol,.token.deleted{color:#f92672;}
+.token.boolean,.token.number,.token.coord{color:#ae81ff;}
+.token.selector,.token.attr-name,.token.string,.token.char,.token.builtin,.token.inserted{color:#a6e22e;}
+.token.operator,.token.entity,.token.url,.language-css .token.string,.style .token.string,.token.variable{color:#f8f8f2;}
+.token.atrule,.token.attr-value,.token.function{color:#e6db74;}
+.token.keyword{color:#66d9ef;}
+.token.regex,.token.important{color:#fd971f;}
+.token.important,.token.bold{font-weight:bold;}
+.token.italic{font-style:italic;}
+.token.entity{cursor:help;}

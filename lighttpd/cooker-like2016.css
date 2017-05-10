@@ -1,0 +1,168 @@
+/* CSS style for SliTaz Cooker */
+
+html { min-height: 102%; }
+body { font: 13px sans-serif, vernada, arial; margin: 0; }
+h1 { margin: 0; padding: 8px; color: #fff; font-size: 20px; }
+h1 a { color: #fff; text-decoration: none; }
+h2 { color: #444; }
+h3 { color: #666; font-size: 140%; }
+a { text-decoration: underline; color: #215090; }
+a:hover { text-decoration: none; }
+hr { margin: 0; border: 1px solid #cfcfcf; }
+pre, table {
+	background-color: #f8f8f8;
+	border: 1px solid #ddd;
+	padding: 10px;
+	overflow: auto;
+	font-size: 96%;
+	font-family: monospace;
+}
+pre .underline { display: none; }
+
+
+/* Header */
+
+header {
+	color: #fff;
+	background: #222;
+	height: 40px;
+	border-bottom: 4px solid #afafaf;
+}
+header h1::before {
+	content: '';
+	display: inline-block;
+	background: url("/images/logo.png") no-repeat left;
+	width: 40px;
+	height: 40px;
+	vertical-align: middle;
+}
+
+header h1 {
+	margin: 0;
+	padding: 0;
+	white-space: nowrap;
+	float: left;
+}
+
+header h1 a {
+	color: #fff;
+	text-decoration: none;
+	font-size: 20px;
+	font-style: italic;
+}
+
+header h1 a:hover, #network a:hover {
+	color: #afafaf;
+}
+
+/* Header links */
+
+.network {
+	float: right;
+	padding: 14px 5px 0;
+	font-size: 12px;
+}
+
+.network a {
+	padding: 0 4px;
+	color: #fff;
+	font-weight: bold;
+	text-decoration: none;
+}
+
+/* Content */
+
+main {
+	margin: 40px 80px;
+	text-align: justify;
+}
+.r { float: right; }
+form button[type='submit'] { display: none; }
+table { width: 100%; }
+td { padding: 0; }
+td:first-child { white-space:nowrap; width:5rem; }
+table td:nth-child(2)::before { content:' : '; }
+.activity .r { display: none; }
+.log a[name] { text-decoration: none; }
+
+.span-ok    { color: #0a0; }
+.span-red   { color: red; }
+.span-sky   { color: blue; }
+.span-no    { color: #d90; }
+.span-line  { color: #888; }
+.log-date   { color: #666; font-size: 95%; }
+.sh-comment { color: #a00; }
+.sh-val     { color: #e50; font-weight: bold; }
+.var        { color: #05a; }
+
+/* Colored log */
+
+.log b  { font-weight: normal;   color: red; }
+.log u  { text-decoration: none; color: darkorange; }
+.log i  { font-style: normal;    color: green; }
+.log em { font-style: normal; }
+
+/* Buttons */
+
+.button {
+	cursor: pointer;
+	padding: 4px;
+	margin: 4px 0px;
+	display: inline-block;
+}
+
+a.button, .meter span {
+	text-decoration: none;
+	color: #666;
+}
+
+.button:hover {
+	border: 1px solid #999;
+}
+
+progress {
+	width: 100%;
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+	height: 23px;
+}
+.meter { height: 23px; overflow: hidden; }
+progress::-webkit-progress-bar { background: #9dff4a; }
+progress::-webkit-progress-value { background: #9dff4a; }
+progress::-moz-progress-bar { background: #9dff4a; }
+.meter span {
+	display: block;
+	position: relative;
+	margin: -20px 6px;
+}
+
+.button, progress {
+	border: 1px solid #cccccc;
+	font-size: 14px;
+	line-height: 1.2em;
+	background-image: -webkit-linear-gradient(#FAFAFA, #F4F4F4 40%, #E5E5E5);
+	background-image: -moz-linear-gradient(#FAFAFA, #F4F4F4 40%, #E5E5E5);
+	-webkit-box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1);
+	-moz-box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1);
+	box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Round corner */
+
+pre, .button, progress, table {
+	-moz-border-radius: 4px;
+	-webkit-border-radius: 4px;
+	border-radius: 4px;
+}
+
+/* Footer */
+
+footer {
+	text-align: center;
+	padding: 20px;
+	border-top: 1px solid #ddd;
+	font-size: 90%;
+}
+
+footer a { padding: 0 2px; }
