@@ -1,93 +1,69 @@
 /* CSS style for SliTaz Cooker */
 
-body {
-	font-family: sans-serif;
-	font-size: 13px;
-	margin: 0;
-	min-height: 100%;
-/*	position: absolute;*/
-	left: 0;
-	right: 0;
-}
-#content2 h2 {
-	color: #444;
-	border-bottom: 2px solid #CCC;
-	height: 100%;
-}
+html { min-height: 102%; }
+body { font: 13px sans-serif, vernada, arial; margin: 0; }
+h1 { margin: 0; padding: 8px; color: #fff; font-size: 20px; }
+h1 a { color: #fff; text-decoration: none; }
+h2 { color: #444; }
 h3 { color: #666; font-size: 140%; }
-a { text-decoration: none; color: #215090; }
-a:hover { text-decoration: underline; }
-.files a { text-decoration: none; color: inherit; }
-.files a:hover { text-decoration: underline; }
+a { text-decoration: underline; color: #215090; }
+a:hover { text-decoration: none; }
 hr { margin: 0; border: 1px solid #cfcfcf; }
 pre {
 	background-color: #f8f8f8;
 	border: 1px solid #ddd;
-	padding: 8px;
+	padding: 10px;
 	overflow: auto;
+	font-size: 96%;
 }
 
 /* Header */
-body>header {
-	display:block;
-	background:#444;
-	text-align:justify;
-	line-height:0;
-	box-shadow:0 -8px 8px #333 inset
+
+#header {
+	color: #fff;
+	background: #222;
+	height: 40px;
+	border-bottom: 4px solid #afafaf;
 }
-h1 {
-	display:inline-block;
-	margin:auto 0;
-	height:40px;
-	white-space:nowrap;
-	vertical-align:middle
+
+#header h1 {
+	margin: 0;
+	/* padding: 8px 0 0 42px; */
+	width: 250px;
 }
-h1::before {
-	display:inline-block;
-	content:url(images/logo.png);
-	vertical-align:middle
+
+#header h1 a {
+	color: #fff;
+	text-decoration: none;
+	font-size: 20px;
+	font-style: italic;
 }
-h1 a {
-	color:#FFF;
-	font-size:20px;
-	font-style:italic
+
+#header h1 a:hover, #network a:hover {
+	color: #afafaf;
 }
-body>header::before,body>header::after,.block>div::before,.block>div::after {
-	display:inline-block;
-	width:100%;
-	height:0;
-	visibility:hidden;
-	overflow:hidden;
-	content:''
+
+/* Header links */
+
+#network {
+	float: right;
+	padding: 14px 5px 0;
+	font-size: 12px;
 }
-.network {
-	display:inline-block;
-	text-align:left;
-	vertical-align:middle;
-	font-size:12px;
-	line-height:normal;
-	color:#999
-}
-.network a {
-	display:inline-block;
-	padding:0 6px;
-	vertical-align:middle;
-	color:#FFF
+
+#network a {
+	padding: 0 4px;
+	color: #fff;
+	font-weight: bold;
+	text-decoration: none;
 }
 
 /* Content */
 
 #content {
-	margin: auto;
-	padding: 0.5em;
+	margin: 40px 80px;
+	text-align: justify;
 }
-#content2 {
-	width: 100%; box-sizing: border-box;
-	max-width: 700px;
-	margin: auto;
-	padding: 0.5em;
-}
-
 
 .span-ok    { color: #0a0; }
 .span-red   { color: red; }
@@ -102,9 +78,9 @@ body>header::before,body>header::after,.block>div::before,.block>div::after {
 /* Buttons */
 
 .button {
-	display: inline-block;
+	cursor: pointer;
 	padding: 4px;
-	margin: 2px 0;
+	margin: 4px 0px;
 }
 
 a.button, .pctbar  {
@@ -112,154 +88,39 @@ a.button, .pctbar  {
 	color: #666;
 }
 
-.pct {
-	background: #9dff4a;
-	background-image: -webkit-linear-gradient(#CDFFA3, #9DFF4A 40%, #87DB40);
-	background-image:    -moz-linear-gradient(#CDFFA3, #9DFF4A 40%, #87DB40);
-	padding: 2px 4px;
+.button:hover {
+	border: 1px solid #999;
 }
+
+.pct { background: #9dff4a; padding: 2px 4px; }
 .pctbar { overflow: hidden; }
 
-.button {
-	text-decoration: none;
-	color: #444;
-	border: 1px solid #666;
+.button, .pctbar {
+	border: 1px solid #cccccc;
 	font-size: 14px;
 	line-height: 1.2em;
-}
-.button:hover {
-	color: #000;
-	border-color: #000;
-}
-.button.active {
-	/*outline: 1px solid #999;
-	outline-offset: 1px;*/
-	color: #000;
-	border-color: #000;
+	background-image: -webkit-linear-gradient(#FAFAFA, #F4F4F4 40%, #E5E5E5);
+	background-image: -moz-linear-gradient(#FAFAFA, #F4F4F4 40%, #E5E5E5);
+	-webkit-box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1);
+	-moz-box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1);
+	box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-.pctbar {
-	border: 1px solid #AAA;
-	font-size: 14px;
-	line-height: 1.2em;
-	background-image: -webkit-linear-gradient(#E5E5E5, #F4F4F4 40%, #FAFAFA);
-	background-image: -moz-linear-gradient(#E5E5E5, #F4F4F4 40%, #FAFAFA);
-}
 /* Round corner */
 
 pre, .button, .pctbar {
-	border-radius: 2px;
+	-moz-border-radius: 4px;
+	-webkit-border-radius: 4px;
+	border-radius: 4px;
 }
 
 /* Footer */
 
 #footer {
 	text-align: center;
-	padding: 20px 0;
+	padding: 20px;
 	border-top: 1px solid #ddd;
 	font-size: 90%;
-/*	position: absolute;*/
-	bottom: 0;
-	left: 0;
-	right: 0;
 }
 
 #footer a { padding: 0 2px; }
-
-body>footer {
-	background:#f1f1f1;
-	text-align:center;
-	border-top:1px solid #CCC;
-	padding:6px;
-	color:#666;
-	clear:both;
-	box-shadow:0 4px 8px #CCC inset
-}
-
-footer a+a::before { display: inline-block; content: '• '; color: #E81; }
-
-body>footer div {
-	margin:12px
-}
-
-
-
-.log a { text-decoration: none; color: #666; }
-.log a:hover { color: #000; }
-
-.activity { padding-left: 0.5em; }
-.activity li { list-style-type: none; }
-.activity li:before { color: #666; content: "•"; padding-right: 0.5em; }
-
-.r { float: right; }
-
-.zebra tr:nth-child(odd)  { background-color: #FFFFFF; }
-.zebra tr:nth-child(even) { background-color: #ECECEC; }
-
-.gray   { background-color: lightgray; }
-.gold   { background-color: gold; }
-.green  { background-color: greenyellow; }
-.sky    { background-color: skyblue; }
-.plum   { background-color: plum; }
-.yellow { background-color: yellow; }
-.khaki  { background-color: khaki; }
-.brown  { background-color: sandybrown; }
-
-a:target {background-color: yellow; }
-
-
-/*
-table {
-	border-spacing: 0;
-	padding: 0 2px;
-	border-width: 1px;
-	border-color: #666;
-	border-radius: 4px;
-	border-style: solid;
-}
-th {
-	background-color: #CCC;
-}
-td {
-	border-bottom: 1px solid #79B;
-	padding: 2px;
-}
-tr:last-child td {
-	border-bottom: unset;
-}
-*/
-
-table {
-	/*width: 100%;*/
-	border: 1px solid #CCC;
-	border-radius: 4px;
-	border-spacing: 0;
-	padding: 0;
-}
-tr {
-	margin: 0;
-	padding: 2px;
-}
-td {
-	margin: 0;
-	padding: 3px;
-	vertical-align: top;
-	line-height: 1.1;
-}
-thead tr {
-	background-color:#DDD
-}
-thead th {
-	border-bottom:1px solid #BBB
-}
-
-tbody tr:nth-child(odd)  { background-color: #FFFFFF; }
-tbody tr:nth-child(even) { background-color: #ECECEC; }
-
-#content, #content2 {
-	min-height: 80vh;
-}
-
-.texinfo pre { display: none; }
-/*.texinfo pre.first:not(:target) { display: block; }*/
-.texinfo pre:target { display: block; }
