@@ -11,7 +11,7 @@ server. The configuration uses the modules:
 
 Examples of human friendly URIs:
 
-  * /busybox                   : the page contains all about busybox package
+  * /busybox                   : the page contains all about a busybox package
   * /busybox/receipt           : the page with the busybox's receipt
   * /busybox/files             : the page with the file listing
   * /busybox/file/bin/busybox  : get the specified file
@@ -26,18 +26,18 @@ Example of traffic saving:
 Notes about logs
 ----------------
 
-Single resource should be associated with the discrete URI. But due to log
-rotation, glibc.log.2 become glibc.log.3 after package rebuilding. In such
-situation:
+Single resources should be associated with the discrete URI. But due to log
+rotation, glibc.log.2 becomes glibc.log.3 after package rebuilding. In such
+situations:
 
   1. we can't point to the specified log and line within it (URI changed);
-  2. caching will fail, already cached log change the name.
+  2. caching will fail, already cached log changes the name.
 
-The solution implemented is virtually append log name with the UNIX timestamp
-of last modification of the log instead of sequental numbers. So, for example,
-'glibc.log.2' will virtually became 'glibc.log.1482699768'. To found the matched
+The solution implemented is to virtually append log name with the UNIX timestamp
+of last modification of the log instead of sequential numbers. So, for example,
+'glibc.log.2' will virtually became 'glibc.log.1482699768'. To find the matched
 log we need to cycle among ten or less 'glibc.log*' physical files and compare
-the files modification date with date in question.
+the files modification date with the date in question.
 
 
 Full list of implemented human friendly URIs

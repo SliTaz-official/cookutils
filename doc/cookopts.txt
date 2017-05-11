@@ -60,7 +60,7 @@ Currently, the following options are recognized:
 
 !perlz
     Default action is to strip POD (plain old documentation) from the Perl
-    modules (*.pm) and programs (*.pl) files.
+    modules (*.pm) and program (*.pl) files.
     The presence of this option overrides the default action (Perl files will
     not be stripped).
     Note, if you disabled the cleaning by using the higher !strip option, Perl

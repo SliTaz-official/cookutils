@@ -1,6 +1,6 @@
 //
 // Set of scripts for SliTaz Cooker
-// that make the better user interaction with it
+// that makes for better user interaction with it
 //
 
 
@@ -38,14 +38,14 @@ function startUpdating(pkg) {
 
 function stopUpdating() {
 	clearInterval(upID);
-	// Also remove the table row containing gauge because it will be no actual anymore
+	// Also remove the table row containing gauge because it will not be actual anymore
 	document.getElementById('pct').innerHTML = '';
 	// first "parentElement" of gauge is <td>, second - is <tr>
 	document.getElementById('gauge').parentElement.parentElement.remove();
 }
 
 
-// Decide whether we need to update percentage
+// Decide whether we need to update percentages
 
 if (typeof updatePkg !== 'undefined')
 	startUpdating(updatePkg);
@@ -73,7 +73,7 @@ function refreshDate(firstWait, serverTimeMs) {
 }
 
 
-// Resize the iframe containing document to fit it's height without scrolling
+// Resize the iframe containing document to fit its height without scrolling
 
 function resizeIframe(theframe) {
 	var height = theframe.contentWindow.document.body.scrollHeight;

@@ -530,7 +530,7 @@ remove_deps() {
 }
 
 
-# Automatic patch the sources.
+# Automatically patch the sources.
 
 patchit() {
 	[ -f "$stuff/patches/series" ] || return
@@ -804,10 +804,10 @@ mk_pkg_receipt() {
 
 	. "$orig_receipt"
 
-	# Is package splitted one?
+	# Is package split one?
 	[ -n "$SPLIT" -a "${SPLIT/$pkg/}" != "$SPLIT" ]; splitted=$?
 
-	# Manage splitted packages
+	# Manage split packages
 	if $splitted; then
 		# For packages with empty $DEPENDS
 		[ -n "$DEPENDS" ] || DEPENDS="$PACKAGE"

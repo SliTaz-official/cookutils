@@ -698,7 +698,7 @@ if [ -z "$pkg" ]; then
 	else
 		toolchain="slitaz-toolchain/"
 	fi
-	# Main page with summary. Count only package include in ARCH,
+	# Main page with summary. Count only packages included in ARCH,
 	# use 'cooker arch-db' to manually create arch.$ARCH files.
 	inwok=$(ls $WOK/*/arch.$ARCH | wc -l)
 	cooked=$(ls $PKGS/*.tazpkg | wc -l)
@@ -936,7 +936,7 @@ case "$cmd" in
 		# find main package
 		wanted=$(. $wok/$pkg/receipt; echo $WANTED)
 		main=${wanted:-$pkg}
-		# identify splitted packages
+		# identify split packages
 		split="$main $(. $wok/$main/receipt; echo $SPLIT)"
 		[ -d "$wok/$main-dev" ] && split="$split $main-dev"
 		split="$(echo $split | tr ' ' '\n' | sort -u)"
@@ -1147,7 +1147,7 @@ EOT
 								wok/*) page="${arg#wok/}"; page="$base/$pkg/browse/${page#*/}";;
 								*)     page="$base/$pkg/browse/install/usr/share/$cmd/$arg";;
 							esac
-							# make the iframe height so long to contain it's content without scrollbar
+							# make the iframe height so long to contain its content without scrollbar
 							echo "<iframe id='idoc' src='$page' width='100%' onload='resizeIframe(this)'></iframe>"
 							;;
 						*.pdf)
