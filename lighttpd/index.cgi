@@ -492,7 +492,7 @@ syntax_highlighter() {
 				 s|^\(lrwxrwxrwx\)|<span class='c61'>\1</span>|;
 				 s|^\(-rwxr-xr-x\)|<span class='c21'>\1</span>|;
 				 s|^\(-rw-r--r--\)|<span class='c31'>\1</span>|;
-				 s|^\([lrwx-]*\)|<span class='c11'>\1</span>|;
+				 s|^\([lrwxs-]*\)|<span class='c11'>\1</span>|;
 				"
 			;;
 	esac
