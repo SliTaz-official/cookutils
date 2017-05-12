@@ -1226,6 +1226,7 @@ copy() {
 				# Copy "standard" files (all but "developer files", man pages, documentation, translations)
 				sed '/\.h$/d; /\.hxx$/d; /\.a$/d; /\.la$/d; /\.pc$/d; /bin\/.*-config$/d;
 					/\.m4$/d; /\.gir$/d; /\.typelib$/d; /\.vapi$/d; /\.deps$/d;
+					/\/include\//d;
 					/\/share\/man\//d; /\/share\/doc\//d; /\/share\/info\//d; /\/share\/locale\//d;
 					/\/share\/bash-completion\//d;
 					' $filelist > $tmplist
@@ -1238,6 +1239,7 @@ copy() {
 				# Copy "developer files"
 				sed -n '/\.h$/p; /\.hxx$/p; /\.a$/p; /\.la$/p; /\.pc$/p; /bin\/.*-config$/p;
 					/\.m4$/p; /\.gir$/p; /\.typelib$/p; /\.vapi$/p; /\.deps$/p;
+					/\/include\//p;
 					' $filelist | \
 				while read j; do
 					mkdir -p $fs$(dirname $j)
