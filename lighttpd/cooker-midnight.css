@@ -1,0 +1,24 @@
+@import url("cooker.css");
+html,body{background:#333;color:#CCC}
+section{background-color:#222;box-shadow:none}
+tr:nth-child(2n){background:#2E2E2E!important}
+tr:nth-child(2n+1){background:#222!important}
+h2,h3{color:#999}
+section,div.list{padding:2px}
+section h2,section h3{background:#333}
+.activity td:first-child,.cooknotes td:first-child,td.m{color:#888}
+progress::-moz-progress-bar{background-color:hsla(200,40%,40%,0.7)}
+progress::-webkit-progress-value{background-color:hsla(200,40%,40%,0.7)}
+.meter span{color:#222}
+.search input{background:#999;color:#000}
+.button{color:#888}
+.button.r{background:#444}
+.button.receipt{background:hsl(80,100%,15%)}
+.button.website{background:hsl(200,100%,15%)}
+.button.files{background:hsl(50,100%,15%)}
+.button.desc{background:hsl(180,100%,15%)}
+.button.download{background:hsl(20,100%,15%)}
+.button.source{background:hsl(60,100%,15%)}
+.button.browse{background:hsl(170,100%,15%)}
+.button.doc{background:hsl(300,100%,15%)}
+.button.log{background:hsl(0,0%,15%)}

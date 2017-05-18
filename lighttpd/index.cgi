@@ -91,6 +91,7 @@ page_header() {
 	<title>$([ -n "$pkg" ] && echo "$pkg - ")$title</title>
 	<link rel="stylesheet" href="/$css">
 	<link rel="icon" type="image/png" href="/slitaz-cooker.png">
+	<link rel="search" href="$base/os.xml" title="$title" type="application/opensearchdescription+xml">
 	<!-- mobile -->
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<meta name="theme-color" content="#222">
@@ -282,7 +283,7 @@ if [ -n "$(GET theme)" ]; then
 	<p>Current theme: “${current:-default}”. Select other:</p>
 	<ul>
 		$(
-			for i in default emerald sky goldenrod like2016 terminal; do
+			for i in default emerald sky goldenrod midnight like2016 terminal; do
 				[ "$i" == "${current:-default}" ] || echo "<li><a href="$base/?theme=$i">$i</a></li>"
 			done
 		)
@@ -292,7 +293,7 @@ EOT
 			page_footer
 			exit 0
 			;;
-		default|emerald|sky|goldenrod|like2016|terminal)
+		default|emerald|sky|goldenrod|midnight|like2016|terminal)
 			# Expires in a year
 			expires=$(date -uRd @$(($(date +%s)+31536000)) | sed 's|UTC|GMT|')
 			echo -e "HTTP/1.1 302 Found\nLocation: $base/\nCache-Control: no-cache\nSet-Cookie: theme=$theme; expires=$expires\n\n"
@@ -356,6 +357,45 @@ EOT
 </rss>
 EOT
 	exit 0
+fi
+
+
+### OpenSearch ###
+
+# Query '/os.xml': get OpenSearch Description
+
+if [ "$pkg" == 'os.xml' ]; then
+	cat <<EOT
+Content-Type: application/xml; charset=UTF-8
+
+<?xml version="1.0" encoding="UTF-8"?>
+<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/">
+	<ShortName>$title</ShortName>
+	<Description>SliTaz packages search</Description>
+	<Image width="16" height="16" type="image/png">http://$HTTP_HOST/images/logo.png</Image>
+	<Url type="text/html" method="GET" template="http://$HTTP_HOST$base/{searchTerms}"/>
+	<Url type="application/x-suggestions+json" method="GET" template="http://$HTTP_HOST$base/">
+		<Param name="oss" value="{searchTerms}"/>
+	</Url>
+	<SearchForm>http://$HTTP_HOST$base/</SearchForm>
+	<InputEncoding>UTF-8</InputEncoding>
+</OpenSearchDescription>
+EOT
+	exit 0
+fi
+
+# Query '?oss[=<term>]': OpenSearch suggestions
+
+if [ -n "$(GET oss)" ]; then
+	term="$(GET oss | tr -cd '[:alnum:]+-')"
+	echo -e 'Content-Type: application/x-suggestions+json; charset=UTF-8\n'
+	cd $wok
+	ls | fgrep "$term" | head -n10 | awk -vterm="$term" '
+		BEGIN{printf("[\"%s\",[", term)}
+		     {printf("%s\"%s\"", NR != 1 ? "," : "", $0)}
+		END  {printf("]]")}
+		'
+		exit 0
 fi
 
 
