@@ -84,12 +84,6 @@ check_pkg_in_wok() {
 }
 
 
-if_empty_value() {
-	# L10n: QA is quality assurance
-	[ -n "$value" ] || die 'QA: empty variable: %s' "$var=\"\""
-}
-
-
 # Initialize files used in $CACHE
 
 init_db_files() {
@@ -104,19 +98,15 @@ init_db_files() {
 
 receipt_quality() {
 	_ 'QA: checking package receipt...'
-	unset online
-	if ifconfig | grep -q -A 1 "^[a-z]*[0-9]" | fgrep 'addr:'; then
-		online='online'
-	fi
+
 	for var in PACKAGE VERSION CATEGORY SHORT_DESC MAINTAINER WEB_SITE; do
 		unset value
 		value="$(. $receipt; eval echo \$$var)"
+		# L10n: QA is quality assurance
+		[ -n "$value" ] || die 'QA: empty variable: %s' "$var=\"\""
+
 		case "$var" in
-			PACKAGE|VERSION|SHORT_DESC)
-				if_empty_value
-				;;
 			CATEGORY)
-				value="${value:-empty}"
 				valid="$(echo $PKGS_CATEGORIES)" # avoid newlines
 				if ! echo " $valid " | grep -q " $value "; then
 					_ 'QA: unknown category "%s"' "$value"
@@ -126,9 +116,8 @@ receipt_quality() {
 			WEB_SITE)
 				# We don't check WGET_URL since if dl is needed it will fail.
 				# Break also if we're not online. Here error is not fatal.
-				if_empty_value
-				[ -z "$online" ] && break
-				if ! busybox wget -T 12 -s $value 2>/dev/null; then
+				if ifconfig | grep -A1 '^[a-z]*[0-9]' | fgrep -q 'addr:' && \
+				! busybox wget -T 12 --spider $value 2>/dev/null; then
 					_ 'QA: unable to reach "%s"' "$value"
 				fi
 				;;
@@ -140,46 +129,45 @@ receipt_quality() {
 # Paths used in receipt and by cook itself.
 
 set_paths() {
-	pkgdir="$WOK/$PACKAGE"
+	pkgdir="$WOK/$pkg"
 	. "$pkgdir/receipt"
 	basesrc="$pkgdir/source"
 	tmpsrc="$basesrc/tmp"
 	src="$basesrc/$PACKAGE-$VERSION"
 	taz="$pkgdir/taz"
-	pack="$taz/$PACKAGE-$VERSION$EXTRAVERSION"
+	pack="$taz/${1:-$PACKAGE}-$VERSION$EXTRAVERSION"	# v2: multiple taz/* folders
 	fs="$pack/fs"
 	stuff="$pkgdir/stuff"
 	install="$pkgdir/install"
+
 	pkgsrc="${SOURCE:-$PACKAGE}-${KBASEVER:-$VERSION}"
 	lzma_tarball="$pkgsrc.tar.lzma"
-	if [ -n "$PATCH" ]; then
-		[ -z "$PTARBALL" ] && PTARBALL="$(basename $PATCH)"
-	fi
+
+	[ -n "$PATCH" -a -z "$PTARBALL" ] && PTARBALL="$(basename $PATCH)"
+
 	if [ -n "$WANTED" ]; then
 		basesrc="$WOK/$WANTED/source"
 		src="$basesrc/$WANTED-$VERSION"
 		install="$WOK/$WANTED/install"
 		wanted_stuff="$WOK/$WANTED/stuff"
 	fi
-	if [ -n "$SOURCE" ]; then
-		source_stuff="$WOK/$SOURCE/stuff"
-	fi
+
+	[ -n "$SOURCE" ] && source_stuff="$WOK/$SOURCE/stuff"
+
 	# Kernel version is set from wok/linux or installed/linux-api-headers(wok-undigest)
 	if [ -f "$WOK/linux/receipt" ]; then
-		kvers=$(grep ^VERSION= $WOK/linux/receipt | cut -d\" -f2)
-		kbasevers=${kvers:0:3}
+		kvers=$(. $WOK/linux/receipt; echo $VERSION)
+		kbasevers=$(echo $kvers | cut -d. -f1,2)
 	elif [ -f "$INSTALLED/linux-api-headers/receipt" ]; then
-		kvers=$(grep ^VERSION= $INSTALLED/linux-api-headers/receipt | cut -d\" -f2)
-		kbasevers=${kvers:0:3}
+		kvers=$(. $INSTALLED/linux-api-headers/receipt; echo $VERSION)
+		kbasevers=$(echo $kvers | cut -d. -f1,2)
 	fi
+
 	# Python version
-	if [ -f "$WOK/python/receipt" ]; then
-		pyvers=$(grep ^VERSION= $WOK/python/receipt | cut -d\" -f2)
-	fi
+	[ -f "$WOK/python/receipt" ] && pyvers=$(. $WOK/python/receipt; echo $VERSION)
 	# Perl version for some packages needed it
-	if [ -f "$WOK/perl/receipt" ]; then
-		perlvers=$(grep ^VERSION= $WOK/perl/receipt | cut -d\" -f2)
-	fi
+	[ -f "$WOK/perl/receipt" ] && perlvers=$(. $WOK/perl/receipt; echo $VERSION)
+
 	# Old way compatibility.
 	_pkg="$install"
 }
@@ -349,25 +337,32 @@ summary() {
 	cd $WOK/$pkg
 	[ -d $WOK/$pkg/install ] && prod=$(du -sh $WOK/$pkg/install | awk '{print $1}' 2>/dev/null)
 	[ -d $WOK/$pkg/source ] && srcdir=$(du -sh $WOK/$pkg/source | awk '{print $1}' 2>/dev/null)
-	fs=$(du -sh $WOK/$pkg/taz/* | awk '{print $1}')
-	size=$(ls -lh $PKGS/$pkg-${VERSION}*.tazpkg | awk '{print $5}')
-	files=$(cat $WOK/$pkg/taz/$pkg-*/files.list | wc -l)		# please keep cat here, otherwise it'll not work
 	[ -n "$TARBALL" ] && srcsize=$(du -sh $SRC/$TARBALL | awk '{print $1}')
 
 	_ 'Summary for: %s' "$PACKAGE $VERSION"
 	separator
 
 	# L10n: keep the same width of translations to get a consistent view
-	[ -n "$srcdir" ]  && _ 'Source dir  : %s' "$srcdir"
 	[ -n "$TARBALL" ] && _ 'Src file    : %s' "$TARBALL"
 	[ -n "$srcsize" ] && _ 'Src size    : %s' "$srcsize"
+	[ -n "$srcdir" ]  && _ 'Source dir  : %s' "$srcdir"
 	[ -n "$prod" ]    && _ 'Produced    : %s' "$prod"
-	_ 'Packed      : %s' "$fs"
-	_ 'Compressed  : %s' "$size"
-	_ 'Files       : %s' "$files"
 	_ 'Cook time   : %s' "$(disp_time "$time")"
 	_ 'Cook date   : %s' "$(date "$(_ '+%%F %%R')")"
 	_ 'Host arch   : %s' "$ARCH"
+
+	separator -
+	_ ' # : Packed : Compressed : Files : Package name'
+	separator -
+	pkgi=1
+	for i in $PACKAGE $SPLIT; do
+		fs=$(du -sh $WOK/$pkg/taz/$i-$VERSION | awk '{print $1}')
+		pkgname="$i-$VERSION.tazpkg"
+		size=$(ls -lh $PKGS/$pkgname | awk '{print $5}')
+		files=$(wc -l < $WOK/$pkg/taz/$i-$VERSION/files.list)
+		printf "%2d : %6s : %10s : %5s : %s\n" "$pkgi" "$fs" "$size" "$files" "$pkgname"
+		pkgi=$((pkgi + 1))
+	done
 	separator
 }
 
@@ -381,7 +376,7 @@ debug_info() {
 	_ 'Cook date: %s' "$(date "$(_ '+%%F %%R')")"
 	if [ -n "$time" ]; then
 		times="$(($(date +%s) - $time))"
-		_ 'Cook time   : %s' "$(disp_time "$times")"
+		_ 'Wasted time : %s' "$(disp_time "$times")"
 	fi
 	for error in \
 		ERROR 'No package' "cp: can't" "can't open" "can't cd" \
@@ -588,6 +583,7 @@ cookit() {
 	esac
 
 	[ -n "$QA" ] && receipt_quality
+
 	cd $pkgdir
 	[ -z "$continue" ] && rm -rf source 2>/dev/null
 	rm -rf install taz 2>/dev/null
@@ -607,6 +603,12 @@ cookit() {
 	export DESTDIR MAKEFLAGS CFLAGS CXXFLAGS CONFIG_SITE LC_ALL=C LANG=C
 	#LDFLAGS
 
+	# BUILD_DEPENDS may vary depending on the ARCH
+	case "$ARCH" in
+		arm*)   [ -n "$BUILD_DEPENDS_arm" ]    && BUILD_DEPENDS=$BUILD_DEPENDS_arm    ;;
+		x86_64) [ -n "$BUILD_DEPENDS_x86_64" ] && BUILD_DEPENDS=$BUILD_DEPENDS_x86_64 ;;
+	esac
+
 	# Check for build deps and handle implicit depends of *-dev packages
 	# (ex: libusb-dev :: libusb).
 	rm -f $CACHE/installed.local $CACHE/installed.web $CACHE/missing.dep
@@ -616,6 +618,8 @@ cookit() {
 	for dep in $BUILD_DEPENDS; do
 		implicit="${dep%-dev}"; [ "$implicit" == "$dep" ] && implicit=''
 		for i in $dep $implicit; do
+#			echo "i='$i'"
+			# Check if package already installed
 			[ -f "$root$INSTALLED/$i/receipt" ] && continue
 
 			# Try local package first.
@@ -688,7 +692,7 @@ cookit() {
 	# use local packages).
 	for i in $(uniq $CACHE/installed.web); do
 		# _ 'Installing dep (web/cache): %s' "$i"
-		tazpkg get-install $i --root=$root --quiet --cookmode
+		tazpkg get-install $i --root=$root --local --quiet --cookmode
 	done
 
 	update_installed_cook_diff
@@ -796,29 +800,29 @@ cookit_quality() {
 
 mk_pkg_receipt() {
 	orig_receipt="$1"
-	# $pkg is package name
 
 	# Receipt's signature is important, although some receipts may miss it
 	signature=$(head -n1 "$orig_receipt")
 	[ "${signature:0:1}" == '#' ] || signature='# SliTaz package receipt.'
 
+	save_PACKAGE="$PACKAGE"; save_DEPENDS="$DEPENDS"; save_PROVIDE="$PROVIDE"
+	unset_receipt
 	. "$orig_receipt"
-
-	# Is package split one?
-	[ -n "$SPLIT" -a "${SPLIT/$pkg/}" != "$SPLIT" ]; splitted=$?
+	PACKAGE="$save_PACKAGE"; DEPENDS="$save_DEPENDS"; PROVIDE="$save_PROVIDE"
 
 	# Manage split packages
-	if $splitted; then
+	SPLIT=" $SPLIT "
+	if [ "$SPLIT" != '  ' -a "${SPLIT/ $PACKAGE /}" != "$SPLIT" ]; then
 		# For packages with empty $DEPENDS
-		[ -n "$DEPENDS" ] || DEPENDS="$PACKAGE"
+		[ -n "$DEPENDS" ] || DEPENDS="$pkg"
 
 		# Default $CAT
 		[ -z "$CAT" ] &&
-		case $pkg in
+		case $PACKAGE in
 			*-dev) CAT="development|development files" ;;
 		esac
 
-		# Manage $CAT
+		# Manage two-in-one $CAT="$CATEGORY|$SHORT_DESC_ADDITION"
 		CATEGORY="${CAT%|*}"
 		SHORT_DESC="$SHORT_DESC (${CAT#*|})"
 	fi
@@ -838,12 +842,13 @@ EOF
 
 	# Optional variables
 	[ -n "$TAGS" ]    && echo "TAGS=\"$TAGS\""
-	[ -n "$DEPENDS" ] && echo "DEPENDS=\"$DEPENDS\""
+	[ -n "$DEPENDS" ] && echo "DEPENDS=\"$DEPENDS\"" | tr -ds '\t' ' '
+	[ -n "$PROVIDE" ] && echo "PROVIDE=\"$PROVIDE\""
 
 	# Extract {pre,post}_{install,remove} functions
 	for i in pre post; do
 		for j in install remove; do
-			if grep -q "^${i}_$j()"; then
+			if grep -q "^${i}_$j()" "$orig_receipt"; then
 				echo
 				sed "/^${i}_$j()/,/}/!d" "$orig_receipt"
 			fi
@@ -856,7 +861,8 @@ EOF
 # but it doesn't handle EXTRAVERSION.
 
 packit() {
-	set_paths
+	set_paths "$1"
+	PACKAGE="${1:-$PACKAGE}"
 
 	# Handle cross compilation
 	case "$ARCH" in
@@ -894,11 +900,18 @@ packit() {
 	fi
 
 	cd $taz
-	for file in receipt description.txt; do
-		[ ! -f "../$file" ] && continue
-		action 'Copying "%s"...' "$file"
-		cp -f ../$file $pack; chown 0.0 $pack/$file; status
-	done
+	action 'Copying "%s"...' 'receipt'
+	mk_pkg_receipt ../receipt > $pack/receipt
+	chown 0.0 $pack/receipt; status
+
+	unset desc
+	[ "$pkg" == "$PACKAGE" -a -f "../description.txt" ] && desc="../description.txt"
+	[ -f "../description.$PACKAGE.txt" ] && desc="../description.$PACKAGE.txt"
+	if [ -n "$desc" ]; then
+		action 'Copying "%s"...' "$(basename "$desc")"
+		cp -f $desc $pack/description.txt; chown 0.0 $pack/description.txt; status
+	fi
+
 	copy_generic_files
 
 	# Strip and stuff files.
@@ -927,11 +940,11 @@ packit() {
 	UNPACKED_SIZE=$(du -chs fs receipt files.list md5sum description.txt \
 		2>/dev/null | awk 'END{ print $1 }')
 
-	# Build cpio archives.
+	# Build cpio archive.
 	action 'Compressing the FS...'
-	find fs -newer $receipt -exec touch -hr $receipt {} \;
+	find fs -newer $receipt -exec touch -hr $receipt '{}' \;
 	find fs | cpio -o -H newc --quiet | lzma e fs.cpio.lzma -si
-	rm -rf fs
+	mv fs ../
 	status
 
 	PACKED_SIZE=$(du -chs fs.cpio.lzma receipt files.list md5sum description.txt \
@@ -953,12 +966,12 @@ packit() {
 
 	# Compress.
 	action 'Creating full cpio archive...'
-	find . -print | cpio -o -H newc --quiet > \
-		../$PACKAGE-$VERSION$EXTRAVERSION$arch.tazpkg
+	find . -newer $receipt -exec touch -hr $receipt '{}' \;
+	find . | cpio -o -H newc --quiet > ../$PACKAGE-$VERSION$EXTRAVERSION$arch.tazpkg
 	status
 
 	action 'Restoring original package tree...'
-	unlzma -c fs.cpio.lzma | cpio -idm --quiet
+	mv ../fs .
 	status
 
 	rm fs.cpio.lzma; cd ..
@@ -967,6 +980,7 @@ packit() {
 	tazpkg=$(ls *.tazpkg)
 	packit_quality
 	footer "$(_ 'Package "%s" created' "$tazpkg")"
+	update_packages_info
 }
 
 
@@ -986,7 +1000,7 @@ packit_quality() {
 	fi
 
 	action 'QA: checking for empty package...'
-	files=$(cat $WOK/$pkg/taz/$pkg-*/files.list | wc -l)
+	files=$(cat $WOK/$pkg/taz/$PACKAGE-$VERSION/files.list | wc -l)
 	if [ "$files" -eq 0 -a "$CATEGORY" != 'meta' ]; then
 		broken
 		rm -f $command
@@ -996,22 +1010,37 @@ packit_quality() {
 	:; status
 	# Find and remove old package(s)
 	tempd="$(mktemp -d)"; cd "$tempd"
-	for testpkg in $(ls $PKGS/$pkg-*.tazpkg 2> /dev/null); do
+	for testpkg in $(ls $PKGS/$PACKAGE-*.tazpkg 2> /dev/null); do
 		# Extract receipt from each matched package
 		cpio -F "$testpkg" -i receipt >/dev/null 2>&1
 		name=$(. receipt; echo $PACKAGE)
 		rm receipt
-		if [ "$name" == "$pkg" ]; then
+		if [ "$name" == "$PACKAGE" ]; then
 			action 'Removing old package "%s"' "$(basename "$testpkg")"
 			rm -f "$testpkg"
 			status
 		fi
 	done
 	rm -r "$tempd"
-	mv -f $pkgdir/taz/$pkg-*.tazpkg $PKGS
+	mv -f $pkgdir/taz/$PACKAGE-$VERSION.tazpkg $PKGS
 	sed -i /^${pkg}$/d $broken
 	#action 'Removing source tree...'
 	#rm -f $WOK/$pkg/source; status
+}
+
+
+# v2: pack all packages using compiled files
+
+packall() {
+	set_paths
+	if head -n1 "$pkgdir/receipt" | fgrep -q 'v2'; then
+		for i in $PACKAGE $SPLIT; do
+			unset DEPENDS CAT
+			packit $i
+		done
+	else
+		packit
+	fi
 }
 
 
@@ -1227,8 +1256,9 @@ copy() {
 				sed '/\.h$/d; /\.hxx$/d; /\.a$/d; /\.la$/d; /\.pc$/d; /bin\/.*-config$/d;
 					/\.m4$/d; /\.gir$/d; /\.typelib$/d; /\.vapi$/d; /\.deps$/d;
 					/\/include\//d;
-					/\/share\/man\//d; /\/share\/doc\//d; /\/share\/info\//d; /\/share\/locale\//d;
-					/\/share\/bash-completion\//d;
+					/\/share\/man\//d; /\/share\/doc\//d; /\/share\/gtk-doc\//d; /\/share\/info\//d;
+					/\/share\/devhelp\//d; /\/share\/locale\//d;
+					/\/share\/bash-completion\//d; /\/lib\/systemd\//d;
 					' $filelist > $tmplist
 				while read j; do
 					mkdir -p $fs$(dirname $j)
@@ -1287,11 +1317,10 @@ cook_copy_icons() {
 # Update packages.info every time after successful build
 
 update_packages_info() {
-	sed -i "/^$pkg\t/d" $PKGS/packages.info
-	PACKAGE="$pkg"; set_paths
+	sed -i "/^$PACKAGE\t/d" $PKGS/packages.info
 	unset_receipt; . $pack/receipt
 	SIZES=$(echo $PACKED_SIZE $UNPACKED_SIZE | sed 's|\.0||g')
-	DEPENDS=$(echo $DEPENDS) # remove newlines from some receipts
+	DEPENDS=$(echo $DEPENDS) # remove newlines, tabs and multiple spaces from variable
 	MD5="$(md5sum "$PKGS/$PACKAGE-$VERSION$EXTRAVERSION.tazpkg" | awk '{print $1}')"
 	cat >> $PKGS/packages.info <<EOT
 $PACKAGE	$VERSION$EXTRAVERSION	$CATEGORY	$SHORT_DESC	$WEB_SITE	$TAGS	$SIZES	$DEPENDS	$MD5	$PROVIDE
@@ -1736,7 +1765,7 @@ case "$1" in
 		cookit $@ 2>&1 | loglimit 50 > $LOGS/$pkg.log
 		remove_deps | tee -a $LOGS/$pkg.log
 		cookit_quality
-		packit 2>&1 | loglimit 5 >> $LOGS/$pkg.log
+		packall 2>&1 | loglimit 5 >> $LOGS/$pkg.log
 		clean_log
 
 		# Exit if any error in packing.
@@ -1761,7 +1790,6 @@ case "$1" in
 		[ -s /aufs-umount.sh ] || install_package
 
 		sed -i '$ s|$| [ Done ]|' $activity
-		update_packages_info
 
 		# Finally we DON'T WANT to build the *-dev or packages with WANTED="$pkg"
 		# If you want automation, use the Cooker Build Bot.

@@ -575,15 +575,28 @@ summary() {
 		if grep -q "cook:$pkg$" $command; then
 			show_note i "The Cooker is currently building $pkg"
 		elif fgrep -q "Summary for:" $log; then
-			sed '/^Summary for:/,$!d' $log | head -n13 | awk '
+			sed '/^Summary for:/,$!d' $log | awk '
 			BEGIN { print "<section>" }
+			function row(line) {
+				split(line, s, " : ");
+				printf("\t<tr><td>%s</td><td>%s</td></tr>\n", s[1], s[2]);
+			}
+			function row2(line, rowNum) {
+				split(line, s, " : ");
+				if (rowNum == 1)
+					printf("\t<tr><th>%s</th><th>%s</th><th>%s</th><th>%s</th><th>%s</th></tr>\n", s[1], s[2], s[3], s[4], s[5]);
+				else
+					printf("\t<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>\n", s[1], s[2], s[3], s[4], s[5]);
+			}
 			{
-				if (NR==1) {
-					printf("<h3>%s</h3>\n<table>\n", $0)
-				} else if ($0 !~ "===") {
-					split($0, s, " : ");
-					printf("<tr><td>%s</td><td>%s</td></tr>", s[1], s[2]);
+				if (NR==1) { printf("<h3>%s</h3>\n<table>\n", $0); next }
+				if ($0 ~ "===") { seen++; if (seen == 1) next; else exit; }
+				if ($0 ~ "---") {
+					seen2++;
+					if (seen2 == 1) printf("</table>\n<table class=\"pkgslist\">\n")
+					next
 				}
+				if (seen2) row2($0, seen2); else row($0);
 			}
 			END { print "</table></section>" }
 			'
@@ -1022,7 +1035,7 @@ case "$cmd" in
 			echo -n '<section><h3>Unpackaged files:</h3><pre class="files">'
 			echo "$orphans" | awk '
 			function tag(text, color) { printf("<span class=\"c%s1\">%s</span> %s\n", color, text, $0); }
-			/\/perllocal.pod$/ || /\/\.packlist$/ || /\/share\/bash-completion\// { tag("---", 0); next }
+			/\/perllocal.pod$/ || /\/\.packlist$/ || /\/share\/bash-completion\// || /\/lib\/systemd\// { tag("---", 0); next }
 			/\.pod$/  { tag("pod", 5); next }
 			/\/share\/man\// { tag("man", 5); next }
 			/\/share\/doc\// || /\/share\/gtk-doc\// || /\/share\/info\// || /\/share\/devhelp\// { tag("doc", 5); next }

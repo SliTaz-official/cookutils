@@ -311,7 +311,7 @@ a:target { background-color: yellow; }
 /* Table */
 
 table { width: 100%; box-sizing: border-box; border-collapse: collapse; /*box-shadow: 0 0 4px rgba(0,0,0,0.3);*/ }
-th { background-color: rgba(0,0,0,0.2); padding: 3px; }
+th { color: rgba(0,0,0,0.6); background-color: rgba(0,0,0,0.2); padding: 3px; }
 td { padding: 2px; vertical-align: top; }
 td:first-child { white-space: nowrap; width: 5rem; }
 td+td, th+th { border-left: 1px solid rgba(0,0,0,0.1); }
@@ -322,6 +322,10 @@ tbody tr:nth-child(odd) {
 }
 tbody tr:nth-child(even) {
 	background-color: hsla(0, 0%,   0%, 0.05);
+}
+.pkgslist { margin-top: 1.6em; }
+.pkgslist td:nth-child(1), .pkgslist td:nth-child(2), .pkgslist td:nth-child(3), .pkgslist td:nth-child(4) {
+	white-space: nowrap; width: 1rem; text-align: right;
 }
 
 

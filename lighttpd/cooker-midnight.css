@@ -3,7 +3,7 @@ html,body{background:#333;color:#CCC}
 section{background-color:#222;box-shadow:none}
 tr:nth-child(2n){background:#2E2E2E!important}
 tr:nth-child(2n+1){background:#222!important}
-h2,h3{color:#999}
+h2,h3,th{color:#999}
 section,div.list{padding:2px}
 section h2,section h3{background:#333}
 .activity td:first-child,.cooknotes td:first-child,td.m{color:#888}
@@ -22,3 +22,6 @@ progress::-webkit-progress-value{background-color:hsla(200,40%,40%,0.7)}
 .button.browse{background:hsl(170,100%,15%)}
 .button.doc{background:hsl(300,100%,15%)}
 .button.log{background:hsl(0,0%,15%)}
+.log em{background:#456}
+[class*="bigicon-"]{color:#222}
+.log a[name]:hover{color:#88C}
