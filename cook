@@ -845,12 +845,17 @@ EOF
 	[ -n "$DEPENDS" ] && echo "DEPENDS=\"$DEPENDS\"" | tr -ds '\t' ' '
 	[ -n "$PROVIDE" ] && echo "PROVIDE=\"$PROVIDE\""
 
-	# Extract {pre,post}_{install,remove} functions
+	# Extract {pre,post}_{install,remove} functions;
+	# post_install_gtk_() will be copied as post_install() for gtk+ package
+	#
+	# restricted name (gtk+ -> gtk_; acl-dev -> acl_dev)
+	rname=$(echo -n $PACKAGE | tr -c 'a-zA-Z0-9' '_')
 	for i in pre post; do
 		for j in install remove; do
-			if grep -q "^${i}_$j()" "$orig_receipt"; then
+			if grep -q "^${i}_${j}_$rname()" "$orig_receipt"; then
 				echo
-				sed "/^${i}_$j()/,/}/!d" "$orig_receipt"
+				sed "/^${i}_${j}_$rname()/,/}/!d" "$orig_receipt" | \
+				sed "s|^${i}_${j}_$rname()|${i}_${j}()|"
 			fi
 		done
 	done
@@ -1254,7 +1259,7 @@ copy() {
 			@std)
 				# Copy "standard" files (all but "developer files", man pages, documentation, translations)
 				sed '/\.h$/d; /\.hxx$/d; /\.a$/d; /\.la$/d; /\.pc$/d; /bin\/.*-config$/d;
-					/\.m4$/d; /\.gir$/d; /\.typelib$/d; /\.vapi$/d; /\.deps$/d;
+					/\.m4$/d; /\.gir$/d; /\.typelib$/d; /\.vapi$/d; /\.deps$/d; /\.cmake$/d;
 					/\/include\//d;
 					/\/share\/man\//d; /\/share\/doc\//d; /\/share\/gtk-doc\//d; /\/share\/info\//d;
 					/\/share\/devhelp\//d; /\/share\/locale\//d;
@@ -1268,7 +1273,7 @@ copy() {
 			@dev)
 				# Copy "developer files"
 				sed -n '/\.h$/p; /\.hxx$/p; /\.a$/p; /\.la$/p; /\.pc$/p; /bin\/.*-config$/p;
-					/\.m4$/p; /\.gir$/p; /\.typelib$/p; /\.vapi$/p; /\.deps$/p;
+					/\.m4$/p; /\.gir$/p; /\.typelib$/p; /\.vapi$/p; /\.deps$/p; /\.cmake$/p;
 					/\/include\//p;
 					' $filelist | \
 				while read j; do

@@ -707,7 +707,7 @@ if [ -z "$pkg" ]; then
 			[ "$list" == 'cooklist' ] && nb="- Packages: $(wc -l < $cooklist)"
 			echo '<section id="content2">'
 			echo "<h2>DB: $list $nb</h2>"
-			tac $CACHE/$list | sed 's|cooker.cgi?pkg=||;
+			tac $CACHE/$list | sed 's|cooker.cgi?pkg=||; s|%2B|+|g;
 				s|\[ Done|<span class="r c20">Done|;
 				s|\[ Failed|<span class="r c10">Failed|;
 				s| \]|</span>|' | mktable $list
