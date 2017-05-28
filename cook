@@ -538,6 +538,21 @@ patchit() {
 }
 
 
+# Check source tarball integrity.
+
+check_integrity() {
+	if [ -n  "$TARBALL_SHA1" ]; then
+		echo "$TARBALL_SHA1  $SRC/$TARBALL"   | sha1sum -c   || exit 1
+	fi
+	if [ -n  "$TARBALL_SHA256" ]; then
+		echo "$TARBALL_SHA256  $SRC/$TARBALL" | sha256sum -c || exit 1
+	fi
+	if [ -n  "$TARBALL_MD5" ]; then
+		echo "$TARBALL_MD5  $SRC/$TARBALL"    | md5sum -c    || exit 1
+	fi
+}
+
+
 # The main cook function.
 
 cookit() {
@@ -1056,7 +1071,23 @@ tac() {
 }
 
 
-# Install package on --install or update the chroot.
+# Update chroot with freshly rebuilt package: keep env up-to-date.
+
+update_chroot() {
+	for i in $pkg $SPLIT; do
+		if [ -d "$root$INSTALLED/$i" ]; then
+			. /etc/slitaz/cook.conf
+			. $WOK/$pkg/taz/$i-$VERSION/receipt
+			_ 'Updating %s chroot environment...' "$ARCH"
+			_ 'Updating chroot: %s' "$i ($VERSION$EXTRAVERSION$arch)" | log
+			cd $PKGS
+			tazpkg install $i-$VERSION$EXTRAVERSION$arch.tazpkg --forced --root=$root
+		fi
+	done
+}
+
+
+# Install package on --inst or update the chroot.
 
 install_package() {
 	case "$ARCH" in
@@ -1067,7 +1098,7 @@ install_package() {
 	# Install package if requested but skip install if target host doesn't
 	# match build system or it will break the build chroot.
 	build=$(echo $BUILD_SYSTEM | cut -d- -f1)
-	if [ -n "$inst" ] && [ "$build" == "$ARCH" ]; then
+	if [ -n "$inst" -a "$build" == "$ARCH" ]; then
 		if [ -f "$PKGS/$PACKAGE-$VERSION$EXTRAVERSION.tazpkg" ]; then
 			cd $PKGS
 			tazpkg install $PACKAGE-$VERSION$EXTRAVERSION.tazpkg --forced
@@ -1077,15 +1108,7 @@ install_package() {
 		fi
 	fi
 
-	# Install package if part of the chroot to keep env up-to-date.
-	if [ -d "$root$INSTALLED/$pkg" ]; then
-		. /etc/slitaz/cook.conf
-		. $WOK/$pkg/taz/$pkg-*/receipt
-		_ 'Updating %s chroot environment...' "$ARCH"
-		_ 'Updating chroot: %s' "$pkg ($VERSION$EXTRAVERSION$arch)" | log
-		cd $PKGS
-		tazpkg install $pkg-$VERSION$EXTRAVERSION$arch.tazpkg --forced --root=$root
-	fi
+	update_chroot
 }
 
 
@@ -1767,6 +1790,7 @@ case "$1" in
 		done
 
 		# Cook and pack or exit on error and log everything.
+		check_integrity
 		cookit $@ 2>&1 | loglimit 50 > $LOGS/$pkg.log
 		remove_deps | tee -a $LOGS/$pkg.log
 		cookit_quality
