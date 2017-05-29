@@ -638,7 +638,7 @@ pkg_info() {
 	if [ -f "$wok/$pkg/taz/$PACKAGE-$VERSION/receipt" ]; then
 		echo "<a class='button icon files$(active files)' href='$base/$pkg/files'>files</a>"
 
-		[ -f "$wok/$pkg/description.txt" ] &&
+		[ -n "$(ls $wok/$pkg/description*.txt)" ] &&
 			echo "<a class='button icon desc$(active description)' href='$base/$pkg/description'>description</a>"
 
 		unset EXTRAVERSION
@@ -688,6 +688,17 @@ section() {
 	echo "<h2>${3%|*}</h2>"
 	mktable "$i"
 	echo '</section>'
+}
+
+
+show_desc() {
+	echo "<section><h3>Description of “$1”</h3>"
+	if [ -n "$md2html" ]; then
+		$md2html $2
+	else
+		show_code markdown < $2
+	fi
+	echo "</section>"
 }
 
 
@@ -1051,14 +1062,17 @@ case "$cmd" in
 	description)
 		page_header
 		pkg_info
-		desc="$WOK$REQUEST_URI.txt"
-		if [ -s "$desc" ]; then
+		descs="$(ls $WOK/$pkg/description*.txt)"
+		if [ -n "$descs" ]; then
 			echo '<div id="content2">'
-			if [ -n "$md2html" ]; then
-				$md2html $desc
-			else
-				show_code markdown < $desc
-			fi
+			[ -f "$WOK/$pkg/description.txt" ] && show_desc "$pkg" "$WOK/$pkg/description.txt"
+			for i in $descs; do
+				case $i in
+					*/description.txt) continue ;;
+					*) package=$(echo $i | cut -d. -f2) ;;
+				esac
+				show_desc "$package" "$i"
+			done
 			echo '</div>'
 		else
 			show_note w "No description of $pkg"

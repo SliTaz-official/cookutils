@@ -859,6 +859,7 @@ EOF
 	[ -n "$TAGS" ]    && echo "TAGS=\"$TAGS\""
 	[ -n "$DEPENDS" ] && echo "DEPENDS=\"$DEPENDS\"" | tr -ds '\t' ' '
 	[ -n "$PROVIDE" ] && echo "PROVIDE=\"$PROVIDE\""
+	[ -n "$CONFIG_FILES" ] && echo "CONFIG_FILES=\"$CONFIG_FILES\""
 
 	# Extract {pre,post}_{install,remove} functions;
 	# post_install_gtk_() will be copied as post_install() for gtk+ package
@@ -869,7 +870,7 @@ EOF
 		for j in install remove; do
 			if grep -q "^${i}_${j}_$rname()" "$orig_receipt"; then
 				echo
-				sed "/^${i}_${j}_$rname()/,/}/!d" "$orig_receipt" | \
+				sed "/^${i}_${j}_$rname()/,/^}/!d" "$orig_receipt" | \
 				sed "s|^${i}_${j}_$rname()|${i}_${j}()|"
 			fi
 		done
@@ -1030,7 +1031,7 @@ packit_quality() {
 	:; status
 	# Find and remove old package(s)
 	tempd="$(mktemp -d)"; cd "$tempd"
-	for testpkg in $(ls $PKGS/$PACKAGE-*.tazpkg 2> /dev/null); do
+	for testpkg in $(ls $PKGS/$PACKAGE-*.tazpkg 2>/dev/null); do
 		# Extract receipt from each matched package
 		cpio -F "$testpkg" -i receipt >/dev/null 2>&1
 		name=$(. receipt; echo $PACKAGE)
@@ -1055,7 +1056,7 @@ packall() {
 	set_paths
 	if head -n1 "$pkgdir/receipt" | fgrep -q 'v2'; then
 		for i in $PACKAGE $SPLIT; do
-			unset DEPENDS CAT
+			unset DEPENDS CAT CONFIG_FILES
 			packit $i
 		done
 	else
