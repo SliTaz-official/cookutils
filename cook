@@ -541,15 +541,16 @@ patchit() {
 # Check source tarball integrity.
 
 check_integrity() {
-	if [ -n  "$TARBALL_SHA1" ]; then
-		echo "$TARBALL_SHA1  $SRC/$TARBALL"   | sha1sum -c   || exit 1
-	fi
-	if [ -n  "$TARBALL_SHA256" ]; then
-		echo "$TARBALL_SHA256  $SRC/$TARBALL" | sha256sum -c || exit 1
-	fi
-	if [ -n  "$TARBALL_MD5" ]; then
-		echo "$TARBALL_MD5  $SRC/$TARBALL"    | md5sum -c    || exit 1
-	fi
+	for i in sha1 sha3 sha256 sha512 md5; do
+		I=$(echo $i | tr 'a-z' 'A-Z')
+		eval sum=\$TARBALL_$I
+		if [ -n "$sum" ]; then
+			newline
+			_ 'Checking %ssum of source tarball...' "$i"
+			echo "$sum  $SRC/$TARBALL" | ${i}sum -c || exit 1
+		fi
+	done
+	newline
 }
 
 
@@ -715,7 +716,7 @@ cookit() {
 	# Get source tarball and make sure we have source dir named:
 	# $PACKAGE-$VERSION to be standard in receipts. Here we use tar.lzma
 	# tarball if it exists.
-	if [ -n "$WGET_URL" ] && [ ! -f "$SRC/$TARBALL" ]; then
+	if [ -n "$WGET_URL" -a ! -f "$SRC/$TARBALL" ]; then
 		if [ -f "$SRC/${SOURCE:-$PACKAGE}-$VERSION.tar.lzma" ]; then
 			TARBALL="${SOURCE:-$PACKAGE}-$VERSION.tar.lzma"
 			LZMA_SRC=''
@@ -723,7 +724,7 @@ cookit() {
 			get_source || { broken; exit 1; }
 		fi
 	fi
-	if [ -z "$WANTED" ] && [ -n "$TARBALL" ] && [ ! -d "$src" ]; then
+	if [ -z "$WANTED" -a -n "$TARBALL" -a ! -d "$src" ]; then
 		mkdir -p $pkgdir/source/tmp; cd $pkgdir/source/tmp
 		if ! extract_source ; then
 			get_source
@@ -731,7 +732,7 @@ cookit() {
 		fi
 		if [ -n "$LZMA_SRC" ]; then
 			cd $pkgdir/source
-			if [ "$(ls -A tmp | wc -l)" -gl 1 ] || [ -f "$(echo tmp/*)" ]; then
+			if [ "$(ls -A tmp | wc -l)" -gl 1 -o -f "$(echo tmp/*)" ]; then
 				mv tmp tmp-1; mkdir tmp
 				mv tmp-1 tmp/${SOURCE:-$PACKAGE}-$VERSION
 			fi
@@ -742,13 +743,15 @@ cookit() {
 		cd $pkgdir/source/tmp
 		# Some archives are not well done and don't extract to one dir (ex lzma).
 		files=$(ls | wc -l)
-		[ "$files" == 1 ] && [ -d "$(ls)" ] && mv * ../$PACKAGE-$VERSION
-		[ "$files" == 1 ] && [ -f "$(ls)" ] && mkdir -p ../$PACKAGE-$VERSION && \
+		[ "$files" -eq 1 -a -d "$(ls)" ] && mv * ../$PACKAGE-$VERSION
+		[ "$files" -eq 1 -a -f "$(ls)" ] && mkdir -p ../$PACKAGE-$VERSION && \
 			mv * ../$PACKAGE-$VERSION/$TARBALL
 		[ "$files" -gt 1 ] && mkdir -p ../$PACKAGE-$VERSION && \
 			mv * ../$PACKAGE-$VERSION
 		cd ..; rm -rf tmp
 	fi
+
+	check_integrity
 
 	# Libtool shared libs path hack.
 	case "$ARCH" in
@@ -1791,7 +1794,6 @@ case "$1" in
 		done
 
 		# Cook and pack or exit on error and log everything.
-		check_integrity
 		cookit $@ 2>&1 | loglimit 50 > $LOGS/$pkg.log
 		remove_deps | tee -a $LOGS/$pkg.log
 		cookit_quality

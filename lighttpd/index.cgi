@@ -475,7 +475,7 @@ syntax_highlighter() {
 				-e 's#\([^a-zA-Z]\)\([Ee]rror\)$#\1<b>\2</b>#' \
 				-e 's#ERROR:#<b>ERROR:</b>#g' \
 				\
-				-e 's#^.*[Ff]ailed.*#<b>\0</b>#' \
+				-e 's#^.*[Ff][Aa][Ii][Ll][Ee][Dd].*#<b>\0</b>#' \
 				-e 's#^.*[Ff]atal.*#<b>\0</b>#' \
 				-e 's#^.*[Nn]ot found.*#<b>\0</b>#' \
 				-e 's#^.*[Nn]o such file.*#<b>\0</b>#' \
