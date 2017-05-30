@@ -6,6 +6,9 @@
 
 . /usr/lib/slitaz/libcook.sh
 
+# tazpkg install command
+tpi='tazpkg -gi --quiet --local --cookmode'
+
 
 # Compressor cache stuff
 
@@ -120,7 +123,7 @@ compress_manpages() {
 	[ -d "$manpath" ] || return
 	size0=$(sizes man); [ -z "$size0" ] && return
 
-	tazpkg -gi advancecomp --quiet --cookmode
+	$tpi advancecomp
 
 	action 'Compressing man pages...'
 
@@ -159,7 +162,7 @@ recompress_gz() {
 	[ "${COOKOPTS/!gz/}" != "$COOKOPTS" ] && return
 	size0=$(sizes gz); [ -z "$size0" ] && return
 
-	tazpkg -gi advancecomp --quiet --cookmode
+	$tpi advancecomp
 
 	action 'Recompressing gzip files...'
 
@@ -188,8 +191,8 @@ compress_png() {
 	use_op=true
 	[ "${COOKOPTS/!pngquant/}" != "$COOKOPTS" ] && use_pq=false
 	[ "${COOKOPTS/!optipng/}"  != "$COOKOPTS" ] && use_op=false
-	$use_pq && tazpkg -gi pngquant --quiet --cookmode
-	$use_op && tazpkg -gi optipng  --quiet --cookmode
+	$use_pq && $tpi pngquant
+	$use_op && $tpi optipng
 
 	action 'Compressing png images...'
 
@@ -223,7 +226,7 @@ compress_svg() {
 	[ "${COOKOPTS/!svgz/}" != "$COOKOPTS" ] && return
 	size0=$(sizes svg); [ -z "$size0" ] && return
 
-	tazpkg -gi svgcleaner --quiet --cookmode
+	$tpi svgcleaner
 
 	action 'Compressing svg images...'
 
@@ -254,7 +257,7 @@ compress_ui() {
 	[ "${COOKOPTS/!uiz/}" != "$COOKOPTS" ] && return
 	[ -z "$(find $install -type f \( -name '*.ui' -o -name '*.glade' \) )" ] && return
 
-	tazpkg -gi xmlstarlet --quiet --cookmode
+	$tpi xmlstarlet
 
 	action 'Compressing ui files...'
 
@@ -309,7 +312,7 @@ fix_desktop_files() {
 	time0=$(get_time)
 
 	if [ -n "$QA" -a -z "$(which desktop-file-validate)" ]; then
-		tazpkg -gi desktop-file-utils-extra --quiet --cookmode
+		$tpi desktop-file-utils-extra
 	fi
 
 	# The variable $LOCALE is set in cook.conf and may be overridden in the receipt.
@@ -359,9 +362,9 @@ normalize_mo() {
 	[ -z "$(find $install -type f -name '*.mo')" ] && return
 
 	# Gettext functions: msgunfmt, msguniq, msgconv, msgfmt
-	tazpkg -gi gettext      --quiet --cookmode
+	$tpi gettext
 	# Gconv modules (convert to UTF-8)
-	tazpkg -gi glibc-locale --quiet --cookmode
+	$tpi glibc-locale
 
 	action 'Normalizing mo files...'
 
