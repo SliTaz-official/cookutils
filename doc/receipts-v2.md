@@ -35,7 +35,7 @@ Here, in every rule you can:
     $install to $fs.
   * define the DEPENDS variable for specified package; you may omit this
     definition, then it will mean the following:
-    * for the *main package*: it don't depends on any package;
+    * for the *main package*: it doesn't depend on any package;
     * for the *split packages*: it depends exclusively on *main package*.
     Note, receipt is the shell script with all its restrictions: there's no
     difference if you define empty DEPENDS variable or not define it at all.
@@ -83,8 +83,8 @@ Like this for `cookutils` package:
     post_install_cookutils()
 
 Attention! You should know that some characters that are valid in package names
-are not allowed in function names. Please, substitute each symbol that not
-belongs to the intervals `A-Z, a-z, 0-9` by yet another underscore (`_`).
+are not allowed in function names. Please, substitute each symbol that doesn't
+belong to the intervals `A-Z, a-z, 0-9` by yet another underscore (`_`).
 Example for `coreutils-disk`:
 
     post_install_coreutils_disk()
