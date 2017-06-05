@@ -89,3 +89,67 @@ Example for `coreutils-disk`:
 
     post_install_coreutils_disk()
 
+
+Function `copy()`
+-----------------
+
+It's the flexible tool allowing you to copy files and folders from `$install` to
+`$fs` using patterns. All files are copied with the folder structure preserved:
+
+    $install/my/folder/       ->   $fs/my/folder/
+    $install/my/system/file   ->   $fs/my/system/file
+
+Now `copy()` understands 4 main forms of patterns:
+
+  * `@std`    - all the "standard" files;
+  * `@dev`    - all the "developer" files;
+  * `folder/` - append folder name in question by slash;
+  * `file`    - file name without the slash in the end.
+
+Both patterns `@std` and `@dev` are meta-patterns making the most common actions
+extremely simple.
+
+In the `folder/` and `file` forms of the patterns you can use the asterisk (`*`)
+symbol meaning any number of any characters.
+
+Some examples (executed on the chroot with the "busybox" package installed):
+
+```
+  Pattern  | Result
+===========|====================================================================
+   bin/    | /bin
+           | /usr/bin
+-----------|--------------------------------------------------------------------
+  *bin/    | /bin
+           | /sbin
+           | /usr/bin
+           | /usr/sbin
+           | /var/www/cgi-bin
+-----------|--------------------------------------------------------------------
+ /usr/bin/ | /usr/bin
+-----------|--------------------------------------------------------------------
+  usr/bin/ | /usr/bin
+-----------|--------------------------------------------------------------------
+    r/bin/ |
+===========|====================================================================
+    cat    | /bin/cat
+-----------|--------------------------------------------------------------------
+   *.sh    | /lib/libtaz.sh
+           | /sbin/mktazdevs.sh
+           | /usr/bin/gettext.sh
+           | /usr/bin/httpd_helper.sh
+           | /usr/lib/slitaz/httphelper.sh
+           | /usr/lib/slitaz/libpkg.sh
+           | /var/www/cgi-bin/cgi-env.sh
+-----------|--------------------------------------------------------------------
+    pt*    | /dev/pts
+           | /usr/share/locale/pt_BR
+           | /usr/share/locale/pt_BR/LC_MESSAGES
+-----------|--------------------------------------------------------------------
+ /bin/*.sh | /usr/bin/gettext.sh
+           | /usr/bin/httpd_helper.sh
+-----------|--------------------------------------------------------------------
+ /lib/*.sh | /lib/libtaz.sh
+           | /usr/lib/slitaz/httphelper.sh
+           | /usr/lib/slitaz/libpkg.sh
+```

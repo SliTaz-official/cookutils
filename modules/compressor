@@ -6,10 +6,6 @@
 
 . /usr/lib/slitaz/libcook.sh
 
-# tazpkg install command
-tpi='tazpkg -gi --quiet --local --cookmode'
-
-
 # Compressor cache stuff
 
 comp_cache_root='/home/slitaz/cache/cook'
@@ -28,6 +24,13 @@ cache_stat=$(mktemp)
 #
 # Functions
 #
+
+
+# tazpkg install command
+
+tpi() {
+	tazpkg -gi --quiet --local --cookmode $1
+}
 
 
 # Working with time (with hundredths precision)
@@ -123,7 +126,7 @@ compress_manpages() {
 	[ -d "$manpath" ] || return
 	size0=$(sizes man); [ -z "$size0" ] && return
 
-	$tpi advancecomp
+	tpi advancecomp
 
 	action 'Compressing man pages...'
 
@@ -162,7 +165,7 @@ recompress_gz() {
 	[ "${COOKOPTS/!gz/}" != "$COOKOPTS" ] && return
 	size0=$(sizes gz); [ -z "$size0" ] && return
 
-	$tpi advancecomp
+	tpi advancecomp
 
 	action 'Recompressing gzip files...'
 
@@ -191,8 +194,8 @@ compress_png() {
 	use_op=true
 	[ "${COOKOPTS/!pngquant/}" != "$COOKOPTS" ] && use_pq=false
 	[ "${COOKOPTS/!optipng/}"  != "$COOKOPTS" ] && use_op=false
-	$use_pq && $tpi pngquant
-	$use_op && $tpi optipng
+	$use_pq && tpi pngquant
+	$use_op && tpi optipng
 
 	action 'Compressing png images...'
 
@@ -226,7 +229,7 @@ compress_svg() {
 	[ "${COOKOPTS/!svgz/}" != "$COOKOPTS" ] && return
 	size0=$(sizes svg); [ -z "$size0" ] && return
 
-	$tpi svgcleaner
+	tpi svgcleaner
 
 	action 'Compressing svg images...'
 
@@ -257,7 +260,7 @@ compress_ui() {
 	[ "${COOKOPTS/!uiz/}" != "$COOKOPTS" ] && return
 	[ -z "$(find $install -type f \( -name '*.ui' -o -name '*.glade' \) )" ] && return
 
-	$tpi xmlstarlet
+	tpi xmlstarlet
 
 	action 'Compressing ui files...'
 
@@ -312,7 +315,7 @@ fix_desktop_files() {
 	time0=$(get_time)
 
 	if [ -n "$QA" -a -z "$(which desktop-file-validate)" ]; then
-		$tpi desktop-file-utils-extra
+		tpi desktop-file-utils-extra
 	fi
 
 	# The variable $LOCALE is set in cook.conf and may be overridden in the receipt.
@@ -362,9 +365,9 @@ normalize_mo() {
 	[ -z "$(find $install -type f -name '*.mo')" ] && return
 
 	# Gettext functions: msgunfmt, msguniq, msgconv, msgfmt
-	$tpi gettext
+	tpi gettext
 	# Gconv modules (convert to UTF-8)
-	$tpi glibc-locale
+	tpi glibc-locale
 
 	action 'Normalizing mo files...'
 

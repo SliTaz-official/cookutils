@@ -174,6 +174,9 @@ main {
 .log i  { font-style: normal;    color: green; }
 .log em { font-style: normal;    background-color: lightsteelblue; font-weight: bold; display: inline-block; width: 100%; }
 
+.catman b  { color: navy; }
+.catman u  { text-decoration: none; color: green; }
+
 
 
 /* Buttons */
@@ -327,7 +330,8 @@ tbody tr:nth-child(even) {
 .pkgslist td:nth-child(1), .pkgslist td:nth-child(2), .pkgslist td:nth-child(3), .pkgslist td:nth-child(4) {
 	white-space: nowrap; width: 1rem; text-align: right;
 }
-
+.summary th, .summary td { white-space: nowrap; width: 1rem; text-align: center; }
+.summary th:last-child, .summary td:last-child { width: unset; }
 
 
 div.list td, div.list th { padding: 5px 2px; }

@@ -458,9 +458,11 @@ syntax_highlighter() {
 				-e 's#Success$#<i>Success</i>#' \
 				-e 's#\([^a-z]\)ok$#\1<i>ok</i>#' \
 				-e 's#\([^a-z]\)yes$#\1<i>yes</i>#' \
+				-e 's#\([^a-z]\)ON$#\1<i>ON</i>#' \
 				-e 's#\([^a-z]\)no$#\1<u>no</u>#' \
 				-e 's#\([^a-z]\)none$#\1<u>none</u>#' \
 				-e 's#\([^a-z]\)false$#\1<u>false</u>#' \
+				-e 's#\([^a-z]\)OFF$#\1<u>OFF</u>#' \
 				-e 's#\(^checking .*\.\.\. \)\(.*\)$#\1<i>\2</i>#' \
 				\
 				-e 's#\( \[Y[nm/]\?\] n\)$# <u>\1</u>#' \
@@ -1018,14 +1020,20 @@ case "$cmd" in
 
 			size=$(du -hs $dir | awk '{ sub(/\.0/, ""); print $1 }')
 
-			echo "<section><h3>Files of package “$namever” ($size):</h3>"
-			echo -en '<pre class="files">\n<span class="underline">permissions·lnk·user    ·'
-			echo -en 'group   ·     size·date &amp; time ·file name\n</span>'
-			find $dir -not -type d -print0 | sort -z | xargs -0 ls -ld --color=always | \
-			syntax_highlighter files | \
-			sed "s|\([^>]*\)>/.*/fs\([^<]*\)\(<.*\)$|\1 href='$base/$indir/browse/taz/$p-$ver/fs\2'>\2\3|" | \
-			awk 'BEGIN { FS="\""; }
-				{ gsub("+", "%2B", $2); print; }'
+			echo "<section><h3>Files of package “$namever” (${size:-empty}):</h3>"
+			echo '<pre class="files">'
+			if [ -s "$wok/$indir/taz/$p-$ver/files.list" ]; then
+				echo -n '<span class="underline">permissions·lnk·user    ·'
+				echo -en 'group   ·     size·date &amp; time ·file name\n</span>'
+				cd $dir
+				find . -not -type d -print0 | sort -z | xargs -0 ls -ld --color=always | \
+				syntax_highlighter files | \
+				sed "s|\([^>]*\)>\.\([^<]*\)\(<.*\)$|\1 href='$base/$indir/browse/taz/$p-$ver/fs\2'>\2\3|" | \
+				awk 'BEGIN { FS="\""; }
+					{ gsub("+", "%2B", $2); print; }'
+			else
+				echo 'No files'
+			fi
 			echo '</pre></section>'
 			cat $wok/$indir/taz/$p-$ver/files.list >> $packaged
 		done
@@ -1042,21 +1050,45 @@ case "$cmd" in
 		all_files=$(mktemp)
 		cd $wok/$main/install; find ! -type d | sed 's|\.||' > $all_files
 		orphans="$(sort $all_files $packaged | uniq -u)"
-		if [ -n "$orphans" ]; then
-			echo -n '<section><h3>Unpackaged files:</h3><pre class="files">'
+		if [ -d "$wok/$main/install" -a -n "$orphans" ]; then
+			echo '<section><h3>Unpackaged files:</h3>'
+			table=$(mktemp)
 			echo "$orphans" | awk '
 			function tag(text, color) { printf("<span class=\"c%s1\">%s</span> %s\n", color, text, $0); }
-			/\/perllocal.pod$/ || /\/\.packlist$/ || /\/share\/bash-completion\// || /\/lib\/systemd\// { tag("---", 0); next }
+			/\/perllocal.pod$/ || /\/\.packlist$/ || /\/share\/bash-completion\// ||
+				/\/lib\/systemd\// || /\.pyc$/ || /\.pyo$/ { tag("---", 0); next }
 			/\.pod$/  { tag("pod", 5); next }
 			/\/share\/man\// { tag("man", 5); next }
-			/\/share\/doc\// || /\/share\/gtk-doc\// || /\/share\/info\// || /\/share\/devhelp\// { tag("doc", 5); next }
+			/\/share\/doc\// || /\/share\/gtk-doc\// || /\/share\/info\// ||
+				/\/share\/devhelp\// { tag("doc", 5); next }
 			/\/share\/icons\// { tag("ico", 2); next }
 			/\/share\/locale\// { tag("loc", 4); next }
 			/\.h$/ || /\.a$/ || /\.la$/ || /\.pc$/ || /\/bin\/.*-config$/ { tag("dev", 3); next }
 			{ tag("???", 1) }
-			'
+			' > $table
+
+			# Summary table
+			for i in head body; do
+				case $i in
+					head) echo -n '<table class="summary"><tr>';;
+					body) echo -n '<th> </th></tr><tr>';;
+				esac
+				for j in '???1' dev3 loc4 ico2 doc5 man5 pod5 '---0'; do
+					tag=${j:0:3}; class="c${j:3:1}0"; [ "$class" == 'c00' ] && class='c01'
+					case $i in
+						head) echo -n "<th class='$class'>$tag</th>";;
+						body) printf '<td>%s</td>' "$(grep ">$tag<" $table | wc -l)";;
+					esac
+				done
+			done
+			echo '<td> </td></tr></table>'
+
+			echo -n '<pre class="files">'
+			cat $table
 			echo '</pre></section>'
+			rm $table
 		fi
+		rm $packaged $all_files
 		;;
 
 	description)
@@ -1243,15 +1275,24 @@ EOT
 
 					if [ -n "$(echo "$html" | fgrep 'The requested file /tmp/tmp.')" ]; then
 						# Process the pre-formatted man-cat page
-						echo '<pre>'
-						sed '
+						# (for example see sudo package without groff in build dependencies)
+						sed -i '
 							s|M-bM-^@M-^S|—|g;
 							s|M-bM-^@M-^\\|<b>|g;
 							s|M-bM-^@M-^]|</b>|g
 							s|M-bM-^@M-^X|<u>|g;
 							s|M-bM-^@M-^Y|</u>|g;
 							s|M-BM-||g;
+							s|++oo|•|g;
+							s|&|\&amp;|g; s|<|\&lt;|g; s|>|\&gt;|g;
 							' "$tmp"
+						for i in a b c d e f g h i j k l m n o p q r s t u v w x y z \
+								 A B C D E F G H I J K L M N O P Q R S T U V W X Y Z \
+								 0 1 2 3 4 5 6 7 8 9 _ - '\\+' '\.' /; do
+							sed -i "s|$i$i|<b>$i</b>|g; s|_$i|<u>$i</u>|g" "$tmp"
+						done
+						echo '<pre class="catman">'
+						sed 's|</b><b>||g; s|</u><u>||g; s|</u><b>_</b><u>|_|g; s|</b> <b>| |g;' "$tmp"
 						echo '</pre>'
 					else
 						echo "$html"
