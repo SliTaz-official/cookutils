@@ -432,7 +432,7 @@ copy_generic_files() {
 		if [ -d "$install/usr/share/pixmaps" ]; then
 			mkdir -p "$fs/usr/share/pixmaps"
 			for i in png xpm; do
-				[ -f "$install/usr/share/pixmaps/$PACKAGE.$i" ] &&
+				[ -f "$install/usr/share/pixmaps/$PACKAGE.$i" -a ! -f "$fs/usr/share/pixmaps/$PACKAGE.$i" ] &&
 				cp -a $install/usr/share/pixmaps/$PACKAGE.$i $fs/usr/share/pixmaps
 			done
 		fi
@@ -835,10 +835,12 @@ mk_pkg_receipt() {
 
 	save_PACKAGE="$PACKAGE"; save_DEPENDS="$DEPENDS"; save_PROVIDE="$PROVIDE"
 	save_SUGGESTED="$SUGGESTED"; save_TAZPANEL_DAEMON="$TAZPANEL_DAEMON"
+	save_TAGS="$TAGS"
 	unset_receipt
 	. "$orig_receipt"
 	PACKAGE="$save_PACKAGE"; DEPENDS="$save_DEPENDS"; PROVIDE="$save_PROVIDE"
 	SUGGESTED="$save_SUGGESTED"; TAZPANEL_DAEMON="$save_TAZPANEL_DAEMON"
+	TAGS="$save_TAGS"
 
 	# Manage split packages
 	SPLIT=" $SPLIT "
@@ -884,6 +886,7 @@ EOF
 	[ -n "${DEPENDS# }" ] && echo "DEPENDS=\"$DEPENDS\"" | tr -ds '\t' ' '
 	[ -n "$PROVIDE" ] && echo "PROVIDE=\"$PROVIDE\"" | tr -ds '\t' ' '
 	[ -n "$CONFIG_FILES" ] && echo "CONFIG_FILES=\"$CONFIG_FILES\"" | tr -ds '\t' ' '
+	[ -n "$SUGGESTED" ] && echo "SUGGESTED=\"$SUGGESTED\"" | tr -ds '\t' ' '
 	[ -n "$DATABASE_FILES" ] && echo "DATABASE_FILES=\"$DATABASE_FILES\""
 	[ -n "$TAZPANEL_DAEMON" ] && echo "TAZPANEL_DAEMON=\"$TAZPANEL_DAEMON\""
 
@@ -1082,7 +1085,7 @@ packall() {
 	set_paths
 	if head -n1 "$pkgdir/receipt" | fgrep -q 'v2'; then
 		for i in $PACKAGE $SPLIT; do
-			unset TAGS DEPENDS CAT CONFIG_FILES PROVIDE DATABASE_FILES TAZPANEL_DAEMON
+			unset TAGS DEPENDS CAT CONFIG_FILES PROVIDE SUGGESTED DATABASE_FILES TAZPANEL_DAEMON
 			packit $i
 		done
 	else
@@ -1309,7 +1312,7 @@ copy() {
 				# Copy "standard" files (all but "developer files", man pages, documentation, translations)
 				sed '/\.h$/d; /\.hxx$/d; /\.a$/d; /\.la$/d; /\.pc$/d; /bin\/.*-config$/d;
 					/\.m4$/d; /\.gir$/d; /\.typelib$/d; /\.vapi$/d; /\.deps$/d; /\.cmake$/d;
-					/\/include\//d;
+					/\/Makefile.*/d; /\/include\//d;
 					/\/share\/man\//d; /\/share\/doc\//d; /\/share\/gtk-doc\//d; /\/share\/info\//d;
 					/\/share\/devhelp\//d; /\/share\/locale\//d;
 					/\/share\/bash-completion\//d; /\/lib\/systemd\//d;
@@ -1319,7 +1322,7 @@ copy() {
 				# Copy "developer files"
 				sed -n '/\.h$/p; /\.hxx$/p; /\.a$/p; /\.la$/p; /\.pc$/p; /bin\/.*-config$/p;
 					/\.m4$/p; /\.gir$/p; /\.typelib$/p; /\.vapi$/p; /\.deps$/p; /\.cmake$/p;
-					/\/include\//p;
+					/\/Makefile.*/p; /\/include\//p;
 					' $filelist
 				;;
 			*/)
@@ -1345,6 +1348,20 @@ copy() {
 	unset IFS
 	rm $filelist
 	status
+}
+
+
+# Remove from current $fs files that already packed (for receipts v2).
+# Note: the order in $SPLIT is very important.
+
+remove_already_packed() {
+	local i j
+	for i in $taz/*/files.list; do
+		while read j; do
+			rm $fs$j
+			rmdir --parents --ignore-fail-on-non-empty $fs$(dirname $j)
+		done < $i
+	done
 }
 
 

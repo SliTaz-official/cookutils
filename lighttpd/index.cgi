@@ -513,7 +513,7 @@ syntax_highlighter() {
 					s|$_install|<span class='var'>\${install}</span>|g;
 					s|$_fs|<span class='var'>\${fs}</span>|g;
 					s|$_stuff|<span class='var'>\${stuff}</span>|g" \
-				-e "s|\[9\([1-6]\)m|<span class='c\1'>|;
+				-e "s|\[9\([1-6]\)m|<span class='c\10'>|;
 					s|\[39m|</span>|;"
 			;;
 
