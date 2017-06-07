@@ -355,7 +355,7 @@ summary() {
 	_ ' # :  Packed : Compressed : Files : Package name'
 	separator -
 	pkgi=1
-	for i in $PACKAGE $SPLIT; do
+	for i in $(all_names); do
 		fs=$(du -sh $WOK/$pkg/taz/$i-$VERSION | awk '{print $1}')
 		pkgname="$i-$VERSION.tazpkg"
 		size=$(ls -lh $PKGS/$pkgname | awk '{print $5}')
@@ -1079,12 +1079,27 @@ packit_quality() {
 }
 
 
+# Return all the names of packages bundled in this receipt
+
+all_names() {
+	local split=" $SPLIT "
+	if [ "${split/ $PACKAGE /}" != "$split" ]; then
+		# $PACKAGE included somewhere in $SPLIT (probably in the end).
+		# We should build packages in the order defined in the $SPLIT.
+		echo $SPLIT
+	else
+		# We'll build the $PACKAGE, then all defined in the $SPLIT.
+		echo $PACKAGE $SPLIT
+	fi
+}
+
+
 # v2: pack all packages using compiled files
 
 packall() {
 	set_paths
 	if head -n1 "$pkgdir/receipt" | fgrep -q 'v2'; then
-		for i in $PACKAGE $SPLIT; do
+		for i in $(all_names); do
 			unset TAGS DEPENDS CAT CONFIG_FILES PROVIDE SUGGESTED DATABASE_FILES TAZPANEL_DAEMON
 			packit $i
 		done
