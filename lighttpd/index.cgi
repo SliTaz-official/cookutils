@@ -484,8 +484,8 @@ syntax_highlighter() {
 				-e 's#^.*No package .* found.*#<b>\0</b>#' \
 				-e 's#^.*Unable to find.*#<b>\0</b>#' \
 				-e 's#^.*[Ii]nvalid.*#<b>\0</b>#' \
-				-e 's#\([Nn][Oo][Tt] found\)$#<b>\1</b>#' \
-				-e 's#\(found\)$#<i>\1</i>#' \
+				-e 's#\([Nn][Oo][Tt] found\.*\)$#<b>\1</b>#' \
+				-e 's#\(found\.*\)$#<i>\1</i>#' \
 				\
 				-e 's#^.*WARNING:.*#<u>\0</u>#' \
 				-e 's#^.*warning:.*#<u>\0</u>#' \

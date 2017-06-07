@@ -27,6 +27,7 @@ filesize() { busybox ls -lh "$1" | awk '{print $5 "B"}'; }
 # as well as flavors files for TazLiTo. We don't need logs since we do it
 # manually to ensure everything is fine before syncing the mirror.
 
+# Find how much time was spent the last time (for web interface)
 lastcooktime=$(sed '/Time:/!d; s|.*: *\([0-9]*\)s.*|\1|' $LOGS/pkgdb.log 2>/dev/null | sed '$!d')
 [ -n "$lastcooktime" ] && echo "cook:pkgdb $lastcooktime $(date +%s)" >> $cooktime
 while read cmd duration start; do
@@ -75,34 +76,41 @@ md5sum packages.md5 | cut -d' ' -f1 > ID
 _n 'Creating file "%s"' 'descriptions.txt' | dblog
 rm $PKGS/descriptions.txt 2>/dev/null
 for i in $(ls $WOK | sort); do
-	if [ -e "$WOK/$i/description.txt" ]; then
-		echo "$i" >> descriptions.txt
-		cat "$WOK/$i/description.txt" | sed 's|^$| |' >> descriptions.txt
+	[ -d "$WOK/$i/taz" ] || continue
+
+	for j in $(ls $WOK/$i/taz | sort); do
+		[ -e "$WOK/$i/taz/$j/description.txt" ] || continue
+
+		pkgname=$(. $WOK/$i/taz/$j/receipt; echo $PACKAGE)
+		echo "$pkgname" >> descriptions.txt
+		cat "$WOK/$i/taz/$j/description.txt" | sed 's|^$| |' >> descriptions.txt
 		echo >> descriptions.txt
-	fi
+	done
 done
 echo " ($(filesize $PKGS/descriptions.txt))" | dblog
 
 
 _ 'Creating lists from "%s"' "$WOK" | dblog
 cd $WOK
-for pkg in *; do
-	unset_receipt
-	. $pkg/receipt
-	# PACKED_SIZE and UNPACKED_SIZE are only in built receipt
-	[ -s $pkg/taz/*/receipt ] && . $pkg/taz/*/receipt
+for i in *; do
+	[ -d "$WOK/$i/taz" ] || continue
 
-	if [ -f "$PKGS/$PACKAGE-$VERSION$EXTRAVERSION.tazpkg" ] || \
-	   [ -f "$PKGS/$PACKAGE-$VERSION$EXTRAVERSION-$ARCH.tazpkg" ]; then
+	for j in $(ls $WOK/$i/taz | sort); do
+		[ -f "$WOK/$i/taz/$j/receipt" ] || continue
+		unset_receipt
+		. $i/taz/$j/receipt
 
-		# packages.desc lets us search easily in DB
-		cat >> $PKGS/packages.desc <<EOT
+		if [ -f "$PKGS/$PACKAGE-$VERSION$EXTRAVERSION.tazpkg" -o \
+		     -f "$PKGS/$PACKAGE-$VERSION$EXTRAVERSION-$ARCH.tazpkg" ]; then
+
+			# packages.desc lets us search easily in DB
+			cat >> $PKGS/packages.desc <<EOT
 $PACKAGE | $VERSION$EXTRAVERSION | $SHORT_DESC | $CATEGORY | $WEB_SITE
 EOT
 
-		# packages.txt used by tazpkg and tazpkg-web also to provide
-		# a human readable package list with version and description.
-		cat >> $PKGS/packages.txt <<EOT
+			# packages.txt used by tazpkg and tazpkg-web also to provide
+			# a human readable package list with version and description.
+			cat >> $PKGS/packages.txt <<EOT
 $PACKAGE
 $VERSION$EXTRAVERSION
 $SHORT_DESC
@@ -110,38 +118,39 @@ $PACKED_SIZE ($UNPACKED_SIZE installed)
 
 EOT
 
-		# packages.info combines TazPkg separate files
-		# and will substitute them all
-		SIZES=$(echo $PACKED_SIZE $UNPACKED_SIZE | sed 's|\.0||g')
-		DEPENDS=$(echo $DEPENDS) # remove newlines from some receipts
-		MD5="$(fgrep " $PACKAGE-$VERSION$EXTRAVERSION.tazpkg" $PKGS/packages.md5 | awk '{print $1}')"
-		cat >> $PKGS/packages.info <<EOT
+			# packages.info combines TazPkg separate files
+			# and will substitute them all
+			SIZES=$(echo $PACKED_SIZE $UNPACKED_SIZE | sed 's|\.0||g')
+			DEPENDS=$(echo $DEPENDS) # remove newlines from some receipts
+			MD5="$(fgrep " $PACKAGE-$VERSION$EXTRAVERSION.tazpkg" $PKGS/packages.md5 | awk '{print $1}')"
+			cat >> $PKGS/packages.info <<EOT
 $PACKAGE	$VERSION$EXTRAVERSION	$CATEGORY	$SHORT_DESC	$WEB_SITE	$TAGS	$SIZES	$DEPENDS	$MD5	$PROVIDE
 EOT
 
-		# packages.equiv is used by tazpkg install to check depends.
-		for i in $PROVIDE; do
-			DEST=''
-			echo $i | fgrep -q : && DEST="${i#*:}:"
-			if grep -qs ^${i%:*}= $PKGS/packages.equiv; then
-				sed -i "s/^${i%:*}=/${i%:*}=$DEST$PACKAGE /" \
-					$PKGS/packages.equiv
-			else
-				echo "${i%:*}=$DEST$PACKAGE" >> $PKGS/packages.equiv
+			# packages.equiv is used by tazpkg install to check depends.
+			for k in $PROVIDE; do
+				DEST=''
+				echo $k | fgrep -q : && DEST="${k#*:}:"
+				if grep -qs ^${k%:*}= $PKGS/packages.equiv; then
+					sed -i "s/^${k%:*}=/${k%:*}=$DEST$PACKAGE /" \
+						$PKGS/packages.equiv
+				else
+					echo "${k%:*}=$DEST$PACKAGE" >> $PKGS/packages.equiv
+				fi
+			done
+
+			# files.list provides a list of all packages files.
+			cat $i/taz/$j/files.list | sed s/^/"$i: \0"/ >> $PKGS/files.list
+
+			# list of unnecessary packages
+			sed -i "/ $PACKAGE-$VERSION$EXTRAVERSION.tazpkg/d" $PKGS/packages.toremove
+		else
+			# if receipt variable HOST_ARCH absent/empty or contains ARCH
+			if [ -z "$HOST_ARCH" -o "${HOST_ARCH/$ARCH/}" != "$HOST_ARCH" ]; then
+				_ '  - absent: %s (%s)' "$PACKAGE-$VERSION$EXTRAVERSION.tazpkg" "$ARCH" | dblog
 			fi
-		done
-
-		# files.list provides a list of all packages files.
-		[ -d $pkg/taz ] && cat $pkg/taz/*/files.list | sed s/^/"$pkg: \0"/ >> $PKGS/files.list
-
-		# list of unnecessary packages
-		sed -i "/ $PACKAGE-$VERSION$EXTRAVERSION.tazpkg/d" $PKGS/packages.toremove
-	else
-		# if receipt variable HOST_ARCH absent/empty or contains ARCH
-		if [ -z "$HOST_ARCH" -o "${HOST_ARCH/$ARCH/}" != "$HOST_ARCH" ]; then
-			_ '  - absent: %s (%s)' "$PACKAGE-$VERSION$EXTRAVERSION.tazpkg" "$ARCH" | dblog
 		fi
-	fi
+	done
 done
 
 # Display list size.
