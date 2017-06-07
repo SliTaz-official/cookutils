@@ -1050,7 +1050,7 @@ packit_quality() {
 	fi
 
 	action 'QA: checking for empty package...'
-	files=$(cat $WOK/$pkg/taz/$PACKAGE-$VERSION/files.list | wc -l)
+	files=$(cat $WOK/$pkg/taz/$PACKAGE-$VERSION$EXTRAVERSION/files.list | wc -l)
 	if [ "$files" -eq 0 -a "$CATEGORY" != 'meta' ]; then
 		broken
 		rm -f $command
@@ -1072,7 +1072,7 @@ packit_quality() {
 		fi
 	done
 	rm -r "$tempd"
-	mv -f $pkgdir/taz/$PACKAGE-$VERSION.tazpkg $PKGS
+	mv -f $pkgdir/taz/$PACKAGE-$VERSION$EXTRAVERSION.tazpkg $PKGS
 	sed -i /^${pkg}$/d $broken
 	#action 'Removing source tree...'
 	#rm -f $WOK/$pkg/source; status

@@ -1002,11 +1002,20 @@ case "$cmd" in
 		# find main package
 		wanted=$(. $wok/$pkg/receipt; echo $WANTED)
 		main=${wanted:-$pkg}
+
 		# identify split packages
 		split="$main $(. $wok/$main/receipt; echo $SPLIT)"
 		[ -d "$wok/$main-dev" ] && split="$split $main-dev"
 		split="$(echo $split | tr ' ' '\n' | sort -u)"
+
 		# finally we need the version
+		if [ -f "$WOK/linux/receipt" ]; then
+			kvers=$(. $WOK/linux/receipt; echo $VERSION)
+			kbasevers=$(echo $kvers | cut -d. -f1,2)
+		elif [ -f "$INSTALLED/linux-api-headers/receipt" ]; then
+			kvers=$(. $INSTALLED/linux-api-headers/receipt; echo $VERSION)
+			kbasevers=$(echo $kvers | cut -d. -f1,2)
+		fi
 		ver=$(. $wok/$main/receipt; echo $VERSION$EXTRAVERSION)
 
 		for p in $split; do
