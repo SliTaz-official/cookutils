@@ -1373,6 +1373,7 @@ remove_already_packed() {
 	local i j
 	for i in $taz/*/files.list; do
 		while read j; do
+			[ -e $fs$j ] || continue
 			rm $fs$j
 			rmdir --parents --ignore-fail-on-non-empty $fs$(dirname $j)
 		done < $i
