@@ -528,7 +528,7 @@ EOT
 		# clean DB as well as log file.
 		cd $wok
 		for pkg in *; do
-			if [ ! -d "${wok}-hg/$pkg" ]; then
+			if [ ! -d "$wok-hg/$pkg" ]; then
 				echo "Removing package: $pkg" | log_commits
 				if [ -s $wok/$pkg/receipt ]; then
 					. $wok/$pkg/receipt
@@ -536,6 +536,21 @@ EOT
 				fi
 				rm -rf $wok/$pkg $LOGS/$pkg.log
 				sed -i "/^${pkg}$/"d $blocked $broken $commits.tmp
+			fi
+			if [ -d "$wok/$pkg/stuff" ]; then
+				if [ ! -d "$wok-hg/$pkg/stuff" ]; then
+					echo "Removing stuff: $pkg/stuff" | log_commits
+					echo "rm -rf $wok/$pkg/stuff" | log_commits			# just for test now
+				else
+					for stuff_file in $(cd $wok/$pkg/stuff; find \( -type f -o -type l \) ); do
+						if [ ! -f "$wok-hg/$pkg/stuff/$stuff_file" -a \
+							 ! -h "$wok-hg/$pkg/stuff/$stuff_file" ]; then
+							echo "Removing file from stuff: $wok/$pkg/stuff/$stuff_file" | log_commits
+							echo "rm -f $wok/$pkg/stuff/$stuff_file" | log_commits			# just for test now
+							echo "rmdir --parents --ignore-fail-on-non-empty $(dirname "$wok/$pkg/stuff/$stuff_file")" | log_commits			# just for test now
+						fi
+					done
+				fi
 			fi
 		done
 
