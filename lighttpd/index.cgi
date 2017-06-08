@@ -1072,7 +1072,7 @@ case "$cmd" in
 				/\/share\/devhelp\// { tag("doc", 5); next }
 			/\/share\/icons\// { tag("ico", 2); next }
 			/\/share\/locale\// { tag("loc", 4); next }
-			/\.h$/ || /\.a$/ || /\.la$/ || /\.pc$/ || /\/bin\/.*-config$/ { tag("dev", 3); next }
+			/\.h$/ || /\.a$/ || /\.la$/ || /\.pc$/ || /\/bin\/.*-config$/ || /\/Makefile.*$/ { tag("dev", 3); next }
 			{ tag("???", 1) }
 			' > $table
 

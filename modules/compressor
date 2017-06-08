@@ -344,7 +344,7 @@ fix_desktop_files() {
 		if [ -n "$QA" ]; then
 			# Check the rest of errors, warnings and tips
 			_ 'QA: Checking %s...' "$(basename $desktop)"
-			diff "$desktop.orig" "$desktop"
+			busybox diff "$desktop.orig" "$desktop"
 			desktop-file-validate "$desktop" | busybox fold -s
 			echo
 		fi
