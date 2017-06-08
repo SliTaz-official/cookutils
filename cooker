@@ -540,14 +540,14 @@ EOT
 			if [ -d "$wok/$pkg/stuff" ]; then
 				if [ ! -d "$wok-hg/$pkg/stuff" ]; then
 					echo "Removing stuff: $pkg/stuff" | log_commits
-					echo "rm -rf $wok/$pkg/stuff" | log_commits			# just for test now
+					rm -rf $wok/$pkg/stuff
 				else
-					for stuff_file in $(cd $wok/$pkg/stuff; find \( -type f -o -type l \) ); do
+					for stuff_file in $(cd $wok/$pkg/stuff; find \( -type f -o -type l \) | sed 's|^\./||'); do
 						if [ ! -f "$wok-hg/$pkg/stuff/$stuff_file" -a \
 							 ! -h "$wok-hg/$pkg/stuff/$stuff_file" ]; then
 							echo "Removing file from stuff: $wok/$pkg/stuff/$stuff_file" | log_commits
-							echo "rm -f $wok/$pkg/stuff/$stuff_file" | log_commits			# just for test now
-							echo "rmdir --parents --ignore-fail-on-non-empty $(dirname "$wok/$pkg/stuff/$stuff_file")" | log_commits			# just for test now
+							rm -f $wok/$pkg/stuff/$stuff_file
+							rmdir --parents --ignore-fail-on-non-empty $(dirname "$wok/$pkg/stuff/$stuff_file")
 						fi
 					done
 				fi
