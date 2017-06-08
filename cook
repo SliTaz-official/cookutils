@@ -1371,13 +1371,15 @@ copy() {
 
 remove_already_packed() {
 	local i j
+	IFS=$'\n'
 	for i in $taz/*/files.list; do
 		while read j; do
-			[ -e $fs$j ] || continue
+			[ -f $fs$j -o -h $fs$j ] || continue
 			rm $fs$j
 			rmdir --parents --ignore-fail-on-non-empty $fs$(dirname $j)
 		done < $i
 	done
+	unset IFS
 }
 
 
