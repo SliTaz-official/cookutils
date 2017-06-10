@@ -57,7 +57,7 @@ fi
 
 running_command() {
 	state="$(cat $command)"
-	local pct
+	local pct=''
 	if [ -n "$state" ];then
 		echo -n "$state</td></tr><tr><td>Completion</td>"
 		set -- $(grep "^$state" $cooktime)

@@ -462,7 +462,7 @@ copy_generic_stuff() {
 	# Homemade desktop file(s) can be in stuff.
 	if [ -d "$stuff/applications" ]; then
 		mkdir -p $install/usr/share
-		cp $stuff/applications $install/usr/share
+		cp -a $stuff/applications $install/usr/share
 	fi
 	if [ -f "$stuff/$PACKAGE.desktop" ]; then
 		mkdir -p $install/usr/share/applications
@@ -472,7 +472,7 @@ copy_generic_stuff() {
 	# Add custom licenses
 	if [ -d "$stuff/licenses" ]; then
 		mkdir -p $install/usr/share/licenses
-		cp $stuff/licenses $install/usr/share/licenses/$PACKAGE
+		cp -a $stuff/licenses $install/usr/share/licenses/$PACKAGE
 	fi
 }
 
@@ -1119,7 +1119,8 @@ tac() {
 # Update chroot with freshly rebuilt package: keep env up-to-date.
 
 update_chroot() {
-	for i in $pkg $SPLIT; do
+	local PACKAGE="$pkg"
+	for i in $(all_names); do
 		if [ -d "$root$INSTALLED/$i" ]; then
 			. /etc/slitaz/cook.conf
 			. $WOK/$pkg/taz/$i-$VERSION/receipt
