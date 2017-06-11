@@ -273,6 +273,7 @@ fi
 
 if [ -n "$(GET theme)" ]; then
 	theme="$(GET theme)"
+	ref="$(echo "$HTTP_REFERER" | sed 's|:|%3A|g; s|/|%2F|g; s|\?|%3F|g; s|\+|%2B|g;')"
 	case $theme in
 		theme)
 			current=$(COOKIE theme)
@@ -284,7 +285,7 @@ if [ -n "$(GET theme)" ]; then
 	<ul>
 		$(
 			for i in default emerald sky goldenrod midnight like2016 terminal; do
-				[ "$i" == "${current:-default}" ] || echo "<li><a href="$base/?theme=$i">$i</a></li>"
+				[ "$i" == "${current:-default}" ] || echo "<li><a href=\"$base/?theme=$i&amp;ref=$ref\">$i</a></li>"
 			done
 		)
 	</ul>
@@ -294,9 +295,11 @@ EOT
 			exit 0
 			;;
 		default|emerald|sky|goldenrod|midnight|like2016|terminal)
+			ref="$(GET ref)"
+			[ -n "$ref" ] || ref="$base/"
 			# Expires in a year
 			expires=$(date -uRd @$(($(date +%s)+31536000)) | sed 's|UTC|GMT|')
-			echo -e "HTTP/1.1 302 Found\nLocation: $base/\nCache-Control: no-cache\nSet-Cookie: theme=$theme; expires=$expires\n\n"
+			echo -e "HTTP/1.1 302 Found\nLocation: $ref\nCache-Control: no-cache\nSet-Cookie: theme=$theme; expires=$expires\n\n"
 			exit 0
 			;;
 	esac
@@ -528,12 +531,14 @@ syntax_highlighter() {
 				if (part3 != "root     ") part3 = "<span class=\"c11\">" part3 "</span>";
 				print part1 part2 part3 part4;
 			}' | \
-			sed "s|\[\([01]\);3\([1-7]\)m|<a class='c\2\1'>|g;
+			sed "s|\[0m/|/\[0m|g;
+				 s|\[\([01]\);3\([1-7]\)m|<a class='c\2\1'>|g;
 				 s|\[\([01]\);0m|<a class='c0\1'>|g;
 				 s|\[0m|</a>|g;
 				 s|^\(lrwxrwxrwx\)|<span class='c61'>\1</span>|;
 				 s|^\(-rwxr-xr-x\)|<span class='c21'>\1</span>|;
 				 s|^\(-rw-r--r--\)|<span class='c31'>\1</span>|;
+				 s|^\(drwxr-xr-x\)|<span class='c41'>\1</span>|;
 				 s|^\([lrwxs-]*\)|<span class='c11'>\1</span>|;
 				"
 			;;
@@ -627,7 +632,7 @@ pkg_info() {
 	local log active bpkg
 	log="$LOGS/$pkg.log"
 
-	echo "<h2>Package “$pkg”</h2>"
+	echo "<h2>$pkg</h2>"
 	echo '<div id="info">'
 	echo "<a class='button icon receipt$(active receipt stuff)' href='$base/$pkg/receipt'>receipt &amp; stuff</a>"
 
@@ -643,17 +648,9 @@ pkg_info() {
 		[ -n "$(ls $wok/$pkg/description*.txt)" ] &&
 			echo "<a class='button icon desc$(active description)' href='$base/$pkg/description'>description</a>"
 
-		unset EXTRAVERSION
-		. $wok/$pkg/taz/$PACKAGE-$VERSION/receipt
-		for filename in "$PACKAGE-$VERSION$EXTRAVERSION.tazpkg" "$PACKAGE-$VERSION$EXTRAVERSION-$ARCH.tazpkg"; do
-			[ -f "$PKGS/$filename" ] &&
-				echo "<a class='button icon download' href='$base/get/$filename'>download</a>"
-		done
-
+		[ -n "$TARBALL" -a -s "$SRC/$TARBALL" -o -d "$wok/$pkg/taz" ] &&
+			echo "<a class='button icon download' href='$base/$pkg/download'>download</a>"
 	fi
-
-	[ -n "$TARBALL" -a -s "$SRC/$TARBALL" ] &&
-		echo "<a class='button icon source' href='$base/src/$TARBALL'>source</a>"
 
 	echo "<a class='button icon browse' href='$base/$pkg/browse/'>browse</a>"
 
@@ -701,6 +698,40 @@ show_desc() {
 		show_code markdown < $2
 	fi
 	echo "</section>"
+}
+
+
+# Return all the names of packages bundled in this receipt
+
+all_names() {
+	local split=" $SPLIT "
+	if [ "${split/ $PACKAGE /}" != "$split" ]; then
+		# $PACKAGE included somewhere in $SPLIT (probably in the end).
+		# We should build packages in the order defined in the $SPLIT.
+		echo $SPLIT
+	else
+		# We'll build the $PACKAGE, then all defined in the $SPLIT.
+		echo $PACKAGE $SPLIT
+	fi
+}
+
+
+toolchain_version() {
+	echo "<tr><td><a href='$base/$1'>$1</a></td><td>"
+	if [ -e "$WOK/$1/receipt" ]; then
+		grep ^VERSION $WOK/$1/receipt | cut -d '"' -f2
+		echo '</td><td>'
+		grep ^SHORT_DESC $WOK/$1/receipt | cut -d '"' -f2
+	else
+		echo -n '---</td><td>---'
+	fi
+	echo "</td></tr>"
+}
+
+
+files_header() {
+	echo '<section><h3>Available downloads:</h3>'
+	echo '<table><thead><tr><th>File</th><th>Size</th><th>Description</th></tr></thead><tbody>'
 }
 
 
@@ -752,6 +783,34 @@ if [ -z "$pkg" ]; then
 					show_note e "No log file: $log"
 				fi
 				;;
+			toolchain)
+				cat <<EOT
+<div id="content2">
+<section>
+<h2>SliTaz GNU/Linux toolchain</h2>
+
+<table>
+<tr><td>Build date</td>		<td colspan="2">$(sed -n '/^Cook date/s|[^:]*: \(.*\)|\1|p' $LOGS/slitaz-toolchain.log)</td></tr>
+<tr><td>Build duration</td>	<td colspan="2">$(sed -n '/^Cook time/s|[^:]*: \(.*\)|\1|p' $LOGS/slitaz-toolchain.log)</td></tr>
+<tr><td>Architecture</td>	<td colspan="2">$ARCH</td></tr>
+<tr><td>Build system</td>	<td colspan="2">$BUILD_SYSTEM</td></tr>
+<tr><td>Host system</td>	<td colspan="2">$HOST_SYSTEM</td></tr>
+<tr><th>Package</th><th>Version</th><th>Description</th></tr>
+$(toolchain_version slitaz-toolchain)
+$(toolchain_version binutils)
+$(toolchain_version linux-api-headers)
+$(toolchain_version gcc)
+$(toolchain_version glibc)
+</table>
+
+<p>Toolchain documentation: <a target="_blank" rel="noopener noreferrer"
+href="http://doc.slitaz.org/en:cookbook:toolchain">http://doc.slitaz.org/en:cookbook:toolchain</a>
+</p>
+
+</section>
+</div>
+EOT
+				;;
 		esac
 		page_footer
 		exit 0
@@ -762,12 +821,12 @@ if [ -z "$pkg" ]; then
 	if [ -f "toolchain.cgi" ]; then
 		toolchain="toolchain.cgi"
 	else
-		toolchain="slitaz-toolchain/"
+		toolchain="?toolchain"
 	fi
 	# Main page with summary. Count only packages included in ARCH,
 	# use 'cooker arch-db' to manually create arch.$ARCH files.
 	inwok=$(ls $WOK/*/arch.$ARCH | wc -l)
-	cooked=$(ls $PKGS/*.tazpkg | wc -l)
+	cooked=$(ls -d $WOK/*/taz | wc -l)
 	unbuilt=$(($inwok - $cooked))
 	pct=0; [ $inwok -gt 0 ] && pct=$(( ($cooked * 100) / $inwok ))
 	cat <<EOT
@@ -813,7 +872,7 @@ EOT
 	fi
 
 	cat <<EOT
-<p>Packages: $inwok in the wok · $cooked cooked · $unbuilt unbuilt</p>
+<p>Receipts in the wok: $inwok total · $cooked cooked · $unbuilt unbuilt</p>
 
 <div class="meter"><progress max="100" value="$pct">${pct}%</progress><span>${pct}%</span></div>
 
@@ -1018,6 +1077,13 @@ case "$cmd" in
 		fi
 		ver=$(. $wok/$main/receipt; echo $VERSION$EXTRAVERSION)
 
+
+		echo "<section><h3>Quick jump:</h3><ul>"
+		echo "$split" | sed 'p' | xargs printf "<li><a href='#id-%s'>%s</a></li>\n"
+		echo "<li><a href='#id-repeats'>repeatedly packaged files</a> (if any)</li>"
+		echo "<li><a href='#id-orphans'>unpackaged files</a> (if any)</li>"
+		echo "</ul></section>"
+
 		for p in $split; do
 			namever="$p-$ver"
 			if [ -d "$wok/$p/taz/$p-$ver" ]; then
@@ -1029,15 +1095,15 @@ case "$cmd" in
 
 			size=$(du -hs $dir | awk '{ sub(/\.0/, ""); print $1 }')
 
-			echo "<section><h3>Files of package “$namever” (${size:-empty}):</h3>"
+			echo "<section><h3 id='id-$p'>Content of package “$namever” (${size:-empty}):</h3>"
 			echo '<pre class="files">'
 			if [ -s "$wok/$indir/taz/$p-$ver/files.list" ]; then
 				echo -n '<span class="underline">permissions·lnk·user    ·'
-				echo -en 'group   ·     size·date &amp; time ·file name\n</span>'
+				echo -en 'group   ·     size·date &amp; time ·name\n</span>'
 				cd $dir
-				find . -not -type d -print0 | sort -z | xargs -0 ls -ld --color=always | \
+				find . -print0 | sort -z | xargs -0 ls -ldp --color=always | \
 				syntax_highlighter files | \
-				sed "s|\([^>]*\)>\.\([^<]*\)\(<.*\)$|\1 href='$base/$indir/browse/taz/$p-$ver/fs\2'>\2\3|" | \
+				sed "s|\([^>]*\)>\.\([^<]*\)\(<.*\)$|\1 href='$base/$indir/browse/taz/$p-$ver/fs\2'>\2\3|;" | \
 				awk 'BEGIN { FS="\""; }
 					{ gsub("+", "%2B", $2); print; }'
 			else
@@ -1050,7 +1116,7 @@ case "$cmd" in
 		# find repeatedly packaged files
 		repeats="$(sort $packaged | uniq -d)"
 		if [ -n "$repeats" ]; then
-			echo -n '<section><h3>Repeatedly packaged files:</h3><pre class="files">'
+			echo -n '<section><h3 id="id-repeats">Repeatedly packaged files:</h3><pre class="files">'
 			echo "$repeats" | sed 's|^|<span class="c11">!!!</span> |'
 			echo "</pre></section>"
 		fi
@@ -1060,10 +1126,13 @@ case "$cmd" in
 		cd $wok/$main/install; find ! -type d | sed 's|\.||' > $all_files
 		orphans="$(sort $all_files $packaged | uniq -u)"
 		if [ -d "$wok/$main/install" -a -n "$orphans" ]; then
-			echo '<section><h3>Unpackaged files:</h3>'
+			echo '<section><h3 id="id-orphans">Unpackaged files:</h3>'
 			table=$(mktemp)
-			echo "$orphans" | awk '
-			function tag(text, color) { printf("<span class=\"c%s1\">%s</span> %s\n", color, text, $0); }
+			echo "$orphans" | awk -vi="$base/$indir/browse/install" '
+			function tag(text, color) {
+				printf("<span class=\"c%s1\">%s</span> ", color, text);
+				printf("<a class=\"c00\" href=\"%s\">%s</a>\n", i $0, $0);
+			}
 			/\/perllocal.pod$/ || /\/\.packlist$/ || /\/share\/bash-completion\// ||
 				/\/lib\/systemd\// || /\.pyc$/ || /\.pyo$/ { tag("---", 0); next }
 			/\.pod$/  { tag("pod", 5); next }
@@ -1072,7 +1141,8 @@ case "$cmd" in
 				/\/share\/devhelp\// { tag("doc", 5); next }
 			/\/share\/icons\// { tag("ico", 2); next }
 			/\/share\/locale\// { tag("loc", 4); next }
-			/\.h$/ || /\.a$/ || /\.la$/ || /\.pc$/ || /\/bin\/.*-config$/ || /\/Makefile.*$/ { tag("dev", 3); next }
+			/\.h$/ || /\.a$/ || /\.la$/ || /\.pc$/ || /\/bin\/.*-config$/ ||
+				/\/Makefile.*$/ { tag("dev", 3); next }
 			{ tag("???", 1) }
 			' > $table
 
@@ -1126,14 +1196,16 @@ case "$cmd" in
 		[ -z "$arg" ] && arg=$(stat -c %Y $LOGS/$pkg.log)
 
 		echo '<div class="btnList">'
-		acc='l'
+		acc='l'		# access key for the latest log is 'L'
 		while read log; do
+			# for all $pkg.log, $pkg.log.0 .. $pkg.log.9, $pkg-pack.log (if any)
 			timestamp=$(stat -c %Y $log)
 			class=''
 			if [ "$arg" == "$timestamp" ]; then
 				class=' log'
 				logfile="$log"
 			fi
+			case $log in *-pack.log) acc='p';; esac		# access key for the packing log is 'P'
 			echo -n "<a class='button$class' data-acc='$acc' accesskey='$acc' href='$base/$pkg/log/$timestamp'>"
 			echo "$(stat -c %y $log | cut -d: -f1,2)</a>"
 			case $acc in
@@ -1142,6 +1214,7 @@ case "$cmd" in
 			esac
 		done <<EOT
 $(find $LOGS -name "$pkg.log*" | sort)
+$(find $LOGS -name "$pkg-pack.log")
 EOT
 		echo '</div>'
 
@@ -1312,6 +1385,49 @@ EOT
 			rm -f $tmp
 		else
 			show_note e "File “$arg” not exists!"
+		fi
+		;;
+
+	download)
+		page_header
+		pkg_info
+		show=0
+
+		. $wok/$pkg/receipt
+
+		if [ -n "$TARBALL" -a -s "$SRC/$TARBALL" ]; then
+			files_header
+			echo "<tr><td><a href='$base/src/$TARBALL'>$TARBALL</a></td>"
+			ls -lh "$SRC/$TARBALL" | awk '{printf("<td>%sB</td>", $5)}'
+			echo "<td>Sources for building the package “$pkg”</td></tr>"
+			show=1
+		fi
+
+		if [ -d "$wok/$pkg/taz" ]; then
+			[ "$show" -eq 1 ] || files_header
+
+			for i in $(all_names); do
+				[ -e "$wok/$pkg/taz/$i-$VERSION$EXTRAVERSION/receipt" ] || continue
+				. $wok/$pkg/taz/$i-$VERSION$EXTRAVERSION/receipt
+
+				for filename in "$PACKAGE-$VERSION$EXTRAVERSION.tazpkg" "$PACKAGE-$VERSION$EXTRAVERSION-$ARCH.tazpkg"; do
+					[ -f "$PKGS/$filename" ] &&
+						cat <<EOT
+<tr>
+<td><a href="$base/get/$filename">$filename</a></td>
+<td>$(ls -lh ./packages/$filename | awk '{printf("%sB", $5)}')</td>
+<td>$SHORT_DESC</td>
+</tr>
+EOT
+				done
+			done
+			show=1
+		fi
+
+		if [ "$show" -eq 1 ]; then
+			echo '</tbody></table></section>'
+		else
+			show_note w "Sorry, there's nothing to download…"
 		fi
 		;;
 

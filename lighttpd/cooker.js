@@ -54,10 +54,13 @@ if (typeof updatePkg !== 'undefined')
 // Calculate and show server date
 
 function calcAndShowDate() {
-	var serverDateNow = new Date() - deltaTime;
-	var serverDateString = new Date(serverDateNow).toISOString();
-	// Format string in form 'YYYY-mm-dd HH:MM UTC'
-	document.getElementById('date').innerHTML = serverDateString.substring(0, 10) + ' ' + serverDateString.substring(11, 16) + ' UTC';
+	var dateEl = document.getElementById('date');
+	if (dateEl !== null) {
+		var serverDateNow = new Date() - deltaTime;
+		var serverDateString = new Date(serverDateNow).toISOString();
+		// Format string in form 'YYYY-mm-dd HH:MM UTC'
+		dateEl.innerHTML = serverDateString.substring(0, 10) + ' ' + serverDateString.substring(11, 16) + ' UTC';
+	}
 }
 
 

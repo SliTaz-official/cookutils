@@ -73,7 +73,7 @@ EOT
 
 clean_log() {
 	sed -i -e s'|\[70G\[ \[1;32m| |' \
-		-e s'|\[0;39m \]||' $LOGS/$pkg.log
+		-e s'|\[0;39m \]||' $LOGS/${1:-$pkg}.log
 }
 
 
@@ -1328,7 +1328,7 @@ copy() {
 				# Copy "standard" files (all but "developer files", man pages, documentation, translations)
 				sed '/\.h$/d; /\.hxx$/d; /\.a$/d; /\.la$/d; /\.pc$/d; /bin\/.*-config$/d;
 					/\.m4$/d; /\.gir$/d; /\.typelib$/d; /\.vapi$/d; /\.deps$/d; /\.cmake$/d;
-					/\/Makefile.*/d; /\/include\//d;
+					/\/Makefile.*/d; /\.inc$/d; /\/include\//d;
 					/\/share\/man\//d; /\/share\/doc\//d; /\/share\/gtk-doc\//d; /\/share\/info\//d;
 					/\/share\/devhelp\//d; /\/share\/locale\//d;
 					/\/share\/bash-completion\//d; /\/lib\/systemd\//d;
@@ -1338,7 +1338,7 @@ copy() {
 				# Copy "developer files"
 				sed -n '/\.h$/p; /\.hxx$/p; /\.a$/p; /\.la$/p; /\.pc$/p; /bin\/.*-config$/p;
 					/\.m4$/p; /\.gir$/p; /\.typelib$/p; /\.vapi$/p; /\.deps$/p; /\.cmake$/p;
-					/\/Makefile.*/p; /\/include\//p;
+					/\/Makefile.*/p; /\.inc$/p; /\/include\//p;
 					' $filelist
 				;;
 			*/)
@@ -1720,8 +1720,14 @@ case "$1" in
 		pkg="$1"
 		[ -z "$pkg" ] && usage
 
-		lastcooktime=$(sed '/^Cook time/!d; s|.*: *\([0-9]*\)s.*|\1|' \
-				$LOGS/$pkg.log 2>/dev/null | sed '$!d')
+		# Search last successful cook time in all logs from newer to older
+		for i in '' $(seq 0 9 | sed 's|^|.|'); do
+			[ -f "$LOGS/$pkg.log$i" ] || break
+			lastcooktime=$(sed '/^Cook time/!d; s|.*: *\([0-9]*\)s.*|\1|' \
+				$LOGS/$pkg.log$i 2>/dev/null | sed '$!d')
+			[ -n "$lastcooktime" ] && break
+		done
+
 		receipt="$WOK/$pkg/receipt"
 		check_pkg_in_wok
 		newline
@@ -1811,11 +1817,13 @@ case "$1" in
 				exit 0 ;;
 
 			--pack)
-				[ -d $WOK/$pkg/taz ] || die 'Need to build "%s"' "$pkg"
-				rm -rf $WOK/$pkg/taz
-				[ -f $LOGS/$pkg-pack.log ] && rm -rf $LOGS/$pkg-pack.log
+				[ -d "$WOK/$pkg/install" ] || die 'Need to build "%s"' "$pkg"
+				[ ! -d "$WOK/$pkg/taz" ] || rm -rf "$WOK/$pkg/taz"
+				[ ! -f "$LOGS/$pkg-pack.log" ] || rm -rf $LOGS/$pkg-pack.log
 				packall 2>&1 | tee -a $LOGS/$pkg-pack.log
-				clean_log
+				clean_log "$pkg-pack"
+				time=$(($(date +%s) - $time))
+				summary | sed 's|^Cook |Pack |' | tee -a $LOGS/$pkg-pack.log
 				rm -f $command
 				exit 0 ;;
 

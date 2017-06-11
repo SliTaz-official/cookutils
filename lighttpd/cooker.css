@@ -314,7 +314,7 @@ a:target { background-color: yellow; }
 /* Table */
 
 table { width: 100%; box-sizing: border-box; border-collapse: collapse; /*box-shadow: 0 0 4px rgba(0,0,0,0.3);*/ }
-th { color: rgba(0,0,0,0.6); background-color: rgba(0,0,0,0.2); padding: 3px; }
+th { color: rgba(0,0,0,0.6); background-color: rgba(0,0,0,0.1); padding: 3px; }
 td { padding: 2px; vertical-align: top; }
 td:first-child { white-space: nowrap; width: 5rem; }
 td+td, th+th { border-left: 1px solid rgba(0,0,0,0.1); }
