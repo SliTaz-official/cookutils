@@ -642,15 +642,14 @@ pkg_info() {
 	[ -n "$WEB_SITE" ] &&
 		echo "<a class='button icon website' href='$WEB_SITE' target='_blank' rel='noopener noreferrer'>web site</a>"
 
-	if [ -f "$wok/$pkg/taz/$PACKAGE-$VERSION/receipt" ]; then
+	[ -f "$wok/$pkg/taz/$PACKAGE-$VERSION/receipt" ] &&
 		echo "<a class='button icon files$(active files)' href='$base/$pkg/files'>files</a>"
 
-		[ -n "$(ls $wok/$pkg/description*.txt)" ] &&
-			echo "<a class='button icon desc$(active description)' href='$base/$pkg/description'>description</a>"
+	[ -n "$(ls $wok/$pkg/description*.txt)" ] &&
+		echo "<a class='button icon desc$(active description)' href='$base/$pkg/description'>description</a>"
 
-		[ -n "$TARBALL" -a -s "$SRC/$TARBALL" -o -d "$wok/$pkg/taz" ] &&
-			echo "<a class='button icon download' href='$base/$pkg/download'>download</a>"
-	fi
+	[ -n "$TARBALL" -a -s "$SRC/$TARBALL" -o -d "$wok/$pkg/taz" ] &&
+		echo "<a class='button icon download' href='$base/$pkg/download'>download</a>"
 
 	echo "<a class='button icon browse' href='$base/$pkg/browse/'>browse</a>"
 

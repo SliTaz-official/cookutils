@@ -93,6 +93,7 @@ footer, div.foot {
 	bottom: 0;
 	width: 100%;
 }
+div.foot { position: unset; }
 footer a+a::before {
 	display: inline-block;
 	content: ' • ';

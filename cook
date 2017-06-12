@@ -862,8 +862,10 @@ mk_pkg_receipt() {
 		case $PACKAGE in
 			*-dev) CAT="development|development files" ;;
 		esac
+	fi
 
-		# Manage two-in-one $CAT="$CATEGORY|$SHORT_DESC_ADDITION"
+	# Manage two-in-one $CAT="$CATEGORY|$SHORT_DESC_ADDITION"
+	if [ -n "$CAT" ]; then
 		CATEGORY="${CAT%|*}"
 		SHORT_DESC="$SHORT_DESC (${CAT#*|})"
 	fi
