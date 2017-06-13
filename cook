@@ -1822,10 +1822,12 @@ case "$1" in
 				[ -d "$WOK/$pkg/install" ] || die 'Need to build "%s"' "$pkg"
 				[ ! -d "$WOK/$pkg/taz" ] || rm -rf "$WOK/$pkg/taz"
 				[ ! -f "$LOGS/$pkg-pack.log" ] || rm -rf $LOGS/$pkg-pack.log
+				sed -i '$ s|$| (packing)|' $activity
 				packall 2>&1 | tee -a $LOGS/$pkg-pack.log
 				clean_log "$pkg-pack"
 				time=$(($(date +%s) - $time))
 				summary | sed 's|^Cook |Pack |' | tee -a $LOGS/$pkg-pack.log
+				sed -i '$ s|$| [ Done ]|' $activity
 				rm -f $command
 				exit 0 ;;
 

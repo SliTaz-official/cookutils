@@ -632,7 +632,7 @@ pkg_info() {
 	local log active bpkg
 	log="$LOGS/$pkg.log"
 
-	echo "<h2>$pkg</h2>"
+	echo "<h2><a href=\"$base/$pkg\">$pkg</a></h2>"
 	echo '<div id="info">'
 	echo "<a class='button icon receipt$(active receipt stuff)' href='$base/$pkg/receipt'>receipt &amp; stuff</a>"
 
