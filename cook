@@ -870,6 +870,9 @@ mk_pkg_receipt() {
 		SHORT_DESC="$SHORT_DESC (${CAT#*|})"
 	fi
 
+	# escape quotes for receipt
+	SHORT_DESC="${SHORT_DESC//\"/\\\"}"
+
 	# Mandatory variables
 	cat <<EOF
 $signature
@@ -1052,7 +1055,7 @@ packit_quality() {
 	fi
 
 	action 'QA: checking for empty package...'
-	files=$(cat $WOK/$pkg/taz/$PACKAGE-$VERSION$EXTRAVERSION/files.list | wc -l)
+	files=$(wc -l < $WOK/$pkg/taz/$PACKAGE-$VERSION$EXTRAVERSION/files.list)
 	if [ "$files" -eq 0 -a "$CATEGORY" != 'meta' ]; then
 		broken
 		rm -f $command
