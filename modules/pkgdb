@@ -140,7 +140,7 @@ EOT
 			done
 
 			# files.list provides a list of all packages files.
-			cat $i/taz/$j/files.list | sed s/^/"$i: \0"/ >> $PKGS/files.list
+			cat $i/taz/$j/files.list | sed s/^/"$PACKAGE: \0"/ >> $PKGS/files.list
 
 			# list of unnecessary packages
 			sed -i "/ $PACKAGE-$VERSION$EXTRAVERSION.tazpkg/d" $PKGS/packages.toremove
