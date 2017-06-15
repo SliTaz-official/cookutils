@@ -1079,8 +1079,8 @@ case "$cmd" in
 
 		echo "<section><h3>Quick jump:</h3><ul>"
 		echo "$split" | sed 'p' | xargs printf "<li><a href='#id-%s'>%s</a></li>\n"
-		echo "<li><a href='#id-repeats'>repeatedly packaged files</a> (if any)</li>"
-		echo "<li><a href='#id-orphans'>unpackaged files</a> (if any)</li>"
+		echo "<li id='li-repeats' style='display:none'><a href='#id-repeats'>repeatedly packaged files</a></li>"
+		echo "<li id='li-orphans' style='display:none'><a href='#id-orphans'>unpackaged files</a></li>"
 		echo "</ul></section>"
 
 		for p in $split; do
@@ -1115,6 +1115,7 @@ case "$cmd" in
 		# find repeatedly packaged files
 		repeats="$(sort $packaged | uniq -d)"
 		if [ -n "$repeats" ]; then
+			echo '<script>document.getElementById("li-repeats").style.display = "list-item"</script>'
 			echo -n '<section><h3 id="id-repeats">Repeatedly packaged files:</h3><pre class="files">'
 			echo "$repeats" | sed 's|^|<span class="c11">!!!</span> |'
 			echo "</pre></section>"
@@ -1125,6 +1126,7 @@ case "$cmd" in
 		cd $wok/$main/install; find ! -type d | sed 's|\.||' > $all_files
 		orphans="$(sort $all_files $packaged | uniq -u)"
 		if [ -d "$wok/$main/install" -a -n "$orphans" ]; then
+			echo '<script>document.getElementById("li-orphans").style.display = "list-item"</script>'
 			echo '<section><h3 id="id-orphans">Unpackaged files:</h3>'
 			table=$(mktemp)
 			echo "$orphans" | awk -vi="$base/$indir/browse/install" '
