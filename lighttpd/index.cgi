@@ -1094,7 +1094,7 @@ case "$cmd" in
 
 			size=$(du -hs $dir | awk '{ sub(/\.0/, ""); print $1 }')
 
-			echo "<section><h3 id='id-$p'>Content of package “$namever” (${size:-empty}):</h3>"
+			echo "<section><h3 id='id-$p'>Contents of package “$namever” (${size:-empty}):</h3>"
 			echo '<pre class="files">'
 			if [ -s "$wok/$indir/taz/$p-$ver/files.list" ]; then
 				echo -n '<span class="underline">permissions·lnk·user    ·'
@@ -1329,7 +1329,7 @@ EOT
 								wok/*) page="${arg#wok/}"; page="$base/$pkg/browse/${page#*/}";;
 								*)     page="$base/$pkg/browse/install/usr/share/$cmd/$arg";;
 							esac
-							# make the iframe height so long to contain its content without scrollbar
+							# make the iframe height so long to contain its contents without scrollbar
 							echo "<iframe id='idoc' src='$page' width='100%' onload='resizeIframe(this)'></iframe>"
 							;;
 						*.pdf)
