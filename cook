@@ -72,8 +72,8 @@ EOT
 # We don't want these escapes in web interface.
 
 clean_log() {
-	sed -i -e s'|\[70G\[ \[1;32m| |' \
-		-e s'|\[0;39m \]||' $LOGS/${1:-$pkg}.log
+	sed -i -e 's|\[70G\[ \[1;32m| |' \
+		-e 's|\[0;39m \]||' $LOGS/${1:-$pkg}.log
 }
 
 
@@ -507,7 +507,7 @@ update_installed_cook_diff() {
 	cd $CACHE
 	[ "$1" == 'force' -o ! -s '/tmp/installed.cook.diff' ] && \
 		busybox diff installed.list installed.cook > /tmp/installed.cook.diff
-	deps=$(cat /tmp/installed.cook.diff | grep ^+[a-zA-Z0-9] | wc -l)
+	deps=$(grep ^+[a-zA-Z0-9] /tmp/installed.cook.diff | wc -l)
 }
 
 
@@ -518,8 +518,8 @@ remove_deps() {
 	diff='/tmp/installed.cook.diff'
 	[ -s "$diff" ] || return
 
-	deps=$(cat $diff | grep ^+[a-zA-Z0-9] | sed s/^+//)
-	nb=$(cat $diff | grep ^+[a-zA-Z0-9] | wc -l)
+	deps=$(grep ^+[a-zA-Z0-9] $diff | sed 's|^+||')
+	nb=$(grep ^+[a-zA-Z0-9] $diff | wc -l)
 	newline
 	_n 'Build dependencies to remove:'; echo " $nb"
 	[ -n "$root" ] && echo "root=\"$root\""
@@ -977,7 +977,7 @@ packit() {
 	cd $fs
 	find . -type f -print > ../files.list
 	find . -type l -print >> ../files.list
-	cd ..; sed -i s/'^.'/''/ files.list
+	cd ..; sed -i 's|^.||' files.list
 	status
 
 	# Md5sum of files.
@@ -988,7 +988,7 @@ packit() {
 		case "$file" in
 			/lib/modules/*/modules.*|*.pyc) continue ;;
 		esac
-		md5sum "fs$file" | sed 's/  fs/  /'
+		md5sum "fs$file" | sed 's|  fs|  |'
 	done < files.list > md5sum
 	status
 
@@ -1006,16 +1006,15 @@ packit() {
 		2>/dev/null | awk 'END{ print $1 }')
 
 	action 'Updating receipt sizes...'
-	sed -i s/^PACKED_SIZE.*$// receipt
-	sed -i s/^UNPACKED_SIZE.*$// receipt
-	sed -i "s/^PACKAGE=/PACKED_SIZE=\"$PACKED_SIZE\"\nUNPACKED_SIZE=\"$UNPACKED_SIZE\"\nPACKAGE=/" receipt
+	sed -i '/^PACKED_SIZE=/d; /^UNPACKED_SIZE=/d' receipt
+	sed -i "s|^PACKAGE=|PACKED_SIZE=\"$PACKED_SIZE\"\nUNPACKED_SIZE=\"$UNPACKED_SIZE\"\nPACKAGE=|" receipt
 	status
 
 	# Set extra version.
 	if [ -n "$EXTRAVERSION" ]; then
 		action 'Updating receipt EXTRAVERSION: %s' "$EXTRAVERSION"
-		sed -i s/^EXTRAVERSION.*$// receipt
-		sed -i "s/^VERSION=/EXTRAVERSION=\"$EXTRAVERSION\"\nVERSION=/" receipt
+		sed -i '/^EXTRAVERSION=/d' receipt
+		sed -i "s|^VERSION=|EXTRAVERSION=\"$EXTRAVERSION\"\nVERSION=|" receipt
 		status
 	fi
 
@@ -1078,7 +1077,7 @@ packit_quality() {
 	done
 	rm -r "$tempd"
 	mv -f $pkgdir/taz/$PACKAGE-$VERSION$EXTRAVERSION.tazpkg $PKGS
-	sed -i /^${pkg}$/d $broken
+	sed -i "/^${pkg}$/d" $broken
 	#action 'Removing source tree...'
 	#rm -f $WOK/$pkg/source; status
 }
@@ -1453,7 +1452,7 @@ case "$1" in
 		cat $activity ;;
 
 	search)
-		# Just a simple search function, we dont need more actually.
+		# Just a simple search function, we don't need more actually.
 		query="$2"
 		title 'Search results for "%s"' "$query"
 		cd $WOK; ls -1 | grep "$query"
@@ -1519,9 +1518,9 @@ case "$1" in
 		title 'Setting up your %s cross environment' "$arch"
 		init_db_files
 		sed -i \
-			-e s"/ARCH=.*/ARCH=\"$arch\"/" \
-			-e s"/CROSS_TREE=.*/CROSS_TREE=\"\/cross\/$arch\"/" \
-			-e s'/BUILD_SYSTEM=.*/BUILD_SYSTEM=i486-slitaz-linux/' \
+			-e "s|ARCH=.*|ARCH=\"$arch\"|" \
+			-e "s|CROSS_TREE=.*|CROSS_TREE=\"/cross/$arch\"|" \
+			-e 's|BUILD_SYSTEM=.*|BUILD_SYSTEM=i486-slitaz-linux|' \
 			/etc/slitaz/cook.conf
 		case "$arch" in
 			arm)
@@ -1538,8 +1537,8 @@ case "$1" in
 				host="$ARCH-slitaz-linux" ;;
 		esac
 		sed -i \
-			-e s"/CFLAGS=.*/CFLAGS=\"$flags\"/" \
-			-e s"/HOST_SYSTEM=.*/HOST_SYSTEM=$host/" /etc/slitaz/cook.conf
+			-e "s|CFLAGS=.*|CFLAGS=\"$flags\"|" \
+			-e "s|HOST_SYSTEM=.*|HOST_SYSTEM=$host|" /etc/slitaz/cook.conf
 		. /etc/slitaz/cook.conf
 		sysroot="$CROSS_TREE/sysroot"
 		tools="/cross/$arch/tools"
@@ -1592,7 +1591,7 @@ case "$1" in
 
 		action 'Preparing the package receipt...'
 		cp $DATA/receipt .
-		sed -i s"/^PACKAGE=.*/PACKAGE=\"$pkg\"/" receipt
+		sed -i "s|^PACKAGE=.*|PACKAGE=\"$pkg\"|" receipt
 		status; newline
 
 		# Interactive mode, asking and seding.
@@ -1603,30 +1602,30 @@ case "$1" in
 				_  'Package       : %s' "$pkg"
 
 				_n 'Version       : ' ; read answer
-				sed -i s/'VERSION=\"\"'/"VERSION=\"$answer\""/ receipt
+				sed -i "s|^VERSION=.*|VERSION=\"$answer\"|" receipt
 
 				_n 'Category      : ' ; read answer
-				sed -i s/'CATEGORY=\"\"'/"CATEGORY=\"$answer\""/ receipt
+				sed -i "s|^CATEGORY=.*|CATEGORY=\"$answer\"|" receipt
 
 				# L10n: Short description
 				_n 'Short desc    : ' ; read answer
-				sed -i s/'SHORT_DESC=\"\"'/"SHORT_DESC=\"$answer\""/ receipt
+				sed -i "s|^SHORT_DESC=.*|SHORT_DESC=\"$answer\"|" receipt
 
 				_n 'Maintainer    : ' ; read answer
-				sed -i s/'MAINTAINER=\"\"'/"MAINTAINER=\"$answer\""/ receipt
+				sed -i "s|^MAINTAINER=.*|MAINTAINER=\"$answer\"|" receipt
 
 				_n 'License       : ' ; read answer
-				sed -i s/'LICENSE=\"\"'/"LICENSE=\"$answer\""/ receipt
+				sed -i "s|^LICENSE=.*|LICENSE=\"$answer\"|" receipt
 
 				_n 'Web site      : ' ; read answer
-				sed -i s#'WEB_SITE=\"\"'#"WEB_SITE=\"$answer\""# receipt
+				sed -i "s|^WEB_SITE=.*|WEB_SITE=\"$answer\"|" receipt
 				newline
 
 				# Wget URL.
 				_ 'Wget URL to download source tarball.'
 				_n 'Example  : ' ; echo '$GNU_MIRROR/$PACKAGE/$TARBALL'
 				_n 'Wget url : ' ; read answer
-				sed -i "s|WGET_URL=.*|WGET_URL=\"$answer\"|" receipt
+				sed -i "s|^WGET_URL=.*|WGET_URL=\"$answer\"|" receipt
 
 				# Ask for a stuff dir.
 				confirm "$(_n 'Do you need a stuff directory? (y/N)')"
@@ -1654,9 +1653,10 @@ case "$1" in
 
 		_ 'Starting cooking the list "%s"' "$2" | log
 
-		for pkg in $(cat $2); do
+		while read pkg; do
 			cook $pkg || broken
-		done ;;
+		done < $2
+		;;
 
 	clean-wok)
 		check_root
@@ -1765,7 +1765,7 @@ case "$1" in
 			_ 'cook: %s' "error"
 			[ -n "$CROSS_BUGS" ] && _ 'bugs: %s' "$CROSS_BUGS"
 			_ 'Cook skip: %s' "$error" | log
-			sed -i /^${pkg}$/d $broken
+			sed -i "/^${pkg}$/d" $broken
 			newline
 			exit 0
 		fi
@@ -1817,7 +1817,7 @@ case "$1" in
 
 			--unblock|-ub)
 				action 'Unblocking package "%s"' "$pkg"
-				sed -i "/^${pkg}$/"d $blocked
+				sed -i "/^${pkg}$/d" $blocked
 				status; newline
 				exit 0 ;;
 

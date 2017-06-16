@@ -50,7 +50,7 @@ EOT
 # into a log file.
 
 log_commits() {
-	sed '/^.\//'d | sed '/^.hg/'d | tee -a $LOGS/commits.log
+	sed '/^.\//d' | sed '/^.hg/d' | tee -a $LOGS/commits.log
 }
 
 
@@ -84,7 +84,7 @@ commits_summary() {
 cook_order_scan() {
 	rm -f $cookorder
 	touch $cookorder
-	for pkg in $(cat $cooklist); do
+	while read pkg; do
 		unset WANTED BUILD_DEPENDS
 		. $wok/$pkg/receipt
 		# The :: is for web interface color.
@@ -96,14 +96,14 @@ cook_order_scan() {
 				fi
 			fi
 		done
-	done
+	done < $cooklist
 
 	# Append unordered packages to cookorder.
-	for pkg in $(cat $cooklist); do
+	while read pkg; do
 		if ! grep -q "^$pkg$" $cookorder; then
 			echo "$pkg" >> $cookorder
 		fi
-	done
+	done < $cooklist
 }
 
 
@@ -143,17 +143,17 @@ cook_order() {
 	# TODO: grep the line number to get pkg position and keep it higher.
 	echo -e '\nHandle WANTED package'
 	separator
-	for pkg in $(cat $cooklist); do
+	while read pkg; do
 		unset WANTED
 		. $wok/$pkg/receipt
 		for wanted in $WANTED; do
 			echo "$pkg :: $wanted"
 			if grep -q ^${wanted}$ $cooklist; then
-				sed -i -e "/^$pkg$/"d  \
+				sed -i -e "/^$pkg$/d" \
 					-e "/^$wanted$/ a $pkg" $cooklist
 			fi
 		done
-	done
+	done < $cooklist
 
 	# Show ordered cooklist
 	echo -e '\nCooklist order'
@@ -162,7 +162,7 @@ cook_order() {
 	separator
 
 	time=$(($(date +%s) - $time))
-	pkgs=$(cat $cooklist | wc -l)
+	pkgs=$(wc -l < $cooklist)
 	echo -e '\nSummary for cookorder'
 	separator
 	cat <<EOT
@@ -179,10 +179,10 @@ EOT
 # Remove blocked (faster this way than grepping before).
 
 strip_blocked() {
-	for pkg in $(cat $blocked); do
-		sed -i /^${pkg}$/d $cooklist
-	done
-	sed -i /^$/d $cooklist
+	while read pkg; do
+		sed -i "/^${pkg}$/d" $cooklist
+	done < $blocked
+	sed -i '/^$/d' $cooklist
 }
 
 
@@ -190,12 +190,12 @@ strip_blocked() {
 
 cook_commits() {
 	if [ -s "$commits" ]; then
-		for pkg in $(cat $commits); do
+		while read pkg; do
 			ps | grep -q "cook $pkg$" && continue
 			echo "cook:$pkg" > $command
 			cook $pkg || broken
-			sed -i /^${pkg}$/d $commits
-		done
+			sed -i "/^${pkg}$/d" $commits
+		done < $commits
 	fi
 }
 
@@ -203,19 +203,19 @@ cook_commits() {
 # Cook all packages in a cooklist.
 
 cook_list() {
-	for pkg in $(cat $cooklist); do
+	while read pkg; do
 		ps | grep -q "cook $pkg$" && continue
 		cook $pkg || broken
-		sed -i /^${pkg}$/d $cooklist
-	done
+		sed -i "/^${pkg}$/d" $cooklist
+	done < $cooklist
 }
 
 
 # Create a arch.$ARCH file for each package cooked for the target host
 # architecture
 #
-# The deal: we dont want all packages handled by cooker commands and stats,
-# since we dont cross compile all packages for each arch but only a set of
+# The deal: we don't want all packages handled by cooker commands and stats,
+# since we don't cross compile all packages for each arch but only a set of
 # packages to provide one full featured desktop, servers and goodies useful
 # for the host system.
 #
@@ -299,7 +299,7 @@ case "$1" in
 			mkdir -p /var/spool/cron/crontabs
 		fi
 		if ! fgrep -q /usr/bin/cooker $crontabs; then
-			cat > $crontabs << EOT
+			cat > $crontabs <<EOT
 # Run SliTaz Cooker every $hours hours
 59 */$hours * * *  touch $CACHE/cooker-request
 */5 * * * *  [ $CACHE/cooker-request -nt $CACHE/activity ] && /usr/bin/cooker --output=html
@@ -359,7 +359,7 @@ EOT
 			fi
 		done
 		separator
-		echo -e "Reverse dependencies found: $(cat $cooklist | wc -l)\n"
+		echo -e "Reverse dependencies found: $(wc -l < $cooklist)\n"
 		strip_blocked
 		cook_order | tee $LOGS/cookorder.log
 		cook_list ;;
@@ -453,7 +453,7 @@ EOT
 		done
 		strip_blocked
 		cook_order | tee $LOGS/cookorder.log
-		echo "Packages to cook: $(cat $cooklist | wc -l)" | log
+		echo "Packages to cook: $(wc -l < $cooklist)" | log
 		cook_list ;;
 
 	*)
@@ -502,7 +502,7 @@ EOT
 			echo "Changes found from: $cur to $new" | log
 			echo 'Syncing build wok with Hg wok...' | log_commits
 			rsync -r -t -c -l -u -v -D -E $wok-hg/ $wok/ | \
-				sed '/^$/'d | log_commits
+				sed '/^$/d' | log_commits
 		else
 			echo "No revision changes: $cur vs $new" | log
 			separator | log_commits
@@ -535,7 +535,7 @@ EOT
 					rm -f $PKGS/$PACKAGE-$VERSION*
 				fi
 				rm -rf $wok/$pkg $LOGS/$pkg.log
-				sed -i "/^${pkg}$/"d $blocked $broken $commits.tmp
+				sed -i "/^${pkg}$/d" $blocked $broken $commits.tmp
 			fi
 			if [ -d "$wok/$pkg/stuff" ]; then
 				if [ ! -d "$wok-hg/$pkg/stuff" ]; then
@@ -555,24 +555,24 @@ EOT
 		done
 
 		# Keep previous commit and discard duplicate lines
-		cat $commits $commits.tmp | sed /"^$"/d > $commits.new
+		cat $commits $commits.tmp | sed '/^$/d' > $commits.new
 		uniq $commits.new > $commits; rm $commits.*
 
 		# Handle cross compilation. Create arch packages DB and remove pkgs
 		# not cooked for this arch from the commits list.
 		arch_db
-		for pkg in $(cat $commits); do
+		while read pkg; do
 			if [ ! -f "$wok/$pkg/arch.$ARCH" ]; then
 				echo "Cooker arch : skip $pkg (not included in: $ARCH)" | \
 					log_commits
-				sed -i "/^${pkg}$/"d $commits
+				sed -i "/^${pkg}$/d" $commits
 			else
 				echo "Cooker arch : $ARCH" | log_commits
 			fi
-		done
+		done < $commits
 
 		# Stats
-		pkgs=$(cat $commits | wc -l)
+		pkgs=$(wc -l < $commits)
 		echo "Packages to cook: $pkgs" | log
 		echo "Packages to cook : $pkgs" | log_commits
 		separator | log_commits
