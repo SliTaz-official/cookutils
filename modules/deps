@@ -1,0 +1,239 @@
+#!/bin/sh
+#
+# deps - module of the SliTaz Cook
+# Copyright (C) SliTaz GNU/Linux - GNU GPL v3
+#
+
+. /usr/lib/slitaz/libcook.sh
+
+
+# Maintain databases
+
+fl="$cache/tp.files.db"		# combined list of all files
+db_so="$cache/tp.so.db"		# database with *.so files
+db_a="$cache/tp.a.db"		# database with *.a files
+db_la="$cache/tp.la.db"		# database with *.la files
+db_pc="$cache/tp.pc.db"		# database with *.pc files
+
+fl_mirrorz='/var/lib/tazpkg/files.list.lzma'	# mirror files list
+fl_local='/home/slitaz/cache/files.list'		# local files list
+
+# recreate "combined list of all files" in the cases:
+#   * it absent
+#   * mirror files list has been updated
+#   * local files list has been updated
+
+if [ ! -s $fl   -o   $fl_mirrorz -nt $fl   -o   $fl_local -nt $fl ]; then
+	# unpack mirror files list
+	fl_mirror="$(mktemp)"
+	lzcat $fl_mirrorz > $fl_mirror
+
+	# remove packages that exist in local list
+	cut -d: -f1 $fl_local | uniq | \
+	while read package; do
+		sed -i "/^$package: /d" $fl_mirror
+	done
+
+	# combine lists
+	cat $fl_mirror $fl_local > $fl
+
+	# clean
+	rm $fl_mirror
+fi
+
+# recreate "database with *.so files" in the cases:
+#   * it absent
+#   * combined list of all files has been updated
+
+if [ ! -s $db_so   -o   $fl -nt $db_so ]; then
+	fgrep '/lib/' $fl | fgrep '.so' | \
+	sed 's|^\([^:]*\):.*/\([^/]*\)$|\2\t\1|' | \
+	awk -F$'\t' '{if ($2 !~ "uclibc") print}' | \
+	sort > $db_so
+fi
+
+# recreate "database with *.a files" in the cases:
+#   * it absent
+#   * combined list of all files has been updated
+
+if [ ! -s $db_a -o $fl -nt $db_a ]; then
+	fgrep '/usr/lib/lib' $fl | fgrep '.a' | \
+	sed 's|^\([^:]*\):.*/\([^/]*\)$|\2\t\1|' | \
+	sort > $db_a
+fi
+
+# recreate "database with *.la files" in the cases:
+#   * it absent
+#   * combined list of all files has been updated
+
+if [ ! -s $db_la -o $fl -nt $db_la ]; then
+	fgrep '/usr/lib/' $fl | fgrep '.la' | \
+	sed 's|^\([^:]*\): \(.*\)$|\2\t\1|' | \
+	sort > $db_la
+fi
+
+# recreate "database with *.pc files" in the cases:
+#   * it absent
+#   * combined list of all files has been updated
+
+if [ ! -s $db_pc -o $fl -nt $db_pc ]; then
+	grep '\.pc$' $fl | \
+	sed -e 's|^\([^:]*\):.*/\([^/]*\)$|\2\t\1|' -e '/\tbuildroot$/d' | \
+	sort > $db_pc
+fi
+
+
+
+
+# Auxiliary function that deal with "not found" packages as well as with "repeatedly found" packages
+
+outpkg() {
+	pkgs="$1"
+	case $pkgs in
+		*ld-linux.so*);;
+		*linux-gate.so*);;
+		*)
+			echo "$pkgs" | awk '
+			# if both packages exist in list, return the first one only
+			function s(pkg1, pkg2) {
+				if (index(" "$0" ", " "pkg1" ") && index(" "$0" ", " " pkg2 " "))
+					$0 = pkg1;
+			}
+			{
+				s("wine",         "wine-rt");
+				s("samba",        "samba-pam");
+				s("mesa",         "mesa-wayland");
+				s("mysql",        "mariadb");
+				s("perl",         "perl-thread");
+				s("xorg-server",  "xorg-server-light");
+				s("cairo",        "cairo-gl");
+				s("freetype",     "freetype-infinality");
+				s("freetype",     "freetype-without-harfbuzz");
+				s("harfbuzz",     "harfbuzz-icu");
+				s("openbox",      "openbox-imlib2");
+				s("gcc-lib-base", "gcc49-lib-base"); # also gcc54-lib-base and gcc61-lib-base
+				s("polkit",       "polkit-pam");
+				s("libgudev",     "eudev"); # also systemd
+				s("xz-dev",       "liblzma-dev");
+
+				if (! index($0, "glibc-base") &&
+					! index($0, "gcc-lib-base") &&
+					! index($0, "glibc-dev") &&
+					$0 != "gcc")
+						print gensub(" ", "|", "g");
+			}';;
+	esac >>$tmptmp
+}
+
+
+# Search for item $1 in db $2
+
+indb() {
+	local res="$(awk -vi="$1" '
+		{
+			if ($1 == i)
+				{ print $2; found = 1; }
+		}
+		END {
+			if (found != 1) {
+				if (index(i, "statically linked"))
+					print gensub(" ", "_", "g", i);
+				else
+					printf("[%s]\n", i);
+			}
+		}
+	' $2 | tr '\n' ' ')"
+	outpkg "${res% }"
+}
+
+
+# Like `ldd` function but returns packages names where dependency exists.
+# Also can process some development files
+
+tp_ldd() {
+	unset IFS
+	tmptmp=$(mktemp)
+
+	case $1 in
+		*.la)
+			# found dependencies in the *.la files
+			libs=$(. $1; echo $dependency_libs)
+			for i in $libs; do
+				case $i in
+					-l*)  indb "lib${i#-l}.so" $db_so;; # FIXME: I'm not sure it's about a *.so, but *.a often absent
+					*.la) indb "$i" $db_la;;
+				esac
+			done
+			;;
+		*.pc)
+			# found dependencies in the *.pc files
+			# Syntax examples:
+			# Requires: glib-2.0 gobject-2.0
+			# Requires.private: gmodule-no-export-2.0
+			# Requires: gobject-2.0,gio-2.0
+			pcs=$(grep '^Requires' $1 | cut -d: -f2 | tr ',' ' ' | tr '\n' ' ')
+			for i in $pcs; do
+				indb "$i.pc" $db_pc
+			done
+			# Syntax examples:
+			# Libs: -L${libdir} -lgio-2.0
+			# Libs.private: -lz -lresolv    
+			libs=$(grep '^Libs' $1 | cut -d: -f2 | tr '\n' ' ')
+			for i in $libs; do
+				case $i in
+					-l*) indb "lib${i#-l}.so" $db_so;;
+				esac
+			done
+			;;
+		*/lib/modules/*)
+			echo 'linux'
+			;;
+		*.pl|*.pm)
+			echo 'perl'
+			;;
+		*.py)
+			echo 'python'
+			;;
+		*)
+			LD_PRELOAD= LD_TRACE_LOADED_OBJECTS=1 /lib/ld-linux* "$1" 2>/dev/null | \
+			sed 's| =>.*||; s| (.*||; s|\t||' | \
+			while read i; do
+				indb "$i" $db_so
+			done
+			;;
+	esac
+
+	sort -u $tmptmp
+	rm $tmptmp
+}
+
+
+# Return all the names of packages bundled in this receipt
+
+all_names() {
+	local split=" $SPLIT "
+	if [ "${split/ $PACKAGE /}" != "$split" ]; then
+		# $PACKAGE included somewhere in $SPLIT (probably in the end).
+		# We should build packages in the order defined in the $SPLIT.
+		echo $SPLIT
+	else
+		# We'll build the $PACKAGE, then all defined in the $SPLIT.
+		echo $PACKAGE $SPLIT
+	fi
+}
+
+
+
+
+unset IFS
+. $WOK/$1/receipt
+
+for pkg in $(all_names); do
+	title 'Dependencies for "%s"' "$pkg"
+	IFS=$'\n'
+	while read file; do
+		tp_ldd "$WOK/$1/taz/$pkg-$VERSION/fs$file"
+	done < $WOK/$1/taz/$pkg-$VERSION/files.list | sort -u | grep -v "^$pkg$"
+done
+
+newline

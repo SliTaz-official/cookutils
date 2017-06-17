@@ -28,7 +28,9 @@ install-cook:
 	install -m 0755 cooker           $(DESTDIR)$(PREFIX)/bin
 	install -m 0755 cookiso          $(DESTDIR)$(PREFIX)/bin
 	install -m 0755 cooklinux        $(DESTDIR)$(PREFIX)/bin
-	install -m 0755 modules/pkgdb modules/compressor \
+	install -m 0755 modules/pkgdb \
+					modules/compressor \
+					modules/deps \
 									 $(DESTDIR)$(PREFIX)/libexec/cookutils
 	install -m 0644 cook.conf        $(DESTDIR)/etc/slitaz
 	install -m 0644 cook.site        $(DESTDIR)/etc/slitaz

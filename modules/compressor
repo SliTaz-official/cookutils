@@ -194,8 +194,8 @@ compress_png() {
 	use_op=true
 	[ "${COOKOPTS/!pngquant/}" != "$COOKOPTS" ] && use_pq=false
 	[ "${COOKOPTS/!optipng/}"  != "$COOKOPTS" ] && use_op=false
-	$use_pq && tpi pngquant
-	$use_op && tpi optipng
+	$use_pq && tpi pngquant-static
+	$use_op && tpi optipng-static
 
 	action 'Compressing png images...'
 

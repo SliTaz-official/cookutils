@@ -63,6 +63,7 @@ cook setup
     --forced           $(_ 'force reinstall of chroot packages.')
 cook pkgdb
     --flavors          $(_ 'create up-to-date flavors files.')
+cook splitdb           $(_ 'create up-to-date split.db file.')
 
 EOT
 	exit 0
@@ -1034,7 +1035,7 @@ packit() {
 	tazpkg=$(ls *.tazpkg)
 	packit_quality
 	footer "$(_ 'Package "%s" created' "$tazpkg")"
-	update_packages_info
+	update_packages_db
 }
 
 
@@ -1404,18 +1405,53 @@ cook_copy_icons() {
 }
 
 
-# Update packages.info every time after successful build
+# Update packages database every time after successful build
 
-update_packages_info() {
-	sed -i "/^$PACKAGE\t/d" $PKGS/packages.info
+update_packages_db() {
+	# packages.info (unsorted, located near to packages)
+	local pi="$PKGS/packages.info"
+	sed -i "/^$PACKAGE\t/d" $pi
 	unset_receipt; . $pack/receipt
 	SIZES=$(echo $PACKED_SIZE $UNPACKED_SIZE | sed 's|\.0||g')
 	DEPENDS=$(echo $DEPENDS) # remove newlines, tabs and multiple spaces from variable
 	MD5="$(md5sum "$PKGS/$PACKAGE-$VERSION$EXTRAVERSION.tazpkg" | awk '{print $1}')"
-	cat >> $PKGS/packages.info <<EOT
+	cat >> $pi <<EOT
 $PACKAGE	$VERSION$EXTRAVERSION	$CATEGORY	$SHORT_DESC	$WEB_SITE	$TAGS	$SIZES	$DEPENDS	$MD5	$PROVIDE
 EOT
 
+	# files.list (uncompressed, unsorted, located in $cache)
+	local fl="$cache/files.list"
+	touch $fl
+	sed -i "/^$PACKAGE: /d" $fl
+	sed  "s/^/$PACKAGE: \0/" $pack/files.list >> $fl
+}
+
+
+# Update split.db once for receipt
+
+update_split_db() {
+	local db="$cache/split.db"
+	touch $db
+	sed -i "/^$pkg\t/d" $db
+	echo -e "$pkg\t$(all_names)" >> $db
+}
+
+
+# Recreate whole split.db from scratch
+
+recreate_split_db() {
+	# Clean
+	local db="$cache/split.db"
+	touch $db
+	> $db
+
+	cd $WOK
+	for i in *; do
+		[ -f "$WOK/$i/receipt" ] || continue
+		unset PACKAGE SPLIT
+		. $WOK/$i/receipt
+		echo -e "$PACKAGE\t$(all_names)" >> $db
+	done
 }
 
 
@@ -1424,6 +1460,10 @@ EOT
 #
 # Commands
 #
+
+# cook <package> --deps
+[ -n "$deps" ] && { @@PREFIX@@/libexec/cookutils/deps $1; exit 0; }
+
 
 case "$1" in
 	usage|help|-u|-h)
@@ -1718,6 +1758,11 @@ case "$1" in
 		@@PREFIX@@/libexec/cookutils/pkgdb "$2"
 		;;
 
+	splitdb)
+		# File split.db is useful for searching for split packages.
+		recreate_split_db
+		;;
+
 	*)
 		# Just cook and generate a package.
 		check_root
@@ -1792,6 +1837,8 @@ case "$1" in
 		trap '_ "\n\nCook stopped: control-C\n\n" | \
 			tee -a $LOGS/$pkg.log' INT
 
+		update_split_db
+
 		# Handle --options
 		case "$2" in
 			--clean|-c)
@@ -1833,9 +1880,6 @@ case "$1" in
 				sed -i '$ s|$| [ Done ]|' $activity
 				rm -f $command
 				exit 0 ;;
-
-			--cdeps)
-				@@PREFIX@@/libexec/cookutils/cdeps $pkg
 		esac
 
 		# Rotate log
