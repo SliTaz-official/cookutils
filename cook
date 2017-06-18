@@ -91,7 +91,8 @@ init_db_files() {
 	_ 'Creating directories structure in "%s"' "$SLITAZ"
 	mkdir -p $WOK $PKGS $SRC $CACHE $LOGS $FEEDS
 	_ 'Creating DB files in "%s"' "$CACHE"
-	touch $activity $command $broken $blocked
+	touch $activity $command $broken $blocked $CACHE/webstat
+	chown www:www $cache/webstat
 }
 
 
@@ -1462,7 +1463,55 @@ recreate_split_db() {
 #
 
 # cook <package> --deps
-[ -n "$deps" ] && { @@PREFIX@@/libexec/cookutils/deps $1; exit 0; }
+[ -n "$deps" ] && {
+	@@PREFIX@@/libexec/cookutils/deps $1
+	exit 0
+}
+
+# cook <package> --clean
+# cook <package> -c
+[ -n "$clean" -o "$2" == '-c' ] && {
+	action 'Cleaning "%s"' "$1"
+	cd $WOK/$1; rm -rf install taz source
+	status; newline
+	touch $activity		# update $activity -> something changed -> update webstat
+	exit 0
+}
+
+# cook <package> --getsrc
+# cook <package> -gs
+[ -n "$getsrc" -o "$2" == '-gs' ] && {
+	title 'Getting source for "%s"' "$1"
+	receipt="$WOK/$pkg/receipt"
+	check_pkg_in_wok
+	unset_receipt
+	. $receipt
+	get_source
+	_ 'Tarball: %s' "$SRC/$TARBALL"; newline
+	exit 0
+}
+
+# cook <package> --block
+# cook <package> -b
+[ -n "$block" -o "$2" == '-b' ] && {
+	action 'Blocking package "%s"' "$1"
+	[ $(grep "^$1$" $blocked) ] || echo "$1" >> $blocked
+	status; newline
+	touch $activity
+	exit 0
+}
+
+# cook <package> --unblock
+# cook <package> -ub
+[ -n "$unblock" -o "$2" == '-ub' ] && {
+	action 'Unblocking package "%s"' "$1"
+	sed -i "/^$1$/d" $blocked
+	status; newline
+	touch $activity
+	exit 0
+}
+
+
 
 
 case "$1" in
@@ -1841,32 +1890,8 @@ case "$1" in
 
 		# Handle --options
 		case "$2" in
-			--clean|-c)
-				action 'Cleaning "%s"' "$pkg"
-				cd $WOK/$pkg; rm -rf install taz source
-				status; newline
-				exit 0 ;;
-
 			--install|-i)
 				inst='yes' ;;
-
-			--getsrc|-gs)
-				title 'Getting source for "%s"' "$pkg"
-				get_source
-				_ 'Tarball: %s' "$SRC/$TARBALL"; newline
-				exit 0 ;;
-
-			--block|-b)
-				action 'Blocking package "%s"' "$pkg"
-				[ $(grep "^$pkg$" $blocked) ] || echo "$pkg" >> $blocked
-				status; newline
-				exit 0 ;;
-
-			--unblock|-ub)
-				action 'Unblocking package "%s"' "$pkg"
-				sed -i "/^${pkg}$/d" $blocked
-				status; newline
-				exit 0 ;;
 
 			--pack)
 				[ -d "$WOK/$pkg/install" ] || die 'Need to build "%s"' "$pkg"

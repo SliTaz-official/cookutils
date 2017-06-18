@@ -334,6 +334,8 @@ tbody tr:nth-child(even) {
 .summary th, .summary td { white-space: nowrap; width: 1rem; text-align: center; }
 .summary th:last-child, .summary td:last-child { width: unset; }
 
+.webstat td { text-align: center; }
+.webstat td:first-child { text-align: unset; }
 
 div.list td, div.list th { padding: 5px 2px; }
 
@@ -355,6 +357,7 @@ div.list {
 
 .meter {
 	height: 1.4rem;
+	margin: 0.7rem 0;
 	color: inherit;
 }
 .meter progress {

@@ -253,7 +253,7 @@ arch_db() {
 # Commands
 #
 
-previous_command="$(cat $command)"
+previous_command="$(cat $command 2>/dev/null)"
 case "$1" in
 	usage|help|-u|-h)
 		usage ;;

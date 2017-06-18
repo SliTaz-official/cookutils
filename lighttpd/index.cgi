@@ -30,6 +30,7 @@ broken="$CACHE/broken"
 cooknotes="$CACHE/cooknotes"
 cooktime="$CACHE/cooktime"
 wokrev="$CACHE/wokrev"
+webstat="$CACHE/webstat"
 
 # Path to markdown to html convertor
 cmark_opts='--smart -e table -e strikethrough -e autolink -e tagfilter'
@@ -734,6 +735,37 @@ files_header() {
 }
 
 
+# Update statistics used in web interface.
+# There is no need to recalculate the statistics every time the page is displayed.
+
+update_webstat() {
+	# for receipts:
+	rtotal=$(ls $WOK/*/arch.$ARCH | wc -l)
+	rcooked=$(ls -d $WOK/*/taz | wc -l)
+	runbuilt=$(($rtotal - $rcooked))
+	rblocked=$(wc -l < $blocked)
+	rbroken=$(wc -l < $broken)
+
+	# for packages:
+	ptotal=$(cut -d$'\t' -f2 $CACHE/split.db | tr ' ' '\n' | wc -l)
+	pcooked=$(ls $PKGS/*.tazpkg | wc -l)
+	punbuilt=$(($ptotal - $pcooked))
+	pblocked=$(
+		while read i; do
+			sed "/^$i\t/!d" $CACHE/split.db
+		done < $blocked | cut -d$'\t' -f2 | tr ' ' '\n' | wc -l)
+	pbroken=$(
+		while read i; do
+			sed "/^$i\t/!d" $CACHE/split.db
+		done < $broken | cut -d$'\t' -f2 | tr ' ' '\n' | wc -l)
+
+	cat > $webstat <<EOT
+rtotal="$rtotal"; rcooked="$rcooked"; runbuilt="$runbuilt"; rblocked="$rblocked"; rbroken="$rbroken"
+ptotal="$ptotal"; pcooked="$pcooked"; punbuilt="$punbuilt"; pblocked="$pblocked"; pbroken="$pbroken"
+EOT
+}
+
+
 
 
 #
@@ -822,12 +854,10 @@ EOT
 	else
 		toolchain="?toolchain"
 	fi
+
 	# Main page with summary. Count only packages included in ARCH,
 	# use 'cooker arch-db' to manually create arch.$ARCH files.
-	inwok=$(ls $WOK/*/arch.$ARCH | wc -l)
-	cooked=$(ls -d $WOK/*/taz | wc -l)
-	unbuilt=$(($inwok - $cooked))
-	pct=0; [ $inwok -gt 0 ] && pct=$(( ($cooked * 100) / $inwok ))
+
 	cat <<EOT
 <div id="content2">
 
@@ -846,8 +876,6 @@ Cooker state     : $(running_command)
 Wok revision     : <a href='$WOK_URL' target='_blank' rel='noopener noreferrer'>$(cat $wokrev)</a>
 Commits to cook  : $(wc -l < $commits)
 Current cooklist : $(wc -l < $cooklist)
-Broken packages  : $(wc -l < $broken)
-Blocked packages : $(wc -l < $blocked)
 Architecture     : $ARCH, <a href="$toolchain">toolchain</a>
 Server date      : <span id='date'>$(date -u '+%F %R %Z')</span>
 EOT
@@ -862,6 +890,23 @@ EOT
 			;;
 	esac
 
+	# Do we need to update the statistics?
+	[ "$webstat" -nt "$activity" ] || update_webstat
+	. $webstat
+
+	pct=0; [ "$rtotal" -gt 0 ] && pct=$(( ($rcooked * 100) / $rtotal ))
+
+cat <<EOT
+<div class="meter"><progress max="100" value="$pct">${pct}%</progress><span>${pct}%</span></div>
+
+<table class="webstat"><thead>
+<tr><th>        </th><th>Total  </th><th>Cooked  </th><th>Unbuilt  </th><th>Blocked  </th><th>Broken  </th></tr>
+</thead><tbody>
+<tr><td>Receipts</td><td>$rtotal</td><td>$rcooked</td><td>$runbuilt</td><td>$rblocked</td><td>$rbroken</td></tr>
+<tr><td>Packages</td><td>$ptotal</td><td>$pcooked</td><td>$punbuilt</td><td>$pblocked</td><td>$pbroken</td></tr>
+</tbody></table>
+EOT
+
 	if [ -e "$CACHE/cooker-request" -a ! -s $command ]; then
 		if [ "$activity" -nt "$CACHE/cooker-request" ]; then
 			echo '<a class="button icon bell r" href="?poke">Wake up</a>'
@@ -871,10 +916,6 @@ EOT
 	fi
 
 	cat <<EOT
-<p>Receipts in the wok: $inwok total · $cooked cooked · $unbuilt unbuilt</p>
-
-<div class="meter"><progress max="100" value="$pct">${pct}%</progress><span>${pct}%</span></div>
-
 <p>
 	Service logs:
 	<a href="?cookorder.log">cookorder</a> ·
