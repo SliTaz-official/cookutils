@@ -648,6 +648,9 @@ cookit() {
 	[ -n "$BUILD_DEPENDS" ] && _ 'Checking build dependencies...'
 	[ -n "$root" ] && _ 'Using packages DB: %s' "$root$DB"
 
+	# Get the list of installed packages
+	cd $root$INSTALLED; ls > $CACHE/installed.list
+
 	for action in check install; do
 		for dep in $BUILD_DEPENDS; do
 			implicit="${dep%-dev}"; [ "$implicit" == "$dep" ] && implicit=''
@@ -674,9 +677,6 @@ cookit() {
 			done
 		done
 	done
-
-	# Get the list of installed packages
-	cd $root$INSTALLED; ls > $CACHE/installed.list
 
 #	# Have we a missing build dep to cook?
 #	if [ -s "$CACHE/missing.dep" ] && [ -n "$AUTO_COOK" ]; then
