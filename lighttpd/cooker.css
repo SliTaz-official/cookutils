@@ -128,6 +128,9 @@ a {
 	-webkit-transition: .2s border-color, .2s box-shadow; transition: .2s border-color, .2s box-shadow;
 	border-bottom: 1px solid transparent;
 }
+p {
+	margin: 8px 0;
+}
 main td a:hover, p a:hover {
 	text-decoration: none;
 	color: hsl(215, 100%, 40%);

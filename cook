@@ -675,9 +675,9 @@ cookit() {
 		done
 	done
 
-#	# Get the list of installed packages
-#	cd $root$INSTALLED; ls -1 > $CACHE/installed.list
-#
+	# Get the list of installed packages
+	cd $root$INSTALLED; ls > $CACHE/installed.list
+
 #	# Have we a missing build dep to cook?
 #	if [ -s "$CACHE/missing.dep" ] && [ -n "$AUTO_COOK" ]; then
 #		_ 'Auto cook config is set: %s' "$AUTO_COOK"
