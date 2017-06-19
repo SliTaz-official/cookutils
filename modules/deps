@@ -19,7 +19,7 @@ fl_mirrorz='/var/lib/tazpkg/files.list.lzma'	# mirror files list
 fl_local='/home/slitaz/cache/files.list'		# local files list
 
 # recreate "combined list of all files" in the cases:
-#   * it absent
+#   * if absent
 #   * mirror files list has been updated
 #   * local files list has been updated
 
@@ -42,7 +42,7 @@ if [ ! -s $fl   -o   $fl_mirrorz -nt $fl   -o   $fl_local -nt $fl ]; then
 fi
 
 # recreate "database with *.so files" in the cases:
-#   * it absent
+#   * if absent
 #   * combined list of all files has been updated
 
 if [ ! -s $db_so   -o   $fl -nt $db_so ]; then
@@ -53,7 +53,7 @@ if [ ! -s $db_so   -o   $fl -nt $db_so ]; then
 fi
 
 # recreate "database with *.a files" in the cases:
-#   * it absent
+#   * if absent
 #   * combined list of all files has been updated
 
 if [ ! -s $db_a -o $fl -nt $db_a ]; then
@@ -63,7 +63,7 @@ if [ ! -s $db_a -o $fl -nt $db_a ]; then
 fi
 
 # recreate "database with *.la files" in the cases:
-#   * it absent
+#   * if absent
 #   * combined list of all files has been updated
 
 if [ ! -s $db_la -o $fl -nt $db_la ]; then
@@ -73,7 +73,7 @@ if [ ! -s $db_la -o $fl -nt $db_la ]; then
 fi
 
 # recreate "database with *.pc files" in the cases:
-#   * it absent
+#   * if absent
 #   * combined list of all files has been updated
 
 if [ ! -s $db_pc -o $fl -nt $db_pc ]; then
@@ -85,7 +85,7 @@ fi
 
 
 
-# Auxiliary function that deal with "not found" packages as well as with "repeatedly found" packages
+# Auxiliary function that deals with "not found" packages as well as with "repeatedly found" packages
 
 outpkg() {
 	pkgs="$1"
