@@ -126,7 +126,7 @@ compress_manpages() {
 	[ -d "$manpath" ] || return
 	size0=$(sizes man); [ -z "$size0" ] && return
 
-	tpi advancecomp
+	tpi advancecomp-static
 
 	action 'Compressing man pages...'
 
@@ -165,7 +165,7 @@ recompress_gz() {
 	[ "${COOKOPTS/!gz/}" != "$COOKOPTS" ] && return
 	size0=$(sizes gz); [ -z "$size0" ] && return
 
-	tpi advancecomp
+	tpi advancecomp-static
 
 	action 'Recompressing gzip files...'
 
@@ -315,7 +315,7 @@ fix_desktop_files() {
 	time0=$(get_time)
 
 	if [ -n "$QA" -a -z "$(which desktop-file-validate)" ]; then
-		tpi desktop-file-utils-extra
+		tpi desktop-file-validate-static
 	fi
 
 	# The variable $LOCALE is set in cook.conf and may be overridden in the receipt.

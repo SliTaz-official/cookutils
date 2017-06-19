@@ -318,10 +318,10 @@ a:target { background-color: yellow; }
 /* Table */
 
 table { width: 100%; box-sizing: border-box; border-collapse: collapse; /*box-shadow: 0 0 4px rgba(0,0,0,0.3);*/ }
-th { color: rgba(0,0,0,0.6); background-color: rgba(0,0,0,0.1); padding: 3px; }
+th { /*color: rgba(0,0,0,0.6);*/ background-color: rgba(0,0,0,0.1); padding: 3px; font-weight: normal; }
 td { padding: 2px; vertical-align: top; }
 td:first-child { white-space: nowrap; width: 5rem; }
-td+td, th+th { border-left: 1px solid rgba(0,0,0,0.1); }
+td+td { border-left: 1px solid rgba(0,0,0,0.1); }
 .activity td:first-child, .cooknotes td:first-child, td.m { color: rgba(0,0,0,0.6); }
 
 tbody tr:nth-child(odd) {
@@ -410,7 +410,7 @@ iframe {
 
 pre.files { background-color: hsla(0,0%,0%,0.8); color: hsla(0,0%,100%,0.9); }
 pre.files a { text-decoration: none; }
-pre.files a:hover { text-decoration: underline; }
+pre.files a[href]:hover { text-decoration: underline; }
 .c00 { color: #d3d7cf; } .c01 { color: #555753; }
 .c10 { color: #cc0000; } .c11 { color: #ef2929; }
 .c20 { color: #4e9a06; } .c21 { color: #8ae234; }

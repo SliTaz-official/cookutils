@@ -747,7 +747,7 @@ update_webstat() {
 	rbroken=$(wc -l < $broken)
 
 	# for packages:
-	ptotal=$(cut -d$'\t' -f2 $CACHE/split.db | tr ' ' '\n' | wc -l)
+	ptotal=$(cut -d$'\t' -f2 $CACHE/split.db | tr ' ' '\n' | sort -u | wc -l)
 	pcooked=$(ls $PKGS/*.tazpkg | wc -l)
 	punbuilt=$(($ptotal - $pcooked))
 	pblocked=$(
