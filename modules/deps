@@ -25,8 +25,8 @@ fl_local='/home/slitaz/cache/files.list'		# local files list
 
 case $(hostname) in
 	# Do we need to use mirror files list?
-	# It useful on casual development on local host, but useless on cooker server
-	# (and slow down list creation a lot).
+	# It's useful on casual development on local host, but useless on cooker server
+	# (and slows down list creation a lot).
 	tank)
 		if [ ! -s $fl   -o   $fl_mirrorz -nt $fl   -o   $fl_local -nt $fl ]; then
 			# unpack mirror files list
