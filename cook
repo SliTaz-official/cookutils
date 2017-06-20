@@ -543,14 +543,18 @@ remove_deps() {
 patchit() {
 	[ -f "$stuff/patches/series" ] || return
 
+	IFS=$'\n'
 	while read i; do
-		[ -f "$src/done.$i" ] && continue
+		patchname=$(echo $i | cut -d' ' -f1)		# allow comments (anything after the space)
+		[ -n "$patchname" ] || continue				# allow empty lines
+		[ -f "$src/done.$patchname" ] && continue	# already applied (useful with `cook --continue`)
 		newline
-		_ 'Applying patch %s' "$i"
-		patch -p1 -i $stuff/patches/$i | sed 's|^|  |'
-		touch $src/done.$i
+		_ 'Applying patch %s' "$patchname"
+		patch -Np1 -i $stuff/patches/$patchname | sed 's|^|  |'
+		touch $src/done.$patchname
 	done < $stuff/patches/series
 	newline
+	unset IFS
 }
 
 

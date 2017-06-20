@@ -23,23 +23,33 @@ fl_local='/home/slitaz/cache/files.list'		# local files list
 #   * mirror files list has been updated
 #   * local files list has been updated
 
-if [ ! -s $fl   -o   $fl_mirrorz -nt $fl   -o   $fl_local -nt $fl ]; then
-	# unpack mirror files list
-	fl_mirror="$(mktemp)"
-	lzcat $fl_mirrorz > $fl_mirror
+case $(hostname) in
+	# Do we need to use mirror files list?
+	# It useful on casual development on local host, but useless on cooker server
+	# (and slow down list creation a lot).
+	tank)
+		if [ ! -s $fl   -o   $fl_mirrorz -nt $fl   -o   $fl_local -nt $fl ]; then
+			# unpack mirror files list
+			fl_mirror="$(mktemp)"
+			lzcat $fl_mirrorz > $fl_mirror
 
-	# remove packages that exist in local list
-	cut -d: -f1 $fl_local | uniq | \
-	while read package; do
-		sed -i "/^$package: /d" $fl_mirror
-	done
+			# remove packages that exist in local list
+			cut -d: -f1 $fl_local | uniq | \
+			while read package; do
+				sed -i "/^$package: /d" $fl_mirror
+			done
 
-	# combine lists
-	cat $fl_mirror $fl_local > $fl
+			# combine lists
+			cat $fl_mirror $fl_local > $fl
 
-	# clean
-	rm $fl_mirror
-fi
+			# clean
+			rm $fl_mirror
+		fi
+		;;
+	*)
+		[ ! -s $fl   -o   $fl_local -nt $fl ] && cp $fl_local $fl
+		;;
+esac
 
 # recreate "database with *.so files" in the cases:
 #   * if absent
@@ -171,8 +181,12 @@ tp_ldd() {
 			# Requires: glib-2.0 gobject-2.0
 			# Requires.private: gmodule-no-export-2.0
 			# Requires: gobject-2.0,gio-2.0
+			# Requires.private: nspr >= 4.9.2
 			pcs=$(grep '^Requires' $1 | cut -d: -f2 | tr ',' ' ' | tr '\n' ' ')
 			for i in $pcs; do
+				isitlib=$(echo $i | tr -d '<=>0-9.')
+				# if it contains only comparisons, numbers, dot - it is not lib, skip
+				[ -n "$isitlib" ] || continue
 				indb "$i.pc" $db_pc
 			done
 			# Syntax examples:

@@ -487,7 +487,7 @@ syntax_highlighter() {
 				-e 's#^.*[Nn]o such file.*#<b>\0</b>#' \
 				-e 's#^.*No package .* found.*#<b>\0</b>#' \
 				-e 's#^.*Unable to find.*#<b>\0</b>#' \
-				-e 's#^.*[Ii]nvalid.*#<b>\0</b>#' \
+				-e 's#[^a-zA-Z-][Ii]nvalid.*#<b>\0</b>#' \
 				-e 's#\([Nn][Oo][Tt] found\.*\)$#<b>\1</b>#' \
 				-e 's#\(found\.*\)$#<i>\1</i>#' \
 				\
@@ -591,8 +591,11 @@ summary() {
 			}
 			function row2(line, rowNum) {
 				split(line, s, " : ");
-				if (rowNum == 1)
+				if (rowNum == 1) {
+					print "<thead>";
 					printf("\t<tr><th>%s</th><th>%s</th><th>%s</th><th>%s</th><th>%s</th></tr>\n", s[1], s[2], s[3], s[4], s[5]);
+					print "</thead><tbody>";
+				}
 				else
 					printf("\t<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>\n", s[1], s[2], s[3], s[4], s[5]);
 			}
@@ -601,12 +604,12 @@ summary() {
 				if ($0 ~ "===") { seen++; if (seen == 1) next; else exit; }
 				if ($0 ~ "---") {
 					seen2++;
-					if (seen2 == 1) printf("</table>\n<table class=\"pkgslist\">\n")
+					if (seen2 == 1) print "</table>\n\n<table class=\"pkgslist\">"
 					next
 				}
 				if (seen2) row2($0, seen2); else row($0);
 			}
-			END { print "</table></section>" }
+			END { print "</tbody></table></section>" }
 			'
 		elif fgrep -q "Debug information" $log; then
 			echo -e '<section>\n<h3>Debug information</h3>'
@@ -739,6 +742,10 @@ files_header() {
 # There is no need to recalculate the statistics every time the page is displayed.
 
 update_webstat() {
+	echo '<div id="waitme">'
+	show_note i 'Please wait while statistics are being collected.'
+	echo "</div>"
+
 	# for receipts:
 	rtotal=$(ls $WOK/*/arch.$ARCH | wc -l)
 	rcooked=$(ls -d $WOK/*/taz | wc -l)
@@ -763,6 +770,8 @@ update_webstat() {
 rtotal="$rtotal"; rcooked="$rcooked"; runbuilt="$runbuilt"; rblocked="$rblocked"; rbroken="$rbroken"
 ptotal="$ptotal"; pcooked="$pcooked"; punbuilt="$punbuilt"; pblocked="$pblocked"; pbroken="$pbroken"
 EOT
+
+	echo '<script>document.getElementById("waitme").remove();</script>'
 }
 
 
@@ -790,10 +799,10 @@ if [ -z "$pkg" ]; then
 		done
 
 		if [ -n "$(GET broken)" ]; then
-			echo '<div id="content2">'
+			echo '<section id="content2">'
 			echo "<h2>DB: broken - Packages: $(wc -l < $broken)</h2>"
 			sort $CACHE/broken | sed "s|^[^']*|<a href='$base/\0'>\0</a>|g" | mktable
-			echo '</div>'
+			echo '</section>'
 		fi
 
 		case "$QUERY_STRING" in

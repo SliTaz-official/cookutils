@@ -337,8 +337,8 @@ tbody tr:nth-child(even) {
 .summary th, .summary td { white-space: nowrap; width: 1rem; text-align: center; }
 .summary th:last-child, .summary td:last-child { width: unset; }
 
-.webstat td { text-align: center; }
-.webstat td:first-child { text-align: unset; }
+.webstat td { text-align: center; width: 16%; }
+.webstat td:first-child { text-align: unset; width: unset; }
 
 div.list td, div.list th { padding: 5px 2px; }
 
