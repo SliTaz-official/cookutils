@@ -545,7 +545,7 @@ patchit() {
 
 	IFS=$'\n'
 	while read i; do
-		patchname=$(echo $i | cut -d' ' -f1)		# allow comments (anything after the space)
+		patchname=$(echo ${i%%#*} | cut -d' ' -f1)	# allow comments (anything after the # or space)
 		[ -n "$patchname" ] || continue				# allow empty lines
 		[ -f "$src/done.$patchname" ] && continue	# already applied (useful with `cook --continue`)
 		newline
@@ -1093,7 +1093,11 @@ packit_quality() {
 
 all_names() {
 	local split=" $SPLIT "
-	if [ "${split/ $PACKAGE /}" != "$split" ]; then
+	if ! head -n1 $WOK/$pkg/receipt | fgrep -q 'v2'; then
+		# For receipts v1: $SPLIT may present in the $WANTED package,
+		# but split packages have their own receipts
+		echo $PACKAGE
+	elif [ "${split/ $PACKAGE /}" != "$split" ]; then
 		# $PACKAGE included somewhere in $SPLIT (probably in the end).
 		# We should build packages in the order defined in the $SPLIT.
 		echo $SPLIT
@@ -1451,10 +1455,10 @@ recreate_split_db() {
 	> $db
 
 	cd $WOK
-	for i in *; do
-		[ -f "$WOK/$i/receipt" ] || continue
+	for pkg in *; do
+		[ -f "$WOK/$pkg/receipt" ] || continue
 		unset PACKAGE SPLIT
-		. $WOK/$i/receipt
+		. $WOK/$pkg/receipt
 		echo -e "$PACKAGE\t$(all_names)" >> $db
 	done
 }

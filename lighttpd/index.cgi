@@ -31,6 +31,7 @@ cooknotes="$CACHE/cooknotes"
 cooktime="$CACHE/cooktime"
 wokrev="$CACHE/wokrev"
 webstat="$CACHE/webstat"
+splitdb="$CACHE/split.db"
 
 # Path to markdown to html convertor
 cmark_opts='--smart -e table -e strikethrough -e autolink -e tagfilter'
@@ -555,15 +556,11 @@ show_code() {
 
 
 datalist() {
-	(
-		cd $wok
-
-		ls | awk '
+	cut -d$'\t' -f2 $splitdb | tr ' ' '\n' | sort -u | awk '
 		BEGIN{printf("<datalist id=\"packages\">")}
-		     {printf("<option>%s</option>",$1)}
+		     {printf("<option>%s",$1)}
 		END  {printf("</datalist>")}
 		'
-	)
 }
 
 
@@ -740,6 +737,7 @@ files_header() {
 
 # Update statistics used in web interface.
 # There is no need to recalculate the statistics every time the page is displayed.
+# Note, $webstat file must be owned by www, otherwise this function will not be able to do the job.
 
 update_webstat() {
 	echo '<div id="waitme">'
@@ -975,32 +973,52 @@ fi
 case "$cmd" in
 	'')
 		page_header
-		log=$LOGS/$pkg.log
 
 		# Package info.
-		if [ -f "$wok/$pkg/receipt" ]; then
-			pkg_info
-		else
-			if [ $(ls $wok/*$pkg*/receipt 2>/dev/null | wc -l) -eq 0 ]; then
-				echo "<h2>Not Found</h2>"
-				show_note e "The requested package <b>$pkg</b> was not found on this server."
-			else
-				# Search page
+		if [ ! -f "$wok/$pkg/receipt" ]; then
+			# Let's look at the cases when the package was not found
+
+			# Maybe query is the exact name of split package? -> proceed to main package
+			mainpkg=$(awk -F$'\t' -vpkg=" $pkg " '{
+				if (index(" " $2 " ", pkg)) {print $1; exit}
+			}' $splitdb)
+
+			# No, so let's find any matches among packages names (both main and split)
+			if [ -z "$mainpkg" ]; then
+				pkgs=$(cut -d$'\t' -f2 $splitdb | tr ' ' '\n' | fgrep "$pkg")
+				# Nothing matched
+				if [ -z "$pkgs" ]; then
+					echo "<h2>Not Found</h2>"
+					show_note e "The requested package <b>$pkg</b> was not found on this server."
+					page_footer; exit 0
+				fi
+				# Search results page
 				echo "<section><h2>Package names matching “$pkg”</h2>"
 				echo "<table><thead><tr><th>Name</th><th>Description</th><th>Category</th></tr></thead><tbody>"
-				for i in $(cd $wok; ls *$pkg*/receipt); do
-					pkg=$(dirname $i)
+				query="$pkg"
+				for pkg in $pkgs; do
+					# Find main package
+					mainpkg=$(awk -F$'\t' -vpkg=" $pkg " '{
+						if (index(" " $2 " ", pkg)) {print $1; exit}
+					}' $splitdb)
+					unset SHORT_DESC CATEGORY; . $wok/$mainpkg/receipt
+
 					unset SHORT_DESC CATEGORY
-					. $wok/$pkg/receipt
-					echo -n "<tr><td><a href="$base/$pkg">$pkg</a></td>"
-					echo -n "<td>$SHORT_DESC</td><td>$CATEGORY</td></tr>"
+					[ -e "$wok/$mainpkg/taz/$PACKAGE-$VERSION/receipt" ] &&
+						. $wok/$mainpkg/taz/$PACKAGE-$VERSION/receipt
+
+					echo -n "<tr><td><a href="$base/$pkg">${pkg//$query/<mark>$query</mark>}</a>"
+					[ "$pkg" == "$mainpkg" ] || echo -n " (${mainpkg//$query/<mark>$query</mark>})"
+					echo -n "</td><td>$SHORT_DESC</td><td>$CATEGORY</td></tr>"
 				done
 				echo '</tbody></table></section>'
-				unset pkg
+				page_footer; exit 0
 			fi
-			page_footer
-			exit 0
+			pkg="$mainpkg"
 		fi
+
+		log=$LOGS/$pkg.log
+		pkg_info
 
 		# Check for a log file and display summary if it exists.
 		summary "$log"
@@ -1128,9 +1146,9 @@ case "$cmd" in
 
 
 		echo "<section><h3>Quick jump:</h3><ul>"
-		echo "$split" | sed 'p' | xargs printf "<li><a href='#id-%s'>%s</a></li>\n"
-		echo "<li id='li-repeats' style='display:none'><a href='#id-repeats'>repeatedly packaged files</a></li>"
-		echo "<li id='li-orphans' style='display:none'><a href='#id-orphans'>unpackaged files</a></li>"
+		echo "$split" | sed 'p' | xargs printf "<li><a href='#%s'>%s</a></li>\n"
+		echo "<li id='li-repeats' style='display:none'><a href='#repeats'>repeatedly packaged files</a></li>"
+		echo "<li id='li-orphans' style='display:none'><a href='#orphans'>unpackaged files</a></li>"
 		echo "</ul></section>"
 
 		for p in $split; do
@@ -1144,7 +1162,7 @@ case "$cmd" in
 
 			size=$(du -hs $dir | awk '{ sub(/\.0/, ""); print $1 }')
 
-			echo "<section><h3 id='id-$p'>Contents of package “$namever” (${size:-empty}):</h3>"
+			echo "<section><h3 id='$p'>Contents of package “$namever” (${size:-empty}):</h3>"
 			echo '<pre class="files">'
 			if [ -s "$wok/$indir/taz/$p-$ver/files.list" ]; then
 				echo -n '<span class="underline">permissions·lnk·user    ·'
@@ -1166,7 +1184,7 @@ case "$cmd" in
 		repeats="$(sort $packaged | uniq -d)"
 		if [ -n "$repeats" ]; then
 			echo '<script>document.getElementById("li-repeats").style.display = "list-item"</script>'
-			echo -n '<section><h3 id="id-repeats">Repeatedly packaged files:</h3><pre class="files">'
+			echo -n '<section><h3 id="repeats">Repeatedly packaged files:</h3><pre class="files">'
 			echo "$repeats" | sed 's|^|<span class="c11">!!!</span> |'
 			echo "</pre></section>"
 		fi
@@ -1177,7 +1195,7 @@ case "$cmd" in
 		orphans="$(sort $all_files $packaged | uniq -u)"
 		if [ -d "$wok/$main/install" -a -n "$orphans" ]; then
 			echo '<script>document.getElementById("li-orphans").style.display = "list-item"</script>'
-			echo '<section><h3 id="id-orphans">Unpackaged files:</h3>'
+			echo '<section><h3 id="orphans">Unpackaged files:</h3>'
 			table=$(mktemp)
 			echo "$orphans" | awk -vi="$base/$indir/browse/install" '
 			function tag(text, color) {

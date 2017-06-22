@@ -28,7 +28,11 @@ case $(hostname) in
 	# It's useful on casual development on local host, but useless on cooker server
 	# (and slows down list creation a lot).
 	tank)
+		[ ! -s $fl   -o   $fl_local -nt $fl ] && cp $fl_local $fl
+		;;
+	*)
 		if [ ! -s $fl   -o   $fl_mirrorz -nt $fl   -o   $fl_local -nt $fl ]; then
+			action 'Updating %s...' "$(basename $fl)"
 			# unpack mirror files list
 			fl_mirror="$(mktemp)"
 			lzcat $fl_mirrorz > $fl_mirror
@@ -44,10 +48,8 @@ case $(hostname) in
 
 			# clean
 			rm $fl_mirror
+			status
 		fi
-		;;
-	*)
-		[ ! -s $fl   -o   $fl_local -nt $fl ] && cp $fl_local $fl
 		;;
 esac
 
@@ -56,10 +58,12 @@ esac
 #   * combined list of all files has been updated
 
 if [ ! -s $db_so   -o   $fl -nt $db_so ]; then
+	action 'Updating %s...' "$(basename $db_so)"
 	fgrep '/lib/' $fl | fgrep '.so' | \
 	sed 's|^\([^:]*\):.*/\([^/]*\)$|\2\t\1|' | \
 	awk -F$'\t' '{if ($2 !~ "uclibc") print}' | \
 	sort > $db_so
+	status
 fi
 
 # recreate "database with *.a files" in the cases:
@@ -67,9 +71,11 @@ fi
 #   * combined list of all files has been updated
 
 if [ ! -s $db_a -o $fl -nt $db_a ]; then
+	action 'Updating %s...' "$(basename $db_a)"
 	fgrep '/usr/lib/lib' $fl | fgrep '.a' | \
 	sed 's|^\([^:]*\):.*/\([^/]*\)$|\2\t\1|' | \
 	sort > $db_a
+	status
 fi
 
 # recreate "database with *.la files" in the cases:
@@ -77,9 +83,11 @@ fi
 #   * combined list of all files has been updated
 
 if [ ! -s $db_la -o $fl -nt $db_la ]; then
+	action 'Updating %s...' "$(basename $db_la)"
 	fgrep '/usr/lib/' $fl | fgrep '.la' | \
 	sed 's|^\([^:]*\): \(.*\)$|\2\t\1|' | \
 	sort > $db_la
+	status
 fi
 
 # recreate "database with *.pc files" in the cases:
@@ -87,9 +95,11 @@ fi
 #   * combined list of all files has been updated
 
 if [ ! -s $db_pc -o $fl -nt $db_pc ]; then
+	action 'Updating %s...' "$(basename $db_pc)"
 	grep '\.pc$' $fl | \
 	sed -e 's|^\([^:]*\):.*/\([^/]*\)$|\2\t\1|' -e '/\tbuildroot$/d' | \
 	sort > $db_pc
+	status
 fi
 
 
