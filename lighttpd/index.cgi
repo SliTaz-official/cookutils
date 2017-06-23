@@ -514,10 +514,14 @@ syntax_highlighter() {
 				-e "s#^[a-zA-Z0-9]\([^']*\) :: #<span class='span-sky'>\0</span>#g" \
 				-e "s#[fh]tt*ps*://[^ '\"]*#<a href='\0'>\0</a>#g" \
 				\
-				-e "s|$_src|<span class='var'>\${src}</span>|g;
-					s|$_install|<span class='var'>\${install}</span>|g;
-					s|$_fs|<span class='var'>\${fs}</span>|g;
-					s|$_stuff|<span class='var'>\${stuff}</span>|g" \
+				-e 's|^<u>\(.*libtool: warning: relinking.*\)</u>|\1|' \
+				-e 's|^<u>\(.*libtool: warning: .* has not been installed in .*\)</u>|\1|' \
+				-e 's|^<u>\(.*checking for a sed.*\)</u>|\1|' \
+				\
+				-e "s|$_src|<var>\${src}</var>|g;
+					s|$_install|<var>\${install}</var>|g;
+					s|$_fs|<var>\${fs}</var>|g;
+					s|$_stuff|<var>\${stuff}</var>|g" \
 				-e "s|\[9\([1-6]\)m|<span class='c\10'>|;
 					s|\[39m|</span>|;"
 			;;

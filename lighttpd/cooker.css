@@ -183,6 +183,7 @@ mark {
 .log u  { text-decoration: none; color: darkorange; }
 .log i  { font-style: normal;    color: green; }
 .log em { font-style: normal;    background-color: lightsteelblue; font-weight: bold; display: inline-block; width: 100%; }
+.log var{ font-style: normal;    color: #05a; }
 
 .catman b  { color: navy; }
 .catman u  { text-decoration: none; color: green; }
