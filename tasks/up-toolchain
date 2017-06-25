@@ -44,7 +44,7 @@ $(separator)
 
 EOT
 
-	# All packages cooked got ther own log so we don't keep them.
+	# All packages cooked have their own log so we don't keep them.
 	mv -f $tmplog $LOGS/$PACKAGE.log
 
 	install=$WOK/$PACKAGE/install
