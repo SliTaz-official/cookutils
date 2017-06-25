@@ -1,0 +1,73 @@
+# SliTaz Cooker task.
+
+DESC="Update SliTaz toolchain"
+
+ver() {
+	grep ^VERSION $WOK/$1/receipt | cut -d '"' -f2
+}
+
+task() {
+	. $WOK/slitaz-toolchain/receipt
+
+	tmplog=$LOGS/$PACKAGE.tmplog
+
+	cat > $tmplog <<EOT
+Cook: $PACKAGE $VERSION
+$(separator)
+Cook toolchain : started $(date '+%F %R')
+Architecture   : $ARCH
+Build system   : $BUILD_SYSTEM
+Host  system   : $HOST_SYSTEM
+$(separator -)
+EOT
+
+	echo "cook: Binutils first pass : $(date '+%F %R')" >> $tmplog
+	cook binutils
+	echo "cook: GCC first pass      : $(date '+%F %R')" >> $tmplog
+	cook gcc --first-pass
+	echo "cook: Linux API headers   : $(date '+%F %R')" >> $tmplog
+	cook linux-api-headers
+	echo "cook: Glibc               : $(date '+%F %R')" >> $tmplog
+	cook glibc
+	echo "cook: Binutils final      : $(date '+%F %R')" >> $tmplog
+	cook binutils
+	echo "cook: GCC final           : $(date '+%F %R')" >> $tmplog
+	cook gcc
+
+	cat >> $tmplog <<EOT
+$(separator)
+
+GCC compiler information
+$(separator)
+$(gcc -v 2>&1 | sed 's|--|\n  --|g')
+$(separator)
+
+EOT
+
+	# All packages cooked got ther own log so we don't keep them.
+	mv -f $tmplog $LOGS/$PACKAGE.log
+
+	install=$WOK/$PACKAGE/install
+	mkdir -p $install/usr/share/doc/slitaz
+	cat > $install/usr/share/doc/slitaz/toolchain.txt <<EOT
+SliTaz GNU/Linux toolchain
+================================================================================
+
+Build date   : $(date "+%F")
+Architecture : $ARCH
+Build system : $BUILD_SYSTEM
+Host  system : $HOST_SYSTEM
+
+Packages:
+
+  * Binutils          : $(ver binutils)
+  * Linux API headers : $(ver linux-api-headers)
+  * GCC               : $(ver gcc)
+  * Glibc             : $(ver glibc)
+
+Toolchain documentation: http://doc.slitaz.org/en:cookbook:toolchain
+
+================================================================================
+
+EOT
+}

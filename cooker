@@ -23,23 +23,27 @@ pidfile='/var/run/cooker.pid'
 usage() {
 	cat <<EOT
 
-Usage: cooker [command] [pkg|list|note|hours]
+Usage: cooker [<command>] [<options>]
 
-Options:
-  usage|-u        Display this short usage.
-  setup|-s        Setup the Cooker environment.
-  setup-cron      Setup a cron job for the Cooker.
-  arch-db         Create host arch packages DB.
-  note|-n         Add a note to the cooknotes.
-  notes|-ns       Display all the cooknotes.
-  block|-b        Block a package so cook will skip it.
-  unblock|-ub     Unblock a blocked package.
-  pkg|-p          Same as 'cook pkg' but with cooker log.
-  flavor|-f       Cook all packages of a flavor.
-  list|-l         Cook all packages in the given list.
-  cat|-c          Cook all packages of a category.
-  rev|-r          Cook packages of a specific revision.
-  all|-a          Find and cook all unbuilt packages.
+Commands with <options>:
+  -u  | usage                  Display this short usage.
+  -s  | setup                  Setup the Cooker environment.
+        setup-cron [<hours>]   Setup a cron job for the Cooker.
+        check-cron             Check Cooker cron job.
+        arch-db                Create host arch packages DB.
+  -n  | note    <note_text>    Add a note to the cooknotes.
+  -ns | notes                  Display all the cooknotes.
+  -b  | block   <package>      Block a package so cook will skip it.
+  -ub | unblock <package>      Unblock a blocked package.
+  -R  | reverse <package>      Cook all reverse dependencies for a package.
+  -p  | pkg     <package>      Same as 'cook pkg' but with cooker log.
+  -f  | flavor  <flavor_name>  Cook all packages of a flavor.
+  -l  | list    <list_file>    Cook all packages in the given list.
+  -c  | cat     <category>     Cook all packages of a category.
+  -r  | rev     <rev_number>   Cook packages of a specific revision.
+  -a  | all                    Find and cook all unbuilt packages.
+  -T  | tasks                  List existing cooker tasks.
+  -t  | task    <task>         Executing specified task.
 
 EOT
 	exit 0
@@ -71,25 +75,67 @@ commits_summary() {
 	[ "$new" == "$cur" ] && msg="revision $new"
 	echo "Will cook $msg"
 	separator
-	echo -e "\nSummary for commits"
-	separator
+	title "Summary for commits"
 	echo "Hg wok revision  : $cur"
 	echo "Pulled revision  : $new"
 	echo "Check date       : $(date '+%F %T')"
 }
 
 
+# Return all the names of packages bundled in this receipt
+
+all_names() {
+	local split=" $SPLIT "
+	unset SPLIT
+	. $wok/$pkg/receipt
+
+	if ! head -n1 $WOK/$pkg/receipt | fgrep -q 'v2'; then
+		# For receipts v1: $SPLIT may present in the $WANTED package,
+		# but split packages have their own receipts
+		echo $PACKAGE
+	elif [ "${split/ $PACKAGE /}" != "$split" ]; then
+		echo $SPLIT
+	else
+		echo $PACKAGE $SPLIT
+	fi
+}
+
+
 # Scan packages build deps and fill up cookorder list.
 
 cook_order_scan() {
-	rm -f $cookorder
-	touch $cookorder
+	rm -f $cookorder $cookorder.split
+	touch $cookorder $cookorder.split
+
+	# Make combined split table: beginning from actual information with fresh
+	# commits. Example:
+	# freetype	freetype freetype-dev
+	# harfbuzz	harfbuzz harfbuzz-apps harfbuzz-dev
+	while read pkg; do
+		echo "$pkg	$(all_names)" >> $cookorder.split
+	done < $cooklist
+	cat $cache/split.db >> $cookorder.split
+
+	maxlen=$(wc -L < $cooklist)
+
 	while read pkg; do
 		unset WANTED BUILD_DEPENDS
 		. $wok/$pkg/receipt
+		bdeps=$(
+			# Substitite each package of BUILD_DEPENDS list by the "main"
+			# receipt which builds this package. Example:
+			# BUILD_DEPENDS="freetype-dev harfbuzz-dev" -> bdeps="freetype harfbuzz"
+			for i in $BUILD_DEPENDS; do
+				main="$(awk -F$'\t' -vi="$i" '{
+					if (index(" " $2 " ", i)) {print $1; exit}
+				}' $cookorder.split)"
+				echo ${main:-$i}
+			done
+		)
 		# The :: is for web interface color.
-		[ "$WANTED$BUILD_DEPENDS" ] && echo "$pkg :: $WANTED $BUILD_DEPENDS"
-		for dep in $WANTED $BUILD_DEPENDS; do
+		bdeps=$(echo $WANTED $bdeps | tr '\n' ' ')
+		printf "%-${maxlen}s :: %s\n" "$pkg" "$bdeps"
+		for dep in $bdeps; do
 			if grep -q "^$dep$" $cooklist; then
 				if ! grep -q "^$dep$" $cookorder; then
 					echo "$dep" >> $cookorder
@@ -112,37 +158,47 @@ cook_order_scan() {
 cook_order() {
 	time=$(date +%s)
 	scan=0
+	rm   -rf $cache/cookorder.d
+	mkdir -p $cache/cookorder.d
 
 	# Keep an original cooklist so we do a diff when ordering is finished.
 	cp -f $cooklist $cooklist.0
 	echo 'cookorder' > $command
-	echo -e '\nInitial Cooker order scan'
-	separator
+	title 'Initial Cooker order scan'
 	cook_order_scan
 
 	# Diff between the cooklist and new ordered list ? So copy the last
 	# cookorder to cooklist and rescan it.
 	while /bin/true; do
-		diff $cooklist $cookorder > $cookorder.diff
-		if [ -s "$cookorder.diff" ]; then
+		if ! cmp -s $cooklist $cookorder; then
 			scan=$(($scan + 1))
-			echo -e "\nDiff scan: $scan"
-			separator
+			title "Diff scan: $scan"
+
+			md5stamp=$(md5sum $cookorder | cut -d' ' -f1)
+			if [ -e "$cache/cookorder.d/$md5stamp" ]; then
+				newline
+				echo 'A dependency loop was detected. Interrupting the cookorder.'
+				break
+			fi
+			touch $cache/cookorder.d/$md5stamp
+
 			mv -f $cookorder $cooklist
 			cook_order_scan
+
 		else
 			break
 		fi
 	done
+	# Clean
+	rm -rf $cache/cookorder.d; rm $cookorder.split
 
 	# Keep a diff between submitted cooklist and the ordered.
 	diff $cooklist.0 $cooklist > $cooklist.diff
-	rm -f $cookorder $cookorder.diff $cooklist.0
+	rm -f $cookorder $cooklist.0
 
 	# Scan finished: append pkg to WANTED or leave it in the ordered cooklist.
 	# TODO: grep the line number to get pkg position and keep it higher.
-	echo -e '\nHandle WANTED package'
-	separator
+	title 'Handle WANTED package'
 	while read pkg; do
 		unset WANTED
 		. $wok/$pkg/receipt
@@ -156,15 +212,13 @@ cook_order() {
 	done < $cooklist
 
 	# Show ordered cooklist
-	echo -e '\nCooklist order'
-	separator
+	title 'Cooklist order'
 	cat $cooklist
 	separator
 
 	time=$(($(date +%s) - $time))
 	pkgs=$(wc -l < $cooklist)
-	echo -e '\nSummary for cookorder'
-	separator
+	title 'Summary for cookorder'
 	cat <<EOT
 Ordered packages : $pkgs
 Scans executed   : $scan
@@ -260,10 +314,9 @@ case "$1" in
 
 	setup|-s)
 		# Setup the Cooker environment.
-		echo -e '\nSetting up the Cooker'
+		title 'Setting up the Cooker'
 		mkdir -p $CACHE
 		echo "Cooker setup using: $SLITAZ" | log
-		separator
 		for pkg in $SETUP_PKGS mercurial rsync tazlito; do
 			[ ! -d "$INSTALLED/$pkg" ] && tazpkg get-install $pkg
 		done
@@ -286,7 +339,7 @@ case "$1" in
 		hg clone $WOK_URL ${wok}-hg || exit 1
 		[ -d "$flavors" ] || hg clone $FLAVORS_URL flavors
 		cp -a ${wok}-hg $wok
-		separator; newline ;;
+		footer ;;
 
 	arch-db)
 		# Manually create arch packages DB.
@@ -323,10 +376,9 @@ EOT
 
 	notes|-ns)
 		# View cooknotes.
-		echo -e '\nCooknotes'
-		separator
+		title 'Cooknotes'
 		cat $cooknotes
-		separator; newline ;;
+		footer ;;
 
 	block|-b)
 		# Block a package.
@@ -347,8 +399,7 @@ EOT
 			exit 0
 		fi
 		rm -f $cooklist; touch $cooklist
-		echo -e "\nReverse cooklist for: $pkg"
-		separator
+		title "Reverse cooklist for: $pkg"
 
 		cd $wok
 		for rev in *; do
@@ -358,8 +409,7 @@ EOT
 				echo "$rev" | tee -a $cooklist
 			fi
 		done
-		separator
-		echo -e "Reverse dependencies found: $(wc -l < $cooklist)\n"
+		footer "Reverse dependencies found: $(wc -l < $cooklist)"
 		strip_blocked
 		cook_order | tee $LOGS/cookorder.log
 		cook_list ;;
@@ -432,9 +482,7 @@ EOT
 		# Try to build all unbuilt packages except blocked's.
 		echo 'cooker:all' > $command
 		rm -f $cooklist; touch $cooklist
-		newline
-		echo 'Cooker cooklist'
-		separator
+		title 'Cooker cooklist'
 
 		# Find all unbuilt packages. Get EXTRAVERSION from packed receipt
 		# if it exists since extra version is added when packing the package.
@@ -455,6 +503,26 @@ EOT
 		cook_order | tee $LOGS/cookorder.log
 		echo "Packages to cook: $(wc -l < $cooklist)" | log
 		cook_list ;;
+
+	tasks|-T)
+		# List existing cooker tasks
+		[ ! -d "$tasks" ] && echo 'There are no tasks.' && exit 0
+		title 'Cooker tasks list'
+		last=$(ls $tasks | tail -n1)
+		for task in $(ls $tasks); do
+			. $tasks/$task
+			echo "Task name   : $task"
+			echo "Description : $DESC"
+			separator $([ $task != $last ] && echo '-')
+		done
+		newline ;;
+
+	task|-t)
+		# Executing specified task
+		task="$2"
+		title "Executing cooker task: $task"
+		. $tasks/$task; task
+		footer "Task $task finished" ;;
 
 	*)
 		# Default is to cook all commits if not yet running.

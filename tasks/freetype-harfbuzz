@@ -1,0 +1,10 @@
+# SliTaz Cooker task.
+
+DESC="Resolve circular dependency between freetype and harfbuzz"
+
+task() {
+	cook freetype
+	cook harfbuzz
+	cook freetype --harfbuzz
+	cook harfbuzz
+}

@@ -43,6 +43,7 @@ wokrev="$cache/wokrev"
 cooknotes="$cache/cooknotes"
 cooktime="$cache/cooktime"
 crontabs="/var/spool/cron/crontabs/root"
+tasks="$SLITAZ/tasks"
 
 
 # Lograte activity.

@@ -523,7 +523,8 @@ syntax_highlighter() {
 					s|$_fs|<var>\${fs}</var>|g;
 					s|$_stuff|<var>\${stuff}</var>|g" \
 				-e "s|\[9\([1-6]\)m|<span class='c\10'>|;
-					s|\[39m|</span>|;"
+					s|\[39m|</span>|;
+					s|\[1m|<strong>|g; s|\[0m|</strong>|g;"
 			;;
 
 		files)
@@ -815,7 +816,7 @@ if [ -z "$pkg" ]; then
 					echo "<h2>Log for: ${name%.log}</h2>"
 					if fgrep -q "Summary" $log; then
 						echo '<pre class="log">'
-						grep -A 20 '^Summary' $log | syntax_highlighter log
+						grep -A 20 'Summary' $log | syntax_highlighter log
 						echo '</pre>'
 					fi
 					echo '<pre class="log">'
