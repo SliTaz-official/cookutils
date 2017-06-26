@@ -35,7 +35,7 @@ case $(hostname) in
 			action 'Updating %s...' "$(basename $fl)"
 			# unpack mirror files list
 			fl_mirror="$(mktemp)"
-			lzcat $fl_mirrorz > $fl_mirror
+			lzcat $fl_mirrorz | sed '/\.\(so.*\|a\|la\|pc\)$/!d' > $fl_mirror
 
 			# remove packages that exist in local list
 			cut -d: -f1 $fl_local | uniq | \
