@@ -1208,7 +1208,8 @@ case "$cmd" in
 				printf("<a class=\"c00\" href=\"%s\">%s</a>\n", i $0, $0);
 			}
 			/\/perllocal.pod$/ || /\/\.packlist$/ || /\/share\/bash-completion\// ||
-				/\/lib\/systemd\// || /\.pyc$/ || /\.pyo$/ { tag("---", 0); next }
+				/\/lib\/systemd\// || /\.pyc$/ || /\.pyo$/ || /\/fonts\.scale$/ || /\/fonts\.dir$/ {
+				tag("---", 0); next }
 			/\.pod$/  { tag("pod", 5); next }
 			/\/share\/man\// { tag("man", 5); next }
 			/\/share\/doc\// || /\/share\/gtk-doc\// || /\/share\/info\// ||

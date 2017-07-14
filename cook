@@ -1346,6 +1346,7 @@ copy() {
 					/\/share\/man\//d; /\/share\/doc\//d; /\/share\/gtk-doc\//d; /\/share\/info\//d;
 					/\/share\/devhelp\//d; /\/share\/locale\//d;
 					/\/share\/bash-completion\//d; /\/lib\/systemd\//d;
+					/\/fonts\.scale$/d; /\/fonts\.dir$/d;
 					' $filelist
 				;;
 			@dev)
@@ -1419,13 +1420,33 @@ cook_copy_icons() {
 update_packages_db() {
 	# packages.info (unsorted, located near to packages)
 	local pi="$PKGS/packages.info"
-	sed -i "/^$PACKAGE\t/d" $pi
 	unset_receipt; . $pack/receipt
 	SIZES=$(echo $PACKED_SIZE $UNPACKED_SIZE | sed 's|\.0||g')
+
 	DEPENDS=$(echo $DEPENDS) # remove newlines, tabs and multiple spaces from variable
-	MD5="$(md5sum "$PKGS/$PACKAGE-$VERSION$EXTRAVERSION.tazpkg" | awk '{print $1}')"
+
+	# Calculate release checksum: usually it not change on "just recook".
+	# Release checksum is md5sum of file contains md5sums of all files, receipt and description.txt.
+	# Md5sum of the package file will change every time because of embedded timestamps;
+	# release checksum based only on files content, and will change only when files change.
+	rsumf=$(mktemp)
+	cp $pack/md5sum $rsumf
+	md5sum $pack/receipt | sed 's| [^ ]*/| |' >> $rsumf
+	[ -e "$pack/description.txt" ] && md5sum $pack/description.txt | sed 's| [^ ]*/| |' >> $rsumf
+	rsum=$(md5sum $rsumf | awk '{print $1}')
+	rm $rsumf
+#	MD5="$(md5sum "$PKGS/$PACKAGE-$VERSION$EXTRAVERSION.tazpkg" | awk '{print $1}')"
+	rsumold=$(awk -F$'\t' -vpkg="$PACKAGE" '{if ($1 == pkg) { print $9; exit; }}' $pi)
+
+	if [ "$rsum" == "$rsumold" ]; then
+		_ 'The release checksum has not changed.\n'
+	else
+		_ 'The release checksum has changed.\n'
+	fi
+
+	sed -i "/^$PACKAGE\t/d" $pi		# remove old entry
 	cat >> $pi <<EOT
-$PACKAGE	$VERSION$EXTRAVERSION	$CATEGORY	$SHORT_DESC	$WEB_SITE	$TAGS	$SIZES	$DEPENDS	$MD5	$PROVIDE
+$PACKAGE	$VERSION$EXTRAVERSION	$CATEGORY	$SHORT_DESC	$WEB_SITE	$TAGS	$SIZES	$DEPENDS	$rsum	$PROVIDE
 EOT
 
 	# files.list (uncompressed, unsorted, located in $cache)

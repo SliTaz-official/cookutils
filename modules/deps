@@ -135,6 +135,21 @@ outpkg() {
 				s("polkit",       "polkit-pam");
 				s("libgudev",     "eudev"); # also systemd
 				s("xz-dev",       "liblzma-dev");
+				s("xorg-libxcb",  "libxcb");
+				s("xorg-xcb-util-image",      "xcb-util-image");
+				s("xorg-xcb-util-keysyms",    "xcb-util-keysyms");
+				s("xorg-xcb-util-renderutil", "xcb-util-renderutil");
+				s("xorg-xcb-util-wm",         "xcb-util-wm");
+				s("xorg-xcb-util",            "xcb-util");
+				s("xorg-libxcb",              "libxcb");
+				s("xorg-libxcb-dev",          "libxcb-dev");
+				s("xorg-pixman",              "pixman");
+				s("xorg-pixman-dev",          "pixman-dev");
+				s("xorg-xcb-util-cursor",     "xcb-util-cursor");
+				s("xorg-xcb-util-dev",        "xcb-util-dev");
+				s("xorg-xcb-util-image-dev",  "xcb-util-image-dev");
+				s("xorg-xcb-util-renderutil-dev", "xcb-util-renderutil-dev");
+				s("eudev-dev", "udev-dev");
 
 				if (! index($0, "glibc-base") &&
 					! index($0, "gcc-lib-base") &&

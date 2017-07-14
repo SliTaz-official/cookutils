@@ -92,13 +92,15 @@ echo " ($(filesize $PKGS/descriptions.txt))" | dblog
 
 _ 'Creating lists from "%s"' "$WOK" | dblog
 cd $WOK
+rsumf=$(mktemp)
 for i in *; do
 	[ -d "$WOK/$i/taz" ] || continue
 
 	for j in $(ls $WOK/$i/taz | sort); do
-		[ -f "$WOK/$i/taz/$j/receipt" ] || continue
+		pack="$i/taz/$j"
+		[ -f "$WOK/$pack/receipt" ] || continue
 		unset_receipt
-		. $i/taz/$j/receipt
+		. $pack/receipt
 
 		if [ -f "$PKGS/$PACKAGE-$VERSION$EXTRAVERSION.tazpkg" -o \
 		     -f "$PKGS/$PACKAGE-$VERSION$EXTRAVERSION-$ARCH.tazpkg" ]; then
@@ -122,9 +124,15 @@ EOT
 			# and will substitute them all
 			SIZES=$(echo $PACKED_SIZE $UNPACKED_SIZE | sed 's|\.0||g')
 			DEPENDS=$(echo $DEPENDS) # remove newlines from some receipts
-			MD5="$(fgrep " $PACKAGE-$VERSION$EXTRAVERSION.tazpkg" $PKGS/packages.md5 | awk '{print $1}')"
+
+			#MD5="$(fgrep " $PACKAGE-$VERSION$EXTRAVERSION.tazpkg" $PKGS/packages.md5 | awk '{print $1}')"
+			cp $pack/md5sum $rsumf
+			md5sum $pack/receipt | sed 's| [^ ]*/| |' >> $rsumf
+			[ -e "$pack/description.txt" ] && md5sum $pack/description.txt | sed 's| [^ ]*/| |' >> $rsumf
+			rsum=$(md5sum $rsumf | awk '{print $1}')
+
 			cat >> $PKGS/packages.info <<EOT
-$PACKAGE	$VERSION$EXTRAVERSION	$CATEGORY	$SHORT_DESC	$WEB_SITE	$TAGS	$SIZES	$DEPENDS	$MD5	$PROVIDE
+$PACKAGE	$VERSION$EXTRAVERSION	$CATEGORY	$SHORT_DESC	$WEB_SITE	$TAGS	$SIZES	$DEPENDS	$rsum	$PROVIDE
 EOT
 
 			# packages.equiv is used by tazpkg install to check depends.
@@ -152,6 +160,8 @@ EOT
 		fi
 	done
 done
+rm $rsumf
+
 
 # Display list size.
 _ 'Done: %s (%s)' 'packages.desc'  "$(filesize $PKGS/packages.desc)"  | dblog
