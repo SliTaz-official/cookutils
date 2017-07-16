@@ -1153,7 +1153,8 @@ case "$cmd" in
 		echo "<section><h3>Quick jump:</h3><ul>"
 		echo "$split" | sed 'p' | xargs printf "<li><a href='#%s'>%s</a></li>\n"
 		echo "<li id='li-repeats' style='display:none'><a href='#repeats'>repeatedly packaged files</a></li>"
-		echo "<li id='li-orphans' style='display:none'><a href='#orphans'>unpackaged files</a></li>"
+		echo "<li id='li-orphans' style='display:none'><a href='#orphans'>unpackaged files</a>"
+		echo "<span id='orphansTypes'></span></li>"
 		echo "</ul></section>"
 
 		for p in $split; do
@@ -1222,6 +1223,7 @@ case "$cmd" in
 			' > $table
 
 			# Summary table
+			orphans_types='()'
 			for i in head body; do
 				case $i in
 					head) echo -n '<table class="summary"><tr>';;
@@ -1231,11 +1233,18 @@ case "$cmd" in
 					tag=${j:0:3}; class="c${j:3:1}0"; [ "$class" == 'c00' ] && class='c01'
 					case $i in
 						head) echo -n "<th class='$class'>$tag</th>";;
-						body) printf '<td>%s</td>' "$(grep ">$tag<" $table | wc -l)";;
+						body)
+							tagscount="$(grep ">$tag<" $table | wc -l)"
+							printf '<td>%s</td>' "$tagscount"
+							[ "$tagscount" -gt 0 ] && orphans_types="${orphans_types/)/ $tag)}"
+							;;
 					esac
 				done
 			done
 			echo '<td> </td></tr></table>'
+			orphans_types="${orphans_types/( /(}"
+			[ "$orphans_types" != '()' ] &&
+				echo "<script>document.getElementById('orphansTypes').innerText = '${orphans_types// /, }';</script>"
 
 			echo -n '<pre class="files">'
 			cat $table
