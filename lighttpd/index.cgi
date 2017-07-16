@@ -112,8 +112,8 @@ page_header() {
 		<a href="http://pizza.slitaz.me/">Pizza</a>
 		<a href="http://tank.slitaz.org/">Tank</a>
 		|
-		<a href="$base/cross/">Cross</a>
-		<a href="$base/i486.cgi">i486</a>
+		<a href="/cross/">Cross</a>
+		<a href="/i486.cgi">i486</a>
 		<a href="$base/cookiso.cgi">ISO</a>
 		<select onChange="window.location.href=this.value" style="display: none">
 			<option value=".">Go to…</option>
