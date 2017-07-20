@@ -604,6 +604,7 @@ EOT
 				fi
 				rm -rf $wok/$pkg $LOGS/$pkg.log
 				sed -i "/^${pkg}$/d" $blocked $broken $commits.tmp
+				sed -i "/^$pkg\t/d" $PKGS/packages.info
 			fi
 			if [ -d "$wok/$pkg/stuff" ]; then
 				if [ ! -d "$wok-hg/$pkg/stuff" ]; then

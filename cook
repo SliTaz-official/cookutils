@@ -534,7 +534,7 @@ remove_deps() {
 		newline; newline
 		# Keep the last diff for debug and info.
 		mv -f $diff $CACHE/installed.diff
-	} | fold -sw80
+	} | busybox fold -sw80
 }
 
 
@@ -1426,9 +1426,11 @@ update_packages_db() {
 	DEPENDS=$(echo $DEPENDS) # remove newlines, tabs and multiple spaces from variable
 
 	# Calculate release checksum: usually it does not change on "just recook".
-	# Release checksum is md5sum of file containing md5sums of all files, receipts and description.txts.
+	# Release checksum is md5sum of file containing md5sums of:
+	# a) all files, b) receipt, and c) description.txt.
 	# Md5sum of the package file will change every time because of embedded timestamps;
 	# release checksum based only on files content, and will change only when files change.
+	# (Pitfall: ownership and permissions...)
 	rsumf=$(mktemp)
 	cp $pack/md5sum $rsumf
 	md5sum $pack/receipt | sed 's| [^ ]*/| |' >> $rsumf
