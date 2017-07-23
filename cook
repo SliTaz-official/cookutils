@@ -1073,7 +1073,7 @@ packit_quality() {
 	for testpkg in $(ls $PKGS/$PACKAGE-*.tazpkg 2>/dev/null); do
 		# Extract receipt from each matched package
 		cpio -F "$testpkg" -i receipt >/dev/null 2>&1
-		name=$(. receipt; echo $PACKAGE)
+		name=$(. ./receipt; echo $PACKAGE)
 		rm receipt
 		if [ "$name" == "$PACKAGE" ]; then
 			action 'Removing old package "%s"' "$(basename "$testpkg")"
@@ -1802,7 +1802,7 @@ case "$1" in
 			# Source cooked pkg receipt to get EXTRAVERSION
 			if [ -d "$WOK/$pkg/taz" ]; then
 				cd $WOK/$pkg/taz/$pkg-*
-				. receipt; cd $WOK
+				. ./receipt; cd $WOK
 			fi 
 			case "$ARCH" in
 				i486)
