@@ -5,8 +5,5 @@ glibc
 gcc
 make
 zlib
-zlib-dev
 pcre
-pcre-dev
 ncurses
-ncurses-dev

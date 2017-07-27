@@ -1,4 +1,4 @@
-# SliTaz package receipt.
+# SliTaz package receipt v2.
 
 PACKAGE=""
 VERSION=""
@@ -7,10 +7,10 @@ SHORT_DESC=""
 MAINTAINER=""
 LICENSE=""
 WEB_SITE=""
+
 TARBALL="$PACKAGE-$VERSION.tar.gz"
 WGET_URL="$TARBALL"
 
-DEPENDS=""
 BUILD_DEPENDS=""
 
 # Rules to configure and make the package.
@@ -22,5 +22,6 @@ compile_rules()
 # Rules to gen a SliTaz package suitable for Tazpkg.
 genpkg_rules()
 {
-	cp -a $install/* $fs
+	copy @std @dev
+	DEPENDS=""
 }

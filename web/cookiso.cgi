@@ -46,9 +46,9 @@ syntax_highlighter() {
 
 list_isos() {
 	cd $iso
-	ls -1t *.iso | head -6 | \
+	ls -1t *.iso | head -n6 | \
 	while read file; do
-		echo -n $(stat -c '%y' $file | cut -d . -f 1 | sed s/:[0-9]*$//)
+		echo -n $(stat -c '%y' $file | cut -d. -f1 | sed s/:[0-9]*$//)
 		echo " : $file"
 	done
 }

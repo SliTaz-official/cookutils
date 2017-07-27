@@ -8,7 +8,7 @@ SLITAZ_TOOLCHAIN="slitaz-toolchain $DEPENDS"
 touch $DONELIST
 while true; do
 	chmod +x $DONELIST
-	for i in $WOK/*/receipt ; do
+	for i in $WOK/*/receipt; do
 		pkg=$(basename ${i%/receipt})
 		grep -q "^$pkg$" $DONELIST && continue
 		grep -q "^$pkg$" $CACHE/broken && continue
@@ -16,16 +16,16 @@ while true; do
 		HOST_ARCH="i486"
 		. $i
 		case " $HOST_ARCH " in
-		*\ i486\ *|*\ any\ *);;
-		*) continue;;
+			*\ i486\ *|*\ any\ *);;
+			*) continue;;
 		esac
-		for j in $WANTED ; do
+		for j in $WANTED; do
 			grep -q "^$j$" $DONELIST || continue 2
 			grep -q "^$j$" $CACHE/broken && continue 2
 		done
-		for j in $BUILD_DEPENDS ; do
+		for j in $BUILD_DEPENDS; do
 			case " $SLITAZ_TOOLCHAIN " in
-			*\ $j\ *) continue ;;
+				*\ $j\ *) continue;;
 			esac
 			grep -q "^$j$" $DONELIST || continue 2
 			grep -q "^$j$" $CACHE/broken && continue 2
@@ -37,7 +37,7 @@ while true; do
 	done
 	[ -x $DONELIST ] || continue
 	# try to break build dep loops...
-	for pkg in gettext python udev cups libQtClucene menu-cache tzdata ; do
+	for pkg in gettext python udev cups libQtClucene menu-cache tzdata; do
 		grep -q "^$pkg$" $DONELIST && continue
 		grep -q "^$pkg$" $CACHE/broken && continue
 		. $WOK/$pkg/receipt
@@ -51,18 +51,18 @@ done
 
 TODOLIST=/tmp/todolist
 # list packages to build and their (build) dependancies
-for i in $WOK/*/receipt ; do
+for i in $WOK/*/receipt; do
 	grep -q "^$(basename ${i%/receipt})$" $DONELIST && continue
 	unset BUILD_DEPENDS WANTED
 	HOST_ARCH="i486"
 	. $i
 	case " $HOST_ARCH " in
-	*\ i486\ *|*\ any\ *);;
-	*) continue;;
+		*\ i486\ *|*\ any\ *);;
+		*) continue;;
 	esac
 	grep -q "^$PACKAGE$" $CACHE/broken && echo -n "broken/"
 	echo -n "$PACKAGE : "
-	for j in $BUILD_DEPENDS $WANTED ; do
+	for j in $BUILD_DEPENDS $WANTED; do
 		grep -q "^$j$" $DONELIST || echo -n "$j "
 		grep -q "^$j$" $CACHE/broken && echo -n "broken/$j "
 	done

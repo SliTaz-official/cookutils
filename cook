@@ -981,7 +981,7 @@ packit() {
 	# Create files.list with redirecting find output.
 	action 'Creating the list of files...'
 	cd $fs
-	find . -type f -print > ../files.list
+	find . -type f -print >  ../files.list
 	find . -type l -print >> ../files.list
 	cd ..; sed -i 's|^.||' files.list
 	status
@@ -1557,7 +1557,7 @@ case "$1" in
 			for pkg in $(fgrep 'HOST_ARCH=' */receipt | egrep "$ARCH|any" | cut -d: -f1)
 			do
 				unset HOST_ARCH
-				. $pkg
+				. ./$pkg
 				count=$(($count + 1))
 				colorize 34 "$PACKAGE"
 			done
@@ -1795,13 +1795,13 @@ case "$1" in
 		count=0
 		title 'Checking for uncooked packages'
 
-		for pkg in *; do
+		for i in *; do
 			unset HOST_ARCH EXTRAVERSION
-			[ ! -e $pkg/receipt ] && continue
-			. $pkg/receipt
+			[ ! -e $i/receipt ] && continue
+			. ./$i/receipt
 			# Source cooked pkg receipt to get EXTRAVERSION
-			if [ -d "$WOK/$pkg/taz" ]; then
-				cd $WOK/$pkg/taz/$pkg-*
+			if [ -d "$WOK/$i/taz" ]; then
+				cd $WOK/$i/taz/$(ls $WOK/$i/taz/ | head -n1)
 				. ./receipt; cd $WOK
 			fi 
 			case "$ARCH" in
@@ -1809,7 +1809,7 @@ case "$1" in
 					debug "$(_ 'Package "%s"' "$PKGS/$PACKAGE-$VERSION$EXTRAVERSION.tazpkg")"
 					if [ ! -f "$PKGS/$PACKAGE-$VERSION$EXTRAVERSION.tazpkg" ]; then
 						count=$(($count + 1))
-						colorize 34 "$pkg"
+						colorize 34 "$i"
 					fi ;;
 				arm*)
 					# Check only packages included in arch
@@ -1817,7 +1817,7 @@ case "$1" in
 						# *.tazpkg
 						if [ ! -f "$PKGS/$PACKAGE-$VERSION$EXTRAVERSION-$ARCH.tazpkg" ]; then
 							count=$(($count + 1))
-							colorize 34 "$pkg"
+							colorize 34 "$i"
 						fi
 					fi ;;
 			esac

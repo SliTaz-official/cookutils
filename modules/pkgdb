@@ -82,10 +82,10 @@ for i in $(ls $WOK | sort); do
 		[ -e "$WOK/$i/taz/$j/description.txt" ] || continue
 
 		pkgname=$(. $WOK/$i/taz/$j/receipt; echo $PACKAGE)
-		echo "$pkgname" >> descriptions.txt
-		cat "$WOK/$i/taz/$j/description.txt" | sed 's|^$| |' >> descriptions.txt
-		echo >> descriptions.txt
-	done
+		echo "$pkgname"
+		sed 's|^$| |' "$WOK/$i/taz/$j/description.txt"
+		echo
+	done >> descriptions.txt
 done
 echo " ($(filesize $PKGS/descriptions.txt))" | dblog
 
@@ -100,7 +100,7 @@ for i in *; do
 		pack="$i/taz/$j"
 		[ -f "$WOK/$pack/receipt" ] || continue
 		unset_receipt
-		. $pack/receipt
+		. ./$pack/receipt
 
 		if [ -f "$PKGS/$PACKAGE-$VERSION$EXTRAVERSION.tazpkg" -o \
 		     -f "$PKGS/$PACKAGE-$VERSION$EXTRAVERSION-$ARCH.tazpkg" ]; then

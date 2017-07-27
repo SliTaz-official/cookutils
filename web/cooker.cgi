@@ -226,9 +226,9 @@ syntax_highlighter() {
 
 list_packages() {
 	cd $PKGS
-	ls -1t *.tazpkg | head -n 20 | \
+	ls -1t *.tazpkg | head -n20 | \
 	while read file; do
-		echo -n $(TZ=UTC stat -c '%y' $PKGS/$file | cut -d . -f 1 | sed s/:[0-9]*$//)
+		echo -n $(TZ=UTC stat -c '%y' $PKGS/$file | cut -d. -f1 | sed s/:[0-9]*$//)
 		echo " : $file"
 	done
 }
