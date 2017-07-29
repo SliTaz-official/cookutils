@@ -1044,6 +1044,33 @@ packit() {
 }
 
 
+# Calculate release checksum: usually it does not change on "just recook".
+# Release checksum is md5sum of file containing md5sums of:
+# a) all files, b) receipt, and c) description.txt.
+# Md5sum of the package file will change every time because of embedded timestamps;
+# release checksum based only on files content, and will change only when files change.
+# (Pitfall: ownership and permissions...)
+
+release_checksum() {
+	local pack=$1
+	local rsum_file=$(mktemp)
+
+	cp $pack/md5sum $rsum_file
+	md5sum $pack/receipt | sed 's| [^ ]*/| |' >> $rsum_file
+	[ -e "$pack/description.txt" ] &&
+		md5sum $pack/description.txt | sed 's| [^ ]*/| |' >> $rsum_file
+
+	local rsum=$(md5sum $rsum_file | awk '{print $1}')
+	rm $rsum_file
+	local rsumold=$(awk -F$'\t' -vpkg="$PACKAGE" '
+		{if ($1 == pkg) { print $9; exit; }}' $PKGS/packages.info)
+
+	[ "$rsum" == "$rsumold" ] && rsum=''
+
+	echo $rsum
+}
+
+
 # Verify package quality and consistency.
 
 packit_quality() {
@@ -1060,29 +1087,28 @@ packit_quality() {
 	fi
 
 	action 'QA: checking for empty package...'
-	files=$(wc -l < $WOK/$pkg/taz/$PACKAGE-$VERSION$EXTRAVERSION/files.list)
-	if [ "$files" -eq 0 -a "$CATEGORY" != 'meta' ]; then
+	if [ ! -s "$pack/files.list" -a "$CATEGORY" != 'meta' ]; then
 		broken
 		rm -f $command
 		die 'ERROR: empty package'
 	fi
 
 	:; status
-	# Find and remove old package(s)
-	tempd="$(mktemp -d)"; cd "$tempd"
-	for testpkg in $(ls $PKGS/$PACKAGE-*.tazpkg 2>/dev/null); do
-		# Extract receipt from each matched package
-		cpio -F "$testpkg" -i receipt >/dev/null 2>&1
-		name=$(. ./receipt; echo $PACKAGE)
-		rm receipt
-		if [ "$name" == "$PACKAGE" ]; then
-			action 'Removing old package "%s"' "$(basename "$testpkg")"
-			rm -f "$testpkg"
+
+	# Find and remove old package(s) only if "release checksum" has changed
+	rsum=$(release_checksum $pack)
+	if [ -n "$rsum" ]; then
+		old_file=$(awk -F$'\t' -vname="$PACKAGE" '{
+			if ($1 == name) printf("%s-%s.tazpkg", $1, $2);
+			}' $PKGS/packages.info)
+		if [ -f "$PKGS/$old_file" ]; then
+			action 'Removing old package "%s"' "$old_file"
+			rm -f "$PKGS/$old_file"
 			status
 		fi
-	done
-	rm -r "$tempd"
-	mv -f $pkgdir/taz/$PACKAGE-$VERSION$EXTRAVERSION.tazpkg $PKGS
+		mv -f $pkgdir/taz/$PACKAGE-$VERSION$EXTRAVERSION.tazpkg $PKGS
+	fi
+
 	sed -i "/^${pkg}$/d" $broken
 	#action 'Removing source tree...'
 	#rm -f $WOK/$pkg/source; status
@@ -1425,37 +1451,23 @@ update_packages_db() {
 
 	DEPENDS=$(echo $DEPENDS) # remove newlines, tabs and multiple spaces from variable
 
-	# Calculate release checksum: usually it does not change on "just recook".
-	# Release checksum is md5sum of file containing md5sums of:
-	# a) all files, b) receipt, and c) description.txt.
-	# Md5sum of the package file will change every time because of embedded timestamps;
-	# release checksum based only on files content, and will change only when files change.
-	# (Pitfall: ownership and permissions...)
-	rsumf=$(mktemp)
-	cp $pack/md5sum $rsumf
-	md5sum $pack/receipt | sed 's| [^ ]*/| |' >> $rsumf
-	[ -e "$pack/description.txt" ] && md5sum $pack/description.txt | sed 's| [^ ]*/| |' >> $rsumf
-	rsum=$(md5sum $rsumf | awk '{print $1}')
-	rm $rsumf
-#	MD5="$(md5sum "$PKGS/$PACKAGE-$VERSION$EXTRAVERSION.tazpkg" | awk '{print $1}')"
-	rsumold=$(awk -F$'\t' -vpkg="$PACKAGE" '{if ($1 == pkg) { print $9; exit; }}' $pi)
-
-	if [ "$rsum" == "$rsumold" ]; then
-		_ 'The release checksum has not changed.\n'
-	else
+	rsum=$(release_checksum $pack)
+	if [ -n "$rsum" ]; then
 		_ 'The release checksum has changed.\n'
-	fi
 
-	sed -i "/^$PACKAGE\t/d" $pi		# remove old entry
-	cat >> $pi <<EOT
+		sed -i "/^$PACKAGE\t/d" $pi		# remove old entry
+		cat >> $pi <<EOT
 $PACKAGE	$VERSION$EXTRAVERSION	$CATEGORY	$SHORT_DESC	$WEB_SITE	$TAGS	$SIZES	$DEPENDS	$rsum	$PROVIDE
 EOT
 
-	# files.list (uncompressed, unsorted, located in $cache)
-	local fl="$cache/files.list"
-	touch $fl
-	sed -i "/^$PACKAGE: /d" $fl
-	sed  "s/^/$PACKAGE: \0/" $pack/files.list >> $fl
+		# files.list (uncompressed, unsorted, located in $cache)
+		local fl="$cache/files.list"
+		touch $fl
+		sed -i "/^$PACKAGE: /d" $fl
+		sed  "s/^/$PACKAGE: \0/" $pack/files.list >> $fl
+	else
+		_ 'The release checksum has not changed.\n'
+	fi
 }
 
 
