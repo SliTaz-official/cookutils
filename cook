@@ -995,7 +995,7 @@ packit() {
 			/lib/modules/*/modules.*|*.pyc) continue ;;
 		esac
 		md5sum "fs$file" | sed 's|  fs|  |'
-	done < files.list > md5sum
+	done < files.list | sort -k2 > md5sum
 	status
 
 	UNPACKED_SIZE=$(du -chs fs receipt files.list md5sum description.txt \
@@ -1176,6 +1176,7 @@ update_chroot() {
 # Install package on --inst or update the chroot.
 
 install_package() {
+	set_paths
 	case "$ARCH" in
 		arm*|x86_64)
 			arch="-$ARCH"
