@@ -82,6 +82,7 @@ sizes() {
 		loc) find $install/usr/share/i18n/locales -type f                                       -exec ls -l \{\} \; ;;
 		mo2) find $fs/usr/share/locale            -type f -name '*.mo'                          -exec ls -l \{\} \; ;;
 		gz)  find $install                        -type f -name '*.gz' ! -path '*/share/man/*'  -exec ls -l \{\} \; ;;
+		zip) find $install                        -type f -name '*.zip'                         -exec ls -l \{\} \; ;;
 		str) find $fs -type f \( -name '*.so*' -o -name '*.a' -o -name '*.pyc' -o -name '*.pyo' \
 				-o -name '.packlist' -o -name '*.pm' -o -name '*.pl' -o -name '*.pod' \) -exec ls -l \{\} \; ;;
 	esac | awk '{s+=$5}END{print s}'
@@ -179,6 +180,31 @@ recompress_gz() {
 	done
 
 	comp_summary "$time0" "$size0" "$(sizes gz)"
+}
+
+
+# Function to recompress all zip archives
+# Recompressing can be disabled with COOKOPTS="!zip"
+
+recompress_zip() {
+	time0=$(get_time)
+	[ "${COOKOPTS/!zip/}" != "$COOKOPTS" ] && return
+	size0=$(sizes zip); [ -z "$size0" ] && return
+
+	tpi advancecomp-static
+
+	action 'Recompressing zip files...'
+
+	# Recompress with advzip
+	IFS=$'\n'
+	for i in $(find $install -type f -name '*.zip'); do
+		if ! cached_path=$(query_cache zip "$i"); then
+			advzip -z3qk "$i"	# -4 is more than 2 orders slower
+			store_cache "$cached_path" "$i"
+		fi
+	done
+
+	comp_summary "$time0" "$size0" "$(sizes zip)"
 }
 
 
@@ -605,6 +631,7 @@ case $1 in
 			arm*) ;;
 			*)
 				recompress_gz
+				recompress_zip
 				compress_manpages
 				compress_png
 				compress_svg

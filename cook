@@ -1106,7 +1106,11 @@ packit_quality() {
 			rm -f "$PKGS/$old_file"
 			status
 		fi
+		# package changed, substitute old package by new
 		mv -f $pkgdir/taz/$PACKAGE-$VERSION$EXTRAVERSION.tazpkg $PKGS
+	else
+		# package not changed, remove new package
+		rm -f $pkgdir/taz/$PACKAGE-$VERSION$EXTRAVERSION.tazpkg
 	fi
 
 	sed -i "/^${pkg}$/d" $broken

@@ -83,7 +83,13 @@ Currently, the following options are recognized:
 !gz
     Default action is to recompress all *.gz files (excluding man pages) with
     the better compression ratio.
-    The presence of this option overrides the default action (all *.gzip files
+    The presence of this option overrides the default action (all *.gz files
+    will be left "as is").
+
+!zip
+    Default action is to recompress all *.zip files with the better compression
+    ratio.
+    The presence of this option overrides the default action (all *.zip files
     will be left "as is").
 
 !pngz
