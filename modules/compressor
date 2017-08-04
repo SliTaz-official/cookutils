@@ -562,7 +562,18 @@ strip_package() {
 
 	# Strip shared and static libraries
 	find $fs -name '*.so*' -exec $STRIP -s '{}' 2>/dev/null \;
-	find $fs -name '*.a' -exec $STRIP --strip-debug '{}' 2>/dev/null \;
+	find $fs -name '*.a'   -exec $STRIP -d '{}' 2>/dev/null \;
+
+	# Nullify timestamps of files in ar archives
+	whereami=$(pwd)
+	find $fs -name '*.a' | \
+	while read i; do
+		tempdir=$(mktemp -d); cd $tempdir
+		ar -x $i; ar -crD $(basename $i) *
+		mv -f $tempdir/$(basename $i) $i
+		rm -rf $tempdir
+	done
+	cd $whereami; unset whereami
 
 	# Remove Python *.pyc and *.pyo
 	find $fs -type f \( -name '*.pyc' -o -name '*.pyo' \) -delete 2>/dev/null
