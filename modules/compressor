@@ -566,7 +566,7 @@ strip_package() {
 
 	# Nullify timestamps of files in ar archives
 	whereami=$(pwd)
-	find $fs -name '*.a' | \
+	find $fs -name '*.a' -type f | \
 	while read i; do
 		tempdir=$(mktemp -d); cd $tempdir
 		ar -x $i; ar -crD $(basename $i) *
