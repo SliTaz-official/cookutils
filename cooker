@@ -44,6 +44,7 @@ Commands with <options>:
   -a  | all                    Find and cook all unbuilt packages.
   -T  | tasks                  List existing cooker tasks.
   -t  | task    <task>         Executing specified task.
+  -o  | outgoing               Find changes in wok that we can move to wok-hg.
 
 EOT
 	exit 0
@@ -303,6 +304,59 @@ arch_db() {
 }
 
 
+# Compare wok and wok-hg file $1, display signs:
+# '+' file added, '-' file removed, '~' file changed, '=' file not changed
+
+compare_wok_file() {
+	local f1='n' f2='n' # n: not exists, e: exists
+	[ -e "$wok/$1"    ] && f1='e'
+	[ -e "$wok-hg/$1" ] && f2='e'
+	case "$f1$f2" in
+		en) echo "+ $1";;
+		ne) [ -n "$del" ] && echo "- $1";;
+		ee)
+			if cmp -s "$wok/$1" "$wok-hg/$1"; then
+				[ -n "$eq" ] && echo "= $1"
+			else
+				echo "~ $1"
+			fi
+			;;
+	esac
+}
+
+
+# Compare wok and wok-hg folder $1; process only:
+# receipt, description.*txt, all files in the stuff folder
+
+compare_wok_folder() {
+	IFS=$'\n'
+	{
+		for i in $wok $wok-hg; do
+			ls $i/$1/receipt 2>/dev/null
+			ls $i/$1/description.*txt 2>/dev/null
+			[ -d $i/$1/stuff ] && find $i/$1/stuff -type f
+		done
+	} | sed "s|$wok/$1/||; s|$wok-hg/$1/||" | sort -u | \
+	while read file; do
+		compare_wok_file "$1/$file"
+	done
+}
+
+
+# Compare entire wok
+
+compare_wok() {
+	{
+		cd $wok;    ls
+		cd $wok-hg; ls
+	} | sort -u | \
+	while read folder; do
+		result="$(compare_wok_folder $folder)"
+		[ -n "$result" ] && echo -e "$result\n"
+	done
+}
+
+
 #
 # Commands
 #
@@ -523,6 +577,11 @@ EOT
 		title "Executing cooker task: $task"
 		. $tasks/$task; task
 		footer "Task $task finished" ;;
+
+	outgoing|-o)
+		# Find changes in wok that we can move to wok-hg
+		compare_wok
+		;;
 
 	*)
 		# Default is to cook all commits if not yet running.

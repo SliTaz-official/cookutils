@@ -113,7 +113,7 @@ outpkg() {
 		*ld-linux.so*);;
 		*linux-gate.so*);;
 		*)
-			echo "$pkgs" | awk '
+			echo "$pkgs" | awk -vincl="$incl" '
 			# if both packages exist in list, return the first one only
 			function s(pkg1, pkg2) {
 				if (index(" "$0" ", " "pkg1" ") && index(" "$0" ", " " pkg2 " "))
@@ -151,7 +151,10 @@ outpkg() {
 				s("xorg-xcb-util-renderutil-dev", "xcb-util-renderutil-dev");
 				s("eudev-dev", "udev-dev");
 
-				if (! index($0, "glibc-base") &&
+				# if called with "--incl": show all deps including glibc-base,
+				# gcc-lib-base, glibc-dev and gcc; otherwise hide them
+				if (incl == "yes" ||
+					! index($0, "glibc-base") &&
 					! index($0, "gcc-lib-base") &&
 					! index($0, "glibc-dev") &&
 					$0 != "gcc")

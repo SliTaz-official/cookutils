@@ -565,8 +565,9 @@ strip_package() {
 	find $fs -name '*.a'   -exec $STRIP -d '{}' 2>/dev/null \;
 
 	# Nullify timestamps of files in ar archives
+	# Skip empty 8-byte archives (hi, musl-libc package)
 	whereami=$(pwd)
-	find $fs -name '*.a' -type f | \
+	find $fs -name '*.a' -type f -size +8c | \
 	while read i; do
 		tempdir=$(mktemp -d); cd $tempdir
 		ar -x $i; ar -crD $(basename $i) *
