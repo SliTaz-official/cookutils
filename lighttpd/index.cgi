@@ -1426,6 +1426,11 @@ EOT
 </object>
 EOT
 							;;
+						*.md|*.markdown)
+							echo '<section>'
+							$md2html "$tmp"
+							echo '</section>'
+							;;
 						*)
 							show_code $class < "$tmp"
 							;;
