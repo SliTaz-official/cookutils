@@ -259,16 +259,18 @@ compress_svg() {
 
 	action 'Compressing svg images...'
 
+	[ "${COOKOPTS/!svgextra/}" == "$COOKOPTS" ] &&
+	opts="--apply-transform-to-paths yes --coordinates-precision 1 --paths-coordinates-precision 1"
+
 	cleaner_log="$(mktemp)"
-	IFS=$'\n'
-	for i in $(find $install -type f -name '*.svg'); do
-		echo -n "$i: " >> "$cleaner_log"
-		svgcleaner "$i" "$i" --remove-unresolved-classes false --quiet >> "$cleaner_log"
+	for i in $(IFS=$'\n' find $install -type f -name '*.svg'); do
+		out="$(unset IFS; svgcleaner "$i" "$i" --copy-on-error --quiet \
+			--multipass --remove-unresolved-classes no $opts 2>&1)"
+		[ -z "$out" ] || echo -e "$i:\n$out\n" >> "$cleaner_log"
 	done
 
 	comp_summary "$time0" "$size0" "$(sizes svg)"
 
-	sed -i '/: $/d' "$cleaner_log"
 	if [ -s "$cleaner_log" ]; then
 		_ 'Cleaner warnings and errors:'
 		awk '{printf "  %s\n", $0;}' "$cleaner_log"
