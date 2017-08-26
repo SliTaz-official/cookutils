@@ -234,8 +234,8 @@ compress_png() {
 
 	[ "$oplevel" == '8' ] && oplevel='7 -zm1-9'
 
-	IFS=$'\n'
-	for i in $(find $install -type f -name '*.png'); do
+	for i in $(IFS=$'\n' find $install -type f -name '*.png'); do
+		unset IFS
 		if ! cached_path=$(query_cache $cache_section "$i"); then
 			$use_pq && pngquant -f --skip-if-larger --ext .png --speed 1 "$i"
 			$use_op && optipng -quiet -strip all -o$oplevel "$i"

@@ -38,9 +38,8 @@ done
 # Default to rolling, or: cookiso [cmd] --version=stable
 
 case "$version" in
-	stable)  string='stable' ;;
-	cooking) string='cooking' ;;
-	*)       string='rolling'; version='cooking' ;;
+	stable|cooking|next) string="$version";;
+	*) version='cooking'; string='rolling';;
 esac
 
 
