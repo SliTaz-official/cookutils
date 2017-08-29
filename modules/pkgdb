@@ -91,6 +91,7 @@ echo " ($(filesize $PKGS/descriptions.txt))" | dblog
 
 
 _ 'Creating lists from "%s"' "$WOK" | dblog
+rm $PKGS/files.list
 cd $WOK
 rsumf=$(mktemp)
 for i in *; do
@@ -148,7 +149,7 @@ EOT
 			done
 
 			# files.list provides a list of all packages files.
-			cat $i/taz/$j/files.list | sed s/^/"$PACKAGE: \0"/ >> $PKGS/files.list
+			sed "s|^|$PACKAGE: \0|" $i/taz/$j/files.list >> $PKGS/files.list
 
 			# list of unnecessary packages
 			sed -i "/ $PACKAGE-$VERSION$EXTRAVERSION.tazpkg/d" $PKGS/packages.toremove
