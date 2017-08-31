@@ -816,10 +816,12 @@ cookit_quality() {
 	if [ ! -d "$WOK/$pkg/install" ] && [ -z "$WANTED" ]; then
 		_ 'ERROR: cook failed' | tee -a $LOGS/$pkg.log
 	fi
+
+	[ "${COOKOPTS/skip-log-errors/}" != "$COOKOPTS" ] && return 0
+
 	# ERROR can be echoed any time in cookit()
-	lerror=$(_n 'ERROR')
 	if grep -Ev "(conftest|configtest)" $LOGS/$pkg.log | \
-	   grep -Eq "(^$lerror|undefined reference to)" ; then
+	   grep -Eq "(^ERROR|undefined reference to)" ; then
 		debug_info | tee -a $LOGS/$pkg.log
 		sed -i '$ s|$| [ Failed ]|' $activity
 		rm -f $command
@@ -1320,6 +1322,18 @@ cook_pick_manpages() {
 		mkdir -p $install/usr/share/man/man$section
 		scopy $i $install/usr/share/man/man$section
 	done
+	status
+}
+
+
+# Function to use in compile_rules() to copy documentation from $src to $install
+
+cook_pick_docs() {
+	local docdir="$install/usr/share/doc/$PACKAGE-$VERSION"
+	action 'Copying documentation...'
+	mkdir -p $docdir
+	cp -r $@ $docdir
+	chmod -R a+r $docdir
 	status
 }
 
@@ -1987,9 +2001,9 @@ case "$1" in
 		clean_log
 
 		# Exit if any error in packing.
-		lerror=$(_n 'ERROR')
-		if grep -Ev "(/root/.cvspass|conftest|df: /|rm: can't remove)" $LOGS/$pkg.log | \
-		   grep -Eq "(^$lerror|: No such file or directory|not remade because of errors|ake: \*\*\* .* Error)"; then
+		if [ "${COOKOPTS/skip-log-errors/}" == "$COOKOPTS" ] &&
+			grep -Ev "(/root/.cvspass|conftest|df: /|rm: can't remove)" $LOGS/$pkg.log | \
+			grep -Eq "(^ERROR|: No such file or directory|not remade because of errors|ake: \*\*\* .* Error)"; then
 			debug_info | tee -a $LOGS/$pkg.log
 			sed -i '$ s|$| [ Failed ]|' $activity
 			rm -f $command
