@@ -91,7 +91,7 @@ echo " ($(filesize $PKGS/descriptions.txt))" | dblog
 
 
 _ 'Creating lists from "%s"' "$WOK" | dblog
-rm $PKGS/files.list
+[ -e $PKGS/files.list ] && rm $PKGS/files.list
 cd $WOK
 rsumf=$(mktemp)
 for i in *; do

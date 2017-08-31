@@ -1378,9 +1378,11 @@ cook_copy_folders() {
 
 copy() {
 	action 'Copying folders and files...'
-	local i j filelist=$(mktemp)
+	local i j k filelist=$(mktemp) folderlist=$(mktemp)
 	IFS=$'\n'
-	cd $install; find ! -type d | sed 's|\.||' > $filelist
+	cd $install
+	find ! -type d | sed 's|\.||' > $filelist
+	find   -type d | sed 's|\.||' > $folderlist
 	for i in $@; do
 		case $i in
 			@std)
@@ -1419,10 +1421,31 @@ copy() {
 				scopy "$install$j" $fs$(dirname "$j")
 			fi
 		done
+		# Copy empty directories
+		case $i in
+			@std)
+				while read j; do
+					[ -z "$(ls "$install$j")" ] || continue
+					# directory $j is empty
+					k="$j"
+					# make 'ladder' from directories, from root dir to $j
+					# /a   /a/b   /a/b/c   etc.
+					while :; do
+						[ -z "$k" ] && break
+						echo "$k"
+						k="${k%/*}"
+					done | tac | \
+					# copy dir with its original ownership/permissions if it not exist
+					while read k; do
+						[ -d "$fs$k" ] || cp -a "$install$k" "$fs$k"
+					done
+				done < $folderlist
+				;;
+		esac
 	done
 	cd - >/dev/null
 	unset IFS
-	rm $filelist
+	rm $filelist $folderlist
 	status
 }
 
