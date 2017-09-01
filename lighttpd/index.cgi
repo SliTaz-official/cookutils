@@ -1153,6 +1153,7 @@ case "$cmd" in
 		echo "<section><h3>Quick jump:</h3><ul>"
 		echo "$split" | sed 'p' | xargs printf "<li><a href='#%s'>%s</a></li>\n"
 		echo "<li id='li-repeats' style='display:none'><a href='#repeats'>repeatedly packaged files</a></li>"
+		echo "<li id='li-empty' style='display:none'><a href='#empty'>unpackaged empty folders</a></li>"
 		echo "<li id='li-orphans' style='display:none'><a href='#orphans'>unpackaged files</a>"
 		echo "<span id='orphansTypes'></span></li>"
 		echo "</ul></section>"
@@ -1192,6 +1193,33 @@ case "$cmd" in
 			echo '<script>document.getElementById("li-repeats").style.display = "list-item"</script>'
 			echo -n '<section><h3 id="repeats">Repeatedly packaged files:</h3><pre class="files">'
 			echo "$repeats" | sed 's|^|<span class="c11">!!!</span> |'
+			echo "</pre></section>"
+		fi
+
+		# find unpackaged empty folders
+		emptydirs="$(
+			cd $wok/$main/install
+			find -type d | sed 's|\.||' | \
+			while read d; do
+				[ -z "$(ls "$wok/$main/install$d")" ] || continue
+				echo $d
+			done | \
+			while read d; do
+				notfound='yes'
+				for p in $(cd $wok/$main/taz; ls); do
+					if [ -d "$wok/$main/taz/$p/fs$d" ]; then
+						notfound=''
+						break
+					fi
+				done
+				[ -n "$notfound" ] &&
+				ls -ldp --color=always .$d | syntax_highlighter files | sed 's|>\./|>/|'
+			done
+		)"
+		if [ -n "$emptydirs" ]; then
+			echo '<script>document.getElementById("li-empty").style.display = "list-item"</script>'
+			echo -n '<section><h3 id="empty">Unpackaged empty folders:</h3><pre class="files">'
+			echo "$emptydirs"
 			echo "</pre></section>"
 		fi
 
