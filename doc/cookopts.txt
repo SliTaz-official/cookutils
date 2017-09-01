@@ -149,8 +149,8 @@ op0 to op8
 skip-log-errors
     Default behaviour is to end work with error message when certain words occur
     in the log: "ERROR" or "undefined reference to". In some cases it may
-    produce false positives when no error produced during cooking, but these
+    produce false positives when no errors are produced during cooking, but these
     words occur. For example, next line:
     g_simple_async_result_set_error (simple, G_IO_ERROR, G_IO_ERROR_FAILED
     The presence of this option overrides the default behaviour (word "ERROR" in
-    the log will not produce error, etc.)
+    the log will not produce errors, etc.)

@@ -1435,7 +1435,7 @@ copy() {
 						echo "$k"
 						k="${k%/*}"
 					done | tac | \
-					# copy dir with its original ownership/permissions if it not exist
+					# copy dir with its original ownership/permissions if it does not exist
 					while read k; do
 						[ -d "$fs$k" ] || cp -a "$install$k" "$fs$k"
 					done
