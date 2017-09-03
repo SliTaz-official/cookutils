@@ -1425,7 +1425,12 @@ copy() {
 		case $i in
 			@std)
 				while read j; do
-					[ -z "$(ls "$install$j")" ] || continue
+					case $j in
+						# always skip empty man folders, because this will end up
+						# copying all the man pages to the package
+						*/man/*) continue;;
+					esac
+					[ -z "$(ls -A "$install$j")" ] || continue
 					# directory $j is empty
 					k="$j"
 					# make 'ladder' from directories, from root dir to $j
