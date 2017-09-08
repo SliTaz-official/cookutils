@@ -100,12 +100,12 @@ flavors_list() {
 
 log() {
 	grep ^[A-Z] | \
-		sed s"#^[A-Z]\([^']*\)#$(date '+%F %R') : \0#" >> $activity
+		sed "s#^[A-Z]\([^']*\)#$(date '+%F %R') : \0#" >> $activity
 }
 
 
 log_bot() {
-	sed '/^.\//'d | sed '/^.hg/'d | tee -a $rollog
+	sed '/^.\//d' | sed '/^.hg/d' | tee -a $rollog
 }
 
 
@@ -113,7 +113,7 @@ log_bot() {
 
 gen_flavors() {
 	cd $SLITAZ/flavors
-	[ -d ".hg" ] && hg pull -u
+	[ -d ".hg" -a -n "$(which hg)" ] && hg pull -u
 	mkdir -p $cache; cd $cache
 	rm -rf *.flavor *.list *.conf *.sh
 	for flavor in $flavors; do
@@ -122,6 +122,7 @@ gen_flavors() {
 		else
 			name="slitaz-$string"
 		fi
+
 		log="$iso/$name.log"
 		for i in $(seq 9 -1 1); do # Rotate log
 			j=$(($i - 1))
@@ -129,7 +130,9 @@ gen_flavors() {
 		done
 		[ -e $log ] && mv $log $log.0
 		touch $log
+
 		echo "Building $string <a href='?distro=$string-$flavor'>$flavor</a>" | log
+
 		echo "Cookiso started: $(date '+%F %R')" | tee -a $log
 		tazlito pack-flavor $flavor | tee -a $log
 		tazlito get-flavor $flavor | tee -a $log
