@@ -59,14 +59,14 @@ newline; { _ 'Creating lists for "%s"' "$PKGS"; separator; } | dblog
 
 cd $PKGS
 rm -f packages.* extra.list
-touch packages.equiv
+#touch packages.equiv
 
 _n 'Creating file "%s"' 'packages.list' | dblog
-ls -1 *.tazpkg | sed s'/.tazpkg//' > $PKGS/packages.list
+find . -name '*.tazpkg' | sed 's|^./||; s|.tazpkg$||' > $PKGS/packages.list
 echo " ($(filesize $PKGS/packages.list))" | dblog
 
 _n 'Creating file "%s"' 'packages.md5' | dblog
-md5sum *.tazpkg > $PKGS/packages.md5
+find . -name '*.tazpkg' -exec md5sum '{}' \; | sed 's|./||' > $PKGS/packages.md5
 echo " ($(filesize $PKGS/packages.md5))" | dblog
 cp $PKGS/packages.md5 $PKGS/packages.toremove			# list of unnecessary packages
 
@@ -161,6 +161,7 @@ EOT
 		fi
 	done
 done
+touch $PKGS/packages.desc $PKGS/packages.txt $PKGS/packages.info $PKGS/packages.equiv
 rm $rsumf
 
 
@@ -229,7 +230,7 @@ echo " ($(filesize $PKGS/bundle.tar.lzma))" | dblog
 
 # Display some info.
 separator | dblog
-nb=$(ls $PKGS/*.tazpkg | wc -l)
+nb=$(ls $PKGS/*.tazpkg 2>/dev/null | wc -l)
 time=$(($(date +%s) - $time))
 # L10n: 's' is for seconds (cooking time)
 { _ 'Packages: %s - Time: %ss' "$nb" "$time"; newline; } | dblog
