@@ -1006,7 +1006,8 @@ packit() {
 	# Build cpio archive.
 	action 'Compressing the FS...'
 	find fs -newer $receipt -exec touch -hr $receipt '{}' \;
-	find fs | cpio -o -H newc --quiet | lzma e fs.cpio.lzma -si
+	find fs | cpio -o -H newc --quiet | lzma-alone e fs.cpio.lzma -si
+#	find fs | cpio -o -H newc --quiet | /bin/lzma -zeT0 -vv >fs.cpio.lzma
 	mv fs ../
 	status
 
@@ -1032,9 +1033,9 @@ packit() {
 	find . | cpio -o -H newc --quiet > ../$PACKAGE-$VERSION$EXTRAVERSION$arch.tazpkg
 	status
 
-	action 'Restoring original package tree...'
+#	action 'Restoring original package tree...'
 	mv ../fs .
-	status
+#	status
 
 	rm fs.cpio.lzma; cd ..
 
@@ -1081,21 +1082,25 @@ packit_quality() {
 	#[ "$link" ] && echo -e "\nERROR: broken link in filesystem"
 	#status
 
-	# Exit if any error found in log file.
-	lerror=$(_n 'ERROR')
-	if fgrep -q ^$lerror $LOGS/$pkg.log; then
-		rm -f $command
-		broken; exit 1
+	if [ "${COOKOPTS/skip-log-errors/}" == "$COOKOPTS" ]; then
+		# Exit if any error found in log file.
+		if fgrep -q ^ERROR $LOGS/$pkg.log; then
+			rm -f $command
+			broken; exit 1
+		fi
 	fi
 
-	action 'QA: checking for empty package...'
-	if [ ! -s "$pack/files.list" -a "$CATEGORY" != 'meta' ]; then
-		broken
-		rm -f $command
-		die 'ERROR: empty package'
+	if [ "${COOKOPTS/empty-pkg/}" == "$COOKOPTS" ]; then
+		action 'QA: checking for empty package...'
+		if [ ! -s "$pack/files.list" -a "$CATEGORY" != 'meta' ]; then
+			broken
+			rm -f $command
+			false; status
+			die 'ERROR: empty package'
+		fi
+		:; status
 	fi
 
-	:; status
 
 	# Find and remove old package(s) only if "release checksum" has changed
 	rsum=$(release_checksum $pack)

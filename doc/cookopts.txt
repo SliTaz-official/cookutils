@@ -154,3 +154,8 @@ skip-log-errors
     g_simple_async_result_set_error (simple, G_IO_ERROR, G_IO_ERROR_FAILED
     The presence of this option overrides the default behaviour (word "ERROR" in
     the log will not produce errors, etc.)
+
+empty-pkg
+    Default behaviour is to end work with error message when package contains no
+    files (exception is made for packages belongs to the "meta" category).
+    Presence of this option allows the package not to contain files.
