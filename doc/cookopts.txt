@@ -157,5 +157,5 @@ skip-log-errors
 
 empty-pkg
     Default behaviour is to end work with error message when package contains no
-    files (exception is made for packages belongs to the "meta" category).
+    files (exception is made for packages belonging to the "meta" category).
     Presence of this option allows the package not to contain files.
