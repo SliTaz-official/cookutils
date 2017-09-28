@@ -1029,19 +1029,17 @@ case "$cmd" in
 		summary "$log"
 
 		# Display <Recook> button only for SliTaz web browser
-		if [ -f "$log" ]; then
-			case "$HTTP_USER_AGENT" in
-				*SliTaz*)
-					if [ -f $CACHE/cooker-request -a -n "$HTTP_REFERER" ]; then
-						if grep -qs "^$pkg$" $CACHE/recook-packages; then
-							show_note i "The package “$pkg” has been requested for recook"
-						else
-							echo "<a class='button' href='$base/?recook=${pkg//+/%2B}'>Recook $pkg</a>"
-						fi
+		case "$HTTP_USER_AGENT" in
+			*SliTaz*)
+				if [ -f $CACHE/cooker-request -a -n "$HTTP_REFERER" ]; then
+					if grep -qs "^$pkg$" $CACHE/recook-packages; then
+						show_note i "The package “$pkg” has been requested for recook"
+					else
+						echo "<a class='button' href='$base/?recook=${pkg//+/%2B}'>Recook $pkg</a>"
 					fi
-					;;
-			esac
-		fi
+				fi
+				;;
+		esac
 		;;
 
 	receipt)
