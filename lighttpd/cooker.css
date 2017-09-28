@@ -146,6 +146,42 @@ pre {
 }
 pre .underline { border-bottom: 1px solid #444; display: block; right: 0; }
 
+/* Log with line numbers (taken from Mercurial - thanks a lot) */
+pre.log {
+	position: relative;
+	counter-reset: lineno;
+}
+pre.log > span {
+	display: inline-block;
+	box-sizing: border-box;
+	width: 100%;
+	padding: 0 0 0 4em;
+	counter-increment: lineno;
+	white-space: pre-wrap;
+}
+pre.log > span::before {
+	-moz-user-select: -moz-none;
+	-khtml-user-select: none;
+	-webkit-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+	display: inline-block;
+	margin-left: -5em;
+	width: 4em;
+	font-size: smaller;
+	color: #999;
+	text-align: right;
+	content: counters(lineno, ".");
+	float: left;
+}
+pre.log > a {
+	display: inline-block;
+	position: absolute;
+	left: 0;
+	width: 4em;
+	height: 1em;
+}
+
 /* Content */
 
 main {

@@ -1367,7 +1367,7 @@ EOT
 		sed -e "/(pkg\/local$theme):/ s|: \([^<]*\)|<img src='$base/i/$blog/\1'> \1|" | \
 		awk '
 		BEGIN { print "<pre class=\"log\">"; }
-		      { printf("<a name=\"l%d\" href=\"#l%d\">%5d</a>  %s\n", NR, NR, NR, $0); }
+		      { printf("<span id=\"l%d\">%s</span><a href=\"#l%d\"></a>\n", NR, $0, NR); }
 		END   { print "</pre>"; }
 		'
 		;;
