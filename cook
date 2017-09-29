@@ -423,7 +423,7 @@ copy_generic_files() {
 			mkdir -p "$fs/usr/share/locale"
 			for i in $LOCALE; do
 				if [ -d  "$install/usr/share/locale/$i" ]; then
-					cp -a $install/usr/share/locale/$i $fs/usr/share/locale
+					cp -r $install/usr/share/locale/$i $fs/usr/share/locale
 				fi
 			done
 		fi
@@ -435,7 +435,7 @@ copy_generic_files() {
 			mkdir -p "$fs/usr/share/pixmaps"
 			for i in png xpm; do
 				[ -f "$install/usr/share/pixmaps/$PACKAGE.$i" -a ! -f "$fs/usr/share/pixmaps/$PACKAGE.$i" ] &&
-				cp -a $install/usr/share/pixmaps/$PACKAGE.$i $fs/usr/share/pixmaps
+				cp -r $install/usr/share/pixmaps/$PACKAGE.$i $fs/usr/share/pixmaps
 			done
 		fi
 	fi
@@ -445,7 +445,7 @@ copy_generic_files() {
 	if [ "${COOKOPTS/!menus/}" == "$COOKOPTS" -a "$GENERIC_MENUS" != 'no' ]; then
 		if [ -d "$install/usr/share/applications" -a -z "$WANTED" ]; then
 			mkdir -p "$fs/usr/share"
-			cp -a $install/usr/share/applications $fs/usr/share
+			cp -r $install/usr/share/applications $fs/usr/share
 		fi
 	fi
 }
@@ -464,7 +464,7 @@ copy_generic_stuff() {
 	# Homemade desktop file(s) can be in stuff.
 	if [ -d "$stuff/applications" ]; then
 		mkdir -p $install/usr/share
-		cp -a $stuff/applications $install/usr/share
+		cp -r $stuff/applications $install/usr/share
 	fi
 	if [ -f "$stuff/$PACKAGE.desktop" ]; then
 		mkdir -p $install/usr/share/applications
@@ -474,7 +474,7 @@ copy_generic_stuff() {
 	# Add custom licenses
 	if [ -d "$stuff/licenses" ]; then
 		mkdir -p $install/usr/share/licenses
-		cp -a $stuff/licenses $install/usr/share/licenses/$PACKAGE
+		cp -r $stuff/licenses $install/usr/share/licenses/$PACKAGE
 	fi
 }
 
