@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: Cook 3.2\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2016-11-19 22:31+0200\n"
-"PO-Revision-Date: 2017-04-19 15:00+0100\n"
+"PO-Revision-Date: 2017-10-02 16:22+0100\n"
 "Last-Translator: Hans-Günter Theisgen\n"
 "Language-Team: German\n"
 "Language: de\n"
@@ -23,7 +23,7 @@ msgstr "Anwendung"
 
 #: cook:33
 msgid "cook [package|command] [list|--option]"
-msgstr ""
+msgstr "cook [package|command] [list|--option]"
 
 #: cook:35
 msgid "Commands:"
@@ -35,7 +35,7 @@ msgstr "Diese Kurzanleitung ausgeben."
 
 #: cook:37
 msgid "Setup your build environment."
-msgstr "Richten Sie Ihre Konstruktionsumgebung ein."
+msgstr "Richten Sie Ihre Kompilierungsumgebung ein."
 
 #: cook:38
 msgid "Setup a cross environment."
@@ -63,11 +63,11 @@ msgstr "Pakete gemäß einer Liste erzeugen."
 
 #: cook:45
 msgid "Clean-up all packages files."
-msgstr "Alle Dateien von Paketen erntfernen."
+msgstr "Alle Dateien von Paketen entfernen."
 
 #: cook:46
 msgid "Clean-up all packages sources."
-msgstr "Alle Paketquellen erntfernen."
+msgstr "Alle Paketquellen entfernen."
 
 #: cook:47
 msgid "Check for uncooked packages"
@@ -150,7 +150,7 @@ msgid "Unable to find package \"%s\" in the wok"
 msgstr "Das Paket \"%s\" befindet sich nicht im Wok"
 
 #. L10n: QA is quality assurance
-# QS ist Abkürzung für Qualitätssicherung
+# HGT: QS ist Abkürzung für Qualitätssicherung
 #: cook:98
 msgid "QA: empty variable: %s"
 msgstr "QS: leere Variable: %s"
@@ -305,18 +305,19 @@ msgstr "FEHLER"
 msgid "QA: Checking %s..."
 msgstr "QS: Prüfe %s..."
 
-# HGT: Was bedeutet Save?
+# HGT: Save sollte Saved heissen, und den beim Komprimieren eingesparten Platz anzeigen.
 #: cook:569
 msgid "  Time: %s. Size: %s B -> %s B. Save: %s KB"
-msgstr "  Zeit: %s. Größe: %s B -> %s B. Save: %s KB"
+msgstr "  Zeit: %s. Größe: %s B -> %s B. Eingespart: %s KB"
 
 #: cook:585
 msgid "Executing strip on all files..."
 msgstr "Symbolinformation wird aus allen Dateien entfernt..."
 
+# HGT: Ist das wirklich gemeint?
 #: cook:629
 msgid "Stripping translations files..."
-msgstr ""
+msgstr "Übersetzte Texte komprimieren..."
 
 #: cook:680 cook:952
 msgid "Build dependencies to remove:"
@@ -348,7 +349,7 @@ msgstr "Erzeugen: %s"
 
 #: cook:852
 msgid "%s sysroot: %s"
-msgstr ""
+msgstr "%s Wurzel: %s"
 
 #: cook:853
 msgid "Adding \"%s\" to PATH"
@@ -446,7 +447,7 @@ msgstr "Das Dateisystem wird komprimiert..."
 
 #: cook:1161
 msgid "Updating receipt sizes..."
-msgstr "Die Rezeptgrößen werden aktualisiert..."
+msgstr "Die Größenangaben im Rezept werden aktualisiert..."
 
 #: cook:1169
 msgid "Updating receipt EXTRAVERSION: %s"
