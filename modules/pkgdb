@@ -61,6 +61,10 @@ cd $PKGS
 rm -f packages.* extra.list
 #touch packages.equiv
 
+# Web interface database files should exist on the mirror1
+>.folderlist; >.filelist
+chown www:www .folderlist .filelist
+
 _n 'Creating file "%s"' 'packages.list' | dblog
 find . -name '*.tazpkg' | sed 's|^./||; s|.tazpkg$||' > $PKGS/packages.list
 echo " ($(filesize $PKGS/packages.list))" | dblog
