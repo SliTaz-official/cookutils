@@ -1430,7 +1430,14 @@ EOT
 						*.sgml|*.devhelp2) class='xml';;
 						*.py)       class='python';; # pycurl package
 						*.css)      class='css';;
-						*)          class='asciidoc';;
+						*.sh)       class='bash';;
+						*)
+							first=$(head -n1 "$tmp")
+							if [ "${first:0:1}" == '#' ]; then
+								class='bash'	# first line begins with '#'
+							else
+								class='asciidoc'
+							fi;;
 					esac
 					case "$arg" in
 						*.htm*)

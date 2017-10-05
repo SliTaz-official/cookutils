@@ -63,7 +63,7 @@ rm -f packages.* extra.list
 
 # Web interface database files should exist on the mirror1
 >.folderlist; >.filelist
-chown www:www .folderlist .filelist
+chmod 666 .folderlist .filelist
 
 _n 'Creating file "%s"' 'packages.list' | dblog
 find . -name '*.tazpkg' | sed 's|^./||; s|.tazpkg$||' > $PKGS/packages.list
