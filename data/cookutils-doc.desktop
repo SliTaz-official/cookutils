@@ -1,7 +1,7 @@
 [Desktop Entry]
 Type=Application
-Name=Cookutils Doc
-Name[fr]=Doc de CookUtils
+Name=Cookutils Documentation
+Name[fr]=Documentation de CookUtils
 Name[ru]=Документация CookUtils
 Exec=browser file:///usr/share/doc/cookutils/cookutils.html
 Icon=slitaz-doc
