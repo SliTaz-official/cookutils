@@ -617,7 +617,7 @@ summary() {
 			echo -e '<section>\n<h3>Debug information</h3>'
 			sed -e '/^Debug information/,$!d; /^===/d; /^$/d' $log | sed -n '1!p' | \
 			if [ -n "$2" ]; then
-				syntax_highlighter log | sed 's|\([0-9][0-9]*\):|<a href="#l\1">\1</a>:|'
+				syntax_highlighter log | sed 's|\([^0-9 ]\)\([0-9][0-9]*\):|\1<a href="#l\2">\2</a>:|'
 			else
 				sed 's|^[0-9][0-9]*:||' | syntax_highlighter log
 			fi | mklog
