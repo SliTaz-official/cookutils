@@ -1392,7 +1392,7 @@ copy() {
 		case $i in
 			@std)
 				# Copy "standard" files (all but "developer files", man pages, documentation, translations)
-				sed '/\.h$/d; /\.hxx$/d; /\.a$/d; /\.la$/d; /\.pc$/d; /bin\/.*-config$/d;
+				sed '/\.h$/d; /\.hxx$/d; /\.a$/d; /\.la$/d; /\.pc$/d; /\.pri$/d; /bin\/.*-config$/d;
 					/\.m4$/d; /\.gir$/d; /\.typelib$/d; /\.vapi$/d; /\.deps$/d; /\.cmake$/d;
 					/\/Makefile.*/d; /\.inc$/d; /\/include\//d;
 					/\/share\/man\//d; /\/share\/doc\//d; /\/share\/gtk-doc\//d; /\/share\/info\//d;
@@ -1403,7 +1403,7 @@ copy() {
 				;;
 			@dev)
 				# Copy "developer files"
-				sed -n '/\.h$/p; /\.hxx$/p; /\.a$/p; /\.la$/p; /\.pc$/p; /bin\/.*-config$/p;
+				sed -n '/\.h$/p; /\.hxx$/p; /\.a$/p; /\.la$/p; /\.pc$/p; /\.pri$/p; /bin\/.*-config$/p;
 					/\.m4$/p; /\.gir$/p; /\.typelib$/p; /\.vapi$/p; /\.deps$/p; /\.cmake$/p;
 					/\/Makefile.*/p; /\.inc$/p; /\/include\//p;
 					' $filelist
