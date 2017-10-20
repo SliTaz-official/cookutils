@@ -93,6 +93,15 @@ for i in $(ls $WOK | sort); do
 done
 echo " ($(filesize $PKGS/descriptions.txt))" | dblog
 
+_n 'Creating file "%s"' 'bdeps.txt' | dblog
+rm $PKGS/bdeps.txt 2>/dev/null
+for i in $(ls $WOK | sort); do
+	[ -s "$WOK/$i/receipt" ] || continue
+	bdeps=$(. $WOK/$i/receipt; echo $BUILD_DEPENDS) # remove newlines from some receipts
+	echo "$i	$bdeps" >> $PKGS/bdeps.txt
+done
+echo " ($(filesize $PKGS/bdeps.txt))" | dblog
+
 
 _ 'Creating lists from "%s"' "$WOK" | dblog
 [ -e $PKGS/files.list ] && rm $PKGS/files.list

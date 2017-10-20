@@ -363,7 +363,8 @@ a:target { background-color: yellow; }
 table { width: 100%; box-sizing: border-box; border-collapse: collapse; /*box-shadow: 0 0 4px rgba(0,0,0,0.3);*/ }
 th { /*color: rgba(0,0,0,0.6);*/ background-color: rgba(0,0,0,0.1); padding: 3px; font-weight: normal; }
 td { padding: 2px; vertical-align: top; }
-td:first-child { white-space: nowrap; width: 5rem; }
+table:not(.half) td:first-child { white-space: nowrap; width: 5rem; }
+table.half td { width:50%; }
 td+td { border-left: 1px solid rgba(0,0,0,0.1); }
 .activity td:first-child, .cooknotes td:first-child, td.m { color: rgba(0,0,0,0.6); }
 

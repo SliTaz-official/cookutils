@@ -529,12 +529,15 @@ remove_deps() {
 		_n 'Removing:'
 		for dep in $deps; do
 			echo -n " $dep"
+			# Do not waste time uninstalling the packages if we are inside
+			# aufs chroot - unmounting chroot will "uninstall" all packages.
+			[ -s /aufs-umount.sh ] ||
 			echo 'y' | tazpkg remove $dep --root=$root >/dev/null
 		done
-		newline; newline
-		# Keep the last diff for debug and info.
-		mv -f $diff $CACHE/installed.diff
 	} | busybox fold -sw80
+	newline; newline
+	# Keep the last diff for debug and info.
+	mv -f $diff $CACHE/installed.diff
 }
 
 
