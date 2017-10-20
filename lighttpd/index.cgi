@@ -668,6 +668,9 @@ pkg_info() {
 	[ -d "$wok/$pkg/install/usr/share/info" ] &&
 		echo "<a class='button icon doc$(active info)' href='$base/$pkg/info/#Top'>info</a>"
 
+	[ -n "$LFS" ] &&
+		echo "<a class='button icon doc' href='$LFS' target='_blank' rel='noopener noreferrer'>(B)LFS</a>"
+
 	[ -s "$log" ] &&
 		echo "<a class='button icon log$(active log)' href='$base/$pkg/log/'>logs</a>"
 
