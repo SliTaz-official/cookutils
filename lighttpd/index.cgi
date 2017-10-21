@@ -1070,7 +1070,7 @@ case "$cmd" in
 				<td>
 					<table>
 EOT
-		for i in $BUILD_DEPENDS; do
+		for i in $WANTED $BUILD_DEPENDS; do
 			echo "<tr><td><img src='$base/s/$i'> <a href='$base/$i'>$i</a></td></tr>"
 		done
 		cat <<EOT
