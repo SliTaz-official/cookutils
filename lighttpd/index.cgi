@@ -848,7 +848,7 @@ if [ -z "$pkg" ]; then
 					echo '<pre class="log">'
 					syntax_highlighter log < $log
 					echo '</pre>'
-					if [ "$log" == 'pkgdb.log' ]; then
+					if [ "$QUERY_STRING" == 'pkgdb.log' ]; then
 						# Display button only for SliTaz web browser
 						case "$HTTP_USER_AGENT" in
 							*SliTaz*)
