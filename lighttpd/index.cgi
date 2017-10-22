@@ -848,6 +848,20 @@ if [ -z "$pkg" ]; then
 					echo '<pre class="log">'
 					syntax_highlighter log < $log
 					echo '</pre>'
+					if [ "$log" == 'pkgdb.log' ]; then
+						# Display button only for SliTaz web browser
+						case "$HTTP_USER_AGENT" in
+							*SliTaz*)
+								if [ -f $CACHE/cooker-request -a -n "$HTTP_REFERER" ]; then
+									if grep -qs '^pkgdb$' $CACHE/recook-packages; then
+										show_note i "The package database has been requested for re-creation"
+									else
+										echo "<a class='button' href='$base/?recook=pkgdb'>Re-create the DB</a>"
+									fi
+								fi
+								;;
+						esac
+					fi
 				else
 					show_note e "No log file: $log"
 				fi
