@@ -549,11 +549,15 @@ patchit() {
 	IFS=$'\n'
 	while read i; do
 		patchname=$(echo ${i%%#*} | cut -d' ' -f1)	# allow comments (anything after the # or space)
+		case $patchname in		# allow patch options in form <options_no_spaces>|<file_name>
+			*\|*) patchopts="${patchname%|*}"; patchname="${patchname#*|}";;
+			*)    patchopts='-Np1';;
+		esac
 		[ -n "$patchname" ] || continue				# allow empty lines
 		[ -f "$src/done.$patchname" ] && continue	# already applied (useful with `cook --continue`)
 		newline
 		_ 'Applying patch %s' "$patchname"
-		patch -Np1 -i $stuff/patches/$patchname | sed 's|^|  |'
+		patch $patchopts -i $stuff/patches/$patchname | sed 's|^|  |'
 		touch $src/done.$patchname
 	done < $stuff/patches/series
 	newline
