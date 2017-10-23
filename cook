@@ -1906,6 +1906,7 @@ case "$1" in
 		# Create suitable packages list for TazPkg and only for built packages
 		# as well as flavors files for TazLiTo. We don't need logs since we do it
 		# manually to ensure everything is fine before syncing the mirror.
+		recreate_split_db
 		@@PREFIX@@/libexec/cookutils/pkgdb "$2"
 		;;
 

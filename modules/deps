@@ -150,6 +150,8 @@ outpkg() {
 				s("xorg-xcb-util-image-dev",  "xcb-util-image-dev");
 				s("xorg-xcb-util-renderutil-dev", "xcb-util-renderutil-dev");
 				s("eudev-dev", "udev-dev");
+				s("util-linux-uuid-dev", "ossp-uuid-dev");
+				s("libltdl", "libltdl"); # weird
 
 				# if called with "--incl": show all deps including glibc-base,
 				# gcc-lib-base, glibc-dev and gcc; otherwise hide them
