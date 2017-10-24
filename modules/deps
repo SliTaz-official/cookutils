@@ -152,6 +152,7 @@ outpkg() {
 				s("eudev-dev", "udev-dev");
 				s("util-linux-uuid-dev", "ossp-uuid-dev");
 				s("libltdl", "libltdl"); # weird
+				s("polkit-pam-dev", "polkit-dev");
 
 				# if called with "--incl": show all deps including glibc-base,
 				# gcc-lib-base, glibc-dev and gcc; otherwise hide them

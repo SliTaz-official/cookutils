@@ -699,6 +699,9 @@ EOT
 			fi
 		done < $commits
 
+		# Re-create split database
+		cook splitdb
+
 		# Stats
 		pkgs=$(wc -l < $commits)
 		echo "Packages to cook: $pkgs" | log
