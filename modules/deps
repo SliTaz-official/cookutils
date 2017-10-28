@@ -151,8 +151,9 @@ outpkg() {
 				s("xorg-xcb-util-renderutil-dev", "xcb-util-renderutil-dev");
 				s("eudev-dev", "udev-dev");
 				s("util-linux-uuid-dev", "ossp-uuid-dev");
-				s("libltdl", "libltdl"); # weird
 				s("polkit-pam-dev", "polkit-dev");
+				s("nspr", "palemoon"); # I doubt app may depend on Palemoon
+				s("nss", "palemoon");  #
 
 				# if called with "--incl": show all deps including glibc-base,
 				# gcc-lib-base, glibc-dev and gcc; otherwise hide them

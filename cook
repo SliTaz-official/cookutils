@@ -820,9 +820,28 @@ cookit() {
 # Cook quality assurance.
 
 cookit_quality() {
-	if [ ! -d "$WOK/$pkg/install" ] && [ -z "$WANTED" ]; then
+	while true; do
+		[ ! -d "$WOK/$pkg/install" -a -z "$WANTED" ] || break
 		_ 'ERROR: cook failed' | tee -a $LOGS/$pkg.log
-	fi
+		[ "$trials" == 'yes' ] || break
+		title "Interactive mode"
+		# TODO: allow commands:
+		# q - quit; v - edit receipt here using vi;
+		# s - search for package containing package;
+		# <package name> - install package; [Enter] - retry
+		_ 'You may install the packages here and/or edit the receipt there.'
+		newline
+		while true; do
+			_n 'Install the package? [name/N] '; read answer
+			[ -n "$answer" ] || break
+			tazpkg -gi $answer --root=$root --local --quiet --cookmode
+		done
+		newline
+		_n 'Try again? [Y/n] '; read answer
+		[ "$answer" == 'n' ] && break
+		# here you may append log if you want (">>" insted of last ">")
+		cookit $@ 2>&1 | loglimit 50 > $LOGS/$pkg.log
+	done
 
 	[ "${COOKOPTS/skip-log-errors/}" != "$COOKOPTS" ] && return 0
 
@@ -1386,6 +1405,24 @@ cook_copy_folders() {
 }
 
 
+# Remove from current $fs files that already packed (for receipts v2).
+# Note: the order in $SPLIT is very important.
+
+remove_already_packed() {
+	local i j
+	IFS=$'\n'
+	for i in $taz/*/files.list; do
+		[ -e "$i" ] || continue
+		while read j; do
+			[ -f $fs$j -o -h $fs$j ] || continue
+			rm $fs$j
+			rmdir --parents --ignore-fail-on-non-empty $fs$(dirname $j)
+		done < $i
+	done
+	unset IFS
+}
+
+
 # Common function to copy files, folders and patterns
 
 copy() {
@@ -1406,6 +1443,8 @@ copy() {
 					/\/share\/devhelp\//d; /\/share\/locale\//d;
 					/\/share\/bash-completion\//d; /\/lib\/systemd\//d;
 					/\/fonts\.scale$/d; /\/fonts\.dir$/d;
+					/\/share\/appdata\//d; /\/share\/help\//d;
+					/\/share\/icons\/hicolor\/[1236][245][68]*x[1236][245][68]*\//d;	# 22, 24, 32, 64, 128, 256
 					' $filelist
 				;;
 			@dev)
@@ -1414,6 +1453,9 @@ copy() {
 					/\.m4$/p; /\.gir$/p; /\.typelib$/p; /\.vapi$/p; /\.deps$/p; /\.cmake$/p;
 					/\/Makefile.*/p; /\.inc$/p; /\/include\//p;
 					' $filelist
+				;;
+			@rm)
+				remove_already_packed
 				;;
 			*/)
 				# Copy specified folders.
@@ -1467,34 +1509,19 @@ copy() {
 }
 
 
-# Remove from current $fs files that already packed (for receipts v2).
-# Note: the order in $SPLIT is very important.
-
-remove_already_packed() {
-	local i j
-	IFS=$'\n'
-	for i in $taz/*/files.list; do
-		while read j; do
-			[ -f $fs$j -o -h $fs$j ] || continue
-			rm $fs$j
-			rmdir --parents --ignore-fail-on-non-empty $fs$(dirname $j)
-		done < $i
-	done
-	unset IFS
-}
-
-
 # Function to use in genpkg_rules() to copy hicolor icons in specified sizes
 # (default: 16 and 48) from $install to $fs
 
 cook_copy_icons() {
-	local sizes=$@
+	local sizes=$@ i j
 	action 'Copying hicolor icons...'
+	[ -d "$fs/usr/share/icons/hicolor" ] && rm -rf "$fs/usr/share/icons/hicolor"
 	mkdir -p $fs/usr/share/icons/hicolor
 	for i in ${sizes:-16 48}; do
-		[ ! -e "$install/usr/share/icons/hicolor/${i}x$i" ] ||
-		scopy $install/usr/share/icons/hicolor/${i}x$i \
-			$fs/usr/share/icons/hicolor
+		j="${i}x$i"; [ "$i" == 'scalable' ] && j="$i"
+		[ ! -e "$install/usr/share/icons/hicolor/$j" ] ||
+		scopy   $install/usr/share/icons/hicolor/$j \
+			         $fs/usr/share/icons/hicolor
 	done
 	status
 }
@@ -2008,6 +2035,9 @@ case "$1" in
 				sed -i '$ s|$| [ Done ]|' $activity
 				rm -f $command
 				exit 0 ;;
+
+			--trials|-t)
+				trials='yes' ;;
 		esac
 
 		# Rotate log

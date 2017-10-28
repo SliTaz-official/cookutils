@@ -365,6 +365,7 @@ th { /*color: rgba(0,0,0,0.6);*/ background-color: rgba(0,0,0,0.1); padding: 3px
 td { padding: 2px; vertical-align: top; }
 table:not(.half):not(.pkgslist) td:first-child { white-space: nowrap; width: 5rem; }
 table.half td { width:50%; }
+table.third td{ width:33%; }
 td+td { border-left: 1px solid rgba(0,0,0,0.1); }
 .activity td:first-child, .cooknotes td:first-child, td.m { color: rgba(0,0,0,0.6); }
 

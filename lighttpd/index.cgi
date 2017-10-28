@@ -507,6 +507,7 @@ syntax_highlighter() {
 				\
 				-e 's#^.*[Ff][Aa][Ii][Ll][Ee][Dd].*#<b>\0</b>#' \
 				-e 's#^.*[Ff]atal.*#<b>\0</b>#' \
+				-e '/non-fatal/ s|</*b>||g' \
 				-e 's#^.*[Nn]ot found.*#<b>\0</b>#' \
 				-e 's#^.*[Nn]o such file.*#<b>\0</b>#' \
 				-e 's#^.*No package .* found.*#<b>\0</b>#' \
@@ -547,7 +548,9 @@ syntax_highlighter() {
 					s|$_stuff|<var>\${stuff}</var>|g" \
 				-e "s|\[9\([1-6]\)m|<span class='c\10'>|;
 					s|\[39m|</span>|;
-					s|\[1m|<strong>|g; s|\[0m|</strong>|g;"
+					s|\[1m|<strong>|g; s|\[0m|</strong>|g" \
+				-e "s|^+.*|<i>\0</i>|;
+					s|^-.*|<b>\0</b>|; /----/s|</*b>||"
 			;;
 
 		files)
@@ -661,7 +664,7 @@ pkg_info() {
 	local log active bpkg
 	log="$LOGS/$pkg.log"
 
-	echo "<h2><a href=\"$base/$pkg\">$pkg</a></h2>"
+	echo "<h2><a href=\"$base/$pkg\">$pkg</a>$(. $wok/$pkg/receipt; [ -n "$SHORT_DESC" ] && echo ": $SHORT_DESC")</h2>"
 	echo '<div id="info">'
 	echo "<a class='button icon receipt$(active receipt stuff)' href='$base/$pkg/receipt'>receipt &amp; stuff</a>"
 
@@ -691,8 +694,11 @@ pkg_info() {
 	[ -d "$wok/$pkg/install/usr/share/info" ] &&
 		echo "<a class='button icon doc$(active info)' href='$base/$pkg/info/#Top'>info</a>"
 
-	[ -n "$LFS" ] &&
-		echo "<a class='button icon doc' href='$LFS' target='_blank' rel='noopener noreferrer'>(B)LFS</a>"
+	if [ -n "$LFS" ]; then
+		printf "<a class='button icon doc' href='%s' target='_blank' rel='noopener noreferrer'>" "$LFS"
+		[ "${LFS/blfs/}" != "$LFS" ] && printf "B"
+		printf "LFS</a>\n"
+	fi
 
 	[ -s "$log" ] &&
 		echo "<a class='button icon log$(active log)' href='$base/$pkg/log/'>logs</a>"
@@ -1019,6 +1025,7 @@ case "$cmd" in
 	'')
 		page_header
 
+		requested_pkg="$pkg"
 		# Package info.
 		if [ ! -f "$wok/$pkg/receipt" ]; then
 			# Let's look at the cases when the package was not found
@@ -1069,13 +1076,15 @@ case "$cmd" in
 		summary "$log"
 
 		# Informal table with dependencies
+		pkg="$requested_pkg"
 		cat <<EOT
 <section>
-	<h3>Dependencies of packages</h3>
-	<table class="half">
+	<h3>Related packages</h3>
+	<table class="third">
 		<thead>
 			<tr>
 				<th>Build dependencies</th>
+				<th>Runtime dependencies</th>
 				<th>Required by</th>
 			</tr>
 		</thead>
@@ -1093,6 +1102,23 @@ EOT
 				<td>
 					<table>
 EOT
+		{
+			[ -s "$PKGS/packages.info" ] &&
+			awk -F$'\t' -vp="$pkg" '{
+				if ($1 == p) print $8
+			}' "$PKGS/packages.info"
+		} | tr ' ' '\n' | sort -u | \
+		while read i; do
+			[ -n "$i" ] &&
+			echo "<tr><td><img src='$base/s/$i'> <a href='$base/$i'>$i</a></td></tr>"
+		done
+		cat <<EOT
+					</table>
+				</td>
+				<td>
+					<table>
+EOT
+
 		{
 			for i in $(awk -F$'\t' -vp="$pkg" '{if($1==p)print $2}' $splitdb); do
 
@@ -1336,6 +1362,7 @@ EOT
 			/\/share\/locale\// { tag("loc", 4); next }
 			/\.h$/ || /\.a$/ || /\.la$/ || /\.pc$/ || /\/bin\/.*-config$/ ||
 				/\/Makefile.*$/ { tag("dev", 3); next }
+			/\/share\/help\// || /\/share\/appdata\// { tag("gnm", 6); next }
 			{ tag("???", 1) }
 			' > $table
 
@@ -1346,7 +1373,7 @@ EOT
 					head) echo -n '<table class="summary"><tr>';;
 					body) echo -n '<th> </th></tr><tr>';;
 				esac
-				for j in '???1' dev3 loc4 ico2 doc5 man5 pod5 '---0'; do
+				for j in '???1' dev3 loc4 ico2 doc5 man5 pod5 gnm6 '---0'; do
 					tag=${j:0:3}; class="c${j:3:1}0"; [ "$class" == 'c00' ] && class='c01'
 					case $i in
 						head) echo -n "<th class='$class'>$tag</th>";;
