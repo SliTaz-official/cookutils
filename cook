@@ -849,7 +849,7 @@ cookit_quality() {
 	if grep -Ev "(conftest|configtest)" $LOGS/$pkg.log | \
 	   grep -Eq "(^ERROR|undefined reference to)" ; then
 		debug_info | tee -a $LOGS/$pkg.log
-		sed -i '$ s|$| [ Failed ]|' $activity
+		put_status $pkg Failed
 		rm -f $command
 		broken; exit 1
 	fi
@@ -1585,6 +1585,14 @@ recreate_split_db() {
 }
 
 
+# Put the status to the activity log
+
+put_status() {
+	# $1: package, $2: status, one of 'Done', 'Failed'
+	sed -i "s|>$1</a>$|& [ $2 ]|" $activity
+}
+
+
 
 
 #
@@ -2032,7 +2040,7 @@ case "$1" in
 				clean_log "$pkg-pack"
 				time=$(($(date +%s) - $time))
 				summary | sed 's|^Cook |Pack |' | tee -a $LOGS/$pkg-pack.log
-				sed -i '$ s|$| [ Done ]|' $activity
+				put_status $pkg Done
 				rm -f $command
 				exit 0 ;;
 
@@ -2076,7 +2084,7 @@ case "$1" in
 			grep -Ev "(/root/.cvspass|conftest|df: /|rm: can't remove)" $LOGS/$pkg.log | \
 			grep -Eq "(^ERROR|: No such file or directory|not remade because of errors|ake: \*\*\* .* Error)"; then
 			debug_info | tee -a $LOGS/$pkg.log
-			sed -i '$ s|$| [ Failed ]|' $activity
+			put_status $pkg Failed
 			rm -f $command
 			broken; exit 1
 		fi
@@ -2092,7 +2100,7 @@ case "$1" in
 		# We may want to install/update (outside aufs jail!).
 		[ -s /aufs-umount.sh ] || install_package
 
-		sed -i '$ s|$| [ Done ]|' $activity
+		put_status $pkg Done
 
 		# Finally we DON'T WANT to build the *-dev or packages with WANTED="$pkg"
 		# If you want automation, use the Cooker Build Bot.
