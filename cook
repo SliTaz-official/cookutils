@@ -839,7 +839,7 @@ cookit_quality() {
 		newline
 		_n 'Try again? [Y/n] '; read answer
 		[ "$answer" == 'n' ] && break
-		# here you may append log if you want (">>" insted of last ">")
+		# here you may append log if you want (">>" instead of last ">")
 		cookit $@ 2>&1 | loglimit 50 > $LOGS/$pkg.log
 	done
 
@@ -1405,7 +1405,7 @@ cook_copy_folders() {
 }
 
 
-# Remove from current $fs files that already packed (for receipts v2).
+# Remove from current $fs files that are already packed (for receipts v2).
 # Note: the order in $SPLIT is very important.
 
 remove_already_packed() {

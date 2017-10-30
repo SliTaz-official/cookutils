@@ -38,22 +38,22 @@ Here, in every rule you can:
 
   * use the `copy()` function or other methods to copy specified files from
     $install to $fs.
-  * define the DEPENDS variable for specified package; you may omit this
+  * define the DEPENDS variable for specified packages; you may omit this
     definition, then it will mean the following:
     * for the *main package*: it doesn't depend on any package;
-    * for the *split packages*: it depends exclusively on *main package*.
-    Note, receipt is the shell script with all its restrictions: there's no
-    difference if you define empty DEPENDS variable or not define it at all.
-    Here's the small trick: if you really want to define empty dependency,
-    put single space between the quotes: `DEPENDS=" "`.
+    * for the *split packages*: it depends exclusively on a *main package*.
+    Note, a receipt is the shell script with all its restrictions: there's no
+    difference if you define an empty DEPENDS variable or do not define it at all.
+    Here's the small trick: if you really want to define empty dependencies,
+    put single spaces between the quotes: `DEPENDS=" "`.
   * define the two-in-one CAT variable for *split packages*. Variable format:
-
+ 
     ```bash
     CAT="category|addition"
     ```
 
-    Where `category` is just the choosed category for the specified *split
-    package*. And `addition` you will find in the brackets at the end of
+    Where `category` is just the chosen category for the specified *split
+    package*. And `addition` you will find in the brackets at the end of a
     short description of the specified *split package*. You may omit this
     definition for the "dev" packages. In this case it will be implicitly
     defined as:
@@ -67,8 +67,8 @@ Here, in every rule you can:
 Long descriptions
 -----------------
 
-You may provide `description.txt` for the *main package* and/or
-`description.package-name.txt` for any of the *split package*.
+You may provide a `description.txt` for the *main package* and/or
+`description.package-name.txt` for any of the *split packages*.
 
 
 `post_install()` and friends
@@ -81,9 +81,9 @@ You may define one of the following functions:
   * `pre_remove()`;
   * `post_remove()`.
 
-These functions may be defined for every of *main* or *split package*, so
-you need to extend function name with underscore (`_`) and the package name.
-Like this for `cookutils` package:
+These functions may be defined for every one of *main* or *split packages*, so
+you need to extend function names with underscores (`_`) and the package name.
+Like this for the `cookutils` package:
 
     post_install_cookutils()
 
@@ -109,7 +109,7 @@ Now `copy()` understands 4 main forms of patterns:
   * `@std`    - all the "standard" files;
   * `@dev`    - all the "developer" files;
   * `folder/` - append folder name in question by slash;
-  * `file`    - file name without the slash in the end.
+  * `file`    - file name without the slash at the end.
 
 Both patterns `@std` and `@dev` are meta-patterns making the most common actions
 extremely simple. Here all files are divided into three types: standard,
@@ -120,7 +120,7 @@ any documentation, man pages, translations, BASH completion, etc...
 In the `folder/` and `file` forms of the patterns you can use the asterisk (`*`)
 symbol meaning any number of any characters.
 
-Some examples (executed on the chroot with the "busybox" package installed):
+Some examples (executed in the chroot with the "busybox" package installed):
 
   Pattern  | Result
 -----------|--------------------------------------------------------------------
@@ -140,8 +140,8 @@ removes already copied files that have already been packed.
 
 ### Some more examples of using `copy()`
 
-If your package used only for development purposes (like automake, flex, vala
-and some other), you may use the next commant to put all the files you want
+If your packages are used only for development purposes (like automake, flex, vala
+and some others), you may use the next command to put all the files you want
 to pack into one package:
 
 ```bash
@@ -170,11 +170,11 @@ genpkg_rules() {
 
 In the following example, a package can contain libraries (which can be used by
 other programs) and executables that use these libraries. We need to split
-`@std` into two parts: libraries and executable files. This can be done in few
+`@std` into two parts: libraries and executable files. This can be done in a few
 ways.
 
 ```bash
-PACKAGE="my-pkg"
+PACKAGE="my-pkg" 
 # We omit "my-pkg" in the $SPLIT, then it is implicit in the first place
 SPLIT="my-pkg-bin my-pkg-dev"
 genpkg_rules() {
@@ -187,7 +187,7 @@ genpkg_rules() {
 ```
 
 ```bash
-# If package contains some more files outside the /bin/ (for example, configs),
+# If a package contains some more files outside of the /bin/ (for example, configs),
 # that we want to pack with the "bin" package:
 PACKAGE="my-pkg"
 SPLIT="my-pkg-bin my-pkg-dev"
@@ -202,10 +202,10 @@ genpkg_rules() {
 ```
 
 ```bash
-# Pack two different libraries into two packages, and the rest into third
+# Pack two different libraries into two packages, and the rest into a third
 # package:
 PACKAGE="my-pkg"
-# We explicitly specified all the packages, therefore they will be processed
+# We explicitly specify all the packages, therefore they will be processed
 # in the specified order
 SPLIT="my-pkg-lib1 my-pkg-lib2 my-pkg my-pkg-dev"
 genpkg_rules() {
