@@ -1084,13 +1084,12 @@ case "$cmd" in
 		pkg="$requested_pkg"
 		inf="$(mktemp -d)"
 
-		# 1/3: Build dependencies (from receipt)
-		for i in $WANTED $BUILD_DEPENDS; do
+		# 1/3: Build dependencies (from receipt and pkgdb)
+		for i in $WANTED $BUILD_DEPENDS $(awk -F$'\t' -vp=" $pkg " '{if (index(" " $2 " ", p)) print $1}' $splitdb); do
 			echo "$i" >> $inf/a
 		done
 
 		# 2/3: Runtime dependencies (from pkgdb)
-		inf_col2="$(mktemp)"
 		{
 			[ -s "$PKGS/packages.info" ] &&
 			awk -F$'\t' -vp="$pkg" '{
@@ -1099,9 +1098,8 @@ case "$cmd" in
 		} | tr ' ' '\n' | sort -u > $inf/b
 
 		# 3/3: Required by (from pkgdb)
-		inf_col3="$(mktemp)"
 		{
-			for i in $(awk -F$'\t' -vp="$pkg" '{if ($1 == p) print $2}' $splitdb); do
+			for i in $pkg $(awk -F$'\t' -vp="$pkg" '{if ($1 == p) print $2}' $splitdb); do
 				[ -s "$PKGS/packages.info" ] &&
 				awk -F$'\t' -vp=" $i " '{
 					if (index(" " $8 " ", p)) print $1
