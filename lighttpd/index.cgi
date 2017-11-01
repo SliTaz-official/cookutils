@@ -1085,7 +1085,7 @@ case "$cmd" in
 		inf="$(mktemp -d)"
 
 		# 1/3: Build dependencies (from receipt and pkgdb)
-		for i in $WANTED $BUILD_DEPENDS $(awk -F$'\t' -vp=" $pkg " '{if (index(" " $2 " ", p)) print $1}' $splitdb); do
+		for i in $WANTED $BUILD_DEPENDS $(awk -F$'\t' -vp=" $pkg " '{if (index(" " $2 " ", p) && (" " $1 " " != p)) print $1}' $splitdb); do
 			echo "$i" >> $inf/a
 		done
 
