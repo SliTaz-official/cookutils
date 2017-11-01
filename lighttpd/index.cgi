@@ -664,8 +664,8 @@ pkg_info() {
 	local log active bpkg
 	log="$LOGS/$pkg.log"
 
-	echo -n "<h2><a href=\"$base/$requested_pkg\">$requested_pkg</a>"
-	[ -f $PKGS/packages.info ] && awk -F$'\t' -vp="$requested_pkg" '{if ($1 == p) { print ": " $4; exit; }}' $PKGS/packages.info
+	echo -n "<h2><a href=\"$base/${requested_pkg:-$pkg}\">${requested_pkg:-$pkg}</a>"
+	[ -f $PKGS/packages.info ] && awk -F$'\t' -vp="${requested_pkg:-$pkg}" '{if ($1 == p) { print ": " $4; exit; }}' $PKGS/packages.info
 	echo '</h2>'
 	echo '<div id="info">'
 	echo "<a class='button icon receipt$(active receipt stuff)' href='$base/$pkg/receipt'>receipt &amp; stuff</a>"
