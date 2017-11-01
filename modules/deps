@@ -18,6 +18,22 @@ db_pc="$cache/tp.pc.db"		# database with *.pc files
 fl_mirrorz='/var/lib/tazpkg/files.list.lzma'	# mirror files list
 fl_local='/home/slitaz/cache/files.list'		# local files list
 
+
+# check "local files list" doesn't contain files from missing/removed packages
+
+action 'Updating %s...' "$(basename $fl_local)"
+
+splitdb="$CACHE/split.db"
+sed 's|:.*||' $fl_local \
+| sort -u \
+| while read pkg; do
+	mainpkg=$(awk -F$'\t' -vpkg=" $pkg " '{
+		if (index(" " $2 " ", pkg)) {print 1; exit}
+	}' $splitdb)
+	[ -n "$mainpkg" ] || sed -i "/^$pkg: /d" $fl_local
+done
+status
+
 # recreate "combined list of all files" in the cases:
 #   * if absent
 #   * mirror files list has been updated
@@ -154,6 +170,8 @@ outpkg() {
 				s("polkit-pam-dev", "polkit-dev");
 				s("nspr", "palemoon"); # I doubt app may depend on Palemoon
 				s("nss", "palemoon");  #
+				s("xfconf", "libxfconf"); s("xfconf-dev", "libxfconf-dev");
+				s("exo",    "libexo");    s("exo-dev",    "libexo-dev");
 
 				# if called with "--incl": show all deps including glibc-base,
 				# gcc-lib-base, glibc-dev and gcc; otherwise hide them

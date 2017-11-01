@@ -664,7 +664,9 @@ pkg_info() {
 	local log active bpkg
 	log="$LOGS/$pkg.log"
 
-	echo "<h2><a href=\"$base/$pkg\">$pkg</a>$(. $wok/$pkg/receipt; [ -n "$SHORT_DESC" ] && echo ": $SHORT_DESC")</h2>"
+	echo -n "<h2><a href=\"$base/$requested_pkg\">$requested_pkg</a>"
+	[ -f $PKGS/packages.info ] && awk -F$'\t' -vp="$requested_pkg" '{if ($1 == p) { print ": " $4; exit; }}' $PKGS/packages.info
+	echo '</h2>'
 	echo '<div id="info">'
 	echo "<a class='button icon receipt$(active receipt stuff)' href='$base/$pkg/receipt'>receipt &amp; stuff</a>"
 
@@ -1075,8 +1077,43 @@ case "$cmd" in
 		# Check for a log file and display summary if it exists.
 		summary "$log"
 
+
+
+
 		# Informal table with dependencies
 		pkg="$requested_pkg"
+		inf="$(mktemp -d)"
+
+		# 1/3: Build dependencies (from receipt)
+		for i in $WANTED $BUILD_DEPENDS; do
+			echo "$i" >> $inf/a
+		done
+
+		# 2/3: Runtime dependencies (from pkgdb)
+		inf_col2="$(mktemp)"
+		{
+			[ -s "$PKGS/packages.info" ] &&
+			awk -F$'\t' -vp="$pkg" '{
+				if ($1 == p) print $8
+			}' "$PKGS/packages.info"
+		} | tr ' ' '\n' | sort -u > $inf/b
+
+		# 3/3: Required by (from pkgdb)
+		inf_col3="$(mktemp)"
+		{
+			for i in $(awk -F$'\t' -vp="$pkg" '{if ($1 == p) print $2}' $splitdb); do
+				[ -s "$PKGS/packages.info" ] &&
+				awk -F$'\t' -vp=" $i " '{
+					if (index(" " $8 " ", p)) print $1
+				}' "$PKGS/packages.info"
+
+				[ -s "$PKGS/bdeps.txt" ] &&
+				awk -F$'\t' -vp=" $i " '{
+					if (index(" " $2 " ", p)) print $1
+				}' $PKGS/bdeps.txt
+			done
+		} | sort -u > $inf/c
+
 		cat <<EOT
 <section>
 	<h3>Related packages</h3>
@@ -1089,61 +1126,31 @@ case "$cmd" in
 			</tr>
 		</thead>
 		<tbody>
-			<tr>
-				<td>
-					<table>
-EOT
-		for i in $WANTED $BUILD_DEPENDS; do
-			echo "<tr><td><img src='$base/s/$i'> <a href='$base/$i'>$i</a></td></tr>"
-		done
-		cat <<EOT
-					</table>
-				</td>
-				<td>
-					<table>
-EOT
-		{
-			[ -s "$PKGS/packages.info" ] &&
-			awk -F$'\t' -vp="$pkg" '{
-				if ($1 == p) print $8
-			}' "$PKGS/packages.info"
-		} | tr ' ' '\n' | sort -u | \
-		while read i; do
-			[ -n "$i" ] &&
-			echo "<tr><td><img src='$base/s/$i'> <a href='$base/$i'>$i</a></td></tr>"
-		done
-		cat <<EOT
-					</table>
-				</td>
-				<td>
-					<table>
 EOT
 
-		{
-			for i in $(awk -F$'\t' -vp="$pkg" '{if($1==p)print $2}' $splitdb); do
-
-				[ -s "$PKGS/packages.info" ] &&
-				awk -F$'\t' -vp=" $i " '{
-					if (index(" " $8 " ", p)) print $1
-				}' "$PKGS/packages.info"
-
-				[ -s "$PKGS/bdeps.txt" ] &&
-				awk -F$'\t' -vp=" $i " '{
-					if (index(" " $2 " ", p)) print $1
-				}' $PKGS/bdeps.txt
-			done
-		} | sort -u | \
-		while read i; do
-			echo "<tr><td><img src='$base/s/$i'> <a href='$base/$i'>$i</a></td></tr>"
-		done
+		awk -vinf="$inf" -vbase="$base" '
+			function linki(i) {
+				if (i) return sprintf("<img src=\"%s/s/%s\"> <a href=\"%s/%s\">%s</a>", base, i, base, i, i);
+			}
+			BEGIN{
+				do {
+					a = b = c = "";
+					getline a < inf "/a";
+					getline b < inf "/b";
+					getline c < inf "/c";
+					printf("<tr><td>%s </td><td>%s </td><td>%s </td></tr>", linki(a), linki(b), linki(c));
+				} while ( a b c )
+			}'
 		cat <<EOT
-					</table>
-				</td>
-			</tr>
 		</tbody>
 	</table>
 </section>
 EOT
+		# Clean
+		rm -r $inf
+
+
+
 
 		# Display <Recook> button only for SliTaz web browser
 		case "$HTTP_USER_AGENT" in
