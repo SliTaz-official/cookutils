@@ -55,7 +55,7 @@ calc_time() {
 # Compressor mini summary
 
 comp_summary() {
-	# "$time0" "$size0" "$size1"
+	# "$time0" "$size0" "$size1" "$log_file"
 	status
 	[ "$2" -eq 0 ] && return
 	saving=$(awk -va="$2" -vb="$3" 'BEGIN{ printf("%.0f\n", (a - b) / 1024) }')
@@ -66,6 +66,14 @@ comp_summary() {
 	fi
 	_ '  Time: %s. Size: %s B -> %s B. Save: %s KB.%s' \
 		"$(calc_time $1)" "$2" "$3" "$saving" "$cache_msg"
+
+	if [ -s "$4" ]; then
+		_ 'Cleaner warnings and errors:'
+		awk '{printf "  %s\n", $0;}' "$4"
+		echo
+	fi
+	# Clean log
+	[ ! -f "$4" ] || rm "$4"
 }
 
 
@@ -146,15 +154,23 @@ compress_manpages() {
 	done
 
 	# Recompress with advdef (it can't compress, only recompress)
+	cleaner_log="$(mktemp)"
 	IFS=$'\n'
 	for i in $(find $manpath -type f); do
 		if ! cached_path=$(query_cache mangz "$i"); then
-			advdef -z4q "$i"
-			store_cache "$cached_path" "$i"
+			cp -a "$i" "$i.orig$$"		# save the original if something goes wrong
+			out="$(advdef -z4q "$i")"
+			if [ -n "$out" ]; then
+				echo "$i:"$'\n'"$out"$'\n' >> "$cleaner_log"
+				mv -f "$i.orig$$" "$i"	# restore the original
+			else
+				store_cache "$cached_path" "$i"
+				rm -f "$i.orig$$"		# clean
+			fi
 		fi
 	done
 
-	comp_summary "$time0" "$size0" "$(sizes man)"
+	comp_summary "$time0" "$size0" "$(sizes man)" "$cleaner_log"
 }
 
 
@@ -171,15 +187,23 @@ recompress_gz() {
 	action 'Recompressing gzip files...'
 
 	# Recompress with advdef
+	cleaner_log="$(mktemp)"
 	IFS=$'\n'
 	for i in $(find $install -type f -name '*.gz' ! -path '*/share/man/*'); do
 		if ! cached_path=$(query_cache gz "$i"); then
-			advdef -z4q "$i"
-			store_cache "$cached_path" "$i"
+			cp -a "$i" "$i.orig$$"		# save the original if something goes wrong
+			out="$(advdef -z4q "$i")"
+			if [ -n "$out" ]; then
+				echo "$i:"$'\n'"$out"$'\n' >> "$cleaner_log"
+				mv -f "$i.orig$$" "$i"	# restore the original
+			else
+				store_cache "$cached_path" "$i"
+				rm -f "$i.orig$$"		# clean
+			fi
 		fi
 	done
 
-	comp_summary "$time0" "$size0" "$(sizes gz)"
+	comp_summary "$time0" "$size0" "$(sizes gz)" "$cleaner_log"
 }
 
 
@@ -196,15 +220,23 @@ recompress_zip() {
 	action 'Recompressing zip files...'
 
 	# Recompress with advzip
+	cleaner_log="$(mktemp)"
 	IFS=$'\n'
 	for i in $(find $install -type f -name '*.zip'); do
 		if ! cached_path=$(query_cache zip "$i"); then
-			advzip -z3qk "$i"	# -4 is more than 2 orders slower
-			store_cache "$cached_path" "$i"
+			cp -a "$i" "$i.orig$$"		# save the original if something goes wrong
+			out="$(advzip -z3qk "$i")"	# '-4' is more than two orders slower; use '-3'
+			if [ -n "$out" ]; then
+				echo "$i:"$'\n'"$out"$'\n' >> "$cleaner_log"
+				mv -f "$i.orig$$" "$i"	# restore the original
+			else
+				store_cache "$cached_path" "$i"
+				rm -f "$i.orig$$"		# clean
+			fi
 		fi
 	done
 
-	comp_summary "$time0" "$size0" "$(sizes zip)"
+	comp_summary "$time0" "$size0" "$(sizes zip)" "$cleaner_log"
 }
 
 
@@ -234,17 +266,37 @@ compress_png() {
 
 	[ "$oplevel" == '8' ] && oplevel='7 -zm1-9'
 
+	cleaner_log="$(mktemp)"
+	pq_opt='--skip-if-larger' # Sublime Text is mad about `if` in $(), so put it separately
 	IFS=$'\n'
 	for i in $(find $install -type f -name '*.png'); do
-		unset IFS
+		unset IFS iserror
 		if ! cached_path=$(query_cache $cache_section "$i"); then
-			$use_pq && pngquant -f --skip-if-larger --ext .png --speed 1 "$i"
-			$use_op && optipng -quiet -strip all -o$oplevel "$i"
-			store_cache "$cached_path" "$i"
+			cp -a "$i" "$i.orig$$"		# save the original if something goes wrong
+			if $use_pq; then
+				out="$(pngquant -f $pq_opt --ext .png --speed 1 "$i" 2>&1)"
+				if [ -n "$out" ]; then
+					echo "$i (pngquant):"$'\n'"$out"$'\n' >> "$cleaner_log"
+					iserror='yes'
+				fi
+			fi
+			if $use_op && [ -z "$iserror" ]; then
+				out="$(optipng -quiet -strip all -o$oplevel "$i" 2>&1)"
+				if [ -n "$out" ]; then
+					echo "$i (optipng):"$'\n'"$out"$'\n' >> "$cleaner_log"
+					iserror='yes'
+				fi
+			fi
+			if [ -n "$iserror" ]; then
+				mv -f "$i.orig$$" "$i"	# restore the original
+			else
+				store_cache "$cached_path" "$i"
+				rm -f "$i.orig$$"		# clean
+			fi
 		fi
 	done
 
-	comp_summary "$time0" "$size0" "$(sizes png)"
+	comp_summary "$time0" "$size0" "$(sizes png)" "$cleaner_log"
 }
 
 
@@ -267,17 +319,10 @@ compress_svg() {
 	for i in $(IFS=$'\n' find $install -type f -name '*.svg'); do
 		out="$(unset IFS; svgcleaner "$i" "$i" --copy-on-error --quiet \
 			--multipass --remove-unresolved-classes no $opts 2>&1)"
-		[ -z "$out" ] || echo -e "$i:\n$out\n" >> "$cleaner_log"
+		[ -z "$out" ] || echo "$i:"$'\n'"$out"$'\n' >> "$cleaner_log"
 	done
 
-	comp_summary "$time0" "$size0" "$(sizes svg)"
-
-	if [ -s "$cleaner_log" ]; then
-		_ 'Cleaner warnings and errors:'
-		awk '{printf "  %s\n", $0;}' "$cleaner_log"
-		echo
-	fi
-	rm "$cleaner_log"
+	comp_summary "$time0" "$size0" "$(sizes svg)" "$cleaner_log"
 }
 
 
@@ -296,13 +341,18 @@ compress_ui() {
 	size0=$(sizes xml)
 	time0=$(get_time)
 	temp_ui="$(mktemp)"
+	cleaner_log="$(mktemp)"
 	IFS=$'\n'
 	for ui in $(find $install -type f \( -name '*.ui' -o -name '*.glade' \) ); do
-		xmlstarlet c14n --without-comments "$ui" | xmlstarlet sel -B -t -c '*' > "$temp_ui"
-		cat "$temp_ui" > "$ui"
+		out="$(xmlstarlet c14n --without-comments "$ui" | xmlstarlet sel -B -t -c '*' > "$temp_ui")"
+		if [ -n "$out" ]; then
+			echo "$ui:"$'\n'"$out"$'\n' >> "$cleaner_log"
+		else
+			cat "$temp_ui" > "$ui"
+		fi
 	done
 
-	comp_summary "$time0" "$size0" "$(sizes xml)"
+	comp_summary "$time0" "$size0" "$(sizes xml)" "$cleaner_log"
 	rm "$temp_ui"
 }
 
@@ -381,7 +431,7 @@ fix_desktop_files() {
 		rm "$desktop.orig"
 	done
 
-	comp_summary "$time0" "$size0" "$(sizes des)"
+	comp_summary "$time0" "$size0" "$(sizes des)" '/dev/null'
 }
 
 
@@ -404,11 +454,20 @@ normalize_mo() {
 	time0=$(get_time)
 
 	# Process all existing *.mo files
+	cleaner_log="$(mktemp)"
 	IFS=$'\n'
 	for mo in $(find "$install" -type f -name '*.mo'); do
 		tmpfile="$(mktemp)"
 
-		msgunfmt "$mo" | msguniq | msgconv -o "$tmpfile" -t 'UTF-8'
+		# put ANY errors of {msgunfmt,msguniq,msgconv} to $out. FIXME?
+		out="$({ msgunfmt "$mo" | msguniq | msgconv -o "$tmpfile" -t 'UTF-8'; } 2>&1)"
+		if [ -n "$out" ]; then
+			# using literal $'\n' here instead of using `echo -e "...\n..."` because
+			# $out may contain escapes ('\r', '\v') that we should print as-is
+			echo "$mo:"$'\n'"$out"$'\n' >> "$cleaner_log"
+			continue # proceed to next file
+		fi
+
 		# add newline
 		echo >> "$tmpfile"
 
@@ -497,12 +556,17 @@ normalize_mo() {
 		}
 		' "$tmpfile" > "$tmpfile.awk"
 
-		msgfmt "$tmpfile.awk" -o "$tmpfile.mo"
+		out="$(msgfmt "$tmpfile.awk" -o "$tmpfile.mo" 2>&1)"
+		if [ -n "$out" ]; then
+			echo "$mo (msgfmt):"$'\n'"$out"$'\n' >> "$cleaner_log"
+			continue # proceed to next file
+		fi
 
 		if [ -s "$tmpfile.mo" ]; then
 			rm "$mo"; mv "$tmpfile.mo" "$mo"
 		else
-			_ 'Error processing %s' "$mo"
+			_ 'Error processing %s' "$mo" >> "$cleaner_log"
+			echo >> "$cleaner_log"
 			[ -e "$tmpfile.mo" ] && rm "$tmpfile.mo"
 		fi
 
@@ -510,7 +574,7 @@ normalize_mo() {
 		rm "$tmpfile" "$tmpfile.pf" "$tmpfile.awk"
 	done
 
-	comp_summary "$time0" "$size0" "$(sizes mo1)"
+	comp_summary "$time0" "$size0" "$(sizes mo1)" "$cleaner_log"
 }
 
 
@@ -629,7 +693,7 @@ strip_mo_i18n() {
 
 	# Remove the unsupported locales
 	for rem_locale in $elocales; do
-		[ -d  "$fs/usr/share/locale/$rem_locale" ] &&
+		[ ! -d  "$fs/usr/share/locale/$rem_locale" ] ||
 		rm -r "$fs/usr/share/locale/$rem_locale"
 	done
 

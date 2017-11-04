@@ -479,7 +479,7 @@ syntax_highlighter() {
 			: ${_fs=#_#_#}
 			: ${_stuff=#_#_#}
 			# Use one-letter html tags to save some bytes :)
-			# <b>is error (red)</b> <u>is warning (orange)</u> <i>is informal (green)</i>
+			# <b>is error (red)</b> <u>is warning (orange)</u> <i>is informative (green)</i>
 			sed	-e 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g' \
 				-e 's#OK$#<i>OK</i>#' \
 				-e 's#\([Dd]one\)$#<i>\1</i>#' \
@@ -661,12 +661,17 @@ active() {
 
 
 pkg_info() {
-	local log active bpkg
+	local log active bpkg short_desc=''
 	log="$LOGS/$pkg.log"
 
 	echo -n "<h2><a href=\"$base/${requested_pkg:-$pkg}\">${requested_pkg:-$pkg}</a>"
-	[ -f $PKGS/packages.info ] && awk -F$'\t' -vp="${requested_pkg:-$pkg}" '{if ($1 == p) { print ": " $4; exit; }}' $PKGS/packages.info
-	echo '</h2>'
+	# Get short description for existing packages
+	[ -f $PKGS/packages.info ] &&
+	short_desc="$(awk -F$'\t' -vp="${requested_pkg:-$pkg}" '{if ($1 == p) { printf("%s", $4); exit; }}' $PKGS/packages.info)"
+	# If package not exists (not created yet or broken), get short description
+	# (but only for "main" package) from receipt
+	[ -n "$short_desc" ] || short_desc="$(. $wok/$pkg/receipt; echo "$SHORT_DESC")"
+	echo ": $short_desc</h2>"
 	echo '<div id="info">'
 	echo "<a class='button icon receipt$(active receipt stuff)' href='$base/$pkg/receipt'>receipt &amp; stuff</a>"
 
