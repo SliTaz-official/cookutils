@@ -11,6 +11,7 @@
 . /usr/lib/slitaz/libcook.sh
 
 orig_receipt="$1"
+PACKAGE="$2"
 
 # Receipt's signature is important, although some receipts may miss it
 signature=$(head -n1 "$orig_receipt")

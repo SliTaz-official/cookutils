@@ -901,7 +901,7 @@ packit() {
 
 	cd $taz
 	action 'Copying "%s"...' 'receipt'
-	@@PREFIX@@/libexec/cookutils/mk_pkg_receipt ../receipt > $pack/receipt
+	@@PREFIX@@/libexec/cookutils/mk_pkg_receipt ../receipt "$PACKAGE" > $pack/receipt
 	chown 0.0 $pack/receipt; status
 
 	unset desc
