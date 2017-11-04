@@ -31,6 +31,7 @@ install-cook:
 	install -m 0755 modules/pkgdb \
 					modules/compressor \
 					modules/deps \
+					modules/mk_pkg_receipt \
 									 $(DESTDIR)$(PREFIX)/libexec/cookutils
 	install -m 0644 cook.conf        $(DESTDIR)/etc/slitaz
 	install -m 0644 cook.site        $(DESTDIR)/etc/slitaz

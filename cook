@@ -856,95 +856,6 @@ cookit_quality() {
 }
 
 
-# Receipt used for cooking the package is redundant to be included into package.
-# This script will strip the original receipt to bare minimum: variables,
-# {pre,post}_{install,remove} functions.
-
-mk_pkg_receipt() {
-	orig_receipt="$1"
-
-	# Receipt's signature is important, although some receipts may miss it
-	signature=$(head -n1 "$orig_receipt")
-	[ "${signature:0:1}" == '#' ] || signature='# SliTaz package receipt.'
-
-	save_PACKAGE="$PACKAGE"; save_DEPENDS="$DEPENDS"; save_PROVIDE="$PROVIDE"
-	save_SUGGESTED="$SUGGESTED"; save_TAZPANEL_DAEMON="$TAZPANEL_DAEMON"
-	save_TAGS="$TAGS"
-	unset_receipt
-	. "$orig_receipt"
-	PACKAGE="$save_PACKAGE"; DEPENDS="$save_DEPENDS"; PROVIDE="$save_PROVIDE"
-	SUGGESTED="$save_SUGGESTED"; TAZPANEL_DAEMON="$save_TAZPANEL_DAEMON"
-	TAGS="$save_TAGS"
-
-	# Manage split packages
-	SPLIT=" $SPLIT "
-	if [ "$SPLIT" != '  ' -a "${SPLIT/ $PACKAGE /}" != "$SPLIT" ]; then
-		# For packages with empty $DEPENDS
-		if [ -z "$DEPENDS" ]; then
-			case $PACKAGE in
-				*-dev)
-					# main package and all the split packages but this *-dev itself
-					DEPENDS=$(echo "$pkg $SPLIT " | sed "s| $PACKAGE | |; s| *$||") ;;
-				*)
-					# main package
-					DEPENDS="$pkg" ;;
-			esac
-		fi
-
-		# Default $CAT
-		[ -z "$CAT" ] &&
-		case $PACKAGE in
-			*-dev) CAT="development|development files" ;;
-		esac
-	fi
-
-	# Manage two-in-one $CAT="$CATEGORY|$SHORT_DESC_ADDITION"
-	if [ -n "$CAT" ]; then
-		CATEGORY="${CAT%|*}"
-		SHORT_DESC="$SHORT_DESC (${CAT#*|})"
-	fi
-
-	# escape quotes for receipt
-	SHORT_DESC="${SHORT_DESC//\"/\\\"}"
-
-	# Mandatory variables
-	cat <<EOF
-$signature
-
-PACKAGE="$PACKAGE"
-VERSION="$VERSION"
-CATEGORY="$CATEGORY"
-SHORT_DESC="$SHORT_DESC"
-MAINTAINER="$MAINTAINER"
-LICENSE="$LICENSE"
-WEB_SITE="$WEB_SITE"
-EOF
-
-	# Optional variables
-	[ -n "$TAGS" ]    && echo "TAGS=\"$TAGS\"" | tr -ds '\t' ' '
-	[ -n "${DEPENDS# }" ] && echo "DEPENDS=\"$DEPENDS\"" | tr -ds '\t' ' '
-	[ -n "$PROVIDE" ] && echo "PROVIDE=\"$PROVIDE\"" | tr -ds '\t' ' '
-	[ -n "$CONFIG_FILES" ] && echo "CONFIG_FILES=\"$CONFIG_FILES\"" | tr -ds '\t' ' '
-	[ -n "$SUGGESTED" ] && echo "SUGGESTED=\"$SUGGESTED\"" | tr -ds '\t' ' '
-	[ -n "$DATABASE_FILES" ] && echo "DATABASE_FILES=\"$DATABASE_FILES\""
-	[ -n "$TAZPANEL_DAEMON" ] && echo "TAZPANEL_DAEMON=\"$TAZPANEL_DAEMON\""
-
-	# Extract {pre,post}_{install,remove} functions;
-	# post_install()      will be copied for both main and all the split packages
-	# post_install_gtk_() will be copied as post_install() for gtk+ package only
-	#
-	# restricted name (gtk+ -> gtk_; acl-dev -> acl_dev)
-	rname=$(echo -n $PACKAGE | tr -c 'a-zA-Z0-9' '_')
-	for i in pre post; do
-		for j in install remove; do
-			sed "/^${i}_${j}()/,/^}/!d" "$orig_receipt"
-			sed "/^${i}_${j}_$rname()/,/^}/!d" "$orig_receipt" | \
-				sed "s|^${i}_${j}_$rname()|${i}_${j}()|"
-		done
-	done
-}
-
-
 # Create the package. Wanted to use TazPkg to create a tazpkg package at first,
 # but it doesn't handle EXTRAVERSION.
 
@@ -990,7 +901,7 @@ packit() {
 
 	cd $taz
 	action 'Copying "%s"...' 'receipt'
-	mk_pkg_receipt ../receipt > $pack/receipt
+	@@PREFIX@@/libexec/cookutils/mk_pkg_receipt ../receipt > $pack/receipt
 	chown 0.0 $pack/receipt; status
 
 	unset desc

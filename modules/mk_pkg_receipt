@@ -1,0 +1,96 @@
+#!/bin/sh
+#
+# mk_pkg_receipt - module of the SliTaz Cook
+# Copyright (C) SliTaz GNU/Linux - GNU GPL v3
+#
+
+# Receipt used for cooking the package is redundant to be included into package.
+# This script will strip the original receipt to bare minimum: variables,
+# {pre,post}_{install,remove} functions.
+
+. /usr/lib/slitaz/libcook.sh
+
+orig_receipt="$1"
+
+# Receipt's signature is important, although some receipts may miss it
+signature=$(head -n1 "$orig_receipt")
+[ "${signature:0:1}" == '#' ] || signature='# SliTaz package receipt.'
+
+save="$(mktemp)"
+cat > $save <<EOT
+PACKAGE="$PACKAGE"; DEPENDS="$DEPENDS"; PROVIDE="$PROVIDE"
+SUGGESTED="$SUGGESTED"; TAZPANEL_DAEMON="$TAZPANEL_DAEMON"
+TAGS="$TAGS"
+EOT
+unset_receipt
+. "$orig_receipt"
+MAIN_PACKAGE="$PACKAGE"
+. $save; rm $save # restore values
+
+# Manage split packages
+SPLIT=" $SPLIT "
+if [ "$PACKAGE"             != "$MAIN_PACKAGE" -a \
+	 "$SPLIT"               != '  '            -a \
+	 "${SPLIT/ $PACKAGE /}" != "$SPLIT" ]; then
+	# For packages with empty $DEPENDS
+	if [ -z "$DEPENDS" ]; then
+		case $PACKAGE in
+			*-dev)
+				# main package and all the split packages but this *-dev itself
+				DEPENDS=$(echo "$MAIN_PACKAGE $SPLIT " | sed "s| $PACKAGE | |; s| *$||");;
+			*)
+				DEPENDS="$MAIN_PACKAGE";;
+		esac
+	fi
+
+	# Default $CAT
+	[ -z "$CAT" ] &&
+	case $PACKAGE in
+		*-dev) CAT="development|development files" ;;
+	esac
+fi
+
+# Manage two-in-one $CAT="$CATEGORY|$SHORT_DESC_ADDITION"
+if [ -n "$CAT" ]; then
+	CATEGORY="${CAT%|*}"
+	SHORT_DESC="$SHORT_DESC (${CAT#*|})"
+fi
+
+# escape quotes for receipt
+SHORT_DESC="${SHORT_DESC//\"/\\\"}"
+
+# Mandatory variables
+cat <<EOF
+$signature
+
+PACKAGE="$PACKAGE"
+VERSION="$VERSION"
+CATEGORY="$CATEGORY"
+SHORT_DESC="$SHORT_DESC"
+MAINTAINER="$MAINTAINER"
+LICENSE="$LICENSE"
+WEB_SITE="$WEB_SITE"
+EOF
+
+# Optional variables
+[ -n "$TAGS"            ] && echo "TAGS=\"$TAGS\""                 | tr -ds '\t' ' '
+[ -n "${DEPENDS# }"     ] && echo "DEPENDS=\"$DEPENDS\""           | tr -ds '\t' ' '
+[ -n "$PROVIDE"         ] && echo "PROVIDE=\"$PROVIDE\""           | tr -ds '\t' ' '
+[ -n "$CONFIG_FILES"    ] && echo "CONFIG_FILES=\"$CONFIG_FILES\"" | tr -ds '\t' ' '
+[ -n "$SUGGESTED"       ] && echo "SUGGESTED=\"$SUGGESTED\""       | tr -ds '\t' ' '
+[ -n "$DATABASE_FILES"  ] && echo "DATABASE_FILES=\"$DATABASE_FILES\""
+[ -n "$TAZPANEL_DAEMON" ] && echo "TAZPANEL_DAEMON=\"$TAZPANEL_DAEMON\""
+
+# Extract {pre,post}_{install,remove} functions;
+# post_install()      will be copied for both main and all the split packages
+# post_install_gtk_() will be copied as post_install() for gtk+ package only
+#
+# restricted name (gtk+ -> gtk_; acl-dev -> acl_dev)
+rname=$(echo -n $PACKAGE | tr -c 'a-zA-Z0-9' '_')
+for i in pre post; do
+	for j in install remove; do
+		sed    "/^${i}_${j}()/,/^}/!d"        "$orig_receipt"
+		sed    "/^${i}_${j}_$rname()/,/^}/!d" "$orig_receipt" \
+		| sed "s|^${i}_${j}_$rname()|${i}_${j}()|"
+	done
+done
