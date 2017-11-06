@@ -480,7 +480,8 @@ syntax_highlighter() {
 			: ${_stuff=#_#_#}
 			# Use one-letter html tags to save some bytes :)
 			# <b>is error (red)</b> <u>is warning (orange)</u> <i>is informative (green)</i>
-			sed	-e 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g' \
+			sed	\
+				-e 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g' \
 				-e 's#OK$#<i>OK</i>#' \
 				-e 's#\([Dd]one\)$#<i>\1</i>#' \
 				-e 's#Success$#<i>Success</i>#' \
@@ -546,11 +547,19 @@ syntax_highlighter() {
 					s|$_install|<var>\${install}</var>|g;
 					s|$_fs|<var>\${fs}</var>|g;
 					s|$_stuff|<var>\${stuff}</var>|g" \
+				\
+				-e "s|\[\([01]\);3\([1-7]\)m|<span class='c\2\1'>|g;
+					s|\[\([01]\);0m|<span class='c0\1'>|g;
+					s|\[0m|</span>|g;" \
+				\
 				-e "s|\[9\([1-6]\)m|<span class='c\10'>|;
 					s|\[39m|</span>|;
 					s|\[1m|<strong>|g; s|\[0m|</strong>|g" \
-				-e "s|^+.*|<i>\0</i>|;
-					s|^-.*|<b>\0</b>|; /----/s|</*b>||; /^<b>--[^-]/s|</*b>||;"
+				-e "s!^|\(+.*\)!|<span class='c20'>\1</span>!;
+					s!^|\(-.*\)!|<span class='c10'>\1</span>!;
+					s!^|\(@@.*@@\)\$!|<span class='c30'>\1</span>!;"
+				\
+
 			;;
 
 		files)
@@ -692,7 +701,7 @@ pkg_info() {
 
 	echo "<a class='button icon browse' href='$base/$pkg/browse/'>browse</a>"
 
-	[ -x ./man2html -a -d "$wok/$pkg/install/usr/share/man" ] &&
+	[ -x ./man2html.bin -a -d "$wok/$pkg/install/usr/share/man" ] &&
 		echo "<a class='button icon doc$(active man)' href='$base/$pkg/man/'>man</a>"
 
 	[ -d "$wok/$pkg/install/usr/share/doc" -o -d "$wok/$pkg/install/usr/share/gtk-doc" ] &&
@@ -1601,7 +1610,7 @@ EOT
 					#export TEXTDOMAIN='man2html'
 					echo "<div id='content2'>"
 
-					html=$(./man2html "$tmp" | sed -e '1,/<header>/d' -e '/<footer>/,$d' \
+					html=$(./man2html.bin "$tmp" | sed -e '1,/<header>/d' -e '/<footer>/,$d' \
 					-e 's|<a href="file:///[^>]*>\([^<]*\)</a>|\1|g' \
 					-e 's|<a href="?[1-9]\+[^>]*>\([^<]*\)</a>|\1|g')
 

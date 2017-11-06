@@ -901,7 +901,7 @@ packit() {
 
 	cd $taz
 	action 'Copying "%s"...' 'receipt'
-	export PACKAGE DEPENDS PROVIDE SUGGESTED TAZPANEL_DAEMON TAGS
+	export PACKAGE DEPENDS PROVIDE SUGGESTED TAZPANEL_DAEMON TAGS CAT
 	@@PREFIX@@/libexec/cookutils/mk_pkg_receipt "$(realpath ../receipt)" > $pack/receipt
 	chown 0.0 $pack/receipt; status
 
