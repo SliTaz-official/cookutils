@@ -173,6 +173,7 @@ outpkg() {
 				s("xfconf", "libxfconf"); s("xfconf-dev", "libxfconf-dev");
 				s("exo",    "libexo");    s("exo-dev",    "libexo-dev");
 				s("gconf",  "GConf");     s("gconf-dev",  "GConf-dev");
+				s("pulseaudio", "apulse");
 
 				# if called with "--incl": show all deps including glibc-base,
 				# gcc-lib-base, glibc-dev and gcc; otherwise hide them

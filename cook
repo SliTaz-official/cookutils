@@ -131,6 +131,20 @@ receipt_quality() {
 # Paths used in receipt and by cook itself.
 
 set_paths() {
+	# Kernel version is set from wok/linux or installed/linux-api-headers(wok-undigest)
+	if [ -f "$WOK/linux/receipt" ]; then
+		kvers=$(. $WOK/linux/receipt; echo $VERSION)
+		kbasevers=$(echo $kvers | cut -d. -f1,2)
+	elif [ -f "$INSTALLED/linux-api-headers/receipt" ]; then
+		kvers=$(. $INSTALLED/linux-api-headers/receipt; echo $VERSION)
+		kbasevers=$(echo $kvers | cut -d. -f1,2)
+	fi
+
+	# Python version
+	[ -f "$WOK/python/receipt" ] && pyvers=$(. $WOK/python/receipt; echo $VERSION)
+	# Perl version for some packages needed it
+	[ -f "$WOK/perl/receipt" ] && perlvers=$(. $WOK/perl/receipt; echo $VERSION)
+
 	pkgdir="$WOK/$pkg"
 	. "$pkgdir/receipt"
 	basesrc="$pkgdir/source"
@@ -155,20 +169,6 @@ set_paths() {
 	fi
 
 	[ -n "$SOURCE" ] && source_stuff="$WOK/$SOURCE/stuff"
-
-	# Kernel version is set from wok/linux or installed/linux-api-headers(wok-undigest)
-	if [ -f "$WOK/linux/receipt" ]; then
-		kvers=$(. $WOK/linux/receipt; echo $VERSION)
-		kbasevers=$(echo $kvers | cut -d. -f1,2)
-	elif [ -f "$INSTALLED/linux-api-headers/receipt" ]; then
-		kvers=$(. $INSTALLED/linux-api-headers/receipt; echo $VERSION)
-		kbasevers=$(echo $kvers | cut -d. -f1,2)
-	fi
-
-	# Python version
-	[ -f "$WOK/python/receipt" ] && pyvers=$(. $WOK/python/receipt; echo $VERSION)
-	# Perl version for some packages needed it
-	[ -f "$WOK/perl/receipt" ] && perlvers=$(. $WOK/perl/receipt; echo $VERSION)
 
 	# Old way compatibility.
 	_pkg="$install"
@@ -341,7 +341,7 @@ summary() {
 	[ -d $WOK/$pkg/source ] && srcdir=$(du -sh $WOK/$pkg/source | awk '{print $1}' 2>/dev/null)
 	[ -n "$TARBALL" ] && srcsize=$(du -sh $SRC/$TARBALL | awk '{print $1}')
 
-	_ 'Summary for: %s' "$PACKAGE $VERSION"
+	_ 'Summary for: %s' "$PACKAGE $VERSION$EXTRAVERSION"
 	separator
 
 	# L10n: keep the same width of translations to get a consistent view
@@ -358,10 +358,10 @@ summary() {
 	separator -
 	pkgi=1
 	for i in $(all_names); do
-		fs=$(du -sh $WOK/$pkg/taz/$i-$VERSION | awk '{print $1}')
-		pkgname="$i-$VERSION.tazpkg"
+		fs=$(du -sh $WOK/$pkg/taz/$i-$VERSION$EXTRAVERSION | awk '{print $1}')
+		pkgname="$i-$VERSION$EXTRAVERSION.tazpkg"
 		size=$(ls -lh $PKGS/$pkgname | awk '{print $5}')
-		files=$(wc -l < $WOK/$pkg/taz/$i-$VERSION/files.list)
+		files=$(wc -l < $WOK/$pkg/taz/$i-$VERSION$EXTRAVERSION/files.list)
 		printf "%2d : %7s : %10s : %5s : %s\n" "$pkgi" "$fs" "$size" "$files" "$pkgname"
 		pkgi=$((pkgi + 1))
 	done
@@ -1356,7 +1356,7 @@ copy() {
 					/\/share\/bash-completion\//d; /\/lib\/systemd\//d;
 					/\/fonts\.scale$/d; /\/fonts\.dir$/d;
 					/\/share\/appdata\//d; /\/share\/help\//d;
-					/\/share\/icons\/hicolor\/[1236][245][68]*x[1236][245][68]*\//d;	# 22, 24, 32, 64, 128, 256
+					/\/share\/icons\/hicolor\/[12356][1245][268]*x[12356][1245][268]*\//d;	# 22, 24, 32, 64, 128, 256, 512
 					' $filelist
 				;;
 			@dev)
@@ -1392,9 +1392,9 @@ copy() {
 			@std)
 				while read j; do
 					case $j in
-						# always skip empty man folders, because this will end up
-						# copying all the man pages to the package
-						*/man/*) continue;;
+						# always skip empty man & doc folders, because this will end up
+						# copying all the man pages and docs to the package
+						*/man/*|*/doc/*) continue;;
 					esac
 					[ -z "$(ls -A "$install$j")" ] || continue
 					# directory $j is empty

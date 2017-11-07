@@ -684,13 +684,22 @@ pkg_info() {
 	echo '<div id="info">'
 	echo "<a class='button icon receipt$(active receipt stuff)' href='$base/$pkg/receipt'>receipt &amp; stuff</a>"
 
+	# In the receipts $EXTRAVERSION is defined using $kvers, get it here [copy from 'cook' set_paths()]
+	if [ -f "$wok/linux/receipt" ]; then
+		kvers=$(. $wok/linux/receipt; echo $VERSION)
+		kbasevers=$(echo $kvers | cut -d. -f1,2)
+	elif [ -f "$INSTALLED/linux-api-headers/receipt" ]; then
+		kvers=$(. $INSTALLED/linux-api-headers/receipt; echo $VERSION)
+		kbasevers=$(echo $kvers | cut -d. -f1,2)
+	fi
+
 	unset WEB_SITE WANTED
 	. $wok/$pkg/receipt
 
 	[ -n "$WEB_SITE" ] &&
 		echo "<a class='button icon website' href='$WEB_SITE' target='_blank' rel='noopener noreferrer'>web site</a>"
 
-	[ -f "$wok/$pkg/taz/$PACKAGE-$VERSION/receipt" ] &&
+	[ -f "$wok/$pkg/taz/$PACKAGE-$VERSION$EXTRAVERSION/receipt" ] &&
 		echo "<a class='button icon files$(active files)' href='$base/$pkg/files'>files</a>"
 
 	[ -n "$(ls $wok/$pkg/description*.txt)" ] &&

@@ -17,10 +17,11 @@ signature=$(head -n1 "$orig_receipt")
 [ "${signature:0:1}" == '#' ] || signature='# SliTaz package receipt.'
 
 save="$(mktemp)"
+# `$(echo ...)`: normalize whitespace (space, tab, newline and they combinations and repeats)
 cat > $save <<EOT
-PACKAGE="$PACKAGE"; DEPENDS="$DEPENDS"; PROVIDE="$PROVIDE"
-SUGGESTED="$SUGGESTED"; TAZPANEL_DAEMON="$TAZPANEL_DAEMON"
-TAGS="$TAGS"
+PACKAGE="$PACKAGE"; DEPENDS="$(echo $DEPENDS)"; PROVIDE="$(echo $PROVIDE)"
+SUGGESTED="$(echo $SUGGESTED)"; TAZPANEL_DAEMON="$TAZPANEL_DAEMON"
+TAGS="$(echo $TAGS)"
 EOT
 unset_receipt
 . "$orig_receipt"
