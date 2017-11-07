@@ -276,16 +276,9 @@ fi
 
 if [ "$pkg" == 's' ]; then
 	# argument <pkg> is in $cmd variable
-
-	# find main package
-	main=$(awk -F$'\t' -vpkg=" $cmd " '{
-		if (index(" " $2 " ", pkg)) {print $1; exit}
-	}' $splitdb)
-	# get version
-	ver="$(. $wok/$main/receipt; echo "$VERSION")"
-
 	echo -en "Content-Type: image/svg+xml\n\n<svg xmlns='http://www.w3.org/2000/svg' height='12' width='8'><path d='"
-	if [ -e $PKGS/$cmd-$ver.tazpkg ]; then
+	# packages.info updates with each new package, so we'll find actual info here
+	if grep -q "^$cmd"$'\t' $PKGS/packages.info; then
 		echo "m1 2-1 1v8l1 1h6l1-1v-8l-1-1z' fill='#090'/></svg>"
 	else
 		echo "m0 3v8l1 1h6l1-1v-8l-1-1h-6zm3 0h2v5h-2zm0 6h2v2h-2z' fill='#d00'/></svg>"
