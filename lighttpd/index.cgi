@@ -670,7 +670,7 @@ pkg_info() {
 	# Get short description for existing packages
 	[ -f $PKGS/packages.info ] &&
 	short_desc="$(awk -F$'\t' -vp="${requested_pkg:-$pkg}" '{if ($1 == p) { printf("%s", $4); exit; }}' $PKGS/packages.info)"
-	# If package not exists (not created yet or broken), get short description
+	# If package does not exist (not created yet or broken), get short description
 	# (but only for "main" package) from receipt
 	[ -n "$short_desc" ] || short_desc="$(. $wok/$pkg/receipt; echo "$SHORT_DESC")"
 	echo ": $short_desc</h2>"
@@ -1645,7 +1645,7 @@ EOT
 			esac
 			rm -f $tmp
 		else
-			show_note e "File “$arg” not exists!"
+			show_note e "File “$arg” does not exist!"
 		fi
 		;;
 

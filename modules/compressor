@@ -15,7 +15,7 @@ cache_stat=$(mktemp)
 # Cache notes.
 # Do not do the same job twice. Getting the file from the cache is much faster
 # than compressing the file one more time. In addition, this cache is trying not
-# to take extra space, using the hardlinks. Although the files from the cache
+# to take extra space using the hardlinks. Although the files from the cache
 # without reference to itself should be removed periodically.
 
 
