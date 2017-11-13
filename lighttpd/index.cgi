@@ -772,15 +772,14 @@ all_names() {
 
 
 toolchain_version() {
-	echo "<tr><td><a href='$base/$1'>$1</a></td><td>"
-	if [ -e "$WOK/$1/receipt" ]; then
-		grep ^VERSION $WOK/$1/receipt | cut -d '"' -f2
-		echo '</td><td>'
-		grep ^SHORT_DESC $WOK/$1/receipt | cut -d '"' -f2
-	else
-		echo -n '---</td><td>---'
-	fi
-	echo "</td></tr>"
+	echo "<tr><td><a href='$base/$1'>$1</a></td>"
+	awk -F$'\t' -vpkg="$1" '
+	BEGIN { version = description = "---"; }
+	      {
+	        if ($1 == pkg) { version = $2; description = $4; }
+	      }
+	END   { printf("<td>%s</td><td>%s</td></tr>", version, description); }
+	' $PKGS/packages.info
 }
 
 
@@ -1039,6 +1038,35 @@ EOT
 fi
 
 
+# show tag
+
+if [ "$pkg" == '~' -a -n "$cmd" ]; then
+	tag="$cmd"
+	page_header
+	cat <<EOT
+<div id="content2">
+<section>
+<h2>Tag “$tag”</h2>
+
+<table>
+	<thead>
+		<tr><th>Name</th><th>Description</th><th>Category</th></tr>
+	</thead>
+	<tbody>
+EOT
+	awk -F$'\t' -vtag=" $tag " -vbase="$base" '{
+		if (index(" " $6 " ", tag)) {
+			url = base "/" $1 "/";
+			gsub("+", "%2B", url);
+			printf("<tr><td><a href=\"%s\">%s</a></td><td>%s</td><td>%s</td></tr>\n", url, $1, $4, $3);
+		}
+	}' $PKGS/packages.info
+	echo '</tbody></table>'
+	page_footer
+	exit 0
+fi
+
+
 case "$cmd" in
 	'')
 		page_header
@@ -1094,9 +1122,29 @@ case "$cmd" in
 		summary "$log"
 
 
+		# Show tag list
+		taglist=$(
+			for i in $pkg $(awk -F$'\t' -vp="$pkg" '{if ($1 == p) print $2}' $splitdb); do
+				[ -s "$PKGS/packages.info" ] &&
+				awk -F$'\t' -vpkg="$i" '{
+					if ($1 == pkg) { print $6; exit; }
+				}' "$PKGS/packages.info"
+			done \
+			| tr ' ' '\n' \
+			| sort -u
+		)
+		if [ -n "$taglist" ]; then
+			echo -n '<section><h3>Tags</h3><p>'
+			lasttag=$(echo "$taglist" | tail -n1)
+			for tag in $taglist; do
+				echo -n "<a href=\"$base/~/${tag//+/%2B}\">$tag</a>"
+				[ "$tag" != "$lasttag" ] && echo -n " · "
+			done
+			echo '</p></section>'
+		fi
 
 
-		# Informal table with dependencies
+		# Informational table with dependencies
 		pkg="$requested_pkg"
 		inf="$(mktemp -d)"
 
