@@ -135,8 +135,14 @@ Some examples (executed in the chroot with the "busybox" package installed):
 `/bin/*.sh`|`/usr/bin/gettext.sh`<br>`/usr/bin/httpd_helper.sh`
 `/lib/*.sh`|`/lib/libtaz.sh`<br>`/usr/lib/slitaz/httphelper.sh`<br>`/usr/lib/slitaz/libpkg.sh`
 
-Also, `copy()` understands the `@rm` pattern. It does not copy anything, but it
-removes already copied files that have already been packed.
+Additional patterns for the `copy()`:
+
+  * `@rm`  - quick alias for the `remove_already_packed` function:
+    remove from the current package already copied files, that was already
+    packed in any of previously packed packages (within current receipt);
+  * `@ico` - remove all the copied *hicolor* icons (if any) and copy only 16px
+    and 48px variants of *hicolor* icons.
+
 
 ### Some more examples of using `copy()`
 
@@ -218,3 +224,122 @@ genpkg_rules() {
     esac
 }
 ```
+
+
+Compiling sets
+--------------
+
+Sometimes you may need to compile the same source code of the same version,
+but with different options. For example, without PAM support and with PAM
+support. Or with support for GTK+2 or GTK+3. Or a complete package with all
+the rich features and a small limited package. You can not limit yourself
+in the number of options.
+
+Compiling set is a pair of separate `$src` and `$install` folders. You can
+still compile the sources using the `$src` variable and install compiled files
+into folder defined by `$install` variable, but these values will be different
+for the different compiling sets.
+
+Set defined by the name which is simple mnemonic made up of one or more letters
+or numbers. It may be "1", "2", "z", or something more meaningful like "pam",
+"gtk2", or "gtk3".
+
+Also you should know that default set with the empty name is always exists,
+for the backward compatibility, and for the cases when you don't want to use
+the sets.
+
+How to use the sets?
+
+First, you should define which set you want to use for each package, appending
+package names in the `$SPLIT` variable. You may not make it for the default set
+with empty name. Few examples:
+
+```bash
+PACKAGE="fuse-emulator"
+SPLIT="fuse-emulator-gtk3:gtk3"
+```
+
+```bash
+PACKAGE="yad"
+SPLIT="yad-html:html yad-gtk3:gtk3"
+```
+
+```bash
+PACKAGE="urxvt"
+SPLIT="urxvt-full:full"
+```
+
+Second, function `compile_rules()` will be executed sequently for default set
+and then for all the sets you mention in the `$SPLIT` variable on the previous
+step. You should make the business logic inside the `compile_rules()` function
+to compile and install different variants based on the value of the `$SET`
+variable. This variable has an empty value for the default set, and the set
+name in other cases. Few examples how you make the job:
+
+```bash
+PACKAGE="fuse-emulator"
+SPLIT="fuse-emulator-gtk3:gtk3"
+
+compile_rules() {
+    SET_ARGS=''; [ -z "$SET" ] && SET_ARGS='--disable-gtk3'
+
+    ./configure \
+        --enable-desktop-integration \
+        $SET_ARGS \
+        $CONFIGURE_ARGS &&
+    make && make install
+}
+```
+
+```bash
+PACKAGE="urxvt"
+SPLIT="urxvt-full:full"
+
+compile_rules() {
+    case $SET in
+        '')
+            ./configure \
+                --disable-everything \
+                $CONFIGURE_ARGS &&
+            make && make install
+            ;;
+        full)
+            ./configure \
+                --enable-everything \
+                --enable-256-color \
+                --with-terminfo=/usr/share/terminfo \
+                $CONFIGURE_ARGS &&
+            make && make install || return 1
+
+            R="$install/usr/share/terminfo"
+            mkdir -p $R
+            tic -s -o $R $src/doc/etc/rxvt-unicode.terminfo
+            ;;
+    esac
+}
+```
+
+```bash
+PACKAGE="yad"
+SPLIT="yad-html:html yad-gtk3:gtk3"
+
+compile_rules() {
+    case $SET in
+        '')   Gtk=gtk2; Html=disable;;
+        html) Gtk=gtk2; Html=enable ;;
+        gtk3) Gtk=gtk3; Html=disable;;
+    esac
+
+    ./configure \
+        --enable-icon-browser \
+        --with-gtk=$Gtk \
+        --$Html-html \
+        $CONFIGURE_ARGS &&
+    make &&
+    make install
+}
+```
+
+Thirdly, make `genpkg_rules()` as usual. *Cook* will switch to the required
+set automatically, based on conformity between packages and sets, that you
+described in the `$SPLIT` variable on the first step. That's all.

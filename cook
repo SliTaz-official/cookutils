@@ -479,28 +479,6 @@ copy_generic_stuff() {
 }
 
 
-# Remove files provided by split packages
-# For example:
-#   1. Package "pkg-main":
-#      SPLIT="pkg-1 pkg-2 pkg-extra"
-#   2. Package="pkg-extra":
-#      WANTED="pkg-main"
-#      BUILD_DEPENDS="pkg-1 pkg-2"
-#      cook_copy_folders usr
-#      cook_split_rm $BUILD_DEPENDS
-
-cook_split_rm() {
-	for i in $@; do
-		action 'Remove files provided by split package %s...' "$i"
-		while read j; do
-			[ -f "$fs$j" -o -h "$fs$j" ] && rm $fs$j
-			rmdir "$(dirname "$fs$j")" 2>/dev/null
-		done < $WOK/$i/taz/$i-$VERSION/files.list
-		:; status
-	done
-}
-
-
 # Update installed.cook.diff
 
 update_installed_cook_diff() {
@@ -761,17 +739,22 @@ cookit() {
 				cd tmp; tar -c * | lzma e $SRC/$TARBALL -si
 			fi
 		fi
+
 		cd $pkgdir/source/tmp
 		# Some archives are not well done and don't extract to one dir (ex lzma).
 		files=$(ls | wc -l)
-		[ "$files" -eq 1 -a -d "$(ls)" ] && mv * ../$PACKAGE-$VERSION
-		[ "$files" -eq 1 -a -f "$(ls)" ] && mkdir -p ../$PACKAGE-$VERSION && \
-			mv * ../$PACKAGE-$VERSION/$TARBALL
-		[ "$files" -gt 1 ] && mkdir -p ../$PACKAGE-$VERSION && \
-			mv * ../$PACKAGE-$VERSION
+		[ "$files" -eq 1 -a -d "$(ls)" ] &&
+			mv *     ../$PACKAGE-$VERSION
+		[ "$files" -eq 1 -a -f "$(ls)" ] &&
+			mkdir -p ../$PACKAGE-$VERSION &&
+			mv *     ../$PACKAGE-$VERSION/$TARBALL
+		[ "$files" -gt 1 ] &&
+			mkdir -p ../$PACKAGE-$VERSION &&
+			mv *     ../$PACKAGE-$VERSION
 		cd ..; rm -rf tmp
 	fi
 
+	# Check md5sum (or similar) for sources tarball
 	check_integrity
 
 	# Libtool shared libs path hack.
@@ -779,30 +762,68 @@ cookit() {
 		arm*) cross libhack ;;
 	esac
 
-	# Execute receipt rules.
+	# Compiling all the sets
 	if grep -q ^compile_rules $receipt; then
 		_ 'Executing: %s' 'compile_rules'
 		echo "CFLAGS   : $CFLAGS"
 		#echo "LDFLAGS  : $LDFLAGS"
 		[ -d "$src" ] && cd $src
 		patchit
-		compile_rules $@ || { broken; exit 1; }
-		# Stay compatible with _pkg
-		[ -d "$src/_pkg" ] && mv $src/_pkg $install
-		# QA: compile_rules success so valid.
-		mkdir -p $install
-	else
-		# QA: no compile_rules so no error, valid.
-		mkdir -p $install
-	fi
 
-	copy_generic_stuff
+		# Get set names from $SPLIT variable, format ex. 'pkg1 pkg2:set1 pkg3:set2'
+		SETS=$(echo $SPLIT \
+			| awk '
+				BEGIN { RS = " "; FS = ":"; }
+				{ print $2; }' \
+			| sort -u \
+			| tr '\n' ' ')
+		SETS=${SETS% }	# normalize space
+		# Prepare specified source sets using patched sources
+		[ -n "$SETS" ] &&
+		for set in $SETS; do
+			echo "Preparing set $set"	# debug
+			cp -a $src $src-$set
+		done
 
-	# Actions to do after compiling the package
-	# Skip all for split packages (already done in main package)
-	if [ -z "$WANTED" ]; then
-		footer
-		export COOKOPTS ARCH install; @@PREFIX@@/libexec/cookutils/compressor install
+		for SET in '' $SETS; do
+			# Switch to the specified source set
+			set_paths
+			local suffix=''
+			[ -n "$SET" ] && suffix="-$SET"
+			export     src="$WOK/$pkg/source/$PACKAGE-$VERSION$suffix"
+			export install="$WOK/$pkg/install$suffix"
+			export DESTDIR="$install"
+
+			if [ -n "$SETS" ]; then
+				if [ -n "$SET" ]; then
+					title "Switching to the set '$SET'"
+				else
+					title "Switching to the default set"
+				fi
+				echo "src    : $src"
+				echo "install: $install"
+			fi
+			cd $src
+			echo
+
+			[ -d "$install" ] && rm -r $install
+			mkdir -p $install
+
+			compile_rules $@ || { broken; exit 1; }
+
+			# Stay compatible with _pkg
+			[ -d "$src/_pkg" ] && mv $src/_pkg $install
+
+			copy_generic_stuff
+
+			# Actions to do after compiling the package
+			# Skip all for split packages (already done in main package)
+			if [ -z "$WANTED" ]; then
+				footer
+				export COOKOPTS ARCH install
+				@@PREFIX@@/libexec/cookutils/compressor install
+			fi
+		done
 	fi
 	footer
 
@@ -1067,18 +1088,24 @@ packit_quality() {
 # Return all the names of packages bundled in this receipt
 
 all_names() {
-	local split=" $SPLIT "
+	# Get package names from $SPLIT variable
+	local split=$(echo $SPLIT \
+		| awk '
+			BEGIN { RS = " "; FS = ":"; }
+			{ print $1; }' \
+		| tr '\n' ' ')
+	local split_space=" $split "
 	if ! head -n1 $WOK/$pkg/receipt | fgrep -q 'v2'; then
 		# For receipts v1: $SPLIT may present in the $WANTED package,
 		# but split packages have their own receipts
 		echo $PACKAGE
-	elif [ "${split/ $PACKAGE /}" != "$split" ]; then
+	elif [ "${split_space/ $PACKAGE /}" != "$split_space" ]; then
 		# $PACKAGE included somewhere in $SPLIT (probably in the end).
 		# We should build packages in the order defined in the $SPLIT.
-		echo $SPLIT
+		echo $split
 	else
 		# We'll build the $PACKAGE, then all defined in the $SPLIT.
-		echo $PACKAGE $SPLIT
+		echo $PACKAGE $split
 	fi
 }
 
@@ -1335,15 +1362,44 @@ remove_already_packed() {
 }
 
 
+# Function to use in genpkg_rules() to copy hicolor icons in specified sizes
+# (default: 16 and 48) from $install to $fs
+
+cook_copy_icons() {
+	local sizes=$@ i j
+	action 'Copying hicolor icons...'
+	[ -d "$fs/usr/share/icons/hicolor" ] && rm -rf "$fs/usr/share/icons/hicolor"
+	mkdir -p $fs/usr/share/icons/hicolor
+	for i in ${sizes:-16 48}; do
+		j="${i}x$i"; [ "$i" == 'scalable' ] && j="$i"
+		[ ! -e "$install/usr/share/icons/hicolor/$j" ] ||
+		scopy   $install/usr/share/icons/hicolor/$j \
+			         $fs/usr/share/icons/hicolor
+	done
+	status
+}
+
+
 # Common function to copy files, folders and patterns
 
 copy() {
 	action 'Copying folders and files...'
 	local i j k filelist=$(mktemp) folderlist=$(mktemp)
+
+	# Get set name for specified package from $SPLIT variable
+	local set=$(echo $SPLIT \
+				| awk -vpkg="$PACKAGE" '
+					BEGIN { RS = " "; FS = ":"; }
+					{ if ($1 == pkg) { print "-" $2; exit; } }')
+	# Change set, make filelist and folderlist for new set
+	export     src="$WOK/$pkg/source/$PACKAGE-$VERSION$set"
+	export install="$WOK/$pkg/install$set"
+	export DESTDIR="$install"
 	IFS=$'\n'
 	cd $install
 	find ! -type d | sed 's|\.||' > $filelist
 	find   -type d | sed 's|\.||' > $folderlist
+
 	for i in $@; do
 		case $i in
 			@std)
@@ -1367,7 +1423,12 @@ copy() {
 					' $filelist
 				;;
 			@rm)
+				# Quick alias
 				remove_already_packed
+				;;
+			@ico)
+				# Quick alias
+				cook_copy_icons >/dev/null
 				;;
 			*/)
 				# Copy specified folders.
@@ -1378,8 +1439,9 @@ copy() {
 				# Copy specified files.
 				find ! -type d -path "*/${i#/}" | sed 's|^.||'
 				;;
-		esac | sort -u | \
-		while read j; do
+		esac \
+		| sort -u \
+		| while read j; do
 			mkdir -p $fs$(dirname "$j")
 			if [ -d "$install$j" ]; then
 				cp -a "$install$j" $fs$(dirname "$j")
@@ -1405,9 +1467,10 @@ copy() {
 						[ -z "$k" ] && break
 						echo "$k"
 						k="${k%/*}"
-					done | tac | \
-					# copy dir with its original ownership/permissions if it does not exist
-					while read k; do
+					done \
+					| tac \
+					| while read k; do
+						# copy dir with its original ownership/permissions if it does not exist
 						[ -d "$fs$k" ] || cp -a "$install$k" "$fs$k"
 					done
 				done < $folderlist
@@ -1417,24 +1480,6 @@ copy() {
 	cd - >/dev/null
 	unset IFS
 	rm $filelist $folderlist
-	status
-}
-
-
-# Function to use in genpkg_rules() to copy hicolor icons in specified sizes
-# (default: 16 and 48) from $install to $fs
-
-cook_copy_icons() {
-	local sizes=$@ i j
-	action 'Copying hicolor icons...'
-	[ -d "$fs/usr/share/icons/hicolor" ] && rm -rf "$fs/usr/share/icons/hicolor"
-	mkdir -p $fs/usr/share/icons/hicolor
-	for i in ${sizes:-16 48}; do
-		j="${i}x$i"; [ "$i" == 'scalable' ] && j="$i"
-		[ ! -e "$install/usr/share/icons/hicolor/$j" ] ||
-		scopy   $install/usr/share/icons/hicolor/$j \
-			         $fs/usr/share/icons/hicolor
-	done
 	status
 }
 
