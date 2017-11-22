@@ -1565,7 +1565,7 @@ EOT
 						# Unpackaged files
 						# ------------------------------------------------------
 						orphans=$(mktemp)
-						awk -vall="$all_files" '
+						awk -F$'\n' -vall="$all_files" '
 							{
 								if (FILENAME == all) files_all[$1] = "1";
 								else                 files_pkg[$1] = "1";
@@ -1626,13 +1626,13 @@ EOT
 							[ "$orphans_types" != '()' ] &&
 							echo "<script>document.getElementById('orphansTypes$set').innerText = '${orphans_types// /, }';</script>"
 
-							i="$wok/$main/install$suffix"
+							suffix=''; [ -n "$set" ] && suffix="-$set"
 							echo -n '	<pre class="files">'
 							echo -en '<span class="underline">tag·permissions·lnk·user    ·group   ·     size·date &amp; time ·name\n</span>'
 							IFS=$'\n'
 							while read orphan_line; do
 								echo -n "${orphan_line/span> */span>} "
-								cd $i
+								cd $install
 								ls -ldp --color=always ".${orphan_line#*</span> }" \
 								| syntax_highlighter files \
 								| sed "s|\([^>]*\)>\.\([^<]*\)\(<.*\)$|\1 href='$base/$main/browse/install$suffix\2'>\2\3|;" \
