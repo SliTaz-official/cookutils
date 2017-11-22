@@ -992,9 +992,8 @@ packit() {
 	find . | cpio -o -H newc --quiet > ../$PACKAGE-$VERSION$EXTRAVERSION$arch.tazpkg
 	status
 
-#	action 'Restoring original package tree...'
+	# Restoring original package tree.
 	mv ../fs .
-#	status
 
 	rm fs.cpio.lzma; cd ..
 
@@ -1346,11 +1345,24 @@ cook_copy_folders() {
 
 # Remove from current $fs files that are already packed (for receipts v2).
 # Note: the order in $SPLIT is very important.
+# Note 2: working in the current set.
 
 remove_already_packed() {
 	local i j
+	neighbors=$(
+		echo $SPLIT" " \
+		| awk -F$'\t' -vpkg="$PACKAGE" '
+		BEGIN { RS = " "; FS = ":"; }
+		      { set[$1] = $2; }
+		END   {
+		        current_set = set[pkg];
+		        for (i in set)
+		          { if (i != pkg && set[i] == current_set) print i; }
+		}
+	')
 	IFS=$'\n'
-	for i in $taz/*/files.list; do
+	for neighbor in $neighbors; do
+		i="$taz/$neighbor-$VERSION$EXTRAVERSION/files.list"
 		[ -e "$i" ] || continue
 		while read j; do
 			[ -f $fs$j -o -h $fs$j ] || continue
@@ -2030,10 +2042,24 @@ case "$1" in
 		done
 
 		# Cook and pack or exit on error and log everything.
-		cookit $@ 2>&1 | loglimit 50 > $LOGS/$pkg.log
+		((((cookit $@ 2>&1; echo $? >&3) | loglimit 50 > $LOGS/$pkg.log) 3>&1) | (read rq; exit $rq))
+		rq=$?	# the return code of `cookit $@` above command
+
+		# Remove build dependencies both when `cookit` done or fail
 		remove_deps | tee -a $LOGS/$pkg.log
 		cookit_quality
+
+		# Log and stop if `cookit` fails
+		if [ $rq -eq 1 ]; then
+			debug_info | tee -a $LOGS/$pkg.log
+			put_status $pkg Failed
+			rm -f $command
+			broken; exit 1
+		fi
+
+		# Proceed only if `cookit` return code is zero-OK
 		packall 2>&1 | loglimit 5 >> $LOGS/$pkg.log
+
 		clean_log
 
 		# Exit if any error in packing.

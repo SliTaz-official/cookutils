@@ -574,7 +574,7 @@ syntax_highlighter() {
 				 s|^\(-rwxr-xr-x\)|<span class='c21'>\1</span>|;
 				 s|^\(-rw-r--r--\)|<span class='c31'>\1</span>|;
 				 s|^\(drwxr-xr-x\)|<span class='c41'>\1</span>|;
-				 s|^\([lrwxs-]*\)|<span class='c11'>\1</span>|;
+				 s|^\([lrwxs-][lrwxs-]*\)|<span class='c11'>\1</span>|;
 				"
 			;;
 	esac
@@ -1312,18 +1312,27 @@ EOT
 		page_header
 		pkg_info
 
-		packaged=$(mktemp)
-
 		# find main package
 		wanted=$(. $wok/$pkg/receipt; echo $WANTED)
 		main=${wanted:-$pkg}
+		devpkg=''; [ -d "$wok/$main-dev" ] && devpkg="$main-dev"
 
-		# identify split packages
-		split="$main $(. $wok/$main/receipt; echo $SPLIT)"
-		[ -d "$wok/$main-dev" ] && split="$split $main-dev"
-		split="$(echo $split | tr ' ' '\n' | sort -u)"
+		splitsets=$(echo $SPLIT" " \
+			| awk '
+				BEGIN { RS = " "; FS = ":"; }
+				{ print $2; }' \
+			| sort -u \
+			| tr '\n' ' ' \
+			| sed 's|^ *||; s| *$||')
 
-		# finally we need the version
+		splitpkgs=$(echo $SPLIT" " \
+			| awk '
+				BEGIN { RS = " "; FS = ":"; }
+				{ print $1; }' \
+			| tr '\n' ' ' \
+			| sed 's|^ *||; s| *$||')
+
+		# we need the version
 		if [ -f "$WOK/linux/receipt" ]; then
 			kvers=$(. $WOK/linux/receipt; echo $VERSION)
 			kbasevers=$(echo $kvers | cut -d. -f1,2)
@@ -1333,138 +1342,326 @@ EOT
 		fi
 		ver=$(. $wok/$main/receipt; echo $VERSION$EXTRAVERSION)
 
+		echo "<section><h3>Quick jump:</h3>"
 
-		echo "<section><h3>Quick jump:</h3><ul>"
-		echo "$split" | sed 'p' | xargs printf "<li><a href='#%s'>%s</a></li>\n"
-		echo "<li id='li-repeats' style='display:none'><a href='#repeats'>repeatedly packaged files</a></li>"
-		echo "<li id='li-empty' style='display:none'><a href='#empty'>unpackaged empty folders</a></li>"
-		echo "<li id='li-orphans' style='display:none'><a href='#orphans'>unpackaged files</a>"
-		echo "<span id='orphansTypes'></span></li>"
-		echo "</ul></section>"
 
-		for p in $split; do
-			namever="$p-$ver"
-			if [ -d "$wok/$p/taz/$p-$ver" ]; then
-				indir=$p
-			elif [ -d "$wok/$main/taz/$p-$ver" ]; then
-				indir=$main
-			fi
-			dir="$wok/$indir/taz/$p-$ver/fs"
+		for part in head body; do
 
-			size=$(du -hs $dir | awk '{ sub(/\.0/, ""); print $1 }')
+			for set in '' $splitsets; do
+				pkgsofset=$(echo $SPLIT" " \
+					| awk -vset="$set" -vmain="$main" -vdev="$devpkg" '
+						BEGIN {
+							RS = " "; FS = ":";
+							if (!set) print main;
+							if (!set && dev) print dev;
+						}
+						{
+							if ($2 == set) print $1;
+						}' \
+					| sort -u)
 
-			echo "<section><h3 id='$p'>Contents of package “$namever” (${size:-empty}):</h3>"
-			echo '<pre class="files">'
-			if [ -s "$wok/$indir/taz/$p-$ver/files.list" ]; then
-				echo -n '<span class="underline">permissions·lnk·user    ·'
-				echo -en 'group   ·     size·date &amp; time ·name\n</span>'
-				cd $dir
-				find . -print0 | sort -z | xargs -0 ls -ldp --color=always | \
-				syntax_highlighter files | \
-				sed "s|\([^>]*\)>\.\([^<]*\)\(<.*\)$|\1 href='$base/$indir/browse/taz/$p-$ver/fs\2'>\2\3|;" | \
-				awk 'BEGIN { FS="\""; }
-					{ gsub("+", "%2B", $2); print; }'
-			else
-				echo 'No files'
-			fi
-			echo '</pre></section>'
-			cat $wok/$indir/taz/$p-$ver/files.list >> $packaged
-		done
-
-		# find repeatedly packaged files
-		repeats="$(sort $packaged | uniq -d)"
-		if [ -n "$repeats" ]; then
-			echo '<script>document.getElementById("li-repeats").style.display = "list-item"</script>'
-			echo -n '<section><h3 id="repeats">Repeatedly packaged files:</h3><pre class="files">'
-			echo "$repeats" | sed 's|^|<span class="c11">!!!</span> |'
-			echo "</pre></section>"
-		fi
-
-		# find unpackaged empty folders
-		emptydirs="$(
-			cd $wok/$main/install
-			find -type d | sed 's|\.||' | \
-			while read d; do
-				[ -z "$(ls "$wok/$main/install$d")" ] || continue
-				echo $d
-			done | \
-			while read d; do
-				notfound='yes'
-				for p in $(cd $wok/$main/taz; ls); do
-					if [ -d "$wok/$main/taz/$p/fs$d" ]; then
-						notfound=''
-						break
-					fi
-				done
-				[ -n "$notfound" ] &&
-				ls -ldp --color=always .$d | syntax_highlighter files | sed 's|>\./|>/|'
-			done
-		)"
-		if [ -n "$emptydirs" ]; then
-			echo '<script>document.getElementById("li-empty").style.display = "list-item"</script>'
-			echo -n '<section><h3 id="empty">Unpackaged empty folders:</h3><pre class="files">'
-			echo "$emptydirs"
-			echo "</pre></section>"
-		fi
-
-		# find unpackaged files
-		all_files=$(mktemp)
-		cd $wok/$main/install; find ! -type d | sed 's|\.||' > $all_files
-		orphans="$(sort $all_files $packaged | uniq -u)"
-		if [ -d "$wok/$main/install" -a -n "$orphans" ]; then
-			echo '<script>document.getElementById("li-orphans").style.display = "list-item"</script>'
-			echo '<section><h3 id="orphans">Unpackaged files:</h3>'
-			table=$(mktemp)
-			echo "$orphans" | awk -vi="$base/$indir/browse/install" '
-			function tag(text, color) {
-				printf("<span class=\"c%s1\">%s</span> ", color, text);
-				printf("<a class=\"c00\" href=\"%s\">%s</a>\n", i $0, $0);
-			}
-			/\/perllocal.pod$/ || /\/\.packlist$/ || /\/share\/bash-completion\// ||
-				/\/lib\/systemd\// || /\.pyc$/ || /\.pyo$/ || /\/fonts\.scale$/ || /\/fonts\.dir$/ {
-				tag("---", 0); next }
-			/\.pod$/  { tag("pod", 5); next }
-			/\/share\/man\// { tag("man", 5); next }
-			/\/share\/doc\// || /\/share\/gtk-doc\// || /\/share\/info\// ||
-				/\/share\/devhelp\// { tag("doc", 5); next }
-			/\/share\/icons\// { tag("ico", 2); next }
-			/\/share\/locale\// { tag("loc", 4); next }
-			/\.h$/ || /\.a$/ || /\.la$/ || /\.pc$/ || /\/bin\/.*-config$/ ||
-				/\/Makefile.*$/ { tag("dev", 3); next }
-			/\/share\/help\// || /\/share\/appdata\// { tag("gnm", 6); next }
-			{ tag("???", 1) }
-			' > $table
-
-			# Summary table
-			orphans_types='()'
-			for i in head body; do
-				case $i in
-					head) echo -n '<table class="summary"><tr>';;
-					body) echo -n '<th> </th></tr><tr>';;
+				set_description=''
+				[ -n "$splitsets" ] &&
+				case "$set" in
+					'')
+						set_description=' (default set)'
+						set_title='Default set'
+						;;
+					*)
+						set_description=" (set “$set”)"
+						set_title="Set “$set”"
+						;;
 				esac
-				for j in '???1' dev3 loc4 ico2 doc5 man5 pod5 gnm6 '---0'; do
-					tag=${j:0:3}; class="c${j:3:1}0"; [ "$class" == 'c00' ] && class='c01'
-					case $i in
-						head) echo -n "<th class='$class'>$tag</th>";;
-						body)
-							tagscount="$(grep ">$tag<" $table | wc -l)"
-							printf '<td>%s</td>' "$tagscount"
-							[ "$tagscount" -gt 0 ] && orphans_types="${orphans_types/)/ $tag)}"
-							;;
-					esac
-				done
-			done
-			echo '<td> </td></tr></table>'
-			orphans_types="${orphans_types/( /(}"
-			[ "$orphans_types" != '()' ] &&
-				echo "<script>document.getElementById('orphansTypes').innerText = '${orphans_types// /, }';</script>"
 
-			echo -n '<pre class="files">'
-			cat $table
-			echo '</pre></section>'
-			rm $table
-		fi
-		rm $packaged $all_files
+				install="$wok/$main/install"
+				[ -n "$set" ] && install="$install-$set"
+
+				case $part in
+					head)
+						[ -n "$splitsets" ] &&
+						case "$set" in
+							'') echo "<ul><li>Default set:";;
+							*)  echo "<li>Set “$set”:";;
+						esac
+						echo -e '\t<ul>'
+						echo "$pkgsofset" | sed 'p' | xargs printf "\t\t<li><a href='#%s'>%s</a></li>\n"
+						cat <<EOT
+		<li id='li-repeats$set' style='display:none'>
+			<a href='#repeats$set'>repeatedly packaged files</a></li>
+		<li id='li-empty$set' style='display:none'>
+			<a href='#empty$set'>unpackaged empty folders</a></li>
+		<li id='li-outoftree$set' style='display:none'>
+			<a href='#outoftree$set'>out-of-tree files</a></li>
+		<li id='li-orphans$set' style='display:none'>
+			<a href='#orphans$set'>unpackaged files</a>
+			<span id='orphansTypes$set'></span></li>
+EOT
+						echo -e '\t</ul>'
+						[ -n "$splitsets" ] && echo "</li>"
+						;;
+					body)
+						all_files=$(mktemp)
+						cd $install; find ! -type d | sed 's|\.||' > $all_files
+
+						# ------------------------------------------------------
+						# Packages content
+						# ------------------------------------------------------
+						packaged=$(mktemp)
+						for p in $pkgsofset; do
+							namever="$p-$ver"
+							if [ -d "$wok/$p/taz/$p-$ver" ]; then
+								indir=$p
+							elif [ -d "$wok/$main/taz/$p-$ver" ]; then
+								indir=$main
+							fi
+							dir="$wok/$indir/taz/$p-$ver/fs"
+
+							size=$(du -hs $dir | awk '{ sub(/\.0/, ""); print $1 }')
+
+							echo
+							echo "<section id='$p'>"
+							echo "	<h3>Contents of package “$namever” (${size:-empty}):</h3>"
+							echo '	<pre class="files">'
+							if [ -s "$wok/$indir/taz/$p-$ver/files.list" ]; then
+								echo -en '<span class="underline">permissions·lnk·user    ·group   ·     size·date &amp; time ·name\n</span>'
+								cd $dir
+								find . -print0 \
+								| sort -z \
+								| xargs -0 ls -ldp --color=always \
+								| syntax_highlighter files \
+								| sed "s|\([^>]*\)>\.\([^<]*\)\(<.*\)$|\1 href='$base/$indir/browse/taz/$p-$ver/fs\2'>\2\3|;" \
+								| awk 'BEGIN { FS="\""; }
+									{ gsub("+", "%2B", $2); print; }'
+							else
+								echo 'No files'
+							fi
+							echo '</pre>'
+							echo '</section>'
+
+							cat $wok/$indir/taz/$p-$ver/files.list >> $packaged
+						done
+						# ------------------------------------------------------
+						# /Packages content
+						# ------------------------------------------------------
+
+						# ------------------------------------------------------
+						# Repeatedly packaged files
+						# ------------------------------------------------------
+						repeats=$(mktemp)
+						sort $packaged | uniq -d > $repeats
+						if [ -s "$repeats" ]; then
+							echo
+							echo "<script>document.getElementById('li-repeats$set').style.display = 'list-item'</script>"
+							echo "<section id='repeats$set'>"
+							echo "	<h3>Repeatedly packaged files$set_description:</h3>"
+							cd $install
+
+							IFS=$'\n'
+							echo -n '	<pre class="files">'
+							echo -en '<span class="underline">permissions·lnk·user    ·group   ·     size·date &amp; time ·name\n</span>'
+							while read i; do
+								find .$i -exec ls -ldp --color=always '{}' \; \
+								| syntax_highlighter files \
+								| sed 's|>\./|>/|'
+							done < $repeats
+							echo '</pre>'
+							echo '</section>'
+							unset IFS
+						fi
+						rm $repeats
+						# ------------------------------------------------------
+						# /Repeatedly packaged files
+						# ------------------------------------------------------
+
+						# ------------------------------------------------------
+						# Unpackaged empty folders
+						# ------------------------------------------------------
+						emptydirs=$(mktemp)
+						cd $install
+						IFS=$'\n'
+						find -type d \
+						| sed 's|\.||' \
+						| while read d; do
+							[ -z "$(ls "$wok/$main/install$d")" ] || continue
+							echo $d
+						done \
+						| while read d; do
+							notfound='yes'
+							for p in $(cd $wok/$main/taz; ls); do
+								if [ -d "$wok/$main/taz/$p/fs$d" ]; then
+									notfound=''
+									break
+								fi
+							done
+							[ -n "$notfound" ] &&
+							ls -ldp --color=always .$d \
+							| syntax_highlighter files \
+							| sed 's|>\./|>/|'
+						done > $emptydirs
+						unset IFS
+						if [ -s "$emptydirs" ]; then
+							echo
+							echo "<script>document.getElementById('li-empty$set').style.display = 'list-item'</script>"
+							echo "<section id='empty$set'>"
+							echo "	<h3>Unpackaged empty folders$set_description:</h3>"
+							echo -n '	<pre class="files">'
+							echo -en '<span class="underline">permissions·lnk·user    ·group   ·     size·date &amp; time ·name\n</span>'
+							cat $emptydirs
+							echo '</pre>'
+							echo '</section>'
+						fi
+						rm $emptydirs
+						# ------------------------------------------------------
+						# /Unpackaged empty folders
+						# ------------------------------------------------------
+
+						# ------------------------------------------------------
+						# Out-of-tree files
+						# ------------------------------------------------------
+						outoftree=$(mktemp)
+						awk -F$'\n' -vall="$all_files" '
+							{
+								if (FILENAME == all) files_all[$1] = "1";
+								else                 files_pkg[$1] = "1";
+							}
+							END {
+								for (i in files_pkg) {
+									if (! files_all[i]) print i;
+								}
+							}
+						' "$all_files" "$packaged" > $outoftree
+
+						if [ -d "$install" -a -s "$outoftree" ]; then
+							echo
+							echo "<script>document.getElementById('li-outoftree$set').style.display = 'list-item'</script>"
+							echo "<section id='outoftree$set'>"
+							echo "	<h3>Out-of-tree files$set_description:</h3>"
+							echo -n '	<pre class="files">'
+							echo -en '<span class="underline">permissions·lnk·user    ·group   ·     size·date &amp; time ·name\n</span>'
+							IFS=$'\n'
+							while read outoftree_line; do
+								# Find the package out-of-tree file belongs to
+								for i in $pkgsofset; do
+									if grep -q "^$outoftree_line$" $wok/$main/taz/$i-$ver/files.list; then
+										cd $wok/$main/taz/$i-$ver/fs
+										ls -ldp --color=always ".$outoftree_line" \
+										| syntax_highlighter files \
+										| sed "s|\([^>]*\)>\.\([^<]*\)\(<.*\)$|\1 href='$base/$main/browse/taz/$i-$ver/fs\2'>\2\3|;" \
+										| awk 'BEGIN { FS="\""; }
+											{ gsub("+", "%2B", $2); print; }'
+									fi
+								done
+							done < $outoftree
+							unset IFS
+							echo '</pre>'
+							echo '</section>'
+						fi
+						rm $outoftree
+						# ------------------------------------------------------
+						# /Out-of-tree files
+						# ------------------------------------------------------
+
+						# ------------------------------------------------------
+						# Unpackaged files
+						# ------------------------------------------------------
+						orphans=$(mktemp)
+						awk -vall="$all_files" '
+							{
+								if (FILENAME == all) files_all[$1] = "1";
+								else                 files_pkg[$1] = "1";
+							}
+							END {
+								for (i in files_all) {
+									if (! files_pkg[i]) print i;
+								}
+							}
+						' "$all_files" "$packaged" > $orphans
+						if [ -d "$install" -a -s "$orphans" ]; then
+							echo
+							echo "<script>document.getElementById('li-orphans$set').style.display = 'list-item'</script>"
+							echo "<section id='orphans$set'>"
+							echo "	<h3>Unpackaged files$set_description:</h3>"
+							table=$(mktemp)
+							awk '
+							function tag(text, color) {
+								printf("<span class=\"c%s1\">%s</span> ", color, text);
+								printf("%s\n", $0);
+							}
+							/\/perllocal.pod$/ || /\/\.packlist$/ || /\/share\/bash-completion\// ||
+								/\/lib\/systemd\// || /\.pyc$/ || /\.pyo$/ || /\/fonts\.scale$/ || /\/fonts\.dir$/ {
+								tag("---", 0); next }
+							/\.pod$/  { tag("pod", 5); next }
+							/\/share\/man\// { tag("man", 5); next }
+							/\/share\/doc\// || /\/share\/gtk-doc\// || /\/share\/info\// ||
+								/\/share\/devhelp\// { tag("doc", 5); next }
+							/\/share\/icons\// { tag("ico", 2); next }
+							/\/share\/locale\// { tag("loc", 4); next }
+							/\.h$/ || /\.a$/ || /\.la$/ || /\.pc$/ || /\/bin\/.*-config$/ ||
+								/\/Makefile.*$/ { tag("dev", 3); next }
+							/\/share\/help\// || /\/share\/appdata\// { tag("gnm", 6); next }
+							{ tag("???", 1) }
+							' "$orphans" > $table
+
+							# Summary table
+							orphans_types='()'
+							for i in head body; do
+								case $i in
+									head) echo -n '<table class="summary"><tr>';;
+									body) echo -n '<th> </th></tr><tr>';;
+								esac
+								for j in '???1' dev3 loc4 ico2 doc5 man5 pod5 gnm6 '---0'; do
+									tag=${j:0:3}; class="c${j:3:1}0"; [ "$class" == 'c00' ] && class='c01'
+									case $i in
+										head) echo -n "<th class='$class'>$tag</th>";;
+										body)
+											tagscount="$(grep ">$tag<" $table | wc -l)"
+											printf '<td>%s</td>' "$tagscount"
+											[ "$tagscount" -gt 0 ] && orphans_types="${orphans_types/)/ $tag)}"
+											;;
+									esac
+								done
+							done
+							echo '<td> </td></tr></table>'
+							orphans_types="${orphans_types/( /(}"
+							[ "$orphans_types" != '()' ] &&
+							echo "<script>document.getElementById('orphansTypes$set').innerText = '${orphans_types// /, }';</script>"
+
+							i="$wok/$main/install$suffix"
+							echo -n '	<pre class="files">'
+							echo -en '<span class="underline">tag·permissions·lnk·user    ·group   ·     size·date &amp; time ·name\n</span>'
+							IFS=$'\n'
+							while read orphan_line; do
+								echo -n "${orphan_line/span> */span>} "
+								cd $i
+								ls -ldp --color=always ".${orphan_line#*</span> }" \
+								| syntax_highlighter files \
+								| sed "s|\([^>]*\)>\.\([^<]*\)\(<.*\)$|\1 href='$base/$main/browse/install$suffix\2'>\2\3|;" \
+								| awk 'BEGIN { FS="\""; }
+									{ gsub("+", "%2B", $2); print; }'
+							done < $table
+							unset IFS
+							echo '</pre>'
+							echo '</section>'
+							rm $table
+						fi
+						rm $orphans
+						# ------------------------------------------------------
+						# /Unpackaged files
+						# ------------------------------------------------------
+
+						rm $all_files $packaged
+						;;
+				esac
+			done # /set
+
+			case "$part" in
+				head)
+					[ -n "$splitsets" ] && echo "</ul>"
+					echo "</section>"
+					;;
+			esac
+		done # /part
+
 		;;
 
 	description)
