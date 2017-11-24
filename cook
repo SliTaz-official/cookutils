@@ -792,6 +792,8 @@ cookit() {
 				@@PREFIX@@/libexec/cookutils/compressor install
 			fi
 		done
+	else
+		mkdir -p $install	# allow receipts without `compile_rules()`
 	fi
 	footer
 
