@@ -96,38 +96,6 @@ init_db_files() {
 }
 
 
-# QA: check a receipt consistency before building.
-
-receipt_quality() {
-	_ 'QA: checking package receipt...'
-
-	for var in PACKAGE VERSION CATEGORY SHORT_DESC MAINTAINER WEB_SITE; do
-		unset value
-		value="$(. $receipt; eval echo \$$var)"
-		# L10n: QA is quality assurance
-		[ -n "$value" ] || die 'QA: empty variable: %s' "$var=\"\""
-
-		case "$var" in
-			CATEGORY)
-				valid="$(echo $PKGS_CATEGORIES)" # avoid newlines
-				if ! echo " $valid " | grep -q " $value "; then
-					_ 'QA: unknown category "%s"' "$value"
-					die 'Please, use one of: %s' "$valid"
-				fi
-				;;
-			WEB_SITE)
-				# We don't check WGET_URL since if dl is needed it will fail.
-				# Break also if we're not online. Here error is not fatal.
-				if ifconfig | grep -A1 '^[a-z]*[0-9]' | fgrep -q 'addr:' && \
-				! busybox wget -T 12 --spider $value 2>/dev/null; then
-					_ 'QA: unable to reach "%s"' "$value"
-				fi
-				;;
-		esac
-	done
-}
-
-
 # Paths used in receipt and by cook itself.
 
 set_paths() {
@@ -603,7 +571,7 @@ cookit() {
 			;;
 	esac
 
-	[ -n "$QA" ] && receipt_quality
+	[ -n "$QA" ] && @@PREFIX@@/libexec/cookutils/precheck $receipt # former receipt_quality()
 
 	cd $pkgdir
 	[ -z "$continue" ] && rm -rf source 2>/dev/null
@@ -1047,6 +1015,8 @@ packit_quality() {
 			broken; exit 1
 		fi
 	fi
+
+	[ -n "$CAT" ] && CATEGORY="${CAT%|*}"	# allow meta-packages in v2 receipts
 
 	if [ "${COOKOPTS/empty-pkg/}" == "$COOKOPTS" ]; then
 		action 'QA: checking for empty package...'

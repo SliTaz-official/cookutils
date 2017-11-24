@@ -1,0 +1,38 @@
+#!/bin/sh
+#
+# precheck - module of the SliTaz Cook
+# Preliminary checks of the receipt, made before the beginning of work.
+# Copyright (C) SliTaz GNU/Linux - GNU GPL v3
+#
+
+. /usr/lib/slitaz/libcook.sh
+
+
+receipt="$(realpath $1)"
+
+_ 'QA: checking package receipt...'
+
+for var in PACKAGE VERSION CATEGORY SHORT_DESC MAINTAINER WEB_SITE; do
+	unset value
+	value="$(. $receipt; eval echo \$$var)"
+	# L10n: QA is quality assurance
+	[ -n "$value" ] || die 'QA: empty variable: %s' "$var=\"\""
+
+	case "$var" in
+		CATEGORY)
+			valid="$(echo $PKGS_CATEGORIES)" # avoid newlines
+			if ! echo " $valid " | grep -q " $value "; then
+				_ 'QA: unknown category "%s"' "$value"
+				die 'Please, use one of: %s' "$valid"
+			fi
+			;;
+		WEB_SITE)
+			# We don't check WGET_URL since if dl is needed it will fail.
+			# Break also if we're not online. Here error is not fatal.
+			if ifconfig | grep -A1 '^[a-z]*[0-9]' | fgrep -q 'addr:' &&
+			! busybox wget -T 12 --spider $value 2>/dev/null; then
+				_ 'QA: unable to reach "%s"' "$value"
+			fi
+			;;
+	esac
+done

@@ -78,11 +78,18 @@ running_command() {
 # HTML page header
 
 page_header() {
-	local theme t='' css
+	local theme t='' css pretitle='' cmd
 	theme=$(COOKIE theme)
 	[ "$theme" == 'default' ] && theme=''
 	[ -n "$theme" ] && theme="-$theme"
 	css="cooker$theme.css"
+
+	if [ -n "$pkg" ]; then
+		pretitle="$pkg - "
+	else
+		cmd="$(cat $command)"
+		[ -n "$cmd" ] && pretitle="$cmd - "
+	fi
 
 	echo -e 'Content-Type: text/html; charset=UTF-8\n'
 
@@ -90,7 +97,7 @@ page_header() {
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<title>$([ -n "$pkg" ] && echo "$pkg - ")$title</title>
+	<title>$pretitle$title</title>
 	<link rel="stylesheet" href="/$css">
 	<link rel="icon" type="image/png" href="/slitaz-cooker.png">
 	<link rel="search" href="$base/os.xml" title="$title" type="application/opensearchdescription+xml">
