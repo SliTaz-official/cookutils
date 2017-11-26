@@ -138,7 +138,7 @@ Some examples (executed in the chroot with the "busybox" package installed):
 Additional patterns for the `copy()`:
 
   * `@rm`  - quick alias for the `remove_already_packed` function:
-    remove from the current package already copied files, that was already
+    remove from the current package already copied files that was already
     packed in any of previously packed packages (within current receipt);
   * `@ico` - remove all the copied *hicolor* icons (if any) and copy only 16px
     and 48px variants of *hicolor* icons.
@@ -244,13 +244,13 @@ Set defined by the name which is simple mnemonic made up of one or more letters
 or numbers. It may be "1", "2", "z", or something more meaningful like "pam",
 "gtk2", or "gtk3".
 
-Also you should know that default set with the empty name is always exists,
-for the backward compatibility, and for the cases when you don't want to use
+Also you should know that default set with the empty name always exists
+for the backward compatibility and for the cases when you don't want to use
 the sets.
 
 How to use the sets?
 
-First, you should define which set you want to use for each package, appending
+First, you should define which set you want to use for each package appending
 package names in the `$SPLIT` variable. You may not make it for the default set
 with empty name. Few examples:
 
@@ -273,7 +273,7 @@ Second, function `compile_rules()` will be executed sequently for default set
 and then for all the sets you mention in the `$SPLIT` variable on the previous
 step. You should make the business logic inside the `compile_rules()` function
 to compile and install different variants based on the value of the `$SET`
-variable. This variable has an empty value for the default set, and the set
+variable. This variable has an empty value for the default set and the set
 name in other cases. Few examples how you make the job:
 
 ```bash
@@ -341,5 +341,5 @@ compile_rules() {
 ```
 
 Thirdly, make `genpkg_rules()` as usual. *Cook* will switch to the required
-set automatically, based on conformity between packages and sets, that you
+set automatically based on conformity between packages and sets that you
 described in the `$SPLIT` variable on the first step. That's all.
