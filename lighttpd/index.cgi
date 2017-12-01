@@ -548,9 +548,11 @@ syntax_highlighter() {
 					s|$_fs|<var>\${fs}</var>|g;
 					s|$_stuff|<var>\${stuff}</var>|g" \
 				\
-				-e "s|\[\([01]\);3\([1-7]\)m|<span class='c\2\1'>|g;
+				-e "s|\[\([01]\)m\[3\([1-7]\)m|<span class='c\2\1'>|g;
+					s|\[\([01]\);3\([1-7]\)m|<span class='c\2\1'>|g;
 					s|\[\([01]\);0m|<span class='c0\1'>|g;
 					s|\[0m|</span>|g;
+					s|\[m|</span>|g;
 					s|\[0;10m|</span>|g;" \
 				\
 				-e "s|\[9\([1-6]\)m|<span class='c\10'>|;
