@@ -771,7 +771,7 @@ cookit() {
 				echo "src    : $src"
 				echo "install: $install"
 			fi
-			cd $src
+			[ -d "$src" ] && cd $src	# packages without sources exists
 			echo
 
 			[ -d "$install" ] && rm -r $install
