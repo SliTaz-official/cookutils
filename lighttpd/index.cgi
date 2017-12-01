@@ -550,7 +550,8 @@ syntax_highlighter() {
 				\
 				-e "s|\[\([01]\);3\([1-7]\)m|<span class='c\2\1'>|g;
 					s|\[\([01]\);0m|<span class='c0\1'>|g;
-					s|\[0m|</span>|g;" \
+					s|\[0m|</span>|g;
+					s|\[0;10m|</span>|g;" \
 				\
 				-e "s|\[9\([1-6]\)m|<span class='c\10'>|;
 					s|\[39m|</span>|;
