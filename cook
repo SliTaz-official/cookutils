@@ -1350,7 +1350,8 @@ remove_already_packed() {
 # (default: 16 and 48) from $install to $fs
 
 cook_copy_icons() {
-	local sizes=$@ i j
+	local sizes=$@ i j ifs="$IFS"
+	unset IFS
 	action 'Copying hicolor icons...'
 	[ -d "$fs/usr/share/icons/hicolor" ] && rm -rf "$fs/usr/share/icons/hicolor"
 	mkdir -p $fs/usr/share/icons/hicolor
@@ -1361,6 +1362,7 @@ cook_copy_icons() {
 			         $fs/usr/share/icons/hicolor
 	done
 	status
+	IFS="$ifs"
 }
 
 
