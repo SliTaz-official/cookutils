@@ -1585,7 +1585,7 @@ EOT
 									if (! files_pkg[i]) print i;
 								}
 							}
-						' "$all_files" "$packaged" > $orphans
+						' "$all_files" "$packaged" | sort > $orphans
 						if [ -d "$install" -a -s "$orphans" ]; then
 							echo
 							echo "<script>document.getElementById('li-orphans$set').style.display = 'list-item'</script>"

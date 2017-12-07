@@ -527,6 +527,26 @@ check_integrity() {
 }
 
 
+# Misc fix functions
+
+fix() {
+	case $1 in
+		# https://bugzilla.gnome.org/show_bug.cgi?id=655517
+		# https://wiki.gentoo.org/wiki/Project:Quality_Assurance/As-needed
+		ld)
+			export LDFLAGS="$LDFLAGS -Wl,-Os,--as-needed"
+			;;
+		libtool)
+			if [ -e 'libtool' ]; then
+				sed -i 's| -shared | -Wl,-Os,--as-needed\0|g' libtool
+			else
+				echo "fix libtool: warning: libtool absent, nothing to fix."
+			fi
+			;;
+	esac
+}
+
+
 # The main cook function.
 
 cookit() {
@@ -571,7 +591,7 @@ cookit() {
 			;;
 	esac
 
-	[ -n "$QA" ] && @@PREFIX@@/libexec/cookutils/precheck $receipt # former receipt_quality()
+	@@PREFIX@@/libexec/cookutils/precheck $receipt || exit 1 # former receipt_quality()
 
 	cd $pkgdir
 	[ -z "$continue" ] && rm -rf source 2>/dev/null
@@ -775,7 +795,7 @@ cookit() {
 			echo
 
 			[ -d "$install" ] && rm -r $install
-			mkdir -p $install
+			#mkdir -p $install
 
 			compile_rules $@ || { broken; exit 1; }
 
@@ -1321,8 +1341,10 @@ cook_copy_folders() {
 
 remove_already_packed() {
 	local i j
+	# $pkg is the name of the main package; $PACKAGE is the name of the current one
+	# $pkg may (or may not) be included in the $SPLIT
 	neighbors=$(
-		echo $SPLIT" " \
+		echo $pkg $SPLIT" " \
 		| awk -F$'\t' -vpkg="$PACKAGE" '
 		BEGIN { RS = " "; FS = ":"; }
 		      { set[$1] = $2; }

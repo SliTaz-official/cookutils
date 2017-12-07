@@ -7,6 +7,8 @@
 
 . /usr/lib/slitaz/libcook.sh
 
+# Return immediately if QA is not used
+[ -n "$QA" ] || return 0
 
 receipt="$(realpath $1)"
 
@@ -22,8 +24,10 @@ for var in PACKAGE VERSION CATEGORY SHORT_DESC MAINTAINER WEB_SITE; do
 		CATEGORY)
 			valid="$(echo $PKGS_CATEGORIES)" # avoid newlines
 			if ! echo " $valid " | grep -q " $value "; then
+				newline
 				_ 'QA: unknown category "%s"' "$value"
-				die 'Please, use one of: %s' "$valid"
+				longline "Please, use one of: $valid"
+				die
 			fi
 			;;
 		WEB_SITE)
