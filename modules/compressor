@@ -77,9 +77,31 @@ comp_summary() {
 }
 
 
+# Find ELF files
+
+find_elf() {
+	local i ifs="$IFS"
+	IFS=$'\n'
+	find $fs -type f \
+	| while read i; do
+		# output of `readelf -h <file> is human-readable information,
+		# we interested in the next line:
+		#  Type:                              EXEC (Executable file)
+		# or
+		#  Type:                              DYN (Shared object file)
+		if [ "$(readelf -h "$i" 2>/dev/null \
+			| sed -n '/Type:/ s|.*: *\([^ ]*\) .*|\1|p')" == "$1" ]; then
+			echo "$i"		# $1 = { EXEC | DYN }
+		fi
+	done
+	IFS="$ifs"
+}
+
+
 # Calculating different sizes
 
 sizes() {
+	local ifs="$IFS"; IFS=$'\n'
 	case $1 in
 		man) find $install/usr/share/man          -type f                                       -exec ls -l \{\} \; ;;
 		png) find $install                        -type f -name '*.png'                         -exec ls -l \{\} \; ;;
@@ -91,9 +113,17 @@ sizes() {
 		mo2) find $fs/usr/share/locale            -type f -name '*.mo'                          -exec ls -l \{\} \; ;;
 		gz)  find $install                        -type f -name '*.gz' ! -path '*/share/man/*'  -exec ls -l \{\} \; ;;
 		zip) find $install                        -type f -name '*.zip'                         -exec ls -l \{\} \; ;;
-		str) find $fs -type f \( -name '*.so*' -o -name '*.a' -o -name '*.pyc' -o -name '*.pyo' \
-				-o -name '.packlist' -o -name '*.pm' -o -name '*.pl' -o -name '*.pod' \) -exec ls -l \{\} \; ;;
+		strip)
+			{
+				find_elf EXEC
+				find_elf DYN
+				find $fs -type f \( -name '*.a' -o -name '*.pyc' -o -name '*.pyo' \
+				-o -name '.packlist' -o -name '*.pm' -o -name '*.pl' -o -name '*.pod' \)
+			} \
+			| xargs ls -l
+			;;
 	esac | awk '{s+=$5}END{print s}'
+	IFS="$ifs"
 }
 
 
@@ -606,6 +636,9 @@ strip_locale_def() {
 strip_package() {
 	[ "${COOKOPTS/!strip/}" != "$COOKOPTS" ] && return
 
+	local i ifs="$IFS"
+	IFS=$'\n'
+
 	case "$ARCH" in
 		arm*|x86_64) export STRIP="$HOST_SYSTEM-strip" ;;
 		*)           export STRIP='strip' ;;
@@ -614,22 +647,17 @@ strip_package() {
 	size0=0
 	size1=0
 	time0=$(get_time)
+	oldsize=$(sizes strip)
 
-	# Strip executable files
-	for dir in $fs/bin $fs/sbin $fs/usr/bin $fs/usr/sbin $fs/usr/games; do
-		if [ -d "$dir" ]; then
-			oldsize=$(find $dir -type f -exec ls -l '{}' \; | awk '{s+=$5}END{print s}')
-			find $dir -type f -exec $STRIP -s '{}' 2>/dev/null \;
-			newsize=$(find $dir -type f -exec ls -l '{}' \; | awk '{s+=$5}END{print s}')
-			size0=$((size0 + oldsize)); size1=$((size1 + newsize))
-		fi
-	done
+	# Strip executable files & shared libraries
+	while read i; do
+		$STRIP -s "$i" 2>/dev/null
+	done <<EOT
+$(find_elf EXEC; find_elf DYN)
+EOT
 
-	oldsize=$(sizes str)
-
-	# Strip shared and static libraries
-	find $fs -name '*.so*' -exec $STRIP -s '{}' 2>/dev/null \;
-	find $fs -name '*.a'   -exec $STRIP -d '{}' 2>/dev/null \;
+	# Strip static libraries
+	find $fs -name '*.a' -exec $STRIP -d '{}' 2>/dev/null \;
 
 	# Nullify timestamps of files in ar archives
 	# Skip empty 8-byte archives (hi, musl-libc package)
@@ -655,13 +683,14 @@ strip_package() {
 	echo "$perlfiles" | xargs rm -f 2>/dev/null
 	echo "$perlfiles" | awk 'BEGIN{FS=OFS="/"}{$NF="";print}' | xargs rmdir -p 2>/dev/null
 
-	# Strip Perl files (*.pm and *.pl) from documentation inside (if not disabled)
+	# Strip documentation inside Perl files (*.pm and *.pl) (if not disabled)
 	[ "${COOKOPTS/!perlz/}" == "$COOKOPTS" ] &&
 		find $fs -type f \( -name '*.pm' -o -name '*.pl' \) -exec sed -i '/^=/,/^=cut/d' '{}' \;
 
-	newsize=$(sizes str)
+	newsize=$(sizes strip)
 
-	comp_summary "$time0" "$((size0 + oldsize))" "$((size1 + newsize))"
+	comp_summary "$time0" "$oldsize" "$newsize"
+	IFS="$ifs"
 }
 
 

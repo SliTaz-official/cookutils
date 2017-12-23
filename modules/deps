@@ -166,6 +166,7 @@ outpkg() {
 				s("xorg-xcb-util-image-dev",  "xcb-util-image-dev");
 				s("xorg-xcb-util-renderutil-dev", "xcb-util-renderutil-dev");
 				s("eudev-dev", "udev-dev");
+				s("util-linux-uuid",     "ossp-uuid");
 				s("util-linux-uuid-dev", "ossp-uuid-dev");
 				s("polkit-pam-dev", "polkit-dev");
 				s("nspr", "palemoon"); # I doubt app may depend on Palemoon
@@ -186,7 +187,7 @@ outpkg() {
 					$0 != "gcc")
 						print gensub(" ", "|", "g");
 			}';;
-	esac >>$tmptmp
+	esac
 }
 
 
@@ -206,8 +207,9 @@ indb() {
 					printf("[%s]\n", i);
 			}
 		}
-	' $2 | tr '\n' ' ')"
-	outpkg "${res% }"
+	' $2 | tr '\n' ' ' | sed 's| $||')"
+
+	outpkg "$res"
 }
 
 
@@ -215,22 +217,29 @@ indb() {
 # Also can process some development files
 
 tp_ldd() {
+	local tmptmp libs variables pcs pkg pkgs out
 	unset IFS
 	tmptmp=$(mktemp)
 
 	case $1 in
 		*.la)
-			# found dependencies in the *.la files
-			libs=$(. $1; echo $dependency_libs)
-			for i in $libs; do
-				case $i in
-					-l*)  indb "lib${i#-l}.so" $db_so;; # FIXME: I'm not sure it's about a *.so, but *.a often absent
-					*.la) indb "$i" $db_la;;
-				esac
-			done
+			if [ -n "$la" ]; then								# use with --la
+				# found dependencies in the *.la files
+				libs=$(. $1; echo $dependency_libs)
+				for i in $libs; do
+					case $i in
+						-l*)  indb "${i/-l/lib}.so" $db_so >>$tmptmp;; # FIXME: I'm not sure it's about a *.so, but *.a often absent
+						*.la) indb "$i" $db_la >>$tmptmp;;
+					esac
+				done
+			fi
 			;;
 		*.pc)
 			# found dependencies in the *.pc files
+			variables=$(mktemp)
+			grep '^[a-zA-Z_][a-zA-Z_]*=' $1 > $variables
+			. $variables
+			rm $variables
 			# Syntax examples:
 			# Requires: glib-2.0 gobject-2.0
 			# Requires.private: gmodule-no-export-2.0
@@ -241,7 +250,7 @@ tp_ldd() {
 				isitlib=$(echo $i | tr -d '<=>0-9.')
 				# if it contains only comparisons, numbers, dot - it is not lib, skip
 				[ -n "$isitlib" ] || continue
-				indb "$i.pc" $db_pc
+				indb "$i.pc" $db_pc >>$tmptmp
 			done
 			# Syntax examples:
 			# Libs: -L${libdir} -lgio-2.0
@@ -249,7 +258,31 @@ tp_ldd() {
 			libs=$(grep '^Libs' $1 | cut -d: -f2 | tr '\n' ' ')
 			for i in $libs; do
 				case $i in
-					-l*) indb "lib${i#-l}.so" $db_so;;
+					-L*) eval LIBDIR="${i#-L}";;
+					-l*)
+						eval i="$i"		# substitute variables
+#echo ">i='$i'" >&2
+						pkg=$(indb "lib${i#-l}.so" $db_so)
+#echo ">>pkg='$pkg'" >&2
+						pkgs=$(awk -F$'\t' -vpkg="$pkg" '{if (index(" " $2 " ", " " pkg " ")) print $2;}' /home/slitaz/cache/split.db)
+#echo ">>pkgs='$pkgs'" >&2
+						unset out
+						for j in $pkgs; do
+							# seadrch for <pkg>-dev
+							case $j in $pkg-dev) out=$j; break;;
+							esac
+						done
+#echo ">>'$out'" >&2
+						[ -z "$out" ] &&
+						for j in $pkgs; do
+							# if not found previously, search for <any>-dev
+							case $j in *-dev) out=$j; break;;
+							esac
+						done
+#echo ">>'$out'" >&2
+						echo ${out:-$pkg}
+#echo >&2
+						;;
 				esac
 			done
 			;;
@@ -263,10 +296,12 @@ tp_ldd() {
 			echo 'python'
 			;;
 		*)
-			LD_PRELOAD= LD_TRACE_LOADED_OBJECTS=1 /lib/ld-linux* "$1" 2>/dev/null | \
-			sed 's| =>.*||; s| (.*||; s|\t||' | \
-			while read i; do
-				indb "$i" $db_so
+#			LD_PRELOAD= LD_TRACE_LOADED_OBJECTS=1 /lib/ld-linux* "$1" 2>/dev/null | \
+#			sed 's| =>.*||; s| (.*||; s|\t||' | \
+			readelf -dW "$1" 2>/dev/null \
+			| sed -n '/NEEDED/ s|.*\[\(.*\)\]|\1|p' \
+			| while read i; do
+				indb "$i" $db_so >>$tmptmp
 			done
 			;;
 	esac
@@ -307,7 +342,7 @@ for pkg in $(all_names); do
 	IFS=$'\n'
 	while read file; do
 		tp_ldd "$WOK/$1/taz/$pkg-$VERSION/fs$file"
-	done < $WOK/$1/taz/$pkg-$VERSION/files.list | sort -u | grep -v "^$pkg$"
+	done < $WOK/$1/taz/$pkg-$VERSION/files.list | sort -u | grep -v "^$pkg$" | sed '/^$/d'
 done
 
 newline

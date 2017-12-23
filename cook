@@ -881,6 +881,16 @@ packit() {
 
 	title 'Pack: %s' "$PACKAGE $VERSION$arch"
 
+	# Get set name for specified package from $SPLIT variable
+	local set=$(echo $SPLIT \
+				| awk -vpkg="$PACKAGE" '
+					BEGIN { RS = " "; FS = ":"; }
+					{ if ($1 == pkg && $2) { print "-" $2; exit; } }')
+	# Change set, make filelist and folderlist for new set
+	export     src="$WOK/$pkg/source/$PACKAGE-$VERSION$set"
+	export install="$WOK/$pkg/install$set"
+	export DESTDIR="$install"
+
 	if grep -q ^genpkg_rules $receipt; then
 		_ 'Executing: %s' 'genpkg_rules'
 		set -e; cd $pkgdir; mkdir -p $fs
@@ -991,44 +1001,17 @@ packit() {
 	tazpkg=$(ls *.tazpkg)
 	packit_quality
 	footer "$(_ 'Package "%s" created' "$tazpkg")"
-	update_packages_db
-}
-
-
-# Calculate release checksum: usually it does not change on "just recook".
-# Release checksum is md5sum of file containing md5sums of:
-# a) all files, b) receipt, and c) description.txt.
-# Md5sum of the package file will change every time because of embedded timestamps;
-# release checksum based only on files content, and will change only when files change.
-# (Pitfall: ownership and permissions...)
-
-release_checksum() {
-	local pack=$1
-	local rsum_file=$(mktemp)
-
-	cp $pack/md5sum $rsum_file
-	md5sum $pack/receipt | sed 's| [^ ]*/| |' >> $rsum_file
-	[ -e "$pack/description.txt" ] &&
-		md5sum $pack/description.txt | sed 's| [^ ]*/| |' >> $rsum_file
-
-	local rsum=$(md5sum $rsum_file | awk '{print $1}')
-	rm $rsum_file
-	local rsumold=$(awk -F$'\t' -vpkg="$PACKAGE" '
-		{if ($1 == pkg) { print $9; exit; }}' $PKGS/packages.info)
-
-	[ "$rsum" == "$rsumold" ] && rsum=''
-
-	echo $rsum
 }
 
 
 # Verify package quality and consistency.
 
 packit_quality() {
-	#action 'QA: checking for broken link...'
-	#link=$(find $fs/usr -type l -follow)
-	#[ "$link" ] && echo -e "\nERROR: broken link in filesystem"
-	#status
+	local rsum rsumold='' rsum_changed old_file
+	local pi="$PKGS/packages.info" fl="$cache/files.list"
+	local pkg_file="$PKGS/$PACKAGE-$VERSION$EXTRAVERSION.tazpkg"
+	local rsum_file=$(mktemp) rsum_file_old=$(mktemp) tmpdir=$(mktemp -d)
+
 
 	if [ "${COOKOPTS/skip-log-errors/}" == "$COOKOPTS" ]; then
 		# Exit if any error found in log file.
@@ -1037,6 +1020,7 @@ packit_quality() {
 			broken; exit 1
 		fi
 	fi
+
 
 	[ -n "$CAT" ] && CATEGORY="${CAT%|*}"	# allow meta-packages in v2 receipts
 
@@ -1052,27 +1036,80 @@ packit_quality() {
 	fi
 
 
-	# Find and remove old package(s) only if "release checksum" has changed
-	rsum=$(release_checksum $pack)
-	if [ -n "$rsum" ]; then
+	# Calculate release checksum: usually it does not change on "just recook".
+	# Release checksum is md5sum of file containing md5sums of:
+	# a) all files, b) receipt, and c) description.txt.
+	# Md5sum of the package file will change every time because of embedded timestamps;
+	# release checksum based only on files content, and will change only when files change.
+	# (Pitfall: ownership and permissions...)
+
+	# Calculate rsum for new package
+	cp $pack/md5sum $rsum_file
+	md5sum $pack/receipt | sed 's| [^ ]*/| |' >> $rsum_file
+	[ -e "$pack/description.txt" ] &&
+		md5sum $pack/description.txt | sed 's| [^ ]*/| |' >> $rsum_file
+	rsum=$(md5sum $rsum_file | awk '{print $1}')
+
+	# Calculate rsum for existing previous "old" package
+	if [ -f "$pkg_file" ]; then
+		# don't trust database entry, check the package file
+		cd $tmpdir
+		cpio -F "$pkg_file" -i md5sum receipt description.txt >/dev/null 2>&1
+		cp ./md5sum $rsum_file_old
+		md5sum ./receipt | sed 's| [^ ]*/| |' >> $rsum_file_old
+		[ -e "./description.txt" ] &&
+			md5sum ./description.txt | sed 's| [^ ]*/| |' >> $rsum_file_old
+		rsumold=$(md5sum $rsum_file_old | awk '{print $1}')
+		cd - >/dev/null
+	fi
+
+	# Clean
+	rm $rsum_file $rsum_file_old
+	rm -r $tmpdir
+
+
+	touch $pi $broken
+
+
+	# Find and remove old package only if "release checksum" has changed
+
+	if [ "$rsum" != "$rsumold" ]; then
 		old_file=$(awk -F$'\t' -vname="$PACKAGE" '{
 			if ($1 == name) printf("%s-%s.tazpkg", $1, $2);
-			}' $PKGS/packages.info)
+			}' $pi)		# <name>-<version><extra_version>.tazpkg
 		if [ -f "$PKGS/$old_file" ]; then
 			action 'Removing old package "%s"' "$old_file"
 			rm -f "$PKGS/$old_file"
 			status
 		fi
-		# package changed, substitute old package by new
+		# package changed, substitute old package by new one
 		mv -f $pkgdir/taz/$PACKAGE-$VERSION$EXTRAVERSION.tazpkg $PKGS
+		_ 'The release checksum has changed.'
 	else
 		# package not changed, remove new package
 		rm -f $pkgdir/taz/$PACKAGE-$VERSION$EXTRAVERSION.tazpkg
+		_ 'The release checksum has not changed.'
 	fi
 
+
 	sed -i "/^${pkg}$/d" $broken
-	#action 'Removing source tree...'
-	#rm -f $WOK/$pkg/source; status
+
+
+	# Update packages database every time after successful build
+
+	# packages.info (unsorted, located near to packages)
+	unset_receipt; . $pack/receipt
+	SIZES=$(echo $PACKED_SIZE $UNPACKED_SIZE | sed 's|\.0||g')
+	DEPENDS=$(echo $DEPENDS) # remove newlines, tabs and multiple spaces from variable
+	sed -i "/^$PACKAGE\t/d" $pi		# remove old entry
+	cat >> $pi <<EOT
+$PACKAGE	$VERSION$EXTRAVERSION	$CATEGORY	$SHORT_DESC	$WEB_SITE	$TAGS	$SIZES	$DEPENDS	$rsum	$PROVIDE
+EOT
+
+	# files.list (uncompressed, unsorted, located in $cache)
+	touch $fl
+	sed -i "/^$PACKAGE: /d" $fl
+	sed  "s/^/$PACKAGE: \0/" $pack/files.list >> $fl
 }
 
 
@@ -1394,15 +1431,6 @@ copy() {
 	action 'Copying folders and files...'
 	local i j k filelist=$(mktemp) folderlist=$(mktemp)
 
-	# Get set name for specified package from $SPLIT variable
-	local set=$(echo $SPLIT \
-				| awk -vpkg="$PACKAGE" '
-					BEGIN { RS = " "; FS = ":"; }
-					{ if ($1 == pkg && $2) { print "-" $2; exit; } }')
-	# Change set, make filelist and folderlist for new set
-	export     src="$WOK/$pkg/source/$PACKAGE-$VERSION$set"
-	export install="$WOK/$pkg/install$set"
-	export DESTDIR="$install"
 	IFS=$'\n'
 	cd $install
 	find ! -type d | sed 's|\.||' > $filelist
@@ -1489,36 +1517,6 @@ copy() {
 	unset IFS
 	rm $filelist $folderlist
 	status
-}
-
-
-# Update packages database every time after successful build
-
-update_packages_db() {
-	# packages.info (unsorted, located near to packages)
-	local pi="$PKGS/packages.info"
-	unset_receipt; . $pack/receipt
-	SIZES=$(echo $PACKED_SIZE $UNPACKED_SIZE | sed 's|\.0||g')
-
-	DEPENDS=$(echo $DEPENDS) # remove newlines, tabs and multiple spaces from variable
-
-	rsum=$(release_checksum $pack)
-	if [ -n "$rsum" ]; then
-		_ 'The release checksum has changed.\n'
-
-		sed -i "/^$PACKAGE\t/d" $pi		# remove old entry
-		cat >> $pi <<EOT
-$PACKAGE	$VERSION$EXTRAVERSION	$CATEGORY	$SHORT_DESC	$WEB_SITE	$TAGS	$SIZES	$DEPENDS	$rsum	$PROVIDE
-EOT
-
-		# files.list (uncompressed, unsorted, located in $cache)
-		local fl="$cache/files.list"
-		touch $fl
-		sed -i "/^$PACKAGE: /d" $fl
-		sed  "s/^/$PACKAGE: \0/" $pack/files.list >> $fl
-	else
-		_ 'The release checksum has not changed.\n'
-	fi
 }
 
 

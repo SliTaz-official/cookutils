@@ -343,3 +343,167 @@ compile_rules() {
 Thirdly, make `genpkg_rules()` as usual. *Cook* will switch to the required
 set automatically based on conformity between packages and sets that you
 described in the `$SPLIT` variable on the first step. That's all.
+
+
+Dependency tracking
+-------------------
+
+Many packages use `libtool`, created during the `configure` processing.
+This `libtool` contains one old and well-known (in narrow circles) “feature”
+that is expressed in the fact that unnecessary dependencies are added to
+libraries and executable files. Read about it:
+
+  * [Bug 655517 - using --as-needed in LDFLAGS is not respected and it links
+    on unneeded libs](https://bugzilla.gnome.org/show_bug.cgi?id=655517)
+  * [Project:Quality Assurance/As-needed](https://wiki.gentoo.org/wiki/Project:Quality_Assurance/As-needed)
+
+Links above recommend to add `-Wl,--as-needed` to the LDFLAGS variable. You can
+use short statement `fix ld` in the beginning (to add `-Wl,--as-needed` to the
+LDFLAGS) and `fix libtool` just after the `configure` invocation (to
+additionally fix just created `libtool`). Example of using:
+
+```bash
+compile_rules() {
+    fix ld
+    ./configure \
+        --sysconfdir=/etc \
+        $CONFIGURE_ARGS &&
+    fix libtool &&
+    make && make install
+}
+```
+
+You should not use `fix libtool` if you not see file named `libtool` in the root
+of the sources tree after the `configure` done. It will not lead to an error,
+although there will be no sense in it.
+
+You can check dependencies of separate files using one of the next methods:
+
+```bash
+ldd /path/to/file
+
+readelf -d /path/to/file | grep NEEDED
+```
+
+You can check dependencies of entire package using the command:
+
+```bash
+cook package_name --deps
+```
+
+You can note a significant decrease in the number of dependencies. For example:
+
+  * for **fontconfig**:
+    * before: bzlib freetype liblzma libpng16 libxml2 zlib
+    * after: freetype libxml2
+  * for **at-spi2-core**:
+    * before: dbus glib libffi pcre util-linux-blkid util-linux-mount
+      util-linux-uuid xorg-libICE xorg-libSM xorg-libX11 xorg-libXau
+      xorg-libXdmcp xorg-libXext xorg-libXi xorg-libXtst xorg-libxcb zlib
+    * after: dbus glib xorg-libX11 xorg-libXtst
+
+For some packages nothing will change.
+
+
+### Dependency tracking for development packages
+
+This is a separate and complex issue.
+
+Dependency info may be extracted from `.pc`, `.la` and `.h` files. Extracting
+dependencies from the header files (`.h`) is non-trivial task due to conditional
+branching and can not be realized using simple tools.
+
+As for `.la` files — Gentoo
+[recommend](https://wiki.gentoo.org/wiki/Project:Quality_Assurance/Handling_Libtool_Archives)
+to remove them in most cases. As they stated, `.la` files may be useful only
+for static libraries (`.a` files). Currently, dependency tracking tool doesn't
+use `.la` files unless you provide special argument `--la`:
+
+```bash
+cook fontconfig --deps --la
+```
+
+It turns that `.pc` files are the only development files that describe
+dependencies of development packages. Usually `configure` script checks
+dependencies using something like this:
+
+```bash
+pkg-config --exists --print-errors "gtk-doc >= 1.15"
+pkg-config --exists --print-errors "xrender >= 0.6"
+```
+
+Dependency tracking tools tries to find the package that contains required
+libraries, then to determine `*-dev` package that corresponds to found package.
+
+For example, file `/usr/lib/pkgconfig/cairo.pc` contains the line:
+
+```
+Requires.private:   gobject-2.0   glib-2.0 >= 2.14   pixman-1 >= 0.30.0
+    fontconfig >= 2.2.95   freetype2 >= 9.7.3   libpng    xcb-shm    x11-xcb
+    xcb >= 1.6   xcb-render >= 1.6   xrender >= 0.6   x11   xext
+```
+
+Finding next files shows the dependencies:
+
+```
+gobject-2.0.pc   glib-2.0.pc   pixman-1.pc   fontconfig.pc   freetype2.pc
+    libpng.pc   xcb-shm.pc   x11-xcb.pc   xcb.pc   xcb-render.pc   xrender.pc
+    x11.pc   xext.pc
+```
+
+Next example using file `/usr/lib/pkgconfig/apr-1.pc`:
+
+```
+prefix=/usr
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+APR_MAJOR_VERSION=1
+
+Libs: -L${libdir} -lapr-${APR_MAJOR_VERSION} -luuid -lrt -lcrypt  -lpthread -ldl
+```
+
+Finding next files shows the runtime dependencies and then full dependencies;
+`*-dev` packages are the full packages.
+
+```
+libapr-1.so    libuuid.so      librt.so   libcrypt.so   libpthread.so   libdl.so
+     |             |               |           |              |            |    
+     v             v               v           v              v            v    
+    apr     util-linux-uuid   glibc-base  glibc-base     glibc-base   glibc-base
+     |             |               |           |              |            |    
+     v             v               v           v              v            v
+  apr-dev  util-linux-uuid-dev glibc-dev   glibc-dev      glibc-dev    glibc-dev
+
+```
+
+Note, sometimes required files may be found in the two or many packages, for
+example, `libdl.so` exists therein packages:
+
+  * `glibc-base`
+  * `uclibc-armv4eb`
+  * `uclibc-armv4l`
+  * `uclibc-armv4tl`
+  * `uclibc-armv5l`
+  * `uclibc-armv6l`
+  * `uclibc-cross-compiler-armv4eb`
+  * `uclibc-cross-compiler-armv4l`
+  * `uclibc-cross-compiler-armv4tl`
+  * `uclibc-cross-compiler-armv5l`
+  * `uclibc-cross-compiler-armv6l`
+  * `uclibc-cross-compiler-i486`
+  * `uclibc-cross-compiler-mips`
+  * `uclibc-cross-compiler-mips64`
+  * `uclibc-cross-compiler-mipsel`
+  * `uclibc-cross-compiler-powerpc`
+  * `uclibc-cross-compiler-sh4`
+  * `uclibc-cross-compiler-sparc`
+  * `uclibc-cross-compiler-x86_64`
+  * `uclibc-i486`
+  * `uclibc-mips`
+  * `uclibc-mips64`
+  * `uclibc-mipsel`
+  * `uclibc-powerpc`
+  * `uclibc-sh4`
+  * `uclibc-sparc`
+  * `uclibc-x86_64`
+
