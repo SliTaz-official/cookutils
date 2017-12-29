@@ -85,7 +85,7 @@ find_elf() {
 	find $fs -type f \
 	| while read i; do
 		# output of `readelf -h <file> is human-readable information,
-		# we interested in the next line:
+		# we are interested in the next line:
 		#  Type:                              EXEC (Executable file)
 		# or
 		#  Type:                              DYN (Shared object file)

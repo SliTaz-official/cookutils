@@ -373,8 +373,8 @@ compile_rules() {
 }
 ```
 
-You should not use `fix libtool` if you not see file named `libtool` in the root
-of the sources tree after the `configure` done. It will not lead to an error,
+You should not use `fix libtool` if you do not see a file named `libtool` in the root
+of the sources tree after the `configure` is done. It will not lead to an error,
 although there will be no sense in it.
 
 You can check dependencies of separate files using one of the next methods:
@@ -385,7 +385,7 @@ ldd /path/to/file
 readelf -d /path/to/file | grep NEEDED
 ```
 
-You can check dependencies of entire package using the command:
+You can check dependencies of an entire package using the command:
 
 ```bash
 cook package_name --deps
@@ -410,21 +410,21 @@ For some packages nothing will change.
 This is a separate and complex issue.
 
 Dependency info may be extracted from `.pc`, `.la` and `.h` files. Extracting
-dependencies from the header files (`.h`) is non-trivial task due to conditional
+dependencies from the header files (`.h`) is a non-trivial task due to conditional
 branching and can not be realized using simple tools.
 
 As for `.la` files — Gentoo
 [recommend](https://wiki.gentoo.org/wiki/Project:Quality_Assurance/Handling_Libtool_Archives)
 to remove them in most cases. As they stated, `.la` files may be useful only
-for static libraries (`.a` files). Currently, dependency tracking tool doesn't
-use `.la` files unless you provide special argument `--la`:
+for static libraries (`.a` files). Currently, the dependency tracking tool doesn't
+use `.la` files unless you a provide special argument `--la`:
 
 ```bash
 cook fontconfig --deps --la
 ```
 
-It turns that `.pc` files are the only development files that describe
-dependencies of development packages. Usually `configure` script checks
+It turns out that `.pc` files are the only development files that describe
+dependencies of development packages. Usually the `configure` script checks
 dependencies using something like this:
 
 ```bash
@@ -432,8 +432,8 @@ pkg-config --exists --print-errors "gtk-doc >= 1.15"
 pkg-config --exists --print-errors "xrender >= 0.6"
 ```
 
-Dependency tracking tools tries to find the package that contains required
-libraries, then to determine `*-dev` package that corresponds to found package.
+Dependency tracking tools try to find the package that contains required
+libraries, then determine a `*-dev` package that corresponds to the found package.
 
 For example, file `/usr/lib/pkgconfig/cairo.pc` contains the line:
 
@@ -443,7 +443,7 @@ Requires.private:   gobject-2.0   glib-2.0 >= 2.14   pixman-1 >= 0.30.0
     xcb >= 1.6   xcb-render >= 1.6   xrender >= 0.6   x11   xext
 ```
 
-Finding next files shows the dependencies:
+Finding the next files shows the dependencies:
 
 ```
 gobject-2.0.pc   glib-2.0.pc   pixman-1.pc   fontconfig.pc   freetype2.pc
@@ -462,7 +462,7 @@ APR_MAJOR_VERSION=1
 Libs: -L${libdir} -lapr-${APR_MAJOR_VERSION} -luuid -lrt -lcrypt  -lpthread -ldl
 ```
 
-Finding next files shows the runtime dependencies and then full dependencies;
+Finding the next files shows the runtime dependencies and then full dependencies;
 `*-dev` packages are the full packages.
 
 ```
@@ -476,8 +476,8 @@ libapr-1.so    libuuid.so      librt.so   libcrypt.so   libpthread.so   libdl.so
 
 ```
 
-Note, sometimes required files may be found in the two or many packages, for
-example, `libdl.so` exists therein packages:
+Note, sometimes required files may be found in two or more packages, for
+example, `libdl.so` exists within packages:
 
   * `glibc-base`
   * `uclibc-armv4eb`
