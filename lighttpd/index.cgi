@@ -550,14 +550,19 @@ syntax_highlighter() {
 				\
 				-e "s|\[\([01]\)m\[3\([1-7]\)m|<span class='c\2\1'>|g;
 					s|\[\([01]\);3\([1-7]\)m|<span class='c\2\1'>|g;
+					s|\[3\([1-7]\)m|<span class='c\10'>|g;
 					s|\[\([01]\);0m|<span class='c0\1'>|g;
 					s|\[0m|</span>|g;
 					s|\[m|</span>|g;
-					s|\[0;10m|</span>|g;" \
+					s|\[0;10m|</span>|g;
+					s|\[K||g;" \
 				\
 				-e "s|\[9\([1-6]\)m|<span class='c\10'>|;
 					s|\[39m|</span>|;
-					s|\[1m|<span class='c01'>|g;" \
+					#s|\[1m|<span class='c01'>|g;
+					s|\[1m|<span style='font-weight:bold'>|g; s|(B|</span>|g;
+					s|\[m||g;
+					" \
 				-e "s!^|\(+.*\)!|<span class='c20'>\1</span>!;
 					s!^|\(-.*\)!|<span class='c10'>\1</span>!;
 					s!^|\(@@.*@@\)\$!|<span class='c30'>\1</span>!;"
@@ -769,14 +774,24 @@ show_desc() {
 # Return all the names of packages bundled in this receipt
 
 all_names() {
-	local split=" $SPLIT "
-	if [ "${split/ $PACKAGE /}" != "$split" ]; then
+	# Get package names from $SPLIT variable
+	local split=$(echo $SPLIT \
+		| awk '
+			BEGIN { RS = " "; FS = ":"; }
+			{ print $1; }' \
+		| tr '\n' ' ')
+	local split_space=" $split "
+	if ! head -n1 $WOK/$pkg/receipt | fgrep -q 'v2'; then
+		# For receipts v1: $SPLIT may present in the $WANTED package,
+		# but split packages have their own receipts
+		echo $PACKAGE
+	elif [ "${split_space/ $PACKAGE /}" != "$split_space" ]; then
 		# $PACKAGE included somewhere in $SPLIT (probably in the end).
 		# We should build packages in the order defined in the $SPLIT.
-		echo $SPLIT
+		echo $split
 	else
 		# We'll build the $PACKAGE, then all defined in the $SPLIT.
-		echo $PACKAGE $SPLIT
+		echo $PACKAGE $split
 	fi
 }
 
