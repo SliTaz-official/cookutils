@@ -882,13 +882,13 @@ packit() {
 	title 'Pack: %s' "$PACKAGE $VERSION$arch"
 
 	# Get set name for specified package from $SPLIT variable
-	local set=$(echo $SPLIT \
+	local set=$(echo -n $SPLIT \
 				| awk -vpkg="$PACKAGE" '
 					BEGIN { RS = " "; FS = ":"; }
-					{ if ($1 == pkg && $2) { print "-" $2; exit; } }')
+					{ if ($1 == pkg && $2 != "") { print "-" $2; exit; } }')
 	# Change set, make filelist and folderlist for new set
-	export     src="$WOK/$pkg/source/$PACKAGE-$VERSION$set"
-	export install="$WOK/$pkg/install$set"
+	export     src="$src$set"
+	export install="$install$set"
 	export DESTDIR="$install"
 
 	if grep -q ^genpkg_rules $receipt; then
