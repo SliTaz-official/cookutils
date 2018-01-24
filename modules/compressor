@@ -68,7 +68,7 @@ comp_summary() {
 		"$(calc_time $1)" "$2" "$3" "$saving" "$cache_msg"
 
 	if [ -s "$4" ]; then
-		_ 'Cleaner warnings and errors:'
+		_ 'Compressor warnings and errors:'
 		awk '{printf "  %s\n", $0;}' "$4"
 		echo
 	fi
@@ -184,23 +184,27 @@ compress_manpages() {
 	done
 
 	# Recompress with advdef (it can't compress, only recompress)
-	cleaner_log="$(mktemp)"
-	IFS=$'\n'
-	for i in $(find $manpath -type f); do
-		if ! cached_path=$(query_cache mangz "$i"); then
-			cp -a "$i" "$i.orig$$"		# save the original if something goes wrong
-			out="$(advdef -z4q "$i")"
-			if [ -n "$out" ]; then
-				echo "$i:"$'\n'"$out"$'\n' >> "$cleaner_log"
-				mv -f "$i.orig$$" "$i"	# restore the original
-			else
-				store_cache "$cached_path" "$i"
-				rm -f "$i.orig$$"		# clean
+	the_log="$(mktemp)"
+	if which advdef >/dev/null; then
+		IFS=$'\n'
+		for i in $(find $manpath -type f); do
+			if ! cached_path=$(query_cache mangz "$i"); then
+				cp -a "$i" "$i.orig$$"		# save the original if something goes wrong
+				out="$(advdef -z4q "$i")"
+				if [ -n "$out" ]; then
+					echo "$i:"$'\n'"$out"$'\n' >> "$the_log"
+					mv -f "$i.orig$$" "$i"	# restore the original
+				else
+					store_cache "$cached_path" "$i"
+					rm -f "$i.orig$$"		# clean
+				fi
 			fi
-		fi
-	done
+		done
+	else
+		echo 'Warning: advdef not found.' > "$the_log"
+	fi
 
-	comp_summary "$time0" "$size0" "$(sizes man)" "$cleaner_log"
+	comp_summary "$time0" "$size0" "$(sizes man)" "$the_log"
 }
 
 
@@ -217,23 +221,27 @@ recompress_gz() {
 	action 'Recompressing gzip files...'
 
 	# Recompress with advdef
-	cleaner_log="$(mktemp)"
-	IFS=$'\n'
-	for i in $(find $install -type f -name '*.gz' ! -path '*/share/man/*'); do
-		if ! cached_path=$(query_cache gz "$i"); then
-			cp -a "$i" "$i.orig$$"		# save the original if something goes wrong
-			out="$(advdef -z4q "$i")"
-			if [ -n "$out" ]; then
-				echo "$i:"$'\n'"$out"$'\n' >> "$cleaner_log"
-				mv -f "$i.orig$$" "$i"	# restore the original
-			else
-				store_cache "$cached_path" "$i"
-				rm -f "$i.orig$$"		# clean
+	the_log="$(mktemp)"
+	if which advdef >/dev/null; then
+		IFS=$'\n'
+		for i in $(find $install -type f -name '*.gz' ! -path '*/share/man/*'); do
+			if ! cached_path=$(query_cache gz "$i"); then
+				cp -a "$i" "$i.orig$$"		# save the original if something goes wrong
+				out="$(advdef -z4q "$i")"
+				if [ -n "$out" ]; then
+					echo "$i:"$'\n'"$out"$'\n' >> "$the_log"
+					mv -f "$i.orig$$" "$i"	# restore the original
+				else
+					store_cache "$cached_path" "$i"
+					rm -f "$i.orig$$"		# clean
+				fi
 			fi
-		fi
-	done
+		done
+	else
+		echo 'Warning: advdef not found.' > "$the_log"
+	fi
 
-	comp_summary "$time0" "$size0" "$(sizes gz)" "$cleaner_log"
+	comp_summary "$time0" "$size0" "$(sizes gz)" "$the_log"
 }
 
 
@@ -250,23 +258,27 @@ recompress_zip() {
 	action 'Recompressing zip files...'
 
 	# Recompress with advzip
-	cleaner_log="$(mktemp)"
-	IFS=$'\n'
-	for i in $(find $install -type f -name '*.zip'); do
-		if ! cached_path=$(query_cache zip "$i"); then
-			cp -a "$i" "$i.orig$$"		# save the original if something goes wrong
-			out="$(advzip -z3qk "$i")"	# '-4' is more than two orders slower; use '-3'
-			if [ -n "$out" ]; then
-				echo "$i:"$'\n'"$out"$'\n' >> "$cleaner_log"
-				mv -f "$i.orig$$" "$i"	# restore the original
-			else
-				store_cache "$cached_path" "$i"
-				rm -f "$i.orig$$"		# clean
+	the_log="$(mktemp)"
+	if which advzip >/dev/null; then
+		IFS=$'\n'
+		for i in $(find $install -type f -name '*.zip'); do
+			if ! cached_path=$(query_cache zip "$i"); then
+				cp -a "$i" "$i.orig$$"		# save the original if something goes wrong
+				out="$(advzip -z3qk "$i")"	# '-4' is more than two orders slower; use '-3'
+				if [ -n "$out" ]; then
+					echo "$i:"$'\n'"$out"$'\n' >> "$the_log"
+					mv -f "$i.orig$$" "$i"	# restore the original
+				else
+					store_cache "$cached_path" "$i"
+					rm -f "$i.orig$$"		# clean
+				fi
 			fi
-		fi
-	done
+		done
+	else
+		echo 'Warning: advzip not found.' > "$the_log"
+	fi
 
-	comp_summary "$time0" "$size0" "$(sizes zip)" "$cleaner_log"
+	comp_summary "$time0" "$size0" "$(sizes zip)" "$the_log"
 }
 
 
@@ -287,6 +299,16 @@ compress_png() {
 
 	action 'Compressing png images...'
 
+	the_log="$(mktemp)"
+	$use_pq && if ! which pngquant >/dev/null; then
+		echo 'Warning: pngquant not found.' > "$the_log"
+		use_pq=false
+	fi
+	$use_op && if ! which optipng >/dev/null; then
+		echo 'Warning: optipng not found.' >> "$the_log"
+		use_op=false
+	fi
+
 	oplevel=$(echo $COOKOPTS | grep 'op[0-8]' | sed 's|.*op\([0-8]\).*|\1|')
 	[ -z "$oplevel" ] && oplevel='2'
 
@@ -296,7 +318,6 @@ compress_png() {
 
 	[ "$oplevel" == '8' ] && oplevel='7 -zm1-9'
 
-	cleaner_log="$(mktemp)"
 	pq_opt='--skip-if-larger' # Sublime Text is mad about `if` in $(), so put it separately
 	IFS=$'\n'
 	for i in $(find $install -type f -name '*.png'); do
@@ -306,14 +327,14 @@ compress_png() {
 			if $use_pq; then
 				out="$(pngquant -f $pq_opt --ext .png --speed 1 "$i" 2>&1)"
 				if [ -n "$out" ]; then
-					echo "$i (pngquant):"$'\n'"$out"$'\n' >> "$cleaner_log"
+					echo "$i (pngquant):"$'\n'"$out"$'\n' >> "$the_log"
 					iserror='yes'
 				fi
 			fi
 			if $use_op && [ -z "$iserror" ]; then
 				out="$(optipng -quiet -strip all -o$oplevel "$i" 2>&1)"
 				if [ -n "$out" ]; then
-					echo "$i (optipng):"$'\n'"$out"$'\n' >> "$cleaner_log"
+					echo "$i (optipng):"$'\n'"$out"$'\n' >> "$the_log"
 					iserror='yes'
 				fi
 			fi
@@ -326,7 +347,7 @@ compress_png() {
 		fi
 	done
 
-	comp_summary "$time0" "$size0" "$(sizes png)" "$cleaner_log"
+	comp_summary "$time0" "$size0" "$(sizes png)" "$the_log"
 }
 
 
@@ -342,17 +363,21 @@ compress_svg() {
 
 	action 'Compressing svg images...'
 
-	[ "${COOKOPTS/!svgextra/}" == "$COOKOPTS" ] &&
-	opts="--apply-transform-to-paths yes --coordinates-precision 1 --paths-coordinates-precision 1"
+	if which svgcleaner >/dev/null; then
+		[ "${COOKOPTS/!svgextra/}" == "$COOKOPTS" ] &&
+		opts="--apply-transform-to-paths yes --coordinates-precision 1 --paths-coordinates-precision 1"
 
-	cleaner_log="$(mktemp)"
-	for i in $(IFS=$'\n' find $install -type f -name '*.svg'); do
-		out="$(unset IFS; svgcleaner "$i" "$i" --copy-on-error --quiet \
-			--multipass --remove-unresolved-classes no $opts 2>&1)"
-		[ -z "$out" ] || echo "$i:"$'\n'"$out"$'\n' >> "$cleaner_log"
-	done
+		the_log="$(mktemp)"
+		for i in $(IFS=$'\n' find $install -type f -name '*.svg'); do
+			out="$(unset IFS; svgcleaner "$i" "$i" --copy-on-error --quiet \
+				--multipass --remove-unresolved-classes no $opts 2>&1)"
+			[ -z "$out" ] || echo "$i:"$'\n'"$out"$'\n' >> "$the_log"
+		done
+	else
+		echo 'Warning: svgcleaner not found.' > "$the_log"
+	fi
 
-	comp_summary "$time0" "$size0" "$(sizes svg)" "$cleaner_log"
+	comp_summary "$time0" "$size0" "$(sizes svg)" "$the_log"
 }
 
 
@@ -368,21 +393,25 @@ compress_ui() {
 
 	action 'Compressing ui files...'
 
-	size0=$(sizes xml)
-	time0=$(get_time)
-	temp_ui="$(mktemp)"
-	cleaner_log="$(mktemp)"
-	IFS=$'\n'
-	for ui in $(find $install -type f \( -name '*.ui' -o -name '*.glade' \) ); do
-		out="$(xmlstarlet c14n --without-comments "$ui" | xmlstarlet sel -B -t -c '*' > "$temp_ui")"
-		if [ -n "$out" ]; then
-			echo "$ui:"$'\n'"$out"$'\n' >> "$cleaner_log"
-		else
-			cat "$temp_ui" > "$ui"
-		fi
-	done
+	if which xmlstarlet >/dev/null; then
+		size0=$(sizes xml)
+		time0=$(get_time)
+		temp_ui="$(mktemp)"
+		the_log="$(mktemp)"
+		IFS=$'\n'
+		for ui in $(find $install -type f \( -name '*.ui' -o -name '*.glade' \) ); do
+			out="$(xmlstarlet c14n --without-comments "$ui" | xmlstarlet sel -B -t -c '*' > "$temp_ui")"
+			if [ -n "$out" ]; then
+				echo "$ui:"$'\n'"$out"$'\n' >> "$the_log"
+			else
+				cat "$temp_ui" > "$ui"
+			fi
+		done
+	else
+		echo 'Warning: xmlstarlet not found.' > "$the_log"
+	fi
 
-	comp_summary "$time0" "$size0" "$(sizes xml)" "$cleaner_log"
+	comp_summary "$time0" "$size0" "$(sizes xml)" "$the_log"
 	rm "$temp_ui"
 }
 
@@ -454,7 +483,11 @@ fix_desktop_files() {
 			# Check the rest of errors, warnings and tips
 			_ 'QA: Checking %s...' "$(basename $desktop)"
 			busybox diff "$desktop.orig" "$desktop" | sed 's!^!|!'
-			desktop-file-validate "$desktop" | busybox fold -s
+			if which xmlstarlet >/dev/null; then
+				desktop-file-validate "$desktop" | busybox fold -s
+			else
+				echo 'Warning: desktop-file-validate not found.'
+			fi
 			echo
 		fi
 
@@ -480,12 +513,21 @@ normalize_mo() {
 
 	action 'Normalizing mo files...'
 
+	the_log="$(mktemp)"
+	to_continue=true
+	for i in msgunfmt msguniq msgconv msgfmt; do
+		if ! which $i >/dev/null; then
+			echo "Warning: $i not found. Normalizing aborted" > "$the_log"
+			to_continue=false
+		fi
+	done
+
 	size0=$(sizes mo1)
 	time0=$(get_time)
 
 	# Process all existing *.mo files
-	cleaner_log="$(mktemp)"
 	IFS=$'\n'
+	$to_continue &&
 	for mo in $(find "$install" -type f -name '*.mo'); do
 		tmpfile="$(mktemp)"
 
@@ -494,7 +536,7 @@ normalize_mo() {
 		if [ -n "$out" ]; then
 			# using literal $'\n' here instead of using `echo -e "...\n..."` because
 			# $out may contain escapes ('\r', '\v') that we should print as-is
-			echo "$mo:"$'\n'"$out"$'\n' >> "$cleaner_log"
+			echo "$mo:"$'\n'"$out"$'\n' >> "$the_log"
 			continue # proceed to next file
 		fi
 
@@ -588,15 +630,15 @@ normalize_mo() {
 
 		out="$(msgfmt "$tmpfile.awk" -o "$tmpfile.mo" 2>&1)"
 		if [ -n "$out" ]; then
-			echo "$mo (msgfmt):"$'\n'"$out"$'\n' >> "$cleaner_log"
+			echo "$mo (msgfmt):"$'\n'"$out"$'\n' >> "$the_log"
 			continue # proceed to next file
 		fi
 
 		if [ -s "$tmpfile.mo" ]; then
 			rm "$mo"; mv "$tmpfile.mo" "$mo"
 		else
-			_ 'Error processing %s' "$mo" >> "$cleaner_log"
-			echo >> "$cleaner_log"
+			_ 'Error processing %s' "$mo" >> "$the_log"
+			echo >> "$the_log"
 			[ -e "$tmpfile.mo" ] && rm "$tmpfile.mo"
 		fi
 
@@ -604,7 +646,7 @@ normalize_mo() {
 		rm "$tmpfile" "$tmpfile.pf" "$tmpfile.awk"
 	done
 
-	comp_summary "$time0" "$size0" "$(sizes mo1)" "$cleaner_log"
+	comp_summary "$time0" "$size0" "$(sizes mo1)" "$the_log"
 }
 
 
@@ -661,11 +703,12 @@ EOT
 
 	# Nullify timestamps of files in ar archives
 	# Skip empty 8-byte archives (hi, musl-libc package)
+	# Using ar from binutils (ar from Busybox isn't enough) as ${TOOLPREFIX}ar
 	whereami=$(pwd)
 	find $fs -name '*.a' -type f -size +8c | \
 	while read i; do
 		tempdir=$(mktemp -d); cd $tempdir
-		ar -x $i; ar -crD $(basename $i) *
+		${TOOLPREFIX}ar -x $i; ${TOOLPREFIX}ar -crD $(basename $i) *
 		mv -f $tempdir/$(basename $i) $i
 		rm -rf $tempdir
 	done

@@ -51,6 +51,11 @@ time=$(date +%s)
 flavors="$SLITAZ/flavors"
 live="$SLITAZ/live"
 
+arch=''
+case "$ARCH" in
+	arm*|x86_64) arch="-$ARCH" ;;
+esac
+
 echo 'cook:pkgdb' > $command
 _ 'Cook pkgdb: Creating all packages lists' | log
 newline; { _ 'Creating lists for "%s"' "$PKGS"; separator; } | dblog
@@ -116,8 +121,7 @@ for i in *; do
 		unset_receipt
 		. ./$pack/receipt
 
-		if [ -f "$PKGS/$PACKAGE-$VERSION$EXTRAVERSION.tazpkg" -o \
-		     -f "$PKGS/$PACKAGE-$VERSION$EXTRAVERSION-$ARCH.tazpkg" ]; then
+		if [ -f "$PKGS/$PACKAGE-$VERSION$EXTRAVERSION$arch.tazpkg" ]; then
 
 			# packages.desc lets us search easily in DB
 			cat >> $PKGS/packages.desc <<EOT
@@ -165,7 +169,7 @@ EOT
 			sed "s|^|$PACKAGE: \0|" $i/taz/$j/files.list >> $PKGS/files.list
 
 			# list of unnecessary packages
-			sed -i "/ $PACKAGE-$VERSION$EXTRAVERSION.tazpkg/d" $PKGS/packages.toremove
+			sed -i "/ $PACKAGE-$VERSION$EXTRAVERSION$arch.tazpkg/d" $PKGS/packages.toremove
 		else
 			# if receipt variable HOST_ARCH absent/empty or contains ARCH
 			if [ -z "$HOST_ARCH" -o "${HOST_ARCH/$ARCH/}" != "$HOST_ARCH" ]; then
@@ -209,13 +213,15 @@ rm $PKGS/packages.toremove
 _n 'Creating file "%s"' 'files.list.lzma' | dblog
 touch files.list
 # pkgs.slitaz.org strongly depends on list sorted by packages names
-lzma e files.list files.list.lzma
+#lzma e files.list files.list.lzma
+/bin/lzma -zeqcT0 files.list > files.list.lzma
 echo " ($(filesize $PKGS/files.list.lzma))" | dblog
 
 # Pre-sorting filenames causes 10% smaller resulting lzma file
 _n 'Creating file "%s"' 'files-list.lzma' | dblog
 cat files.list | sort -k2 -o files.list.sorted
-lzma e files.list.sorted files-list.lzma
+#lzma e files.list.sorted files-list.lzma
+/bin/lzma -zeqcT0 files.list.sorted > files-list.lzma
 rm -f files.list files.list.sorted
 echo " ($(filesize $PKGS/files-list.lzma))" | dblog
 
@@ -235,10 +241,11 @@ until [ -e 'extra.list' ]; do
 	wget -q -O extra.list http://mirror1.slitaz.org/packages/get.list
 	echo -n '.' | dblog; sleep 5
 done
-busybox tar -chaf bundle.tar.lzma \
+busybox tar -chf bundle.tar \
 	mirrors extra.list files-list.md5 packages.info descriptions.txt \
 	packages.desc packages.md5 packages.txt packages.list packages.equiv
-rm ./mirrors
+/bin/lzma -zeqcT0 bundle.tar > bundle.tar.lzma
+rm ./bundle.tar ./mirrors
 echo " ($(filesize $PKGS/bundle.tar.lzma))" | dblog
 
 # Display some info.

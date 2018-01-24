@@ -303,14 +303,18 @@ disp_time() {
 # Display cooked package summary.
 
 summary() {
+	local arch=''
+	case "$ARCH" in
+		arm*|x86_64) arch="-$ARCH" ;;
+	esac
+
 	set_paths
 	cd $WOK/$pkg
 	[ -d $WOK/$pkg/install ] && prod=$(du -sh $WOK/$pkg/install | awk '{print $1}' 2>/dev/null)
 	[ -d $WOK/$pkg/source ] && srcdir=$(du -sh $WOK/$pkg/source | awk '{print $1}' 2>/dev/null)
 	[ -n "$TARBALL" ] && srcsize=$(du -sh $SRC/$TARBALL | awk '{print $1}')
 
-	_ 'Summary for: %s' "$PACKAGE $VERSION$EXTRAVERSION"
-	separator
+	title 'Summary for: %s' "$PACKAGE $VERSION$EXTRAVERSION$arch"
 
 	# L10n: keep the same width of translations to get a consistent view
 	[ -n "$TARBALL" ] && _ 'Src file    : %s' "$TARBALL"
@@ -319,7 +323,7 @@ summary() {
 	[ -n "$prod" ]    && _ 'Produced    : %s' "$prod"
 	_ 'Cook time   : %s' "$(disp_time "$time")"
 	_ 'Cook date   : %s' "$(date "$(_ '+%%F %%R')")"
-	_ 'Host arch   : %s' "$ARCH"
+	_ 'Target arch : %s' "$ARCH"
 
 	separator -
 	_ ' # :  Packed : Compressed : Files : Package name'
@@ -327,7 +331,7 @@ summary() {
 	pkgi=1
 	for i in $(all_names); do
 		fs=$(du -sh $WOK/$pkg/taz/$i-$VERSION$EXTRAVERSION | awk '{print $1}')
-		pkgname="$i-$VERSION$EXTRAVERSION.tazpkg"
+		pkgname="$i-$VERSION$EXTRAVERSION$arch.tazpkg"
 		size=$(ls -lh $PKGS/$pkgname | awk '{print $5}')
 		files=$(wc -l < $WOK/$pkg/taz/$i-$VERSION$EXTRAVERSION/files.list)
 		printf "%2d : %7s : %10s : %5s : %s\n" "$pkgi" "$fs" "$size" "$files" "$pkgname"
@@ -559,6 +563,7 @@ cookit() {
 	set_paths
 
 	# Handle cross-tools.
+	[ "$BUILD_SYSTEM" != "$HOST_SYSTEM" ] &&
 	case "$ARCH" in
 		arm*|x86_64)
 			# CROSS_COMPILE is used by at least Busybox and the kernel to set
@@ -965,8 +970,8 @@ packit() {
 	# Build cpio archive.
 	action 'Compressing the FS...'
 	find fs -newer $receipt -exec touch -hr $receipt '{}' \;
-	find fs | cpio -o -H newc --quiet | lzma-alone e fs.cpio.lzma -si
-#	find fs | cpio -o -H newc --quiet | /bin/lzma -zeT0 -vv >fs.cpio.lzma
+#	find fs | cpio -o -H newc --quiet | lzma-alone e fs.cpio.lzma -si
+	find fs | cpio -o -H newc --quiet | /bin/lzma -qzeT0 >fs.cpio.lzma
 	mv fs ../
 	status
 
@@ -1007,9 +1012,14 @@ packit() {
 # Verify package quality and consistency.
 
 packit_quality() {
+	local arch=''
+	case "$ARCH" in
+		arm*|x86_64) arch="-$ARCH" ;;
+	esac
+
 	local rsum rsumold='' rsum_changed old_file
 	local pi="$PKGS/packages.info" fl="$cache/files.list"
-	local pkg_file="$PKGS/$PACKAGE-$VERSION$EXTRAVERSION.tazpkg"
+	local pkg_file="$PKGS/$PACKAGE-$VERSION$EXTRAVERSION$arch.tazpkg"
 	local rsum_file=$(mktemp) rsum_file_old=$(mktemp) tmpdir=$(mktemp -d)
 
 
@@ -1083,11 +1093,11 @@ packit_quality() {
 			status
 		fi
 		# package changed, substitute old package by new one
-		mv -f $pkgdir/taz/$PACKAGE-$VERSION$EXTRAVERSION.tazpkg $PKGS
+		mv -f $pkgdir/taz/$PACKAGE-$VERSION$EXTRAVERSION$arch.tazpkg $PKGS
 		_ 'The release checksum has changed.'
 	else
 		# package not changed, remove new package
-		rm -f $pkgdir/taz/$PACKAGE-$VERSION$EXTRAVERSION.tazpkg
+		rm -f $pkgdir/taz/$PACKAGE-$VERSION$EXTRAVERSION$arch.tazpkg
 		_ 'The release checksum has not changed.'
 	fi
 
@@ -1951,7 +1961,7 @@ case "$1" in
 		esac
 
 		# Some packages are not included in some arch or fail to cross compile.
-		: ${HOST_ARCH=i486}
+		: ${HOST_ARCH=$ARCH}
 		debug "$(_ 'Host arch %s' "$HOST_ARCH")"
 		# Handle arm{v6hf,v7,..}
 		if ! $(echo "$HOST_ARCH" | egrep -q "${ARCH%v[0-9]*}|any"); then

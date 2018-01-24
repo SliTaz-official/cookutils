@@ -924,8 +924,8 @@ if [ -z "$pkg" ]; then
 <tr><td>Build date</td>		<td colspan="2">$(sed -n '/^Cook date/s|[^:]*: \(.*\)|\1|p' $LOGS/slitaz-toolchain.log)</td></tr>
 <tr><td>Build duration</td>	<td colspan="2">$(sed -n '/^Cook time/s|[^:]*: \(.*\)|\1|p' $LOGS/slitaz-toolchain.log)</td></tr>
 <tr><td>Architecture</td>	<td colspan="2">$ARCH</td></tr>
-<tr><td>Build system</td>	<td colspan="2">$BUILD_SYSTEM</td></tr>
-<tr><td>Host system</td>	<td colspan="2">$HOST_SYSTEM</td></tr>
+<tr><td>Host system</td>	<td colspan="2">$BUILD_SYSTEM</td></tr>
+<tr><td>Target system</td>	<td colspan="2">$HOST_SYSTEM</td></tr>
 <tr><th>Package</th><th>Version</th><th>Description</th></tr>
 $(toolchain_version slitaz-toolchain)
 $(toolchain_version binutils)

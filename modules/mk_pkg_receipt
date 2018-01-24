@@ -12,6 +12,23 @@
 
 orig_receipt="$1"
 
+# 1. Main package.
+#    By default it has no dependencies.
+#    You can write or omit DEPENDS="" for indicating package have no dependencies.
+# 2. Split package (excluding *-dev).
+#    By default every split package depends on the main package.
+#    Unfortunately, in the shell script (receipt is the shell script too),
+#    every undeclared variable has empty value, so there's no difference if you
+#    wrote DEPENDS="" or omit it - result will be the same empty value.
+#    If you want to define the split package has no dependencies - you need to
+#    to put single space between the quotes: DEPENDS=" ".
+# 3. Development split package.
+#    Installing *-dev package should install all the files produced during
+#    compilation and then were separated to the different packages, so
+#    by default (if you wrote DEPENDS="" or omit it) *-dev package depends on
+#    the main package and all the split packages (excluding the itself).
+[ "$DEPENDS" == ' ' ] && DEPENDS='@EMPTY@'
+
 # Receipt's signature is important, although some receipts may miss it
 signature=$(head -n1 "$orig_receipt")
 [ "${signature:0:1}" == '#' ] || signature='# SliTaz package receipt.'
@@ -78,7 +95,10 @@ EOF
 
 # Optional variables
 [ -n "$TAGS"            ] && echo "TAGS=\"$TAGS\""                 | tr -ds '\t' ' '
-[ -n "${DEPENDS# }"     ] && echo "DEPENDS=\"$DEPENDS\""           | tr -ds '\t' ' '
+case "x$DEPENDS" in
+	x|x@EMPTY@) ;;
+	*)                       echo "DEPENDS=\"$DEPENDS\""           | tr -ds '\t' ' ';;
+esac
 [ -n "$PROVIDE"         ] && echo "PROVIDE=\"$PROVIDE\""           | tr -ds '\t' ' '
 [ -n "$CONFIG_FILES"    ] && echo "CONFIG_FILES=\"$CONFIG_FILES\"" | tr -ds '\t' ' '
 [ -n "$SUGGESTED"       ] && echo "SUGGESTED=\"$SUGGESTED\""       | tr -ds '\t' ' '
