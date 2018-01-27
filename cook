@@ -1181,7 +1181,7 @@ update_chroot() {
 			_ 'Updating %s chroot environment...' "$ARCH"
 			_ 'Updating chroot: %s' "$i ($VERSION$EXTRAVERSION$arch)" | log
 			cd $PKGS
-			tazpkg install $i-$VERSION$EXTRAVERSION$arch.tazpkg --forced --root=$root
+			tazpkg install $PKGS/$i-$VERSION$EXTRAVERSION$arch.tazpkg --forced --root=$root
 		fi
 	done
 }
