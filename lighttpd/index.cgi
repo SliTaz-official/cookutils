@@ -1048,13 +1048,34 @@ EOT
 		section $blocked 12 "Blocked|All blocked packages"
 
 	cd $PKGS
-	ls -let *.tazpkg | awk '
-	(NR<=20){
-		sub(/:[0-9][0-9]$/, "", $9);
-		mon = index("  JanFebMarAprMayJunJulAugSepOctNovDec", $7) / 3;
-		printf("%d-%02d-%02d %s : <a href=\"get/%s\">%s</a>\n", $10, mon, $8, $9, $11, $11);
-	}' | \
-		section $activity 1000 "Latest cook"
+	# About BusyBox's `ls`
+	# On the Tank server: BusyBox v1.18.4 (2012-03-14 03:32:25 CET) multi-call binary.
+	# It supported the option `-e`, output with `-let` options is like this:
+	# -rw-r--r--    1 user     group       100000 Fri Nov  3 10:00:00 2017 filename
+	# 1             2 3        4           5      6   7    8 9        10   11
+	# Newer BusyBox v1.27.2 don't support option `-e` and have no configs to
+	# configure it or return the option back. It supported the long option
+	# `--full-time` instead, but output is different:
+	# -rw-r--r--    1 user     group       100000 2017-11-03 10:00:00 +0200 filename
+	# 1             2 3        4           5      6          7        8     9
+	if ls -let >/dev/null 2>&1; then
+		ls -let *.tazpkg \
+		| awk '
+		(NR<=20){
+			sub(/:[0-9][0-9]$/, "", $9);
+			mon = index("  JanFebMarAprMayJunJulAugSepOctNovDec", $7) / 3;
+			printf("%d-%02d-%02d %s : <a href=\"get/%s\">%s</a>\n", $10, mon, $8, $9, $11, $11);
+		}' \
+		| section $activity 1000 "Latest cook"
+	else
+		ls -lt --full-time *.tazpkg \
+		| awk '
+		(NR<=20){
+			sub(/:[0-9][0-9]$/, "", $7);
+			printf("%s %s : <a href=\"get/%s\">%s</a>\n", $6, $7, $9, $9);
+		}' \
+		| section $activity 1000 "Latest cook"
+	fi
 
 	echo '</div>'
 	datalist
