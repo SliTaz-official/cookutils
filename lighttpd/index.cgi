@@ -871,6 +871,7 @@ if [ -z "$pkg" ]; then
 			tac $CACHE/$list | sed 's|cooker.cgi?pkg=||; s|%2B|+|g;
 				s|\[ Done|<span class="r c20">Done|;
 				s|\[ Failed|<span class="r c10">Failed|;
+				s|\[ -Failed|<span class="r c10"><del>Failed</del>|;
 				s| \]|</span>|' | mktable $list
 			echo '</section>'
 		done
@@ -1028,6 +1029,7 @@ EOT
 	tac $activity | head -n12 | sed 's|cooker.cgi?pkg=||;
 		s|\[ Done|<span class="r c20">Done|;
 		s|\[ Failed|<span class="r c10">Failed|;
+		s|\[ -Failed|<span class="r c10"><del>Failed</del>|;
 		s| \]|</span>|;
 		s|%2B|\+|g' | \
 		section $activity 12 "Activity|More activity"

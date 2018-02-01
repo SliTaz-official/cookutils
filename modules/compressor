@@ -691,28 +691,35 @@ strip_package() {
 	time0=$(get_time)
 	oldsize=$(sizes strip)
 
-	# Strip executable files & shared libraries
+
+	# GNU strip (GNU Binutils)
+	# -p --preserve-dates                 Copy modified/access timestamps to the output
+	# -s --strip-all                      Remove all symbol and relocation information
+	#    --strip-unneeded                 Remove all symbols not needed by relocations
+	# -D --enable-deterministic-archives  Produce deterministic output when stripping archives
+	# -g -S -d --strip-debug              Remove all debugging symbols & sections
+
+	# Strip executable files
 	while read i; do
-		$STRIP -s "$i" 2>/dev/null
+		$STRIP -ps "$i" 2>/dev/null
 	done <<EOT
-$(find_elf EXEC; find_elf DYN)
+$(find_elf EXEC)
+EOT
+
+	# Strip shared libraries
+	while read i; do
+		case $i in
+			*.dbg) ;; # skip library.so.*.dbg debugging symbols
+			*) $STRIP -p --strip-unneeded "$i" 2>/dev/null;;
+		esac
+	done <<EOT
+$(find_elf DYN)
 EOT
 
 	# Strip static libraries
-	find $fs -name '*.a' -exec $STRIP -d '{}' 2>/dev/null \;
+	# See also: https://wiki.debian.org/ReproducibleBuilds/TimestampsInStaticLibraries
+	find $fs -name '*.a' -exec $STRIP -pdD '{}' 2>/dev/null \;
 
-	# Nullify timestamps of files in ar archives
-	# Skip empty 8-byte archives (hi, musl-libc package)
-	# Using ar from binutils (ar from Busybox isn't enough) as ${TOOLPREFIX}ar
-	whereami=$(pwd)
-	find $fs -name '*.a' -type f -size +8c | \
-	while read i; do
-		tempdir=$(mktemp -d); cd $tempdir
-		${TOOLPREFIX}ar -x $i; ${TOOLPREFIX}ar -crD $(basename $i) *
-		mv -f $tempdir/$(basename $i) $i
-		rm -rf $tempdir
-	done
-	cd $whereami; unset whereami
 
 	# Remove Python *.pyc and *.pyo
 	find $fs -type f \( -name '*.pyc' -o -name '*.pyo' \) -delete 2>/dev/null

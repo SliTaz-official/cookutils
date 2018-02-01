@@ -4,24 +4,25 @@
 # handles CONFIG_SITE and will source this file automatically.
 #
 # If you want to use your own cook.site, you can use:
-# export CONFIG_SITE=config.site in compile_rules of a receipt.
+# export CONFIG_SITE=config.site in compile_rules() of a receipt.
 #
 
-# Some old configure(s) use "${prefix}" instead of "${datarootdir}".
-if echo "$localedir" | grep -q \${prefix}; then
-	localedir=$( echo "$localedir" | sed 's/${prefix}/${datarootdir}/')
-fi
-if echo "$infodir" | grep -q \${prefix}; then
-	infodir=$( echo "$infodir" | sed 's/${prefix}/${datarootdir}/')
-fi
-if echo "$mandir" | grep -q \${prefix}; then
-	mandir=$( echo "$mandir" | sed 's/${prefix}/${datarootdir}/')
-fi
+# Find receipt (backward recursively from current dir)
+receiptpath=$(realpath .)
+until [ -z "$receiptpath" -o -e "$receiptpath/receipt" ]; do
+	receiptpath="${receiptpath%/*}"
+done
+
 
 # Default options.
-prefix=/usr
-datarootdir=$prefix/share
-datadir=$datadir
-localedir=$datarootdir/locale
-infodir=$datarootdir/info
-mandir=$datarootdir/man
+prefix="/usr"
+sysconfdir="/etc"
+localstatedir="/var"
+datarootdir="$prefix/share"
+datadir="$datarootdir"
+infodir="$datarootdir/info"
+localedir="$datarootdir/locale"
+mandir="$datarootdir/man"
+docdir="$datarootdir/doc/$(. $receiptpath/receipt; echo $PACKAGE-$VERSION)"
+
+unset receiptpath

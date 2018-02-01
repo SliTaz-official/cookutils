@@ -1084,9 +1084,9 @@ packit_quality() {
 	# Find and remove old package only if "release checksum" has changed
 
 	if [ "$rsum" != "$rsumold" ]; then
-		old_file=$(awk -F$'\t' -vname="$PACKAGE" '{
-			if ($1 == name) printf("%s-%s.tazpkg", $1, $2);
-			}' $pi)		# <name>-<version><extra_version>.tazpkg
+		old_file=$(awk -F$'\t' -vname="$PACKAGE" -varch="$arch" '{
+			if ($1 == name) printf("%s-%s%s.tazpkg", $1, $2, arch);
+			}' $pi)		# <name>-<version><extra_version><-arch>.tazpkg
 		if [ -f "$PKGS/$old_file" ]; then
 			action 'Removing old package "%s"' "$old_file"
 			rm -f "$PKGS/$old_file"
@@ -1181,7 +1181,7 @@ update_chroot() {
 			_ 'Updating %s chroot environment...' "$ARCH"
 			_ 'Updating chroot: %s' "$i ($VERSION$EXTRAVERSION$arch)" | log
 			cd $PKGS
-			tazpkg install $PKGS/$i-$VERSION$EXTRAVERSION$arch.tazpkg --forced --root=$root
+			tazpkg -i "$PKGS/$i-$VERSION$EXTRAVERSION$arch.tazpkg" --forced --root=$root
 		fi
 	done
 }
@@ -1192,17 +1192,21 @@ update_chroot() {
 install_package() {
 	set_paths
 	case "$ARCH" in
-		arm*|x86_64)
+		arm*)
 			arch="-$ARCH"
-			root="$CROSS_TREE/sysroot" ;;
+			root="$CROSS_TREE/sysroot"
+			;;
+		x86_64)
+			arch="-$ARCH"
+			;;
 	esac
 	# Install package if requested but skip install if target host doesn't
 	# match build system or it will break the build chroot.
 	build=$(echo $BUILD_SYSTEM | cut -d- -f1)
 	if [ -n "$inst" -a "$build" == "$ARCH" ]; then
-		if [ -f "$PKGS/$PACKAGE-$VERSION$EXTRAVERSION.tazpkg" ]; then
+		if [ -f "$PKGS/$PACKAGE-$VERSION$EXTRAVERSION$arch.tazpkg" ]; then
 			cd $PKGS
-			tazpkg install $PACKAGE-$VERSION$EXTRAVERSION.tazpkg --forced
+			tazpkg -i "$PKGS/$PACKAGE-$VERSION$EXTRAVERSION$arch.tazpkg" --forced
 		else
 			broken
 			die 'Unable to install package, build has failed.'
@@ -1563,6 +1567,10 @@ recreate_split_db() {
 put_status() {
 	# $1: package, $2: status, one of 'Done', 'Failed'
 	sed -i "s|>$1</a>$|& [ $2 ]|" $activity
+	if [ "$2" == 'Done' ]; then
+		# overstrike all previous 'Failed' to indicate package is OK now
+		sed -i "/>$1<\/a>/ s|\[ Failed \]|[ -Failed ]|" $activity
+	fi
 }
 
 
