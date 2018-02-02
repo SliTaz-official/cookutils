@@ -78,17 +78,20 @@ running_command() {
 # HTML page header
 
 page_header() {
-	local theme t='' css pretitle='' cmd
+	local theme t='' css pretitle='' command
 	theme=$(COOKIE theme)
 	[ "$theme" == 'default' ] && theme=''
 	[ -n "$theme" ] && theme="-$theme"
 	css="cooker$theme.css"
 
 	if [ -n "$pkg" ]; then
-		pretitle="$pkg - "
+		case "$pkg" in
+			~) pretitle="Tag \"$cmd\" - ";;
+			*) pretitle="$pkg - ";;
+		esac
 	else
-		cmd="$(cat $command)"
-		[ -n "$cmd" ] && pretitle="$cmd - "
+		command="$(cat $command)"
+		[ -n "$command" ] && pretitle="$command - "
 	fi
 
 	echo -e 'Content-Type: text/html; charset=UTF-8\n'
@@ -1102,14 +1105,16 @@ if [ "$pkg" == '~' -a -n "$cmd" ]; then
 	</thead>
 	<tbody>
 EOT
-	awk -F$'\t' -vtag=" $tag " -vbase="$base" '{
+	sort $PKGS/packages.info \
+	| awk -F$'\t' -vtag=" $tag " -vbase="$base" '{
 		if (index(" " $6 " ", tag)) {
 			url = base "/" $1 "/";
 			gsub("+", "%2B", url);
-			printf("<tr><td><a href=\"%s\">%s</a></td><td>%s</td><td>%s</td></tr>\n", url, $1, $4, $3);
+			printf("<tr><td><img src=\"%s/s/%s\"> ", base, $1);
+			printf("<a href=\"%s\">%s</a></td><td>%s</td><td>%s</td></tr>\n", url, $1, $4, $3);
 		}
-	}' $PKGS/packages.info
-	echo '</tbody></table>'
+	}'
+	echo '</tbody></table></section></div>'
 	page_footer
 	exit 0
 fi
