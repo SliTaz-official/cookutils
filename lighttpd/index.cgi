@@ -1055,10 +1055,10 @@ EOT
 	cd $PKGS
 	# About BusyBox's `ls`
 	# On the Tank server: BusyBox v1.18.4 (2012-03-14 03:32:25 CET) multi-call binary.
-	# It supported the option `-e`, output with `-let` options is like this:
+	# It supported the option `-e`, output with `-let` options like this:
 	# -rw-r--r--    1 user     group       100000 Fri Nov  3 10:00:00 2017 filename
 	# 1             2 3        4           5      6   7    8 9        10   11
-	# Newer BusyBox v1.27.2 don't support option `-e` and have no configs to
+	# Newer BusyBox v1.27.2 doesn't support option `-e` and has no configs to
 	# configure it or return the option back. It supported the long option
 	# `--full-time` instead, but output is different:
 	# -rw-r--r--    1 user     group       100000 2017-11-03 10:00:00 +0200 filename

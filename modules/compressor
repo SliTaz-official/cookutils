@@ -694,7 +694,7 @@ strip_package() {
 
 	# GNU strip (GNU Binutils)
 	# -p --preserve-dates                 Copy modified/access timestamps to the output
-	# -s --strip-all                      Remove all symbol and relocation information
+	# -s --strip-all                      Remove all symbols and relocation information
 	#    --strip-unneeded                 Remove all symbols not needed by relocations
 	# -D --enable-deterministic-archives  Produce deterministic output when stripping archives
 	# -g -S -d --strip-debug              Remove all debugging symbols & sections
