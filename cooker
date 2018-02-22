@@ -292,12 +292,10 @@ arch_db() {
 			fi
 			unset HOST_ARCH
 		else
-			# HOST_ARCH not set --> in i486
-			if [ "$ARCH" == 'i486' ]; then
-				count=$(($count + 1))
-				echo "Adding: $pkg"
-				touch $pkg/arch.$ARCH
-			fi
+			# HOST_ARCH not set --> package is suitable for current ARCH (equivalent to "any")
+			count=$(($count + 1))
+			echo "Adding: $pkg"
+			touch $pkg/arch.$ARCH
 		fi
 	done
 	echo "Packages for $ARCH : $count"
