@@ -117,11 +117,12 @@ gen_flavors() {
 	mkdir -p $cache; cd $cache
 	rm -rf *.flavor *.list *.conf *.sh
 	for flavor in $flavors; do
-		if [ "$flavor" != 'core-4in1' ]; then
-			name="slitaz-$string-$flavor"
-		else
-			name="slitaz-$string"
-		fi
+		case "$flavor" in
+		core-*in1)
+			name="slitaz-$string-$flavor" ;;
+		*)
+			name="slitaz-$string" ;;
+		esac
 
 		log="$iso/$name.log"
 		for i in $(seq 9 -1 1); do # Rotate log
@@ -159,7 +160,7 @@ push_iso() {
 	export DROPBEAR_PASSWORD=none
 	for flavor in $flavors; do
 		distro="slitaz-${string}-$flavor"
-		file="${distro%-core-4in1}"
+		file="${distro%-core-*in1}"
 		rsync $BWLIMIT -vtP -e "$SSH_CMD" $iso/$file.??? \
 			${SSH_HOST}:$SSH_ISO/$string 2>&1 | tee $synclog
 	done
@@ -211,9 +212,9 @@ case "$1" in
 		echo -e "\nGenerating flavors:\n$flavors"
 		gen_flavors ;;
 
-	4in1)
-		echo -e "\nGenerating 4in1 distros..."
-		flavors="base justx gtkonly core core-4in1"
+	*in1)
+		echo -e "\nGenerating $1 distros..."
+		flavors="base justx gtkonly core core-$1"
 		gen_flavors ;;
 
 	rolling)
