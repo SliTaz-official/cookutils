@@ -120,7 +120,8 @@ sizes() {
 				find $fs -type f \( -name '*.a' -o -name '*.pyc' -o -name '*.pyo' \
 				-o -name '.packlist' -o -name '*.pm' -o -name '*.pl' -o -name '*.pod' \)
 			} \
-			| xargs ls -l
+			| tr '\n' '\0' \
+			| xargs -0 ls -l
 			;;
 	esac | awk '{s+=$5}END{print s}'
 	IFS="$ifs"
