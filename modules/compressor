@@ -485,7 +485,7 @@ fix_desktop_files() {
 			# Check the rest of errors, warnings and tips
 			_ 'QA: Checking %s...' "$(basename $desktop)"
 			busybox diff "$desktop.orig" "$desktop" | sed 's!^!|!'
-			if which xmlstarlet >/dev/null; then
+			if which desktop-file-validate >/dev/null; then
 				desktop-file-validate "$desktop" | busybox fold -s
 			else
 				echo 'Warning: desktop-file-validate not found.'
