@@ -48,7 +48,7 @@ tasks="$SLITAZ/tasks"
 
 # Lograte activity.
 
-[ -s "$activity" ] && tail -n 60 $activity > /tmp/tail-$$ && \
+[ -s "$activity" ] && tail -n 1000 $activity > /tmp/tail-$$ && \
 	mv -f /tmp/tail-$$ $activity
 
 
