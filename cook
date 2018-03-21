@@ -547,6 +547,19 @@ fix() {
 				echo "fix libtool: warning: libtool absent, nothing to fix."
 			fi
 			;;
+		math)
+			# fix C++ math issue introduced in Glibc 2.26:
+			# error: '__builtin_isnan' is not a member of 'std'
+			#   if (std::isnan(N)) {
+			#            ^
+			find $src -type f -exec sed -i '
+				s|std::signbit|__builtin_signbit|g;
+				s|std::isnan|__builtin_isnan|g;
+				s|std::isinf|__builtin_isinf_sign|g;
+				s|std::isfinite|__builtin_isfinite|g;
+				s|std::isnormal|__builtin_isnormal|g
+				' '{}' \;
+			;;
 	esac
 }
 
@@ -614,8 +627,8 @@ cookit() {
 	# Export flags and path to be used by make and receipt.
 	DESTDIR="$pkgdir/install"
 	# FIXME: L10n: Is this the right time for 'LC_ALL=C LANG=C'?
-	export DESTDIR MAKEFLAGS CFLAGS CXXFLAGS CONFIG_SITE LC_ALL=C LANG=C
-	#LDFLAGS
+	export DESTDIR MAKEFLAGS CFLAGS CXXFLAGS CONFIG_SITE LC_ALL=C LANG=C \
+	LDFLAGS
 
 	# BUILD_DEPENDS may vary depending on the ARCH
 	case "$ARCH" in
@@ -759,7 +772,7 @@ cookit() {
 	if grep -q ^compile_rules $receipt; then
 		_ 'Executing: %s' 'compile_rules'
 		echo "CFLAGS   : $CFLAGS"
-		#echo "LDFLAGS  : $LDFLAGS"
+		echo "LDFLAGS  : $LDFLAGS"
 		[ -d "$src" ] && cd $src
 		patchit
 
