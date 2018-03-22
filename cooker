@@ -45,6 +45,7 @@ Commands with <options>:
   -T  | tasks                  List existing cooker tasks.
   -t  | task    <task>         Executing specified task.
   -o  | outgoing               Find changes in wok that we can move to wok-hg.
+        autodeps               Find dependencies for all packages in wok.
 
 EOT
 	exit 0
@@ -579,6 +580,14 @@ EOT
 	outgoing|-o)
 		# Find changes in wok that we can move to wok-hg
 		compare_wok
+		;;
+
+	autodeps)
+		# Find dependencies for all packages in wok
+		cd $WOK
+		for pkg in *; do
+			cook $pkg --deps --quiet
+		done | tee $cache/autodeps
 		;;
 
 	*)

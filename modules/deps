@@ -337,12 +337,22 @@ all_names() {
 unset IFS
 . $WOK/$1/receipt
 
+if [ -n "$quiet" ]; then
+	sub='\n'
+else
+	sub=' '
+fi
+
 for pkg in $(all_names); do
 	title 'Dependencies for "%s"' "$pkg"
+	[ -n "$quiet" ] && echo -n "$pkg: "
 	IFS=$'\n'
 	while read file; do
 		tp_ldd "$WOK/$1/taz/$pkg-$VERSION/fs$file"
-	done < $WOK/$1/taz/$pkg-$VERSION/files.list | sort -u | grep -v "^$pkg$" | sed '/^$/d'
+	done < $WOK/$1/taz/$pkg-$VERSION/files.list \
+	| sort -u | grep -v "^$pkg$" | sed '/^$/d' \
+	| tr "$sub" ' '
+	[ -n "$quiet" ] && echo
 done
 
 newline
