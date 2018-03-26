@@ -16,8 +16,17 @@ done
 
 # Default options.
 prefix="/usr"
-sysconfdir="/etc"
-localstatedir="/var"
+
+case $sysconfdir in
+	/etc*) ;;
+	*) sysconfdir="/etc";;
+esac
+
+case $localstatedir in
+	/var*) ;;
+	*) localstatedir="/var";;
+esac
+
 datarootdir="$prefix/share"
 #datadir="$datarootdir"		# respect "kbd" receipt
 infodir="$datarootdir/info"
