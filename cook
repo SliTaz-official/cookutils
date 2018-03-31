@@ -1482,7 +1482,7 @@ copy() {
 				;;
 			@dev)
 				# Copy "developer files"
-				sed -n '/\.h$/p; /\.hxx$/p; /\.a$/p; /\.la$/p; /\.pc$/p; /\.pri$/p; /bin\/.*-config$/p;
+				sed -n '/\.h$/p; /\.hxx$/p; /\.a$/p; /\.pc$/p; /\.pri$/p; /bin\/.*-config$/p;
 					/\.m4$/p; /\.gir$/p; /\.typelib$/p; /\.vapi$/p; /\.deps$/p; /\.cmake$/p;
 					/\/Makefile.*/p; /\.inc$/p; /\/include\//p;
 					/\.so\.dbg$/p;
@@ -1520,8 +1520,7 @@ copy() {
 			@std)
 				while read j; do
 					case $j in
-						# always skip empty man & doc folders, because this will end up
-						# copying all the man pages and docs to the package
+						# skip empty man & doc folders
 						*/man/*|*/doc/*) continue;;
 					esac
 					[ -z "$(ls -A "$install$j")" ] || continue
@@ -1536,8 +1535,14 @@ copy() {
 					done \
 					| tac \
 					| while read k; do
-						# copy dir with its original ownership/permissions if it does not exist
-						[ -d "$fs$k" ] || cp -a "$install$k" "$fs$k"
+						# make dir if it does not exist
+						if [ ! -d "$fs$k" ]; then
+							# It's like "copy the directory without it's underlying content".
+							# keep original ownership/permissions, access:
+							install -d $(stat -c'-o%u -g%g -m%a' "$install$k") "$fs$k"
+							# keep last-modified date:
+							touch -r "$install$k" "$fs$k"
+						fi
 					done
 				done < $folderlist
 				;;

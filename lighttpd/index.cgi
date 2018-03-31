@@ -1641,7 +1641,7 @@ EOT
 								printf("%s\n", $0);
 							}
 							/\/perllocal.pod$/ || /\/\.packlist$/ || /\/share\/bash-completion\// ||
-								/\/lib\/systemd\// || /\.pyc$/ || /\.pyo$/ || /\/fonts\.scale$/ || /\/fonts\.dir$/ {
+								/\/lib\/systemd\// || /\.pyc$/ || /\.pyo$/ || /\/fonts\.scale$/ || /\/fonts\.dir$/ || /\.la$/ {
 								tag("---", 0); next }
 							/\.pod$/  { tag("pod", 5); next }
 							/\/share\/man\// { tag("man", 5); next }
@@ -1649,7 +1649,7 @@ EOT
 								/\/share\/devhelp\// { tag("doc", 5); next }
 							/\/share\/icons\// { tag("ico", 2); next }
 							/\/share\/locale\// { tag("loc", 4); next }
-							/\.h$/ || /\.a$/ || /\.la$/ || /\.pc$/ || /\/bin\/.*-config$/ ||
+							/\.h$/ || /\.a$/ || /\.pc$/ || /\/bin\/.*-config$/ ||
 								/\/Makefile.*$/ { tag("dev", 3); next }
 							/\/share\/help\// || /\/share\/appdata\// { tag("gnm", 6); next }
 							{ tag("???", 1) }
