@@ -93,6 +93,7 @@ page_header() {
 		command="$(cat $command)"
 		[ -n "$command" ] && pretitle="$command - "
 	fi
+	[ -z "$favicon" ] && favicon='/slitaz-cooker.png'
 
 	echo -e 'Content-Type: text/html; charset=UTF-8\n'
 
@@ -102,7 +103,7 @@ page_header() {
 <head>
 	<title>$pretitle$title</title>
 	<link rel="stylesheet" href="/$css">
-	<link rel="icon" type="image/png" href="/slitaz-cooker.png">
+	<link rel="icon" type="image/png" href="$favicon">
 	<link rel="search" href="$base/os.xml" title="$title" type="application/opensearchdescription+xml">
 	<!-- mobile -->
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
