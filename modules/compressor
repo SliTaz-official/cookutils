@@ -330,7 +330,7 @@ compress_png() {
 				if [ -n "$out" ]; then
 					echo "$i (pngquant):"$'\n'"$out"$'\n' >> "$the_log"
 					iserror='yes'
-					rm "$i.tmp"	# zero-size file remains on pngquant fail
+					[ -e "$i.tmp" ] && rm "$i.tmp"	# zero-size file remains on pngquant fail
 				fi
 			fi
 			if $use_op && [ -z "$iserror" ]; then
