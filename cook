@@ -1537,7 +1537,7 @@ copy() {
 					| while read k; do
 						# make dir if it does not exist
 						if [ ! -d "$fs$k" ]; then
-							# It's like "copy the directory without it's underlying content".
+							# It's like "copy the directory without its underlying content".
 							# keep original ownership/permissions, access:
 							keepIFS="$IFS"; unset IFS
 							install -d $(stat -c'-o%u -g%g -m%a' "$install$k") "$fs$k"
