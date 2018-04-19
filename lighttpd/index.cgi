@@ -546,6 +546,7 @@ syntax_highlighter() {
 				-e 's|^<u>\(.*libtool: warning: relinking.*\)</u>|\1|' \
 				-e 's|^<u>\(.*libtool: warning: .* has not been installed in .*\)</u>|\1|' \
 				-e 's|^<u>\(.*checking for a sed.*\)</u>|\1|' \
+				-e 's|^<u><b>\(.*inlining failed.*\)</b></u>|<u>\1</u>|' \
 				\
 				-e "s|$_src|<var>\${src}</var>|g;
 					s|$_install|<var>\${install}</var>|g;
@@ -1641,8 +1642,10 @@ EOT
 								printf("<span class=\"c%s1\">%s</span> ", color, text);
 								printf("%s\n", $0);
 							}
-							/\/perllocal.pod$/ || /\/\.packlist$/ || /\/share\/bash-completion\// ||
-								/\/lib\/systemd\// || /\.pyc$/ || /\.pyo$/ || /\/fonts\.scale$/ || /\/fonts\.dir$/ || /\.la$/ {
+							/\/perllocal\.pod$/ || /\/\.packlist$/ ||
+								/\/share\/bash-completion\// || /\/etc\/bash_completion\.d\// ||
+								/\/lib\/systemd\// || /\.pyc$/ || /\.pyo$/ ||
+								/\/fonts\.scale$/ || /\/fonts\.dir$/ || /\.la$/ {
 								tag("---", 0); next }
 							/\.pod$/  { tag("pod", 5); next }
 							/\/share\/man\// { tag("man", 5); next }
