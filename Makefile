@@ -16,12 +16,14 @@ uninstall: uninstall-cook uninstall-libcook uninstall-cross
 install-cook:
 	install -m 0755 -d $(DESTDIR)/etc/slitaz
 	install -m 0755 -d $(DESTDIR)/etc/init.d
+	install -m 0755 -d $(DESTDIR)/bin
 	install -m 0755 -d $(DESTDIR)$(PREFIX)/bin
 	install -m 0755 -d $(DESTDIR)$(PREFIX)/libexec/cookutils
 	install -m 0755 -d $(DESTDIR)/var/www/cgi-bin/cooker
 	install -m 0755 -d $(DESTDIR)$(PREFIX)/share/applications
 	install -m 0755 -d $(DESTDIR)$(PREFIX)/share/cook/cooktest
 	install -m 0755 -d $(DESTDIR)$(PREFIX)/share/doc/cookutils
+	install -m 0755 uname            $(DESTDIR)/bin
 	install -m 0755 cook             $(DESTDIR)$(PREFIX)/bin
 	install -m 0755 cooks            $(DESTDIR)$(PREFIX)/bin
 	install -m 0755 fix-desktop-file $(DESTDIR)$(PREFIX)/bin
@@ -49,6 +51,7 @@ install-cook:
 
 uninstall-cook:
 	rm -rf \
+		$(DESTDIR)/bin/uname \
 		$(DESTDIR)$(PREFIX)/bin/cook \
 		$(DESTDIR)$(PREFIX)/bin/cooks \
 		$(DESTDIR)$(PREFIX)/bin/fix-desktop-file \

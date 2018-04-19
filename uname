@@ -1,0 +1,10 @@
+#!/bin/sh
+# uname - special "fake" wrapper for using inside SliTaz cooker chroot.
+# Although SliTaz cooker *host arch* is 64-bit, SliTaz *target arch* may be
+# 32-bit, and some configuration tools use uname could be improperly configured.
+# This also applies to the kernel versions of the host and the target systems.
+
+. /etc/slitaz/cook.conf
+kernel_version=$(. /home/slitaz/wok/linux/receipt; echo $VERSION)
+uname_r=$(/bin/busybox uname -r)
+/bin/busybox uname $@ | sed "s|x86_64|$ARCH|g; s|$uname_r|$kernel_version-slitaz|g"
