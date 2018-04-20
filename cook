@@ -560,6 +560,23 @@ fix() {
 				s|std::isnormal|__builtin_isnormal|g
 				' '{}' \;
 			;;
+		symlinks)
+			# make absolute symlinks relative
+			echo "fix symlinks"
+			local ifs="$IFS" link target
+			IFS=$'\n'
+			# step 1: fast job, prefix all the absolute symlinks with "$install"
+			for link in $(find $install -type l); do
+				target="$(readlink $link)"
+				case "$target" in
+					/*) ln -sfv "$install$target" "$link";;
+				esac
+			done
+			IFS="$ifs"
+			# step 2: fine tuning, make symlinks relative
+			tazpkg -gi --quiet --local --cookmode symlinks
+			symlinks -cr $install
+			;;
 	esac
 }
 
