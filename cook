@@ -11,6 +11,7 @@
 
 VERSION="3.2"
 export output=raw
+prev_ts="/home/slitaz/cache/prev_ts"; touch $prev_ts
 
 
 # Internationalization.
@@ -581,6 +582,50 @@ fix() {
 }
 
 
+# Store timestamps, log jobs length
+
+timestamp() {
+	local ts_file="$WOK/$pkg/.ts"
+	local curr_ts=$(date '+%s')
+	case $1 in
+		init)
+			rm $ts_file 2>/dev/null
+			echo $curr_ts > $prev_ts
+			;;
+		job*)
+			# calculate time from the last timestamp
+			echo "$1='$(( $curr_ts - $(cat $prev_ts) ))'" >> $ts_file
+			echo $curr_ts > $prev_ts
+			;;
+		sets)
+			echo "sets='$2'" >> $ts_file
+			;;
+	esac
+}
+
+
+# Store time statsistics to the cache
+
+store_timestats() {
+	# see doc/timestats.txt for file format
+	temp=$(mktemp)
+	{
+		for i in $(seq 1 30); do echo "job$i=0"; done
+		cat $WOK/$pkg/.ts
+		echo -n 'total=$(( 0'
+		for i in $(seq 1 30); do echo -n " + job$i"; done
+		echo ' ))'
+	} > $temp
+	. $temp
+	{
+		echo -n "$pkg	$sets	"
+		for i in $(seq 1 30); do echo -n "$((job$i))	"; done
+		echo "$total"
+	} >> /home/slitaz/cache/timestats
+	rm $temp $WOK/$pkg/.ts # clean
+}
+
+
 # The main cook function.
 
 cookit() {
@@ -591,6 +636,7 @@ cookit() {
 
 	title 'Cook: %s' "$PACKAGE $VERSION"
 	set_paths
+	timestamp init # the very start
 
 	# Handle cross-tools.
 	[ "$BUILD_SYSTEM" != "$HOST_SYSTEM" ] &&
@@ -646,6 +692,8 @@ cookit() {
 	# FIXME: L10n: Is this the right time for 'LC_ALL=C LANG=C'?
 	export DESTDIR MAKEFLAGS CFLAGS CXXFLAGS CONFIG_SITE LC_ALL=C LANG=C \
 	LDFLAGS
+
+	timestamp job1 # pre-checks
 
 	# BUILD_DEPENDS may vary depending on the ARCH
 	case "$ARCH" in
@@ -735,6 +783,8 @@ cookit() {
 
 	update_installed_cook_diff
 
+	timestamp job2 # installing bdeps
+
 	# Get source tarball and make sure we have source dir named:
 	# $PACKAGE-$VERSION to be standard in receipts. Here we use tar.lzma
 	# tarball if it exists.
@@ -785,6 +835,8 @@ cookit() {
 		arm*) cross libhack ;;
 	esac
 
+	timestamp job3 # get/unpack src tarball
+
 	# Compiling all the sets
 	if grep -q ^compile_rules $receipt; then
 		_ 'Executing: %s' 'compile_rules'
@@ -792,6 +844,8 @@ cookit() {
 		echo "LDFLAGS  : $LDFLAGS"
 		[ -d "$src" ] && cd $src
 		patchit
+
+		timestamp job4 # patching
 
 		# Get set names from $SPLIT variable, format ex. 'pkg1 pkg2:set1 pkg3:set2'
 		SETS=$(echo $SPLIT \
@@ -808,6 +862,10 @@ cookit() {
 			cp -a $src $src-$set
 		done
 
+		timestamp job5 # preparing sets
+		timestamp sets "$SETS"
+
+		job_counter='6'
 		for SET in '' $SETS; do
 			# Switch to the specified source set
 			set_paths
@@ -839,18 +897,25 @@ cookit() {
 
 			copy_generic_stuff
 
+			timestamp job$job_counter # compiling (set '$SET')
+
 			# Actions to do after compiling the package
 			# Skip all for split packages (already done in main package)
 			if [ -z "$WANTED" ]; then
 				footer
 				export COOKOPTS ARCH install
 				@@PREFIX@@/libexec/cookutils/compressor install
+				timestamp job$(($job_counter + 1)) # compressing (set '$SET')
 			fi
+
+			job_counter=$(($job_counter + 2))
 		done
 	else
 		mkdir -p $install	# allow receipts without `compile_rules()`
 	fi
 	footer
+
+	timestamp job # reset counter
 
 	# Execute testsuite.
 	if grep -q ^testsuite $receipt; then
@@ -858,6 +923,8 @@ cookit() {
 		testsuite $@ || { broken; exit 1; }
 		footer
 	fi
+
+	timestamp job26 # test suite
 
 	update_installed_cook_diff force
 }
@@ -2099,7 +2166,9 @@ case "$1" in
 
 		# Remove build dependencies both when `cookit` done or fail
 		remove_deps | tee -a $LOGS/$pkg.log
+		timestamp job27 # removing bdeps
 		cookit_quality
+		timestamp job28 # checking quality
 
 		# Log and stop if `cookit` fails
 		if [ $rq -eq 1 ]; then
@@ -2111,6 +2180,7 @@ case "$1" in
 
 		# Proceed only if `cookit` return code is zero-OK
 		packall 2>&1 | loglimit 5 >> $LOGS/$pkg.log
+		timestamp job29 # packing
 
 		clean_log
 
@@ -2140,6 +2210,15 @@ case "$1" in
 		# Finally we DON'T WANT to build the *-dev or packages with WANTED="$pkg"
 		# If you want automation, use the Cooker Build Bot.
 		rm -f $command
+		timestamp job30 # misc. final operations
+		store_timestats
+
+		sed -n '/^Build dependencies to remove:/,/^$/p' $LOGS/$pkg.log \
+		| sed '/^Build/d; s|Removing: ||' \
+		| tr ' ' '\n' \
+		| sed '/^$/d' \
+		> $WOK/$pkg/.bdeps
+
 		;;
 esac
 
