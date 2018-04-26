@@ -476,6 +476,8 @@ header, footer, main {
 	display: block;
 }
 
+.r.c10 del { color: gray; }
+
 
 /* FOLLOWING CSS HAS SOME CHANGES FOR SLITAZ COOKER! */
 
