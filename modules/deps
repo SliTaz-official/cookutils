@@ -237,7 +237,10 @@ tp_ldd() {
 		*.pc)
 			# found dependencies in the *.pc files
 			variables=$(mktemp)
-			grep '^[a-zA-Z_][a-zA-Z_]*=' $1 > $variables
+			# variable value may contain spaces, so use pkg-config to safely get variable's value
+			for i in $(grep '^[a-zA-Z_][a-zA-Z_]*=' $1 | cut -d= -f1); do
+				echo "$i=\"$(pkg-config --variable=$i $1)\""
+			done > $variables
 			. $variables
 			rm $variables
 			# Syntax examples:
@@ -246,6 +249,8 @@ tp_ldd() {
 			# Requires: gobject-2.0,gio-2.0
 			# Requires.private: nspr >= 4.9.2
 			pcs=$(grep '^Requires' $1 | cut -d: -f2 | tr ',' ' ' | tr '\n' ' ')
+			# expand $variables here, if any:
+			pcs=$(eval echo $pcs)
 			for i in $pcs; do
 				isitlib=$(echo $i | tr -d '<=>0-9.')
 				# if it contains only comparisons, numbers, dot - it is not lib, skip
