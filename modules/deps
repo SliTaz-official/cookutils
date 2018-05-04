@@ -250,7 +250,8 @@ tp_ldd() {
 			# Requires.private: nspr >= 4.9.2
 			pcs=$(grep '^Requires' $1 | cut -d: -f2 | tr ',' ' ' | tr '\n' ' ')
 			# expand $variables here, if any:
-			pcs=$(eval echo $pcs)
+			# (remove '>' because '>=' here will redirect `echo` output to file '=')
+			pcs=$(eval echo "${pcs//>/}")
 			for i in $pcs; do
 				isitlib=$(echo $i | tr -d '<=>0-9.')
 				# if it contains only comparisons, numbers, dot - it is not lib, skip
