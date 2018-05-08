@@ -1537,7 +1537,8 @@ EOT
 						find -type d \
 						| sed 's|\.||' \
 						| while read d; do
-							[ -z "$(ls "$wok/$main/install$d")" ] || continue
+							[ -z "$(ls "$install$d")" ] || continue
+							# empty dir determined by empty `ls`
 							echo $d
 						done \
 						| while read d; do
