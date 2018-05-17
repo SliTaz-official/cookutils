@@ -38,7 +38,7 @@ save="$(mktemp)"
 cat > $save <<EOT
 PACKAGE="$PACKAGE"; DEPENDS="$(echo $DEPENDS)"; PROVIDE="$(echo $PROVIDE)"
 SUGGESTED="$(echo $SUGGESTED)"; TAZPANEL_DAEMON="$TAZPANEL_DAEMON"
-TAGS="$(echo $TAGS)"
+TAGS="$(echo $TAGS)"; VERSION="$VERSION"
 EOT
 unset_receipt
 . "$orig_receipt"
