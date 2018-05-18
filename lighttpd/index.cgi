@@ -1463,7 +1463,9 @@ EOT
 						# ------------------------------------------------------
 						packaged=$(mktemp)
 						for p in $pkgsofset; do
-							namever="$p-$ver"
+							namever="$(awk -F$'\t' -vp="$p" '{
+								if ($1==p) {printf("%s-%s\n", $1, $2); exit}
+								}' $PKGS/packages.info)"
 							if [ -d "$wok/$p/taz/$p-$ver" ]; then
 								indir=$p
 							elif [ -d "$wok/$main/taz/$p-$ver" ]; then
