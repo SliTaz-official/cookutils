@@ -1970,9 +1970,10 @@ EOT
 		if [ -d "$wok/$pkg/taz" ]; then
 			[ "$show" -eq 1 ] || files_header
 
+			common_version=$VERSION
 			for i in $(all_names); do
-				[ -e "$wok/$pkg/taz/$i-$VERSION$EXTRAVERSION/receipt" ] || continue
-				. $wok/$pkg/taz/$i-$VERSION$EXTRAVERSION/receipt
+				[ -e "$wok/$pkg/taz/$i-$common_version$EXTRAVERSION/receipt" ] || continue
+				. $wok/$pkg/taz/$i-$common_version$EXTRAVERSION/receipt
 
 				for filename in "$PACKAGE-$VERSION$EXTRAVERSION.tazpkg" "$PACKAGE-$VERSION$EXTRAVERSION-$ARCH.tazpkg"; do
 					[ -f "$PKGS/$filename" ] &&
