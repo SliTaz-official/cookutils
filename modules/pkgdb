@@ -113,7 +113,7 @@ for i in $(ls $WOK | sort); do
 	bdeps=$(. $WOK/$i/receipt; echo $BUILD_DEPENDS) # remove newlines from some receipts
 	echo "$i	$bdeps" >> $dbs/bdeps.txt
 done
-echo " ($(filesize $PKGS/$dbs/bdeps.txt))" | dblog
+echo " ($(filesize $dbs/bdeps.txt))" | dblog
 
 
 _ 'Creating lists from "%s"' "$WOK" | dblog
