@@ -24,8 +24,7 @@ filesize() { busybox ls -lh "$1" | awk '{print $5 "B"}'; }
 
 
 # Create suitable packages list for TazPkg and only for built packages
-# as well as flavors files for TazLiTo. We don't need logs since we do it
-# manually to ensure everything is fine before syncing the mirror.
+# as well as flavors files for TazLiTo.
 
 # Find how much time was spent the last time (for web interface)
 lastcooktime=$(sed '/Time:/!d; s|.*: *\([0-9]*\)s.*|\1|' $LOGS/pkgdb.log 2>/dev/null | sed '$!d')
@@ -63,27 +62,35 @@ newline; { _ 'Creating lists for "%s"' "$PKGS"; separator; } | dblog
 { _ 'Cook pkgdb started: %s' "$(date "$(_ '+%%F %%R')")"; newline; } | dblog
 
 cd $PKGS
-rm -f packages.* extra.list
-#touch packages.equiv
 
 # Web interface database files should exist on the mirror1
 >.folderlist; >.filelist
 chmod 666 .folderlist .filelist
 
+# Command `cook pkgdb` may be executed by cron. Creating a packages database
+# takes some time, during which previously pending packages may be continue to
+# create. This will result in an error due to the lack of a database. This in
+# turn can lead to errors in the creating of many subsequent packages and will
+# require manual intervention.
+# Solution is an atomic update of packages database: first we create new files
+# (in the separate temp dir), and then instantly (well, almost) replace the old
+# files by new ones.
+
+dbs=$(mktemp -d)
+
 _n 'Creating file "%s"' 'packages.list' | dblog
-find . -name '*.tazpkg' | sed 's|^./||; s|.tazpkg$||' > $PKGS/packages.list
-echo " ($(filesize $PKGS/packages.list))" | dblog
+find . -name '*.tazpkg' | sed 's|^./||; s|.tazpkg$||' > $dbs/packages.list
+echo " ($(filesize $dbs/packages.list))" | dblog
 
 _n 'Creating file "%s"' 'packages.md5' | dblog
-find . -name '*.tazpkg' -exec md5sum '{}' \; | sed 's|./||' > $PKGS/packages.md5
-echo " ($(filesize $PKGS/packages.md5))" | dblog
-cp $PKGS/packages.md5 $PKGS/packages.toremove			# list of unnecessary packages
+find . -name '*.tazpkg' -exec md5sum '{}' \; | sed 's|./||' > $dbs/packages.md5
+echo " ($(filesize $dbs/packages.md5))" | dblog
+cp $dbs/packages.md5 $dbs/packages.toremove			# list of unnecessary packages
 
-md5sum packages.md5 | cut -d' ' -f1 > ID
-( cat ./ID | tr $'\n' ' '; date -ur ./ID +%s ) > IDs	# md5 and timestamp
+md5sum $dbs/packages.md5 | cut -d' ' -f1 > $dbs/ID
+( cat $dbs/ID | tr $'\n' ' '; date -ur $dbs/ID +%s ) > $dbs/IDs	# md5 and timestamp
 
 _n 'Creating file "%s"' 'descriptions.txt' | dblog
-rm $PKGS/descriptions.txt 2>/dev/null
 for i in $(ls $WOK | sort); do
 	[ -d "$WOK/$i/taz" ] || continue
 
@@ -93,25 +100,26 @@ for i in $(ls $WOK | sort); do
 		pkgname=$(. $WOK/$i/taz/$j/receipt; echo $PACKAGE)
 		echo "$pkgname"
 		sed 's|^$| |' "$WOK/$i/taz/$j/description.txt"
+		# if description.txt don't ends with \n then add one
+		[ -z "$(tail -c1 $WOK/$i/taz/$j/description.txt)" ] || echo
 		echo
-	done >> descriptions.txt
+	done >> $dbs/descriptions.txt
 done
-echo " ($(filesize $PKGS/descriptions.txt))" | dblog
+echo " ($(filesize $dbs/descriptions.txt))" | dblog
 
 _n 'Creating file "%s"' 'bdeps.txt' | dblog
-rm $PKGS/bdeps.txt 2>/dev/null
 for i in $(ls $WOK | sort); do
 	[ -s "$WOK/$i/receipt" ] || continue
 	bdeps=$(. $WOK/$i/receipt; echo $BUILD_DEPENDS) # remove newlines from some receipts
-	echo "$i	$bdeps" >> $PKGS/bdeps.txt
+	echo "$i	$bdeps" >> $dbs/bdeps.txt
 done
-echo " ($(filesize $PKGS/bdeps.txt))" | dblog
+echo " ($(filesize $PKGS/$dbs/bdeps.txt))" | dblog
 
 
 _ 'Creating lists from "%s"' "$WOK" | dblog
-[ -e $PKGS/files.list ] && rm $PKGS/files.list
 cd $WOK
 rsumf=$(mktemp)
+touch $dbs/packages.desc $dbs/packages.txt $dbs/packages.info $dbs/packages.equiv
 for i in *; do
 	[ -d "$WOK/$i/taz" ] || continue
 
@@ -124,13 +132,13 @@ for i in *; do
 		if [ -f "$PKGS/$PACKAGE-$VERSION$EXTRAVERSION$arch.tazpkg" ]; then
 
 			# packages.desc lets us search easily in DB
-			cat >> $PKGS/packages.desc <<EOT
+			cat >> $dbs/packages.desc <<EOT
 $PACKAGE | $VERSION$EXTRAVERSION | $SHORT_DESC | $CATEGORY | $WEB_SITE
 EOT
 
-			# packages.txt used by tazpkg and tazpkg-web also to provide
+			# packages.txt used by tazpkg-web also to provide
 			# a human readable package list with version and description.
-			cat >> $PKGS/packages.txt <<EOT
+			cat >> $dbs/packages.txt <<EOT
 $PACKAGE
 $VERSION$EXTRAVERSION
 $SHORT_DESC
@@ -149,7 +157,7 @@ EOT
 			[ -e "$pack/description.txt" ] && md5sum $pack/description.txt | sed 's| [^ ]*/| |' >> $rsumf
 			rsum=$(md5sum $rsumf | awk '{print $1}')
 
-			cat >> $PKGS/packages.info <<EOT
+			cat >> $dbs/packages.info <<EOT
 $PACKAGE	$VERSION$EXTRAVERSION	$CATEGORY	$SHORT_DESC	$WEB_SITE	$TAGS	$SIZES	$DEPENDS	$rsum	$PROVIDE
 EOT
 
@@ -157,19 +165,19 @@ EOT
 			for k in $PROVIDE; do
 				DEST=''
 				echo $k | fgrep -q : && DEST="${k#*:}:"
-				if grep -qs ^${k%:*}= $PKGS/packages.equiv; then
+				if grep -qs ^${k%:*}= $dbs/packages.equiv; then
 					sed -i "s/^${k%:*}=/${k%:*}=$DEST$PACKAGE /" \
-						$PKGS/packages.equiv
+						$dbs/packages.equiv
 				else
-					echo "${k%:*}=$DEST$PACKAGE" >> $PKGS/packages.equiv
+					echo "${k%:*}=$DEST$PACKAGE" >> $dbs/packages.equiv
 				fi
 			done
 
 			# files.list provides a list of all packages files.
-			sed "s|^|$PACKAGE: \0|" $i/taz/$j/files.list >> $PKGS/files.list
+			sed "s|^|$PACKAGE: \0|" $i/taz/$j/files.list >> $dbs/files.list
 
 			# list of unnecessary packages
-			sed -i "/ $PACKAGE-$VERSION$EXTRAVERSION$arch.tazpkg/d" $PKGS/packages.toremove
+			sed -i "/ $PACKAGE-$VERSION$EXTRAVERSION$arch.tazpkg/d" $dbs/packages.toremove
 		else
 			# if receipt variable HOST_ARCH absent/empty or contains ARCH
 			if [ -z "$HOST_ARCH" -o "${HOST_ARCH/$ARCH/}" != "$HOST_ARCH" ]; then
@@ -178,21 +186,20 @@ EOT
 		fi
 	done
 done
-touch $PKGS/packages.desc $PKGS/packages.txt $PKGS/packages.info $PKGS/packages.equiv
 rm $rsumf
 
 
 # Display list size.
-_ 'Done: %s (%s)' 'packages.desc'  "$(filesize $PKGS/packages.desc)"  | dblog
-_ 'Done: %s (%s)' 'packages.txt'   "$(filesize $PKGS/packages.txt)"   | dblog
-_ 'Done: %s (%s)' 'packages.info'  "$(filesize $PKGS/packages.info)"  | dblog
-_ 'Done: %s (%s)' 'packages.equiv' "$(filesize $PKGS/packages.equiv)" | dblog
+_ 'Done: %s (%s)' 'packages.desc'  "$(filesize $dbs/packages.desc)"  | dblog
+_ 'Done: %s (%s)' 'packages.txt'   "$(filesize $dbs/packages.txt)"   | dblog
+_ 'Done: %s (%s)' 'packages.info'  "$(filesize $dbs/packages.info)"  | dblog
+_ 'Done: %s (%s)' 'packages.equiv' "$(filesize $dbs/packages.equiv)" | dblog
 
 cd $PKGS
 
 
 # Check for unnecessary packages
-if [ -s "$PKGS/packages.toremove" ]; then
+if [ -s "$dbs/packages.toremove" ]; then
 	newline | dblog
 	case x$rmpkg in
 		x) _ 'Found unnecessary packages (use `cook pkgdb --rmpkg` to remove):' | dblog;;
@@ -200,53 +207,54 @@ if [ -s "$PKGS/packages.toremove" ]; then
 	esac
 	while read pkgsum pkgfile; do
 		echo "  - $pkgfile" | dblog
-		sed -i "/${pkgfile%.tazpkg}/d" $PKGS/packages.list
-		sed -i "/ $pkgfile/d" $PKGS/packages.md5
+		sed -i "/${pkgfile%.tazpkg}/d" $dbs/packages.list
+		sed -i "/ $pkgfile/d" $dbs/packages.md5
 		[ -n "$rmpkg" ] && rm $PKGS/$pkgfile	# remove packages only with --rmpkg
-	done < $PKGS/packages.toremove
+	done < $dbs/packages.toremove
 	newline | dblog
 fi
-rm $PKGS/packages.toremove
+rm $dbs/packages.toremove
 
 
 # files.list.lzma
 _n 'Creating file "%s"' 'files.list.lzma' | dblog
-touch files.list
+touch $dbs/files.list
 # pkgs.slitaz.org strongly depends on list sorted by packages names
-#lzma e files.list files.list.lzma
-/bin/lzma -zeqcT0 files.list > files.list.lzma
-echo " ($(filesize $PKGS/files.list.lzma))" | dblog
+#lzma e $dbs/files.list $dbs/files.list.lzma
+/bin/lzma -zeqcT0 $dbs/files.list > $dbs/files.list.lzma
+echo " ($(filesize $dbs/files.list.lzma))" | dblog
 
 # Pre-sorting filenames causes 10% smaller resulting lzma file
 _n 'Creating file "%s"' 'files-list.lzma' | dblog
-cat files.list | sort -k2 -o files.list.sorted
-#lzma e files.list.sorted files-list.lzma
-/bin/lzma -zeqcT0 files.list.sorted > files-list.lzma
-rm -f files.list files.list.sorted
-echo " ($(filesize $PKGS/files-list.lzma))" | dblog
+cat $dbs/files.list | sort -k2 -o $dbs/files.list.sorted
+#lzma e $dbs/files.list.sorted $dbs/files-list.lzma
+/bin/lzma -zeqcT0 $dbs/files.list.sorted > $dbs/files-list.lzma
+rm -f $dbs/files.list $dbs/files.list.sorted
+echo " ($(filesize $dbs/files-list.lzma))" | dblog
 
-[ -e files.list.md5 ] && rm files.list.md5
-md5sum files-list.lzma | cut -d' ' -f1 | tr -d $'\n' > files-list.md5
+md5sum $dbs/files-list.lzma | cut -d' ' -f1 | tr -d $'\n' > $dbs/files-list.md5
 
 # Make bundle to fast recharge
 _n 'Creating file "%s"' 'bundle.tar.lzma' | dblog
-[ -f bundle.tar.lzma ] && rm bundle.tar.lzma
 # Make sure to get "mirrors" file
-until [ -e 'mirrors' ]; do
-	wget -q http://mirror1.slitaz.org/mirrors
+until [ -e "$dbs/mirrors" ]; do
+	wget -q -O $dbs/mirrors http://mirror1.slitaz.org/mirrors
 	echo -n '.' | dblog; sleep 5
 done
 # Make sure to get "extra.list" file
-until [ -e 'extra.list' ]; do
-	wget -q -O extra.list http://mirror1.slitaz.org/packages/get.list
+until [ -e "$dbs/extra.list" ]; do
+	wget -q -O $dbs/extra.list http://mirror1.slitaz.org/packages/get.list
 	echo -n '.' | dblog; sleep 5
 done
-busybox tar -chf bundle.tar \
-	mirrors extra.list files-list.md5 packages.info descriptions.txt \
-	packages.desc packages.md5 packages.txt packages.list packages.equiv
-/bin/lzma -zeqcT0 bundle.tar > bundle.tar.lzma
-rm ./bundle.tar ./mirrors
-echo " ($(filesize $PKGS/bundle.tar.lzma))" | dblog
+(
+	cd $dbs
+	busybox tar -chf bundle.tar \
+		mirrors extra.list files-list.md5 packages.info descriptions.txt \
+		packages.desc packages.md5 packages.txt packages.list packages.equiv
+)
+/bin/lzma -zeqcT0 $dbs/bundle.tar > $dbs/bundle.tar.lzma
+rm $dbs/bundle.tar $dbs/mirrors
+echo " ($(filesize $dbs/bundle.tar.lzma))" | dblog
 
 # Display some info.
 separator | dblog
@@ -254,6 +262,10 @@ nb=$(ls $PKGS/*.tazpkg 2>/dev/null | wc -l)
 time=$(($(date +%s) - $time))
 # L10n: 's' is for seconds (cooking time)
 { _ 'Packages: %s - Time: %ss' "$nb" "$time"; newline; } | dblog
+
+# "Atomic" update now
+cp -f $dbs/* $PKGS
+rm -r $dbs
 
 
 # Create all flavors files at once. Do we really need code to monitor

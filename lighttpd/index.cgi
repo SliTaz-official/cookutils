@@ -491,8 +491,10 @@ syntax_highlighter() {
 				-e 's#Success$#<i>Success</i>#' \
 				-e 's#\([^a-z]\)ok$#\1<i>ok</i>#' \
 				-e 's#\([^a-z]\)yes$#\1<i>yes</i>#' \
+				-e 's#: \(YES.*\)#: <i>\1</i>#' \
 				-e 's#\([^a-z]\)ON$#\1<i>ON</i>#' \
 				-e 's#\([^a-z]\)no$#\1<u>no</u>#' \
+				-e 's#: \(NO.*\)#: <u>\1</u>#' \
 				-e 's#\([^a-z]\)none$#\1<u>none</u>#' \
 				-e 's#\([^a-z]\)false$#\1<u>false</u>#' \
 				-e 's#\([^a-z]\)OFF$#\1<u>OFF</u>#' \
