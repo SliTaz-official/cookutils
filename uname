@@ -1,7 +1,7 @@
 #!/bin/sh
 # uname - special "fake" wrapper for using inside SliTaz cooker chroot.
 # Although SliTaz cooker *host arch* is 64-bit, SliTaz *target arch* may be
-# 32-bit, and some configuration tools use uname could be improperly configured.
+# 32-bit and some configuration tools using uname could be improperly configured.
 # This also applies to the kernel versions of the host and the target systems.
 
 . /etc/slitaz/cook.conf

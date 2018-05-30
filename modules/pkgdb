@@ -14,7 +14,7 @@
 dblog() { tee -a $LOGS/pkgdb.log; }
 
 
-# Return size of file in human readible format
+# Return size of file in human readable format
 # Note, "du" in opposite returns size occupied by file on disk (4KB multiple in most cases)
 
 filesize() { busybox ls -lh "$1" | awk '{print $5 "B"}'; }
@@ -68,11 +68,11 @@ cd $PKGS
 chmod 666 .folderlist .filelist
 
 # Command `cook pkgdb` may be executed by cron. Creating a packages database
-# takes some time, during which previously pending packages may be continue to
-# create. This will result in an error due to the lack of a database. This in
+# takes some time, during which previously pending packages may continue to
+# be created. This will result in an error due to the lack of a database. This in
 # turn can lead to errors in the creating of many subsequent packages and will
 # require manual intervention.
-# Solution is an atomic update of packages database: first we create new files
+# Solution is an atomic update of the packages database: first we create new files
 # (in the separate temp dir), and then instantly (well, almost) replace the old
 # files by new ones.
 
@@ -100,7 +100,7 @@ for i in $(ls $WOK | sort); do
 		pkgname=$(. $WOK/$i/taz/$j/receipt; echo $PACKAGE)
 		echo "$pkgname"
 		sed 's|^$| |' "$WOK/$i/taz/$j/description.txt"
-		# if description.txt don't ends with \n then add one
+		# if description.txt doesn't end with \n then add one
 		[ -z "$(tail -c1 $WOK/$i/taz/$j/description.txt)" ] || echo
 		echo
 	done >> $dbs/descriptions.txt
