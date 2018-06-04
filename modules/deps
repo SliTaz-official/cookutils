@@ -178,6 +178,7 @@ outpkg() {
 				s("cairo-dev", "cairo-gl-dev");
 				s("freetype-dev", "freetype-infinality-dev");
 				s("nspr", "webian-shell");
+				s("nss", "webian-shell");
 
 				# if called with "--incl": show all deps including glibc-base,
 				# gcc-lib-base, glibc-dev and gcc; otherwise hide them

@@ -110,6 +110,22 @@ page_header() {
 	<meta name="theme-color" content="#222">
 	<!-- rss -->
 	<link rel="alternate" type="application/rss+xml" title="$title Feed" href="?rss">
+	<script>
+		// Get part of the main page
+		function getPart(part) {
+			var partRequest = new XMLHttpRequest();
+			partRequest.onreadystatechange = function() {
+				if (this.readyState == 4 && this.status == 200) {
+					response = this.responseText;
+					var partElement = document.getElementById(part);
+					if (response !== null) partElement.innerHTML = response;
+				}
+			};
+			partRequest.open('GET', '?part=' + part, true);
+			partRequest.responseType = '';
+			partRequest.send();
+		}
+	</script>
 </head>
 <body>
 <div id="container">
@@ -514,6 +530,7 @@ syntax_highlighter() {
 				-e 's#\([^a-zA-Z]\)\([Ee]rror\)$#\1<b>\2</b>#' \
 				-e 's#ERROR:#<b>ERROR:</b>#g' \
 				\
+				-e 's#^.*multiple definition of.*#<b>\0</b>#' \
 				-e 's#^.*[Ff][Aa][Ii][Ll][Ee][Dd].*#<b>\0</b>#' \
 				-e 's#^.*[Ff]atal.*#<b>\0</b>#' \
 				-e '/non-fatal/ s|</*b>||g' \
@@ -828,9 +845,9 @@ files_header() {
 # Note, $webstat file must be owned by www, otherwise this function will not be able to do the job.
 
 update_webstat() {
-	echo '<div id="waitme">'
-	show_note i 'Please wait while statistics are being collected.'
-	echo "</div>"
+#	echo '<div id="waitme">'
+#	show_note i 'Please wait while statistics are being collected.'
+#	echo "</div>"
 
 	# for receipts:
 	rtotal=$(ls $WOK/*/arch.$ARCH | wc -l)
@@ -859,6 +876,135 @@ EOT
 
 	echo '<script>document.getElementById("waitme").remove();</script>'
 }
+
+
+# Generate part of the main page
+
+part() {
+	if [ -z "$nojs" ]; then
+		echo "<div id='$1'></div><script>getPart('$1')</script>"
+		return
+	fi
+
+	echo '<div>'
+	case $1 in
+		summary)
+			echo '<h2>Summary</h2>'
+
+			mktable <<EOT
+Cooker state     : $(running_command)
+Wok revision     : <a href='$WOK_URL' target='_blank' rel='noopener noreferrer'>$(cat $wokrev)</a>
+Commits to cook  : $(wc -l < $commits)
+Current cooklist : $(wc -l < $cooklist)
+Architecture     : $ARCH, <a href="$toolchain">toolchain</a>
+Server date      : <span id='date'>$(date -u '+%F %R %Z')</span>
+EOT
+
+			# If command is "cook:*", update gauge and percentage periodically.
+			# If different package is cooking, reload the page (with new settings)
+			cmd="$(cat $command)"
+			case "$cmd" in
+				cook:*)
+					pkg=${cmd#*:}
+					echo "<script>updatePkg = '${pkg//+/%2B}';</script>"
+					;;
+			esac
+			;;
+		webstat)
+			# Do we need to update the statistics?
+			[ "$webstat" -nt "$activity" ] || update_webstat
+			. $webstat
+
+			pct=0; [ "$rtotal" -gt 0 ] && pct=$(( ($rcooked * 100) / $rtotal ))
+
+			cat <<EOT
+<div class="meter"><progress max="100" value="$pct">${pct}%</progress><span>${pct}%</span></div>
+
+<table class="webstat"><thead>
+<tr><th>        </th><th>Total  </th><th>Cooked  </th><th>Unbuilt  </th><th>Blocked  </th><th>Broken  </th></tr>
+</thead><tbody>
+<tr><td>Receipts</td><td>$rtotal</td><td>$rcooked</td><td>$runbuilt</td><td>$rblocked</td><td>$rbroken</td></tr>
+<tr><td>Packages</td><td>$ptotal</td><td>$pcooked</td><td>$punbuilt</td><td>$pblocked</td><td>$pbroken</td></tr>
+</tbody></table>
+EOT
+			;;
+		activity)
+			tac $activity | head -n12 | sed 's|cooker.cgi?pkg=||;
+				s|\[ Done|<span class="r c20">Done|;
+				s|\[ Failed|<span class="r c10">Failed|;
+				s|\[ -Failed|<span class="r c10"><del>Failed</del>|;
+				s| \]|</span>|;
+				s|%2B|\+|g' | \
+				section $activity 12 "Activity|More activity"
+			;;
+		cooknotes)
+			[ -s "$cooknotes" ] && tac $cooknotes | head -n12 | \
+				section $cooknotes 12 "Cooknotes|More notes"
+			;;
+		commits)
+			[ -s "$commits" ] && head -n20 $commits | \
+				section $commits 20 "Commits|More commits"
+			;;
+		cooklist)
+			[ -s "$cooklist" ] && head -n 20 $cooklist | \
+				section $cooklist 20 "Cooklist|Full cooklist"
+			;;
+		broken)
+			[ -s "$broken" ] && head -n20 $broken | sed "s|^[^']*|<a href='\0'>\0</a>|g" | \
+				section $broken 20 "Broken|All broken packages"
+			;;
+		blocked)
+			[ -s "$blocked" ] && sed "s|^[^']*|<a href='\0'>\0</a>|g" $blocked | \
+				section $blocked 12 "Blocked|All blocked packages"
+			;;
+		pkgs)
+			cd $PKGS
+			# About BusyBox's `ls`
+			# On the Tank server: BusyBox v1.18.4 (2012-03-14 03:32:25 CET) multi-call binary.
+			# It supported the option `-e`, output with `-let` options like this:
+			# -rw-r--r--    1 user     group       100000 Fri Nov  3 10:00:00 2017 filename
+			# 1             2 3        4           5      6   7    8 9        10   11
+			# Newer BusyBox v1.27.2 doesn't support option `-e` and has no configs to
+			# configure it or return the option back. It supported the long option
+			# `--full-time` instead, but output is different:
+			# -rw-r--r--    1 user     group       100000 2017-11-03 10:00:00 +0200 filename
+			# 1             2 3        4           5      6          7        8     9
+			if ls -let >/dev/null 2>&1; then
+				ls -let *.tazpkg \
+				| awk '
+				(NR<=20){
+					sub(/:[0-9][0-9]$/, "", $9);
+					mon = index("  JanFebMarAprMayJunJulAugSepOctNovDec", $7) / 3;
+					printf("%d-%02d-%02d %s : <a href=\"get/%s\">%s</a>\n", $10, mon, $8, $9, $11, $11);
+				}' \
+				| section $activity 1000 "Latest cook"
+			else
+				ls -lt --full-time *.tazpkg \
+				| awk '
+				(NR<=20){
+					sub(/:[0-9][0-9]$/, "", $7);
+					printf("%s %s : <a href=\"get/%s\">%s</a>\n", $6, $7, $9, $9);
+				}' \
+				| section $activity 1000 "Latest cook"
+			fi
+			;;
+	esac
+	echo '</div>'
+}
+
+
+# Query '?part=<part>': get part of the main page
+
+if [ -n "$(GET part)" ]; then
+	part="$(GET part)"
+	case $part in
+		summary|webstat|activity|cooknotes|commits|cooklist|broken|blocked|pkgs)
+			nojs='yes'
+			part $part
+			;;
+	esac
+	exit 0
+fi
 
 
 
@@ -977,45 +1123,10 @@ EOT
 	<button type="submit" title="Search">Search</button>
 	<input type="search" name="q" placeholder="Package" list="packages" autocorrect="off" autocapitalize="off"/>
 </form>
-
-<h2>Summary</h2>
 EOT
 
-mktable <<EOT
-Cooker state     : $(running_command)
-Wok revision     : <a href='$WOK_URL' target='_blank' rel='noopener noreferrer'>$(cat $wokrev)</a>
-Commits to cook  : $(wc -l < $commits)
-Current cooklist : $(wc -l < $cooklist)
-Architecture     : $ARCH, <a href="$toolchain">toolchain</a>
-Server date      : <span id='date'>$(date -u '+%F %R %Z')</span>
-EOT
-
-	# If command is "cook:*", update gauge and percentage periodically.
-	# If different package is cooking, reload the page (with new settings)
-	cmd="$(cat $command)"
-	case "$cmd" in
-		cook:*)
-			pkg=${cmd#*:}
-			echo "<script>updatePkg = '${pkg//+/%2B}';</script>"
-			;;
-	esac
-
-	# Do we need to update the statistics?
-	[ "$webstat" -nt "$activity" ] || update_webstat
-	. $webstat
-
-	pct=0; [ "$rtotal" -gt 0 ] && pct=$(( ($rcooked * 100) / $rtotal ))
-
-cat <<EOT
-<div class="meter"><progress max="100" value="$pct">${pct}%</progress><span>${pct}%</span></div>
-
-<table class="webstat"><thead>
-<tr><th>        </th><th>Total  </th><th>Cooked  </th><th>Unbuilt  </th><th>Blocked  </th><th>Broken  </th></tr>
-</thead><tbody>
-<tr><td>Receipts</td><td>$rtotal</td><td>$rcooked</td><td>$runbuilt</td><td>$rblocked</td><td>$rbroken</td></tr>
-<tr><td>Packages</td><td>$ptotal</td><td>$pcooked</td><td>$punbuilt</td><td>$pblocked</td><td>$pbroken</td></tr>
-</tbody></table>
-EOT
+	part summary
+	part webstat
 
 	if [ -e "$CACHE/cooker-request" -a ! -s $command ]; then
 		if [ "$activity" -nt "$CACHE/cooker-request" ]; then
@@ -1035,58 +1146,13 @@ EOT
 </section>
 EOT
 
-	tac $activity | head -n12 | sed 's|cooker.cgi?pkg=||;
-		s|\[ Done|<span class="r c20">Done|;
-		s|\[ Failed|<span class="r c10">Failed|;
-		s|\[ -Failed|<span class="r c10"><del>Failed</del>|;
-		s| \]|</span>|;
-		s|%2B|\+|g' | \
-		section $activity 12 "Activity|More activity"
-
-	[ -s "$cooknotes" ] && tac $cooknotes | head -n12 | \
-		section $cooknotes 12 "Cooknotes|More notes"
-
-	[ -s "$commits" ] &&
-		section $commits 20 "Commits|More commits" < $commits
-
-	[ -s "$cooklist" ] && head -n 20 $cooklist | \
-		section $cooklist 20 "Cooklist|Full cooklist"
-
-	[ -s "$broken" ] && head -n20 $broken | sed "s|^[^']*|<a href='\0'>\0</a>|g" | \
-		section $broken 20 "Broken|All broken packages"
-
-	[ -s "$blocked" ] && sed "s|^[^']*|<a href='\0'>\0</a>|g" $blocked | \
-		section $blocked 12 "Blocked|All blocked packages"
-
-	cd $PKGS
-	# About BusyBox's `ls`
-	# On the Tank server: BusyBox v1.18.4 (2012-03-14 03:32:25 CET) multi-call binary.
-	# It supported the option `-e`, output with `-let` options like this:
-	# -rw-r--r--    1 user     group       100000 Fri Nov  3 10:00:00 2017 filename
-	# 1             2 3        4           5      6   7    8 9        10   11
-	# Newer BusyBox v1.27.2 doesn't support option `-e` and has no configs to
-	# configure it or return the option back. It supported the long option
-	# `--full-time` instead, but output is different:
-	# -rw-r--r--    1 user     group       100000 2017-11-03 10:00:00 +0200 filename
-	# 1             2 3        4           5      6          7        8     9
-	if ls -let >/dev/null 2>&1; then
-		ls -let *.tazpkg \
-		| awk '
-		(NR<=20){
-			sub(/:[0-9][0-9]$/, "", $9);
-			mon = index("  JanFebMarAprMayJunJulAugSepOctNovDec", $7) / 3;
-			printf("%d-%02d-%02d %s : <a href=\"get/%s\">%s</a>\n", $10, mon, $8, $9, $11, $11);
-		}' \
-		| section $activity 1000 "Latest cook"
-	else
-		ls -lt --full-time *.tazpkg \
-		| awk '
-		(NR<=20){
-			sub(/:[0-9][0-9]$/, "", $7);
-			printf("%s %s : <a href=\"get/%s\">%s</a>\n", $6, $7, $9, $9);
-		}' \
-		| section $activity 1000 "Latest cook"
-	fi
+	part activity
+	part cooknotes
+	part commits
+	part cooklist
+	part broken
+	part blocked
+	part pkgs
 
 	echo '</div>'
 	datalist
