@@ -890,7 +890,6 @@ part() {
 		return
 	fi
 
-	echo '<div>'
 	case $1 in
 		summary)
 			echo '<h2>Summary</h2>'
@@ -993,7 +992,6 @@ EOT
 			fi
 			;;
 	esac
-	echo '</div>'
 }
 
 

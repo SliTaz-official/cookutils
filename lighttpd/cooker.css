@@ -382,6 +382,7 @@ tbody tr:nth-child(even) {
 .summary th, .summary td { white-space: nowrap; width: 1rem; text-align: center; }
 .summary th:last-child, .summary td:last-child { width: unset; }
 
+#webstat { height: 7em; }
 .webstat td { text-align: center; width: 16%; }
 .webstat td:first-child { text-align: unset; width: unset; }
 
