@@ -106,6 +106,7 @@ sizes() {
 		man) find $install/usr/share/man          -type f                                       -exec ls -l \{\} \; ;;
 		png) find $install                        -type f -name '*.png'                         -exec ls -l \{\} \; ;;
 		svg) find $install                        -type f -name '*.svg'                         -exec ls -l \{\} \; ;;
+		gif) find $install                        -type f -name '*.gif'                         -exec ls -l \{\} \; ;;
 		xml) find $install                        -type f \( -name '*.ui' -o -name '*.glade' \) -exec ls -l \{\} \; ;;
 		des) find $install                        -type f -name '*.desktop'                     -exec ls -l \{\} \; ;;
 		mo1) find $install                        -type f -name '*.mo'                          -exec ls -l \{\} \; ;;
@@ -380,6 +381,38 @@ compress_svg() {
 	fi
 
 	comp_summary "$time0" "$size0" "$(sizes svg)" "$the_log"
+}
+
+
+# Function used after compile_rules() to compress all gif images
+# Compressing can be disabled with COOKOPTS="!gifz"
+
+compress_gif() {
+	time0=$(get_time)
+	[ "${COOKOPTS/!gifz/}" != "$COOKOPTS" ] && return
+	size0=$(sizes gif); [ -z "$size0" ] && return
+
+	tpi gifsicle
+
+	action 'Compressing gif images...'
+
+	if which gifsicle >/dev/null; then
+		the_log="$(mktemp)"
+		j="$(mktemp)"
+		for i in $(IFS=$'\n' find $install -type f -name '*.gif'); do
+			unset IFS
+			# use intermediate file, if all well ($?=0), then substitute the original
+			if gifsicle -O3 "$i" -o "$j" >> "$the_log" 2>&1; then
+				mv "$j" "$i"
+			else
+				rm "$j"
+			fi
+		done
+	else
+		echo 'Warning: gifsicle not found.' > "$the_log"
+	fi
+
+	comp_summary "$time0" "$size0" "$(sizes gif)" "$the_log"
 }
 
 
@@ -795,6 +828,7 @@ case $1 in
 				compress_manpages
 				compress_png
 				compress_svg
+				compress_gif
 				compress_ui
 				;;
 		esac

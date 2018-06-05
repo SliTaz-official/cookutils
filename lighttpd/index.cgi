@@ -539,6 +539,7 @@ syntax_highlighter() {
 				-e 's#^.*No package .* found.*#<b>\0</b>#' \
 				-e 's#^.*Unable to find.*#<b>\0</b>#' \
 				-e 's#[^a-zA-Z-][Ii]nvalid.*#<b>\0</b>#' \
+				-e 's#Segmentation fault#<b>\1</b>#' \
 				-e 's#\([Nn][Oo][Tt] found\.*\)$#<b>\1</b>#' \
 				-e 's#\(found\.*\)$#<i>\1</i>#' \
 				\
@@ -548,7 +549,7 @@ syntax_highlighter() {
 				-e 's#^.*terminated.*#<b>\0</b>#' \
 				-e 's#\(missing\)#<b>\1</b>#g' \
 				-e 's#^.*[Cc]annot find.*#<b>\0</b>#' \
-				-e 's#^.*unrecognized options.*#<u>\0</u>#' \
+				-e 's#^.*unrecognized option.*#<u>\0</u>#' \
 				-e 's#^.*does not.*#<u>\0</u>#' \
 				-e 's#^.*[Ii]gnoring.*#<u>\0</u>#' \
 				-e 's#^.*note:.*#<u>\0</u>#' \

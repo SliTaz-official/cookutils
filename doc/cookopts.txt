@@ -132,6 +132,11 @@ op0 to op8
     will not be applied to paths and default numeric precision will be 6 digits
     after the dot).
 
+!gifz
+    Default action is to compress all GIF images.
+    The presence of this option overrides the default action (all GIF images
+    will be left "as is").
+
 !uiz
     Default action is to compress Glade UI files. Compression means the removal
     of insignificant spaces and comments.
