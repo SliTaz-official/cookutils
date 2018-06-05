@@ -398,14 +398,13 @@ compress_gif() {
 
 	if which gifsicle >/dev/null; then
 		the_log="$(mktemp)"
-		j="$(mktemp)"
 		for i in $(IFS=$'\n' find $install -type f -name '*.gif'); do
 			unset IFS
 			# use intermediate file, if all well ($?=0), then substitute the original
-			if gifsicle -O3 "$i" -o "$j" >> "$the_log" 2>&1; then
-				mv "$j" "$i"
+			if gifsicle -O3 "$i" -o "$i.$$" >> "$the_log" 2>&1; then
+				mv "$i.$$" "$i"
 			else
-				rm "$j"
+				rm "$i.$$"
 			fi
 		done
 	else
