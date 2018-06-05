@@ -846,10 +846,6 @@ files_header() {
 # Note, $webstat file must be owned by www, otherwise this function will not be able to do the job.
 
 update_webstat() {
-#	echo '<div id="waitme">'
-#	show_note i 'Please wait while statistics are being collected.'
-#	echo "</div>"
-
 	# for receipts:
 	rtotal=$(ls $WOK/*/arch.$ARCH | wc -l)
 	rcooked=$(ls -d $WOK/*/taz | wc -l)
@@ -874,8 +870,6 @@ update_webstat() {
 rtotal="$rtotal"; rcooked="$rcooked"; runbuilt="$runbuilt"; rblocked="$rblocked"; rbroken="$rbroken"
 ptotal="$ptotal"; pcooked="$pcooked"; punbuilt="$punbuilt"; pblocked="$pblocked"; pbroken="$pbroken"
 EOT
-
-	echo '<script>document.getElementById("waitme").remove();</script>'
 }
 
 
@@ -883,7 +877,16 @@ EOT
 
 part() {
 	if [ -z "$nojs" ]; then
-		echo "<div id='$1'></div><script>getPart('$1')</script>"
+		case $1 in
+			webstat)
+				echo -n "<div id='$1'>"
+				show_note i 'Please wait while statistics are being collected.'
+				echo "</div><script>getPart('$1')</script>"
+				;;
+			*)
+				echo "<div id='$1'></div><script>getPart('$1')</script>"
+				;;
+		esac
 		return
 	fi
 
