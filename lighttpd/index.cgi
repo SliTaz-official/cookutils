@@ -876,20 +876,7 @@ EOT
 # Generate part of the main page
 
 part() {
-	if [ -z "$nojs" ]; then
-		case $1 in
-			webstat)
-				echo -n "<div id='$1'>"
-				# Show previous webstat, it will be updated seamless then
-				nojs=1; part webstat noupdate; unset nojs
-				echo "</div><script>getPart('$1')</script>"
-				;;
-			*)
-				echo "<div id='$1'></div><script>getPart('$1')</script>"
-				;;
-		esac
-		return
-	fi
+	echo -n "<div id='$1'>"
 
 	case $1 in
 		summary)
@@ -916,7 +903,7 @@ EOT
 			;;
 		webstat)
 			# Do we need to update the statistics?
-			if [ -z "$2" -a "$activity" -nt "$webstat" ]; then update_webstat; fi
+			if [ -n "$nojs" -a "$activity" -nt "$webstat" ]; then update_webstat; fi
 			. $webstat
 
 			pct=0; [ "$rtotal" -gt 0 ] && pct=$(( ($rcooked * 100) / $rtotal ))
@@ -931,6 +918,7 @@ EOT
 <tr><td>Packages</td><td>$ptotal</td><td>$pcooked</td><td>$punbuilt</td><td>$pblocked</td><td>$pbroken</td></tr>
 </tbody></table>
 EOT
+			if [ -z "$nojs" ]; then echo "<script>getPart('$1')</script>"; fi
 			;;
 		activity)
 			tac $activity | head -n12 | sed 's|cooker.cgi?pkg=||;
@@ -993,6 +981,7 @@ EOT
 			fi
 			;;
 	esac
+	echo "</div>"
 }
 
 
@@ -1128,6 +1117,7 @@ EOT
 </form>
 EOT
 
+	unset nojs
 	part summary
 	part webstat
 
