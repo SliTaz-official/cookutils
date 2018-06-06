@@ -403,7 +403,7 @@ compress_gif() {
 			unset IFS
 			# use intermediate file, if all well ($?=0), then substitute the original
 			if gifsicle -O3 "$i" -o "$i.$$" >> "$the_log" 2>&1; then
-				mv "$i.$$" "$i"
+				if [ -s "$i.$$" ]; then mv "$i.$$" "$i"; fi
 			else
 				rm "$i.$$"
 			fi

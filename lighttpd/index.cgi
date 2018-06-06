@@ -880,7 +880,8 @@ part() {
 		case $1 in
 			webstat)
 				echo -n "<div id='$1'>"
-				show_note i 'Please wait while statistics are being collected.'
+				# Show previous webstat, it will be updated seamless then
+				nojs=1; part webstat noupdate
 				echo "</div><script>getPart('$1')</script>"
 				;;
 			*)
@@ -915,7 +916,7 @@ EOT
 			;;
 		webstat)
 			# Do we need to update the statistics?
-			[ "$webstat" -nt "$activity" ] || update_webstat
+			[ -z "$2" -a "$webstat" -nt "$activity" ] || update_webstat
 			. $webstat
 
 			pct=0; [ "$rtotal" -gt 0 ] && pct=$(( ($rcooked * 100) / $rtotal ))
