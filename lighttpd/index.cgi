@@ -916,7 +916,7 @@ EOT
 			;;
 		webstat)
 			# Do we need to update the statistics?
-			[ -z "$2" -a "$webstat" -nt "$activity" ] || update_webstat
+			if [ -z "$2" -a "$activity" -nt "$webstat" ]; then update_webstat; fi
 			. $webstat
 
 			pct=0; [ "$rtotal" -gt 0 ] && pct=$(( ($rcooked * 100) / $rtotal ))
