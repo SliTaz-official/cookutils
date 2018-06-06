@@ -881,7 +881,7 @@ part() {
 			webstat)
 				echo -n "<div id='$1'>"
 				# Show previous webstat, it will be updated seamless then
-				nojs=1; part webstat noupdate
+				nojs=1; part webstat noupdate; unset nojs
 				echo "</div><script>getPart('$1')</script>"
 				;;
 			*)
