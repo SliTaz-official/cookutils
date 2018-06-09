@@ -366,11 +366,11 @@ compress_svg() {
 
 	action 'Compressing svg images...'
 
+	the_log="$(mktemp)"
 	if which svgcleaner >/dev/null; then
 		[ "${COOKOPTS/!svgextra/}" == "$COOKOPTS" ] &&
 		opts="--apply-transform-to-paths yes --coordinates-precision 1 --paths-coordinates-precision 1"
 
-		the_log="$(mktemp)"
 		for i in $(IFS=$'\n' find $install -type f -name '*.svg'); do
 			out="$(unset IFS; svgcleaner "$i" "$i" --copy-on-error --quiet \
 				--multipass --remove-unresolved-classes no $opts 2>&1)"
@@ -396,16 +396,21 @@ compress_gif() {
 
 	action 'Compressing gif images...'
 
+	the_log="$(mktemp)"
 	if which gifsicle >/dev/null; then
-		the_log="$(mktemp)"
 		IFS=$'\n'
 		for i in $(find $install -type f -name '*.gif'); do
-			unset IFS
-			# use intermediate file, if all well ($?=0), then substitute the original
-			if gifsicle -O3 "$i" -o "$i.$$" >> "$the_log" 2>&1; then
-				if [ -s "$i.$$" ]; then mv "$i.$$" "$i"; fi
-			else
-				rm "$i.$$"
+			if ! cached_path=$(query_cache gif "$i"); then
+				unset IFS
+				# use intermediate file, if all well ($?=0), then substitute the original
+				if gifsicle -O3 "$i" -o "$i.$$" >> "$the_log" 2>&1; then
+					if [ -s "$i.$$" ]; then
+						mv "$i.$$" "$i"
+						store_cache "$cached_path" "$i"
+					fi
+				else
+					rm "$i.$$"
+				fi
 			fi
 		done
 	else
@@ -428,11 +433,11 @@ compress_ui() {
 
 	action 'Compressing ui files...'
 
+	the_log="$(mktemp)"
 	if which xmlstarlet >/dev/null; then
 		size0=$(sizes xml)
 		time0=$(get_time)
 		temp_ui="$(mktemp)"
-		the_log="$(mktemp)"
 		IFS=$'\n'
 		for ui in $(find $install -type f \( -name '*.ui' -o -name '*.glade' \) ); do
 			out="$(xmlstarlet c14n --without-comments "$ui" | xmlstarlet sel -B -t -c '*' > "$temp_ui")"

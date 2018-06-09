@@ -1721,7 +1721,8 @@ EOT
 							/\/share\/locale\// { tag("loc", 4); next }
 							/\.h$/ || /\.a$/ || /\.pc$/ || /\/bin\/.*-config$/ ||
 								/\/Makefile.*$/ { tag("dev", 3); next }
-							/\/share\/help\// || /\/share\/appdata\// { tag("gnm", 6); next }
+							/\/share\/help\// || /\/share\/appdata\// ||
+							/\/share\/metainfo\// { tag("gnm", 6); next }
 							{ tag("???", 1) }
 							' "$orphans" > $table
 
