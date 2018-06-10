@@ -1010,9 +1010,12 @@ if [ -z "$pkg" ]; then
 	page_header
 	if [ -n "$QUERY_STRING" -a "$QUERY_STRING" != 'debug' ]; then
 
-		for list in activity cooknotes cooklist; do
+		for list in activity cooknotes cooklist commits; do
 			[ -n "$(GET $list)" ] || continue
-			[ "$list" == 'cooklist' ] && nb="- Packages: $(wc -l < $cooklist)"
+			case $list in
+				cooklist) nb="- Packages: $(wc -l < $cooklist)";;
+				commits)  nb="- Packages: $(wc -l < $commits)";;
+			esac
 			echo '<section id="content2">'
 			echo "<h2>DB: $list $nb</h2>"
 			tac $CACHE/$list | sed 's|cooker.cgi?pkg=||; s|%2B|+|g;
