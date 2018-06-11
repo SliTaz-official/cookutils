@@ -15,6 +15,13 @@ export arg=$(echo "$REQUEST_URI" | sed 's|^/[^/]*/[^/]*/||')
 
 . /usr/lib/slitaz/httphelper.sh
 
+case $QUERY_STRING in
+	*debug*)
+		debug='yes'
+		QUERY_STRING="$(echo "$QUERY_STRING" | sed 's|debug||; s|^&||; s|&&|\&|; s|&$||')"
+		;;
+esac
+
 [ -f "/etc/slitaz/cook.conf" ] && . /etc/slitaz/cook.conf
 [ -f "./cook.conf" ] && . ./cook.conf
 wok="$WOK"
@@ -161,7 +168,7 @@ page_header() {
 <main>
 EOT
 
-	[ -n "$(GET debug)" ] && echo "<pre><code class='language-ini'>$(env | sort)</code></pre>"
+	[ -n "$debug" ] && echo "<pre><code class='language-ini'>$(env | sort)</code></pre>"
 }
 
 
@@ -709,8 +716,8 @@ pkg_info() {
 	log="$LOGS/$pkg.log"
 
 	echo -n "<div id=\"hdr\"><a href=\"$base/${requested_pkg:-$pkg}\">"
-	if [ -e $wok/${requested_pkg:-$pkg}/.icon.png ]; then
-		echo -n "<img src=\"$base/${requested_pkg:-$pkg}/browse/.icon.png\"/>"
+	if [ -e $wok/$pkg/.icon.png ]; then
+		echo -n "<img src=\"$base/$pkg/browse/.icon.png\"/>"
 	else
 		echo -n "<img src=\"/tazpkg.png\"/>"
 	fi
@@ -1015,8 +1022,9 @@ fi
 if [ -z "$pkg" ]; then
 
 	page_header
-	if [ -n "$QUERY_STRING" -a "$QUERY_STRING" != 'debug' ]; then
+	if [ -n "$QUERY_STRING" ]; then
 
+		[ "$QUERY_STRING" != 'commits.log' ] &&
 		for list in activity cooknotes cooklist commits; do
 			[ -n "$(GET $list)" ] || continue
 			case $list in
