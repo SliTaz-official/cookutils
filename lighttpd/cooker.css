@@ -109,7 +109,7 @@ footer div {
 
 h2 {
 	margin: 0; padding: 0.2rem;
-	font: bold 1.3rem/2rem sans-serif;
+	font: bold 1.3rem/1.6rem sans-serif;
 	color: rgba(0,0,0,0.7);
 }
 section h2, section h3 {
@@ -187,6 +187,18 @@ pre.log > a {
 main {
 	margin: auto;
 	padding: 0.5em 0.5em 5em;
+}
+#hdr {
+	margin: 0.2rem;
+}
+#hdr img {
+	float: left;
+	padding-right: 0.5rem;
+	height: 48px;
+	width: 48px;
+}
+#info {
+	clear: both;
 }
 #content2, div.list {
 	width: 100%; box-sizing: border-box;
@@ -382,7 +394,6 @@ tbody tr:nth-child(even) {
 .summary th, .summary td { white-space: nowrap; width: 1rem; text-align: center; }
 .summary th:last-child, .summary td:last-child { width: unset; }
 
-#webstat { height: 7em; }
 .webstat td { text-align: center; width: 16%; }
 .webstat td:first-child { text-align: unset; width: unset; }
 

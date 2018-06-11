@@ -708,6 +708,13 @@ pkg_info() {
 	local log active bpkg short_desc=''
 	log="$LOGS/$pkg.log"
 
+	echo -n "<div id=\"hdr\"><a href=\"$base/${requested_pkg:-$pkg}\">"
+	if [ -e $wok/${requested_pkg:-$pkg}/.icon.png ]; then
+		echo -n "<img src=\"$base/${requested_pkg:-$pkg}/browse/.icon.png\"/>"
+	else
+		echo -n "<img src=\"/tazpkg.png\"/>"
+	fi
+	echo -n "</a>"
 	echo -n "<h2><a href=\"$base/${requested_pkg:-$pkg}\">${requested_pkg:-$pkg}</a>"
 	# Get short description for existing packages
 	[ -f $PKGS/packages.info ] &&
@@ -715,7 +722,7 @@ pkg_info() {
 	# If package does not exist (not created yet or broken), get short description
 	# (but only for "main" package) from receipt
 	[ -n "$short_desc" ] || short_desc="$(. $wok/$pkg/receipt; echo "$SHORT_DESC")"
-	echo ": $short_desc</h2>"
+	echo "<br/>$short_desc</h2></div>"
 	echo '<div id="info">'
 	echo "<a class='button icon receipt$(active receipt stuff)' href='$base/$pkg/receipt'>receipt &amp; stuff</a>"
 
