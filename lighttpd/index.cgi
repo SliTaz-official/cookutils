@@ -183,7 +183,7 @@ page_footer() {
 
 <footer>
 	<a href="http://www.slitaz.org/">SliTaz Website</a>
-	<a href="$base/">Cooker</a>
+	<a href="http://tank.slitaz.org/graphs.php">Server status</a>
 	<a href="$base/doc/cookutils/cookutils.html">Documentation</a>
 	<a href="$base/?theme">Theme</a>
 </footer>
@@ -623,6 +623,7 @@ syntax_highlighter() {
 				 s|^\(-rwxr-xr-x\)|<span class='c21'>\1</span>|;
 				 s|^\(-rw-r--r--\)|<span class='c31'>\1</span>|;
 				 s|^\(drwxr-xr-x\)|<span class='c41'>\1</span>|;
+				 s|^\(-rwsr-xr-x\)|<span class='c51'>\1</span>|;
 				 s|^\([lrwxs-][lrwxs-]*\)|<span class='c11'>\1</span>|;
 				"
 			;;

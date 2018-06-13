@@ -109,7 +109,7 @@ footer div {
 
 h2 {
 	margin: 0; padding: 0.2rem;
-	font: bold 1.3rem/1.6rem sans-serif;
+	font: bold 1.3rem/2rem sans-serif;
 	color: rgba(0,0,0,0.7);
 }
 section h2, section h3 {
@@ -196,6 +196,9 @@ main {
 	padding-right: 0.5rem;
 	height: 48px;
 	width: 48px;
+}
+#hdr h2 {
+	font: bold 1.3rem/1.6rem sans-serif;
 }
 #info {
 	clear: both;
