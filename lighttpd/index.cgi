@@ -539,7 +539,7 @@ syntax_highlighter() {
 				\
 				-e 's#^.*multiple definition of.*#<b>\0</b>#' \
 				-e 's#^.*[Ff][Aa][Ii][Ll][Ee][Dd].*#<b>\0</b>#' \
-				-e 's#^.*[Ff]atal.*#<b>\0</b>#' \
+				-e 's#^.*[^A-Za-z:/-][Ff]atal.*#<b>\0</b>#' \
 				-e '/non-fatal/ s|</*b>||g' \
 				-e 's#^.*[Nn]ot found.*#<b>\0</b>#' \
 				-e 's#^.*[Nn]o such file.*#<b>\0</b>#' \
@@ -571,6 +571,7 @@ syntax_highlighter() {
 				-e "s#^====\([^']*\).#<span class='span-line'>\0</span>#g" \
 				-e "s#^[a-zA-Z0-9]\([^']*\) :: #<span class='span-sky'>\0</span>#g" \
 				-e "s#[fh]tt*ps*://[^ '\"]*#<a href='\0'>\0</a>#g" \
+				-e 's|^Switching to the set.*|<span class="switch">‣‣‣ \0</span>|' \
 				\
 				-e 's|^<u>\(.*libtool: warning: relinking.*\)</u>|\1|' \
 				-e 's|^<u>\(.*libtool: warning: .* has not been installed in .*\)</u>|\1|' \
@@ -775,7 +776,7 @@ pkg_info() {
 		printf "LFS</a>\n"
 	fi
 
-	[ -s "$log" ] &&
+	ls $log* >/dev/null 2>&1 &&
 		echo "<a class='button icon log$(active log)' href='$base/$pkg/log/'>logs</a>"
 
 	echo '</div>'

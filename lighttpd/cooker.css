@@ -226,6 +226,7 @@ mark {
 .sh-comment { color: #a00; }
 .sh-val     { color: #e50; font-weight: bold; }
 .var        { color: #05a; }
+.switch     { background-color: #fce94f; font-weight: bold; display: inline-block; width: 100%; }
 
 
 /* Colored log */

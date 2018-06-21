@@ -38,7 +38,8 @@ save="$(mktemp)"
 cat > $save <<EOT
 PACKAGE="$PACKAGE"; DEPENDS="$(echo $DEPENDS)"; PROVIDE="$(echo $PROVIDE)"
 SUGGESTED="$(echo $SUGGESTED)"; TAZPANEL_DAEMON="$TAZPANEL_DAEMON"
-TAGS="$(echo $TAGS)"; VERSION="$VERSION"
+TAGS="$(echo $TAGS)"; VERSION="$VERSION"; SHORT_DESC="$SHORT_DESC"
+WEB_SITE="$WEB_SITE"
 EOT
 unset_receipt
 . "$orig_receipt"
@@ -47,9 +48,8 @@ MAIN_PACKAGE="$PACKAGE"
 
 # Manage split packages
 SPLIT=" $SPLIT "
-if [ "$PACKAGE"             != "$MAIN_PACKAGE" -a \
-	 "$SPLIT"               != '  '            -a \
-	 "${SPLIT/ $PACKAGE /}" != "$SPLIT" ]; then
+if [ "$PACKAGE" != "$MAIN_PACKAGE"   -a   "$SPLIT" != '  ' ] &&
+	echo "$SPLIT" | fgrep -q " $PACKAGE "; then
 	# For packages with empty $DEPENDS
 	if [ -z "$DEPENDS" ]; then
 		case $PACKAGE in

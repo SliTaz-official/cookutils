@@ -769,9 +769,10 @@ EOT
 	local perlfiles="$(find $fs -type f \( -name 'perllocal.pod' -o -name '.packlist' \))"
 	# 2. Perl *.pod (if not disabled)
 	[ "${COOKOPTS/!rmpod/}" == "$COOKOPTS" ] &&
-		perlfiles="$perlfiles $(find $fs -type f -name '*.pod')"
-	echo "$perlfiles" | xargs rm -f 2>/dev/null
-	echo "$perlfiles" | awk 'BEGIN{FS=OFS="/"}{$NF="";print}' | xargs rmdir -p 2>/dev/null
+		perlfiles="$perlfiles"$'\n'"$(find $fs -type f -name '*.pod')"
+	echo "$perlfiles" | sort -u | xargs rm -f 2>/dev/null
+	echo "$perlfiles" | sort -u | awk 'BEGIN{FS=OFS="/"}{$NF="";print}' \
+	| xargs rmdir -p --ignore-fail-on-non-empty 2>/dev/null
 
 	# Strip documentation inside Perl files (*.pm and *.pl) (if not disabled)
 	[ "${COOKOPTS/!perlz/}" == "$COOKOPTS" ] &&

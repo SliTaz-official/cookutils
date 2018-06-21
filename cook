@@ -706,8 +706,6 @@ cookit() {
 
 	# Check for build deps and handle implicit depends of *-dev packages
 	# (ex: libusb-dev :: libusb).
-#	rm -f $CACHE/installed.local $CACHE/installed.web $CACHE/missing.dep
-#	touch $CACHE/installed.local $CACHE/installed.web
 	[ -n "$BUILD_DEPENDS" ] && _ 'Checking build dependencies...'
 	[ -n "$root" ] && _ 'Using packages DB: %s' "$root$DB"
 
@@ -740,49 +738,6 @@ cookit() {
 			done
 		done
 	done
-
-#	# Have we a missing build dep to cook?
-#	if [ -s "$CACHE/missing.dep" ] && [ -n "$AUTO_COOK" ]; then
-#		_ 'Auto cook config is set: %s' "$AUTO_COOK"
-#		cp -f $LOGS/$PACKAGE.log $LOGS/$PACKAGE.log.$$
-#		for i in $(uniq $CACHE/missing.dep); do
-#			(_ 'Building dep (wok/pkg)    : %s' "$i $vers") | \
-#				tee -a $LOGS/$PACKAGE.log.$$
-#			# programmers: next two messages are exact copy from remove_deps()
-#			togrep1=$(_n 'Build dependencies to remove:')
-#			togrep2=$(_n 'Removing:')
-#			cook $i || (_ "ERROR: can't cook dep \"%s\"" "$i" && newline && \
-#				fgrep $togrep1 $LOGS/$i.log && \
-#				fgrep $togrep2 $LOGS/$i.log && newline) | \
-#				tee -a $LOGS/$PACKAGE.log.$$ && break
-#		done
-#		rm -f $CACHE/missing.dep
-#		mv  $LOGS/$PACKAGE.log.$$ $LOGS/$PACKAGE.log
-#	fi
-#
-#	# QA: Exit on missing dep errors. We exit in both cases, if AUTO_COOK
-#	# is enabled and cook fails we have ERROR in log, if no auto cook we have
-#	# missing dep in cached file.
-#	lerror=$(_n 'ERROR')
-#	if fgrep -q ^$lerror $LOGS/$pkg.log || [ -s "$CACHE/missing.dep" ]; then
-#		[ -s "$CACHE/missing.dep" ] && nb=$(wc -l < $CACHE/missing.dep)
-#		_p 'ERROR: missing %d dependency' 'ERROR: missing %d dependencies' "$nb" "$nb"
-#		broken; exit 1
-#	fi
-#
-#	# Install local packages: package-version$arch
-#	cd $PKGS
-#	for i in $(uniq $CACHE/installed.local); do
-#		# _ 'Installing dep (pkg/local): %s' "$i"
-#		tazpkg install $i --root=$root --local --quiet --cookmode
-#	done
-#
-#	# Install web or cached packages (if mirror is set to $PKGS we only
-#	# use local packages).
-#	for i in $(uniq $CACHE/installed.web); do
-#		# _ 'Installing dep (web/cache): %s' "$i"
-#		tazpkg get-install $i --root=$root --local --quiet --cookmode
-#	done
 
 	update_installed_cook_diff
 
@@ -859,7 +814,7 @@ cookit() {
 			| tr '\n' ' ')
 		SETS=${SETS% }	# normalize space
 		# Prepare specified source sets using patched sources
-		[ -n "$SETS" ] &&
+		[ -n "$SETS" -a -d "$src" ] &&
 		for set in $SETS; do
 			echo "Preparing set $set"	# debug
 			cp -a $src $src-$set
@@ -1027,7 +982,7 @@ packit() {
 
 	cd $taz
 	action 'Copying "%s"...' 'receipt'
-	export PACKAGE VERSION DEPENDS PROVIDE SUGGESTED TAZPANEL_DAEMON TAGS CAT CONFIG_FILES
+	export PACKAGE VERSION SHORT_DESC WEB_SITE DEPENDS PROVIDE SUGGESTED TAZPANEL_DAEMON TAGS CAT CONFIG_FILES
 	@@PREFIX@@/libexec/cookutils/mk_pkg_receipt "$(realpath ../receipt)" > $pack/receipt
 	chown 0.0 $pack/receipt; status
 
@@ -2125,7 +2080,7 @@ case "$1" in
 			--pack)
 				[ -d "$WOK/$pkg/install" ] || die 'Need to build "%s"' "$pkg"
 				[ ! -d "$WOK/$pkg/taz" ] || rm -rf "$WOK/$pkg/taz"
-				[ ! -f "$LOGS/$pkg-pack.log" ] || rm -rf $LOGS/$pkg-pack.log
+				[ ! -f "$LOGS/$pkg-pack.log" ] || rm -f $LOGS/$pkg-pack.log
 				sed -i '$ s|$| (packing)|' $activity
 				packall 2>&1 | tee -a $LOGS/$pkg-pack.log
 				clean_log "$pkg-pack"
