@@ -1657,16 +1657,30 @@ update_split_db() {
 recreate_split_db() {
 	# Clean
 	local db="$cache/split.db"
-	touch $db
-	> $db
 
 	cd $WOK
 	for pkg in *; do
 		[ -f "$WOK/$pkg/receipt" ] || continue
 		unset PACKAGE SPLIT
 		. $WOK/$pkg/receipt
-		echo -e "$PACKAGE\t$(all_names)" >> $db
-	done
+		echo -e "$PACKAGE\t$(all_names)"
+	done > $db
+}
+
+
+# Recreate whole maint.db from scratch
+
+recreate_maint_db() {
+	# Clean
+	local db="$cache/maint.db"
+
+	cd $WOK
+	for pkg in *; do
+		[ -f "$WOK/$pkg/receipt" ] || continue
+		unset PACKAGE MAINTAINER
+		. $WOK/$pkg/receipt
+		echo -e "$MAINTAINER\t$PACKAGE"
+	done | sort > $db
 }
 
 
@@ -2031,12 +2045,18 @@ case "$1" in
 		# as well as flavors files for TazLiTo. We don't need logs since we do it
 		# manually to ensure everything is fine before syncing the mirror.
 		recreate_split_db
+		recreate_maint_db
 		@@PREFIX@@/libexec/cookutils/pkgdb "$2"
 		;;
 
 	splitdb)
 		# File split.db is useful for searching for split packages.
 		recreate_split_db
+		;;
+
+	maintdb)
+		# File maint.db is useful for searching maintainer's packages.
+		recreate_maint_db
 		;;
 
 	*)

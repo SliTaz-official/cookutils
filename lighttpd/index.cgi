@@ -39,6 +39,7 @@ cooktime="$CACHE/cooktime"
 wokrev="$CACHE/wokrev"
 webstat="$CACHE/webstat"
 splitdb="$CACHE/split.db"
+maintdb="$CACHE/maint.db"
 
 # Path to markdown to html convertor
 cmark_opts='--smart -e table -e strikethrough -e autolink -e tagfilter'
@@ -1110,6 +1111,62 @@ href="http://doc.slitaz.org/en:cookbook:toolchain">http://doc.slitaz.org/en:cook
 </div>
 EOT
 				;;
+				maintainer*)
+					maintainer=$(GET maintainer)
+					cat <<EOT
+<section>
+	<h2>For maintainers</h2>
+	<p>Check your packages version, ${maintainer:-maintainer}.</p>
+	<form>
+		<select name="maintainer">
+			<option value=''>--- select maintainer ---
+EOT
+					cut -d$'\t' -f1 $maintdb | sort -u \
+					| awk -vm=$maintainer '{
+						selected=$0==m?"selected":""
+						printf("<option %s value='%s'>%s\n", selected, $0, $0)
+					}'
+					cat <<EOT
+
+		</select>
+		<button type="submit">Go</button>
+	</form>
+EOT
+
+					if [ "$maintainer" != 'maintainer' ]; then
+						cat <<EOT
+	<table class="maint">
+		<thead><tr><th>Package</th><th>Version</th><th>Repology</th></tr></thead>
+EOT
+						awk -vm=$maintainer '{if ($1 == m) print $2}' $maintdb \
+						| while read pkg; do
+							unset VERSION; REPOLOGY=$pkg
+							. $wok/$pkg/receipt
+							if [ "$REPOLOGY" == '-' ]; then
+								repo_info=" </td><td> "
+							else
+								repo_info="<a href='https://repology.org/metapackage/$REPOLOGY' target='_blank'
+									rel='noopener noreferrer' title='latest packaged version(s)'>
+									<img src='https://repology.org/badge/latest-versions/$REPOLOGY.svg' alt='latest packaged version(s)'>
+									</a></td>"
+							fi
+							cat <<EOT
+		<tr>
+			<td><img src="$base/s/$pkg"> <a href="$pkg">$pkg</a></td>
+			<td>$VERSION</td>
+			<td>$repo_info</td>
+		</tr>
+EOT
+					done
+
+					cat <<EOT
+	</table>
+EOT
+					fi
+					cat <<EOT
+</section>
+EOT
+				;;
 		esac
 		page_footer
 		exit 0
@@ -1141,6 +1198,15 @@ EOT
 	part summary
 	part webstat
 
+	cat <<EOT
+<p>
+	Service logs:
+	<a href="?cookorder.log">cookorder</a> ·
+	<a href="?commits.log">commits</a> ·
+	<a href="?pkgdb.log">pkgdb</a>
+</p>
+EOT
+
 	if [ -e "$CACHE/cooker-request" -a ! -s $command ]; then
 		if [ "$activity" -nt "$CACHE/cooker-request" ]; then
 			echo '<a class="button icon bell r" href="?poke">Wake up</a>'
@@ -1150,12 +1216,7 @@ EOT
 	fi
 
 	cat <<EOT
-<p>
-	Service logs:
-	<a href="?cookorder.log">cookorder</a> ·
-	<a href="?commits.log">commits</a> ·
-	<a href="?pkgdb.log">pkgdb</a>
-</p>
+<a class="button icon maintainers" href="?maintainer">For maintainers</a>
 </section>
 EOT
 
