@@ -1260,6 +1260,19 @@ case "$cmd" in
 		summary "$log"
 
 
+		# Repology badge
+		[ "$REPOLOGY" == '-' ] || cat <<EOT
+<section>
+	<h3>Repology</h3>
+	<a href="https://repology.org/metapackage/${REPOLOGY:-$pkg}" target='_blank'
+	rel='noopener noreferrer' title="latest packaged version(s) by Repology">
+	<img src="https://repology.org/badge/latest-versions/${REPOLOGY:-$pkg}.svg" alt="latest packaged version(s)">
+	<img src="https://repology.org/badge/tiny-repos/${REPOLOGY:-$pkg}.svg" alt="Packaging status">
+	</a>
+</section>
+EOT
+
+
 		# Show tag list
 		taglist=$(
 			for i in $pkg $(awk -F$'\t' -vp="$pkg" '{if ($1 == p) print $2}' $splitdb); do
