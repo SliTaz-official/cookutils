@@ -164,3 +164,13 @@ empty-pkg
     Default behaviour is to end work with error message when package contains no
     files (exception is made for packages belonging to the "meta" category).
     Presence of this option allows the package not to contain files.
+
+instant-pack
+    Usual behaviour is to make the sources (when sources in the $src became
+    files in the $install) and then pack the package (when files from $install
+    split to one or another $fs, and then became the *.tazpkg archives).
+    When multiple SETs used in the receipt, the default behaviour is to make
+    all the sources for all the sets, and only then to pack all the packages.
+    Presence of this option will pack the SET packages instantly before
+    to switch to another SET. So, packages created in the first SET will be
+    immediately available to use in the second SET, and so on.

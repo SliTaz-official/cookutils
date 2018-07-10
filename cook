@@ -86,6 +86,16 @@ check_pkg_in_wok() {
 }
 
 
+# Find the package, return the receipt name where it was found
+# for example, libpcreposix -> pcre
+
+find_pkg_in_wok() {
+	awk -F$'\t' -vi="$1" '{
+		if (index(" " $2 " ", i)) {print $1; exit}
+	}' $cache/split.db
+}
+
+
 # Initialize files used in $CACHE
 
 init_db_files() {
@@ -629,6 +639,68 @@ store_timestats() {
 }
 
 
+# Internal function to cook specified SET
+
+cook_set() {
+	# Switch to the specified source set
+	set_paths
+	local suffix=''
+	[ -n "$SET" ] && suffix="-$SET"
+	export     src="$WOK/$pkg/source/$PACKAGE-$VERSION$suffix"
+	export install="$WOK/$pkg/install$suffix"
+	export DESTDIR="$install"
+
+	if [ -n "$SETS" ]; then
+		if [ -n "$SET" ]; then
+			title "Switching to the set '$SET'"
+		else
+			title "Switching to the default set"
+		fi
+		echo "src    : $src"
+		echo "install: $install"
+	fi
+	[ -d "$src" ] && cd $src	# packages without sources exists
+	echo
+
+	[ -d "$install" ] && rm -r $install
+	#mkdir -p $install
+
+	compile_rules $@ || { broken; exit 1; }
+
+	# Stay compatible with _pkg
+	[ -d "$src/_pkg" ] && mv $src/_pkg $install
+
+	copy_generic_stuff
+
+	timestamp job$job_counter # compiling (set '$SET')
+
+	# Actions to do after compiling the package
+	# Skip all for split packages (already done in main package)
+	if [ -z "$WANTED" ]; then
+		footer
+		export COOKOPTS ARCH install
+		@@PREFIX@@/libexec/cookutils/compressor install
+		timestamp job$(($job_counter + 1)) # compressing (set '$SET')
+	fi
+
+	# Activate "instant-pack" mode
+	if [ "${COOKOPTS/instant-pack/}" != "$COOKOPTS" ]; then
+		echo " $SPLIT " | fgrep -q " $PACKAGE " || SPLIT="$PACKAGE $SPLIT"
+		# determine the list of the packages belongs to the current SET...
+		echo -n $SPLIT \
+		| awk -vset="$SET" '
+			BEGIN { RS = " "; FS = ":"; }
+			{ if ($2 == set) print $1; }' \
+		| while read SET_PKG; do
+			# ... and then pack them
+			packit $SET_PKG
+		done
+	fi
+
+	job_counter=$(($job_counter + 2))
+}
+
+
 # The main cook function.
 
 cookit() {
@@ -806,13 +878,14 @@ cookit() {
 		timestamp job4 # patching
 
 		# Get set names from $SPLIT variable, format ex. 'pkg1 pkg2:set1 pkg3:set2'
-		SETS=$(echo $SPLIT \
+		# Keep natural order of the sets, don't sort them alphabetically
+		SETS=$(echo -n $SPLIT \
 			| awk '
 				BEGIN { RS = " "; FS = ":"; }
-				{ print $2; }' \
-			| sort -u \
-			| tr '\n' ' ')
-		SETS=${SETS% }	# normalize space
+				{
+					if ($2 && ! set[$2]) { printf("%s ", $2); set[$2] = "1"; }
+				}' \
+			| sed 's| $||')
 		# Prepare specified source sets using patched sources
 		[ -n "$SETS" -a -d "$src" ] &&
 		for set in $SETS; do
@@ -824,49 +897,19 @@ cookit() {
 		timestamp sets "$SETS"
 
 		job_counter='6'
-		for SET in '' $SETS; do
-			# Switch to the specified source set
-			set_paths
-			local suffix=''
-			[ -n "$SET" ] && suffix="-$SET"
-			export     src="$WOK/$pkg/source/$PACKAGE-$VERSION$suffix"
-			export install="$WOK/$pkg/install$suffix"
-			export DESTDIR="$install"
 
-			if [ -n "$SETS" ]; then
-				if [ -n "$SET" ]; then
-					title "Switching to the set '$SET'"
-				else
-					title "Switching to the default set"
-				fi
-				echo "src    : $src"
-				echo "install: $install"
-			fi
-			[ -d "$src" ] && cd $src	# packages without sources exists
-			echo
+		SET='' cook_set # first run for empty SET
 
-			[ -d "$install" ] && rm -r $install
-			#mkdir -p $install
-
-			compile_rules $@ || { broken; exit 1; }
-
-			# Stay compatible with _pkg
-			[ -d "$src/_pkg" ] && mv $src/_pkg $install
-
-			copy_generic_stuff
-
-			timestamp job$job_counter # compiling (set '$SET')
-
-			# Actions to do after compiling the package
-			# Skip all for split packages (already done in main package)
-			if [ -z "$WANTED" ]; then
-				footer
-				export COOKOPTS ARCH install
-				@@PREFIX@@/libexec/cookutils/compressor install
-				timestamp job$(($job_counter + 1)) # compressing (set '$SET')
-			fi
-
-			job_counter=$(($job_counter + 2))
+		# Allow to change SETS after the first run, follow the changes
+		SETS=$(. $receipt; echo -n $SPLIT \
+			| awk '
+				BEGIN { RS = " "; FS = ":"; }
+				{
+					if ($2 && ! set[$2]) { printf("%s ", $2); set[$2] = "1"; }
+				}' \
+			| sed 's| $||')
+		for SET in $SETS; do
+			cook_set
 		done
 	else
 		mkdir -p $install	# allow receipts without `compile_rules()`
@@ -982,7 +1025,7 @@ packit() {
 
 	cd $taz
 	action 'Copying "%s"...' 'receipt'
-	export PACKAGE VERSION SHORT_DESC WEB_SITE DEPENDS PROVIDE SUGGESTED TAZPANEL_DAEMON TAGS CAT CONFIG_FILES
+	export PACKAGE VERSION CATEGORY SHORT_DESC WEB_SITE DEPENDS PROVIDE SUGGESTED TAZPANEL_DAEMON TAGS CAT CONFIG_FILES
 	@@PREFIX@@/libexec/cookutils/mk_pkg_receipt "$(realpath ../receipt)" > $pack/receipt
 	chown 0.0 $pack/receipt; status
 
@@ -1182,7 +1225,7 @@ EOT
 
 all_names() {
 	# Get package names from $SPLIT variable
-	local split=$(echo $SPLIT \
+	local split=$(echo -n $SPLIT \
 		| awk '
 			BEGIN { RS = " "; FS = ":"; }
 			{ print $1; }' \
@@ -2137,6 +2180,8 @@ case "$1" in
 		fi
 
 		# Proceed only if `cookit` return code is zero-OK
+		# If instant-pack if specified, then packages already packed in the cookit()
+		[ "${COOKOPTS/instant-pack/}" == "$COOKOPTS" ] &&
 		packall 2>&1 | loglimit 5 >> $LOGS/$pkg.log
 		timestamp job29 # packing
 
