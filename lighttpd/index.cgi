@@ -37,9 +37,10 @@ broken="$CACHE/broken"
 cooknotes="$CACHE/cooknotes"
 cooktime="$CACHE/cooktime"
 wokrev="$CACHE/wokrev"
-webstat="$CACHE/webstat"
+webstat="$CACHE/webstat"		# note, file should be previously created with write permissions for www
 splitdb="$CACHE/split.db"
 maintdb="$CACHE/maint.db"
+repologydb="$CACHE/repology.db"	# note, file should be previously created with write permissions for www
 
 # Path to markdown to html convertor
 cmark_opts='--smart -e table -e strikethrough -e autolink -e tagfilter'
@@ -250,6 +251,38 @@ manage_modified() {
 	fi
 	echo "Last-Modified: $(date -Rur "$file" | sed 's|UTC|GMT|')"
 	echo "Cache-Control: public, max-age=3600"
+}
+
+
+# Proxy to the Repology
+# Problems:
+# 1. Function "latest packaged version" widely used here, and it has no JSON API, but only SVG badge.
+# 2. So, all version comparisons can be only visually and not automated.
+# 3. When the thousands of badges present on the web page, many of them are broken (maybe server
+#    drops requests), while our server displays status icons well.
+# 4. Default badges are wide and not customizable.
+# Solution:
+# 1. Make local cache. Update it on demand, but no more than once a day (Repology cached info
+#    on a hourly basis). Use cached values when they are not expired.
+# 2. Extract and save version(s) from the SVG badges. Values can be compared in the scripts as well
+#    as custom badges may be provided.
+
+repology_get() {
+	local found versions day=$(date +%j)		# %j is the number of the day in the year
+	found=$(awk -F$'\t' -vpkg="$1" -vday="$day" '{
+		if ($1 == pkg && $2 == day) { print $3; exit; }
+	}' $repologydb)
+	if [ -n "$found" ]; then
+		echo "$found"
+	else
+		versions=$(wget -q -T 20 -O- https://repology.org/badge/latest-versions/$1.svg \
+		| sed '/<text /!d; /fill/d; /latest/d; s|.*>\(.*\)<.*|\1|; s|, | |g') # space separated list
+		if [ -n "$versions" ]; then
+			sed -i "/^$1	/d" $repologydb
+			echo -e "$1\t$day\t$versions" >> $repologydb
+			echo $versions
+		fi
+	fi
 }
 
 
@@ -1143,18 +1176,22 @@ EOT
 							unset VERSION; REPOLOGY=$pkg
 							. $wok/$pkg/receipt
 							if [ "$REPOLOGY" == '-' ]; then
-								repo_info=" </td><td> "
+								unset repo_info1 repo_info2
 							else
-								repo_info="<a href='https://repology.org/metapackage/$REPOLOGY' target='_blank'
-									rel='noopener noreferrer' title='latest packaged version(s)'>
-									<img src='https://repology.org/badge/latest-versions/$REPOLOGY.svg' alt='latest packaged version(s)'>
-									</a></td>"
+								repo_ver=$(repology_get $REPOLOGY)
+								if echo " $repo_ver " | fgrep -q " $VERSION "; then
+									icon='actual'
+								else
+									icon='update'
+								fi
+								repo_info1="<a class='icon $icon' href='https://repology.org/metapackage/$REPOLOGY' target='_blank'"
+								repo_info2="rel='noopener noreferrer' title='latest packaged version(s)'>${repo_ver// /, }</a>"
 							fi
 							cat <<EOT
 		<tr>
 			<td><img src="$base/s/$pkg"> <a href="$pkg">$pkg</a></td>
 			<td>$VERSION</td>
-			<td>$repo_info</td>
+			<td>$repo_info1 $repo_info2</td>
 		</tr>
 EOT
 					done

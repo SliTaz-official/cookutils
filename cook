@@ -1679,6 +1679,7 @@ recreate_maint_db() {
 		[ -f "$WOK/$pkg/receipt" ] || continue
 		unset PACKAGE MAINTAINER
 		. $WOK/$pkg/receipt
+		MAINTAINER=$(echo $MAINTAINER | sed 's|.*<||; s|>.*||')
 		echo -e "$MAINTAINER\t$PACKAGE"
 	done | sort > $db
 }
