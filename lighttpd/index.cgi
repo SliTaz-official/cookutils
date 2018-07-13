@@ -275,7 +275,7 @@ repology_get() {
 	if [ -n "$found" ]; then
 		echo "$found"
 	else
-		versions=$(wget -q -T 20 -O- https://repology.org/badge/latest-versions/$1.svg \
+		versions=$(chroot /home/slitaz/next/chroot/ wget -q -T 20 -O- https://repology.org/badge/latest-versions/$1.svg \
 		| sed '/<text /!d; /fill/d; /latest/d; s|.*>\(.*\)<.*|\1|; s|, | |g') # space separated list
 		if [ -n "$versions" ]; then
 			sed -i "/^$1	/d" $repologydb
@@ -1144,9 +1144,9 @@ href="http://doc.slitaz.org/en:cookbook:toolchain">http://doc.slitaz.org/en:cook
 </div>
 EOT
 				;;
-				maintainer*)
-					maintainer=$(GET maintainer)
-					cat <<EOT
+			maintainer*)
+				maintainer=$(GET maintainer)
+				cat <<EOT
 <section>
 	<h2>For maintainers</h2>
 	<p>Check your packages version, ${maintainer:-maintainer}.</p>
@@ -1154,53 +1154,81 @@ EOT
 		<select name="maintainer">
 			<option value=''>--- select maintainer ---
 EOT
-					cut -d$'\t' -f1 $maintdb | sort -u \
-					| awk -vm=$maintainer '{
-						selected=$0==m?"selected":""
-						printf("<option %s value='%s'>%s\n", selected, $0, $0)
-					}'
-					cat <<EOT
+				cut -d$'\t' -f1 $maintdb | sort -u \
+				| awk -vm=$maintainer '{
+					selected=$0==m?"selected":""
+					printf("<option %s value='%s'>%s\n", selected, $0, $0)
+				}'
+				cat <<EOT
 
 		</select>
 		<button type="submit">Go</button>
 	</form>
 EOT
 
-					if [ "$maintainer" != 'maintainer' ]; then
-						cat <<EOT
+				if [ "$maintainer" != 'maintainer' ]; then
+					tmp_status=$(mktemp)
+					cat <<EOT
 	<table class="maint">
 		<thead><tr><th>Package</th><th>Version</th><th>Repology</th></tr></thead>
 EOT
-						awk -vm=$maintainer '{if ($1 == m) print $2}' $maintdb \
-						| while read pkg; do
-							unset VERSION; REPOLOGY=$pkg
-							. $wok/$pkg/receipt
-							if [ "$REPOLOGY" == '-' ]; then
-								unset repo_info1 repo_info2
+					awk -vm=$maintainer '{if ($1 == m) print $2}' $maintdb \
+					| while read pkg; do
+						unset VERSION; REPOLOGY=$pkg
+						. $wok/$pkg/receipt
+						ver=$(awk -F$'\t' -vpkg="$pkg" '{if ($1 == pkg) {print $2; exit}}' $PKGS/packages.info)
+						if [ "$REPOLOGY" == '-' ]; then
+							unset repo_info1 repo_info2
+							echo '-' >>$tmp_status
+						else
+							repo_ver=$(repology_get $REPOLOGY)
+							if [ "$repo_ver" == '-' ]; then
+								echo '-' >>$tmp_status
+								icon='more'
 							else
-								repo_ver=$(repology_get $REPOLOGY)
-								if echo " $repo_ver " | fgrep -q " $VERSION "; then
+								if echo " $repo_ver " | fgrep -q " ${ver:-$VERSION} "; then
 									icon='actual'
 								else
 									icon='update'
 								fi
-								repo_info1="<a class='icon $icon' href='https://repology.org/metapackage/$REPOLOGY' target='_blank'"
-								repo_info2="rel='noopener noreferrer' title='latest packaged version(s)'>${repo_ver// /, }</a>"
+								echo $icon >>$tmp_status
 							fi
-							cat <<EOT
+							repo_info1="<a class='icon $icon' href='https://repology.org/metapackage/$REPOLOGY' target='_blank'"
+							repo_info2="rel='noopener noreferrer' title='latest packaged version(s)'>${repo_ver// /, }</a>"
+						fi
+						cat <<EOT
 		<tr>
 			<td><img src="$base/s/$pkg"> <a href="$pkg">$pkg</a></td>
-			<td>$VERSION</td>
+			<td>${ver:-$VERSION}</td>
 			<td>$repo_info1 $repo_info2</td>
 		</tr>
 EOT
 					done
 
+					pkg_total=$(   wc -l      < $tmp_status)
+					pkg_actual=$(  fgrep actual $tmp_status | wc -l)
+					pkg_outdated=$(fgrep update $tmp_status | wc -l)
+					pkg_unknown=$( fgrep '-'    $tmp_status | wc -l)
+
+					pct_actual=$((   $pkg_actual   * 100 / $pkg_total ))
+					pct_outdated=$(( $pkg_outdated * 100 / $pkg_total ))
+					pct_unknown=$((  $pkg_unknown  * 100 / $pkg_total ))
+
+					[ "$pkg_actual"   -eq 0 ] && pkg_actual=''
+					[ "$pkg_outdated" -eq 0 ] && pkg_outdated=''
+					[ "$pkg_unknown"  -eq 0 ] && pkg_unknown=''
+
 					cat <<EOT
 	</table>
+
+	<div class="meter" style="width:100%;text-align:center"><div
+	style="display:inline-block;background-color:#090;width:$pct_actual%">$pkg_actual</div><div
+	style="display:inline-block;background-color:#f90;width:$pct_outdated%">$pkg_outdated</div><div
+	style="display:inline-block;background-color:#ccc;width:$pct_unknown%">$pkg_unknown</div></div>
 EOT
-					fi
-					cat <<EOT
+					rm $tmp_status
+				fi
+				cat <<EOT
 </section>
 EOT
 				;;
