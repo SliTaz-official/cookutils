@@ -64,7 +64,7 @@ if [ -n "$(GET search)" ]; then
 fi
 
 
-# Show the running command and it's progression
+# Show the running command and its progression
 
 running_command() {
 	state="$(cat $command)"
@@ -256,16 +256,16 @@ manage_modified() {
 
 # Proxy to the Repology
 # Problems:
-# 1. Function "latest packaged version" widely used here, and it has no JSON API, but only SVG badge.
-# 2. So, all version comparisons can be only visually and not automated.
-# 3. When the thousands of badges present on the web page, many of them are broken (maybe server
+# 1. Function "latest packaged version" widely used here and it has no JSON API, but only SVG badge.
+# 2. So, all version comparisons can be only visual and not automated.
+# 3. Of the thousands of badges present on the web page, many of them are broken (maybe server
 #    drops requests), while our server displays status icons well.
 # 4. Default badges are wide and not customizable.
 # Solution:
-# 1. Make local cache. Update it on demand, but no more than once a day (Repology cached info
+# 1. Make local cache. Update it on demand, but no more than once a day (Repology caches info
 #    on a hourly basis). Use cached values when they are not expired.
 # 2. Extract and save version(s) from the SVG badges. Values can be compared in the scripts as well
-#    as custom badges may be provided.
+#    as custom badges that may also be provided.
 
 repology_get() {
 	local found versions day=$(date +%j)		# %j is the number of the day in the year
@@ -1149,7 +1149,7 @@ EOT
 				cat <<EOT
 <section>
 	<h2>For maintainers</h2>
-	<p>Check your packages version, ${maintainer:-maintainer}.</p>
+	<p>Check your packages version: ${maintainer:-maintainer}.</p>
 	<form>
 		<select name="maintainer">
 			<option value=''>--- select maintainer ---
