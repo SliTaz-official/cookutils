@@ -345,7 +345,7 @@ summary() {
 			if ($1 == pkg) {print $2; exit}
 		}' "$PKGS/packages.info")
 		fs=$(du -sh $WOK/$pkg/taz/$i-$VERSION$EXTRAVERSION | awk '{print $1}')
-		pkgname="$i-$version$EXTRAVERSION$arch.tazpkg"
+		pkgname="$i-$version$arch.tazpkg"
 		size=$(ls -lh $PKGS/$pkgname | awk '{print $5}')
 		files=$(wc -l < $WOK/$pkg/taz/$i-$VERSION$EXTRAVERSION/files.list)
 		printf "%2d : %7s : %10s : %5s : %s\n" "$pkgi" "$fs" "$size" "$files" "$pkgname"
