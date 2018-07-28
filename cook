@@ -871,6 +871,8 @@ cookit() {
 	if grep -q ^compile_rules $receipt; then
 		_ 'Executing: %s' 'compile_rules'
 		echo "CFLAGS   : $CFLAGS"
+		echo "CXXLAGS  : $CXXFLAGS"
+		echo "CPPFLAGS : $CPPFLAGS"
 		echo "LDFLAGS  : $LDFLAGS"
 		[ -d "$src" ] && cd $src
 		patchit
