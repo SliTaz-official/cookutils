@@ -275,7 +275,8 @@ repology_get() {
 	if [ -n "$found" ]; then
 		echo "$found"
 	else
-		versions=$(chroot /home/slitaz/next/chroot/ wget -q -T 20 -O- https://repology.org/badge/latest-versions/$1.svg \
+		# set HOST_WGET in cook.conf
+		versions=$($HOST_WGET -q -T 20 -O- https://repology.org/badge/latest-versions/$1.svg \
 		| sed '/<text /!d; /fill/d; /latest/d; s|.*>\(.*\)<.*|\1|; s|, | |g') # space separated list
 		if [ -n "$versions" ]; then
 			sed -i "/^$1	/d" $repologydb
@@ -515,9 +516,9 @@ info2html() {
 		-e 's|^\* \(.*\)::|* <a href="#\1">\1</a>  |' \
 		-e 's|\*note \(.*\)::|<a href="#\1">\1</a>|' \
 		-e '/^File: / s|(dir)|Top|g' \
-		-e '/^File: / s|Next: \([^,]*\)|<a class="button" href="#\1">Next: \1</a>|' \
-		-e '/^File: / s|Prev: \([^,]*\)|<a class="button" href="#\1">Prev: \1</a>|' \
-		-e '/^File: / s|Up: \([^,]*\)|<a class="button" href="#\1">Up: \1</a>|' \
+		-e '/^File: / s|Next: \([^,]*\)|<a class="button icon next" href="#\1">Next: \1</a>|' \
+		-e '/^File: / s|Prev: \([^,]*\)|<a class="button icon prev" href="#\1">Prev: \1</a>|' \
+		-e '/^File: / s|Up: \([^,]*\)|<a class="button icon up" href="#\1">Up: \1</a>|' \
 		-e '/^File: / s|^.* Node: \([^,]*\), *\(.*\)$|<pre id="\1">\2|' \
 		-e '/^<pre id=/ s|^\([^>]*>\)\(<a[^>]*>Next: [^,]*\), *\(<a[^>]*>Prev: [^,]*\), *\(<a[^>]*>Up: .*\)|\1 \3 \4 \2|' \
 		-e '/^Tag Table:$/,/^End Tag Table$/d' \
@@ -1870,7 +1871,8 @@ EOT
 							/\/perllocal\.pod$/ || /\/\.packlist$/ ||
 								/\/share\/bash-completion\// || /\/etc\/bash_completion\.d\// ||
 								/\/lib\/systemd\// || /\.pyc$/ || /\.pyo$/ ||
-								/\/fonts\.scale$/ || /\/fonts\.dir$/ || /\.la$/ {
+								/\/fonts\.scale$/ || /\/fonts\.dir$/ || /\.la$/ ||
+								/\/cache\/.*\.gem$/ {
 								tag("---", 0); next }
 							/\.pod$/  { tag("pod", 5); next }
 							/\/share\/man\// { tag("man", 5); next }
@@ -2045,18 +2047,23 @@ EOT
 		pkg_info
 		echo '<div style="max-height: 6.4em; overflow: auto; padding: 0 4px">'
 
-		dir="wok/$pkg/install/usr/share/$cmd"
-		[ "$cmd" == 'doc' ] && dir="$dir wok/$pkg/install/usr/share/gtk-doc"
-		if [ "$cmd" == 'doc' -a -z "$arg" ]; then
-			try=$(for i in $dir; do find $i -name 'index.htm*'; done | sed q)
-			[ -n "$try" ] && arg="$try"
+		dir="wok/$pkg/install/usr/share/$cmd/"; dir2=''
+		if [ "$cmd" == 'doc' ]; then
+			dir2="wok/$pkg/install/usr/share/gtk-doc/"
+			subdirs="$(ls -p $dir | sed '/\/$/!d')"
+			[ $(echo "$subdirs" | wc -l) -eq 1 ] && dir="$dir$subdirs"
+			if [ -z "$arg" ]; then
+				try=$(for i in $dir $dir2; do find $i -name 'index.htm*'; done | sed q)
+				[ -n "$try" ] && arg="$try"
+			fi
 		fi
+
 		while read i; do
 			[ -s "$i" ] || continue
 			case "$i" in
 				*.jp*g|*.png|*.gif|*.svg|*.css) continue
 			esac
-			i=${i#$dir/}
+			i=${i#$dir}; i=${i#$dir2}
 			[ -n "$arg" ] || arg="$i"
 			class=''; [ "$arg" == "$i" ] && class=" doc"
 			case "$cmd" in
@@ -2069,7 +2076,7 @@ EOT
 					echo "<a class='button$class' href='$base/$pkg/man/$i'>$lang${man%.*} (${man##*.})</a>"
 					;;
 				doc)
-					echo "<a class='button$class' href='$base/$pkg/doc/$i'>$(basename $i .gz)</a>"
+					echo "<a class='button$class' href='$base/$pkg/doc/$i'>$i</a>"
 					;;
 				info)
 					info=$(basename $i)
@@ -2077,7 +2084,7 @@ EOT
 					;;
 			esac
 		done <<EOT
-$(for i in $dir; do find $i -type f; done | sort)
+$(for i in $dir $dir2; do find $i -type f; done | sort)
 EOT
 		echo '</div>'
 
@@ -2098,6 +2105,8 @@ EOT
 						*.py)       class='python';; # pycurl package
 						*.css)      class='css';;
 						*.sh)       class='bash';;
+						*.rb|*/Rakefile*|*/Gemfile*) class='ruby';;
+						*.rdoc)     class='asciidoc';;
 						*)
 							first=$(head -n1 "$tmp")
 							if [ "${first:0:1}" == '#' ]; then
@@ -2128,7 +2137,7 @@ EOT
 							;;
 						*.md|*.markdown)
 							echo '<section>'
-							$md2html "$tmp"
+							$md2html "$tmp" | sed 's|class="|class="language-|g'
 							echo '</section>'
 							;;
 						*)

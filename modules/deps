@@ -356,7 +356,8 @@ for pkg in $(all_names); do
 	[ -n "$quiet" ] && echo -n "$pkg: "
 	IFS=$'\n'
 	while read file; do
-		tp_ldd "$WOK/$1/taz/$pkg-$VERSION/fs$file"
+		# run in subprocess because VERSION may be redefined in .pc file
+		( tp_ldd "$WOK/$1/taz/$pkg-$VERSION/fs$file" )
 	done < $WOK/$1/taz/$pkg-$VERSION/files.list \
 	| sort -u | grep -v "^$pkg$" | sed '/^$/d' \
 	| tr "$sub" ' '

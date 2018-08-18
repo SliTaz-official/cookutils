@@ -591,6 +591,73 @@ fix() {
 			tazpkg -gi --quiet --local --cookmode symlinks
 			symlinks -cr $install
 			;;
+		gem)
+			# some useful operations while Ruby gems cooking
+			_gems="$(ruby -e'puts Gem.default_dir')"
+
+			# remove unwanted empty folders
+			rmdir --ignore-fail-on-non-empty \
+				$install/$_gems/build_info/ \
+				$install/$_gems/cache/ \
+				$install/$_gems/doc/ \
+				$install/$_gems/extensions/
+
+			# move files to docdir
+			docdir=$install/usr/share/doc/$PACKAGE-$VERSION
+			for i in $(ls -ap $install/$_gems/gems/${PACKAGE#*-}-$VERSION/ | sed '
+				/\/$/d; /^\./d; /gemspec$/d; /Rakefile*/d; /Gemfile*/d; /Makefile/d;
+				/\.c$/d; /\.h$/d; /\.o$/d; /\.rb$/d; /\.so$/d; /\.yml$/d;
+				/Manifest/d; /\.inc$/d; /depend/d;
+				'); do
+				mkdir -p $docdir # docdir will not be created when nothing to move
+				mv $install/$_gems/gems/${PACKAGE#*-}-$VERSION/$i $docdir
+			done
+			if [ -d $install/$_gems/gems/${PACKAGE#*-}-$VERSION/doc/ ]; then
+				mkdir -p $docdir
+				mv $install/$_gems/gems/${PACKAGE#*-}-$VERSION/doc/ $docdir
+			fi
+
+			if [ -d $docdir ]; then
+				# move man pages
+				unset man_to_copy
+				for i in $(seq 1 8); do
+					for j in $(find $docdir -type f -name "*.$i" | sed '/LGPL-2\.1/d'); do
+						man_to_copy="$man_to_copy $j"
+					done
+				done
+				if [ -n "$man_to_copy" ]; then
+					cook_pick_manpages $man_to_copy
+					rm $man_to_copy
+				fi
+
+				# convert rdoc to markdown (thanks https://gist.github.com/teeparham/8a99e308884e1c32735a)
+				for i in $(find $docdir -type f -name '*.rdoc'); do
+					fix utf-8
+					LC_ALL=en_US.UTF-8 ruby -r rdoc -e 'puts RDoc::Markup::ToMarkdown.new.convert File.read(ARGV[0] || "'$i'")' >$i.md && rm $i || rm $i.md
+				done
+			fi
+
+			# move man pages (from the different place)
+			rubyman=$install/$_gems/gems/${PACKAGE#*-}-$VERSION/man
+			if [ -d $rubyman ]; then
+				unset man_to_copy
+				for i in $(seq 1 8); do
+					for j in $(find $rubyman -type f -name "*.$i" | sed '/LGPL-2\.1/d'); do
+						man_to_copy="$man_to_copy $j"
+					done
+				done
+				if [ -n "$man_to_copy" ]; then
+					cook_pick_manpages $man_to_copy
+				fi
+				rm -r $rubyman
+			fi
+			;;
+		utf-8)
+			# Install UTF-8 locale
+			tazpkg -gi --quiet --local --cookmode locale-en-base
+			mkdir -p /usr/lib/locale
+			localedef -i 'en_US' -c -f 'UTF-8' /usr/lib/locale/en_US.UTF-8
+			;;
 	esac
 }
 
@@ -1573,6 +1640,19 @@ copy() {
 					/\.m4$/p; /\.gir$/p; /\.typelib$/p; /\.vapi$/p; /\.deps$/p; /\.cmake$/p;
 					/\/Makefile.*/p; /\.inc$/p; /\/include\//p;
 					/\.so\.dbg$/p;
+					' $filelist
+				;;
+			@ruby)
+				# Copy mandatory Ruby files
+				gem_base="\/usr\/lib\/ruby\/gems\/.*\/${PACKAGE#*-}-$VERSION"
+				sed -n '/\/extensions\/.*\.so$/p; /'$gem_base'\/lib\//p; /\.gemspec$/p;
+					/\/usr\/bin\//p; /\/gems\/.*\/bin\//p;
+					' $filelist | sed '/\/gems\/.*\/lib\/.*\.so$/d; /\/gems\/.*\/lib\/.*\.h$/d;
+					/\/gems\/.*\/gems\/.*\.gemspec$/d;'
+				;;
+			@ruby-dev)
+				sed -n '/\/ext\/.*\.h$/p; /\/ext\/.*\.pc$/p; /\/gem.build_complete$/p;
+					/\/gems\/.*\/lib\/.*\.h$/p;
 					' $filelist
 				;;
 			@rm)
