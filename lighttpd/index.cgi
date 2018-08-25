@@ -1146,11 +1146,13 @@ href="http://doc.slitaz.org/en:cookbook:toolchain">http://doc.slitaz.org/en:cook
 EOT
 				;;
 			maintainer*)
-				maintainer=$(GET maintainer)
+				maintainer=$(GET maintainer); maintainer=${maintainer/maintainer/}
+				regexp=$(GET regexp); regexp=${regexp/regexp/}
+				[ -n "$regexp" ] && maintainer=''
 				cat <<EOT
 <section>
 	<h2>For maintainers</h2>
-	<p>Check your packages version: ${maintainer:-maintainer}.</p>
+	<p>Check packages version either for specified maintainer or using regular expression:</p>
 	<form>
 		<select name="maintainer">
 			<option value=''>--- select maintainer ---
@@ -1158,23 +1160,30 @@ EOT
 				cut -d$'\t' -f1 $maintdb | sort -u \
 				| awk -vm=$maintainer '{
 					selected=$0==m?"selected":""
-					printf("<option %s value='%s'>%s\n", selected, $0, $0)
+					printf("<option %s value=\"%s\">%s\n", selected, $0, $0)
 				}'
 				cat <<EOT
 
 		</select>
+		or
+		<input type="text" name="regexp" value="$regexp"/>
 		<button type="submit">Go</button>
 	</form>
 EOT
-
-				if [ "$maintainer" != 'maintainer' ]; then
+				if [ -n "$maintainer" -o -n "$regexp" ]; then
 					tmp_status=$(mktemp)
 					cat <<EOT
 	<table class="maint">
 		<thead><tr><th>Package</th><th>Version</th><th>Repology</th></tr></thead>
 EOT
-					awk -vm=$maintainer '{if ($1 == m) print $2}' $maintdb \
-					| while read pkg; do
+					{
+						if [ -n "$maintainer" ]; then
+							awk -vm=$maintainer '{if ($1 == m) print $2}' $maintdb
+						fi
+						if [ -n "$regexp" ]; then
+							cd $wok; ls | grep "$regexp"
+						fi
+					} | while read pkg; do
 						unset VERSION; REPOLOGY=$pkg
 						. $wok/$pkg/receipt
 						ver=$(awk -F$'\t' -vpkg="$pkg" '{if ($1 == pkg) {print $2; exit}}' $PKGS/packages.info)
