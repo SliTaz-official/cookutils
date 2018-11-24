@@ -960,51 +960,51 @@ show_badges() {
 			broken)
 				t="Broken package"
 				p="Package is broken"
-				s="Fix package build: analyze <a href=\"log/\">logs</a>, upgrade the version, search for patches"
+				s="Fix package build: analyze <a href=\"$base/$PACKAGE/log/\">logs</a>, upgrade the version, search for patches"
 				;;
 			any)
 				t="“Any” arch"
-				p="This package contains only architecture-less <a href=\"files\">files</a>, it does not make sense to make it several times in each build environment"
-				s="Add the line <code>HOST_ARCH=\"any\"</code> to <a href=\"receipt\">receipt</a>"
+				p="This package contains only architecture-less <a href=\"$base/$PACKAGE/files\">files</a>, it does not make sense to make it several times in each build environment"
+				s="Add the line <code>HOST_ARCH=\"any\"</code> to <a href=\"$base/$PACKAGE/receipt\">receipt</a>"
 				;;
 			noany)
 				t="No “any” arch"
-				p="This package contains architecture dependent <a href=\"files\">files</a>"
-				s="Remove the line <code>HOST_ARCH=\"any\"</code> from <a href=\"receipt\">receipt</a>"
+				p="This package contains architecture dependent <a href=\"$base/$PACKAGE/files\">files</a>"
+				s="Remove the line <code>HOST_ARCH=\"any\"</code> from <a href=\"$base/$PACKAGE/receipt\">receipt</a>"
 				;;
 			libtool)
 				t="Libtool isn't fixed"
 				p="This package use <code>libtool</code> that likes to add unnecessary dependencies to programs and libraries"
-				s="Add the <code>fix libtool</code> command to the <a href=\"receipt\">receipt</a> between the <code>configure</code> and <code>make</code> commands invocation"
+				s="Add the <code>fix libtool</code> command to the <a href=\"$base/$PACKAGE/receipt\">receipt</a> between the <code>configure</code> and <code>make</code> commands invocation"
 				;;
 			nolibtool)
 				t="Libtool is absent"
 				p="This package does not use <code>libtool</code>, nothing to fix"
-				s="Remove the command <code>fix libtool</code> from <a href=\"receipt\">receipt</a>"
+				s="Remove the command <code>fix libtool</code> from <a href=\"$base/$PACKAGE/receipt\">receipt</a>"
 				;;
 			own)
 				t="Ownership problems"
-				p="Some files of this package have <a href=\"files\">ownership problems</a>"
-				s="Correct the ownership or add problem files to the “<a href=\"stuff/overrides\">overrides</a>” list if you believe it is OK"
+				p="Some files of this package have <a href=\"$base/$PACKAGE/files\">ownership problems</a>"
+				s="Correct the ownership or add problem files to the “<a href=\"$base/$PACKAGE/stuff/overrides\">overrides</a>” list if you believe it is OK"
 				;;
 			ownover)
 				t="Ownership overridden"
-				p="This package contains files with <a href=\"files\">ownership problems</a> that have been overridden"
-				s="<abbr title=\"For your information\">FYI</abbr> only, you may want to revise <a href=\"stuff/overrides\">the list</a>"
+				p="This package contains files with <a href=\"$base/$PACKAGE/files\">ownership problems</a> that have been overridden"
+				s="<abbr title=\"For your information\">FYI</abbr> only, you may want to revise <a href=\"$base/$PACKAGE/stuff/overrides\">the list</a>"
 				;;
 			perm)
 				t="Permissions problems"
-				p="Some files of this package have <a href=\"files\">unusual permissions</a>"
-				s="Correct the permissions or add problem files to the “<a href=\"stuff/overrides\">overrides</a>” list if you believe it is OK"
+				p="Some files of this package have <a href=\"$base/$PACKAGE/files\">unusual permissions</a>"
+				s="Correct the permissions or add problem files to the “<a href=\"$base/$PACKAGE/stuff/overrides\">overrides</a>” list if you believe it is OK"
 				;;
 			permover)
 				t="Permissions overridden"
-				p="This package contains files with <a href=\"files\">unusual permissions</a> that have been recorded"
-				s="<abbr title=\"For your information\">FYI</abbr> only, you may want to revise <a href=\"stuff/overrides\">the list</a>"
+				p="This package contains files with <a href=\"$base/$PACKAGE/files\">unusual permissions</a> that have been recorded"
+				s="<abbr title=\"For your information\">FYI</abbr> only, you may want to revise <a href=\"$base/$PACKAGE/stuff/overrides\">the list</a>"
 				;;
 			symlink)
 				t="Broken symlink"
-				p="This package contains one or more <a href=\"files\">broken symlinks</a>"
+				p="This package contains one or more <a href=\"$base/$PACKAGE/files\">broken symlinks</a>"
 				s="Fix the symlinks destination; you may use <code>fix symlinks</code> when symlinks have absolute path"
 				;;
 			ss)
@@ -1014,17 +1014,17 @@ show_badges() {
 				;;
 			fadd)
 				t="Files have been added"
-				p="Some files absent in <var>\$install</var> was <a href=\"files#outoftree\">directly added</a> to <var>\$fs</var>"
+				p="Some files absent in <var>\$install</var> was <a href=\"$base/$PACKAGE/files#outoftree\">directly added</a> to <var>\$fs</var>"
 				s="Rework your <code>compile_rules()</code> to add all the required files to <var>\$install</var> there"
 				;;
 			frem)
 				t="Files have been removed"
-				p="Some files existing in <var>\$install</var> <a href=\"files#orphans\">not belong to any package</a>"
-				s="Revise <code>genpkg_rules()</code> or add files to “<a href=\"stuff/overrides\">overrides</a>” list"
+				p="Some files existing in <var>\$install</var> <a href=\"$base/$PACKAGE/files#orphans\">not belong to any package</a>"
+				s="Revise <code>genpkg_rules()</code> or add files to “<a href=\"$base/$PACKAGE/stuff/overrides\">overrides</a>” list"
 				;;
 			fdup)
 				t="Files are duplicated"
-				p="Some files existing in <var>\$install</var> was added to <a href=\"files#repeats\">more than one</a> package"
+				p="Some files existing in <var>\$install</var> was added to <a href=\"$base/$PACKAGE/files#repeats\">more than one</a> package"
 				s="Check your copy rules in <code>genpkg_rules()</code>"
 				;;
 			old)
