@@ -1,0 +1,865 @@
+#!/bin/sh
+#
+# pack - module of the SliTaz Cook
+# Copyright (C) SliTaz GNU/Linux - GNU GPL v3
+#
+
+. /usr/lib/slitaz/libcook.sh
+
+
+######################################################
+# BEGIN: Functions may be used in the genpkg_rules() #
+######################################################
+
+
+# A bit smarter function than the classic `cp` command
+
+scopy() {
+	if [ "$(stat -c %h -- "$1")" -eq 1 ]; then
+		cp -a  "$1" "$2"	# copy generic files
+	else
+		cp -al "$1" "$2"	# copy hardlinks
+	fi
+}
+
+
+# Copy specified files from $install to $fs
+
+cook_copy_files() {
+	action 'Copying files...'
+	cd $install
+	local i j
+	IFS=$'\n'
+	for i in $@; do
+		for j in $(find . -name $i ! -type d); do
+			mkdir -p $fs$(dirname ${j#.})
+			scopy $j $fs$(dirname ${j#.})
+		done
+	done
+	cd - >/dev/null
+	status
+}
+
+
+# Copy specified folders from $install to $fs
+
+cook_copy_folders() {
+	action 'Copying folders...'
+	cd $install
+	local i j
+	IFS=$'\n'
+	for i in $@; do
+		for j in $(find . -name $i -type d); do
+			mkdir -p $fs$(dirname ${j#.})
+			cp -a $j $fs$(dirname ${j#.})
+		done
+	done
+	cd - >/dev/null
+	status
+}
+
+
+# Remove from current $fs files that are already packed (for receipts v2).
+# Note: the order in $SPLIT is very important.
+# Note 2: working in the current set.
+
+remove_already_packed() {
+	local i j
+	# $pkg is the name of the main package; $PACKAGE is the name of the current one
+	# $pkg may (or may not) be included in the $SPLIT
+	neighbors=$(
+		echo $basepkg $SPLIT" " \
+		| awk -F$'\t' -vpkg="$thispkg" '
+		BEGIN { RS = " "; FS = ":"; }
+		      { set[$1] = $2; }
+		END   {
+		        current_set = set[pkg];
+		        for (i in set)
+		          { if (i != pkg && set[i] == current_set) print i; }
+		}
+	')
+	IFS=$'\n'
+	for neighbor in $neighbors; do
+		i="$taz/$neighbor-$VERSION$EXTRAVERSION/files.list"
+		[ -e "$i" ] || continue
+		while read j; do
+			[ -f $fs$j -o -h $fs$j ] || continue
+			rm $fs$j
+			rmdir --parents --ignore-fail-on-non-empty $fs$(dirname $j)
+		done < $i
+	done
+	unset IFS
+}
+
+
+# Copy hicolor icons in specified sizes (default: 16 and 48) from $install to $fs
+
+cook_copy_icons() {
+	local sizes=$@ i j ifs="$IFS"
+	unset IFS
+	action 'Copying hicolor icons...'
+	[ -d "$fs/usr/share/icons/hicolor" ] && rm -rf "$fs/usr/share/icons/hicolor"
+	mkdir -p $fs/usr/share/icons/hicolor
+	for i in ${sizes:-16 48}; do
+		j="${i}x$i"; [ "$i" == 'scalable' ] && j="$i"
+		[ ! -e "$install/usr/share/icons/hicolor/$j" ] ||
+		scopy   $install/usr/share/icons/hicolor/$j \
+			         $fs/usr/share/icons/hicolor
+	done
+	status
+	IFS="$ifs"
+}
+
+
+# Common function to copy files, folders and patterns
+
+copy() {
+	action 'Copying folders and files...'
+	local i j k filelist=$(mktemp) folderlist=$(mktemp)
+
+	IFS=$'\n'
+	cd $install
+	find ! -type d | sed 's|\.||' > $filelist
+	find   -type d | sed 's|\.||' > $folderlist
+
+	for i in $@; do
+		case $i in
+			@std)
+				# Copy "standard" files (all but "developer files", man pages, documentation, translations)
+				sed '/\.h$/d; /\.hxx$/d; /\.a$/d; /\.la$/d; /\.pc$/d; /\.pri$/d; /bin\/.*-config$/d;
+					/\.m4$/d; /\.gir$/d; /\.typelib$/d; /\.vapi$/d; /\.deps$/d; /\.cmake$/d;
+					/\/Makefile.*/d; /\.inc$/d; /\/include\//d;
+					/\/share\/man\//d; /\/share\/doc\//d; /\/share\/gtk-doc\//d; /\/share\/info\//d;
+					/\/share\/devhelp\//d; /\/share\/locale\//d;
+					/\/share\/bash-completion\//d; /\/etc\/bash_completion\.d\//d; /\/lib\/systemd\//d;
+					/\/fonts\.scale$/d; /\/fonts\.dir$/d;
+					/\/share\/appdata\//d; /\/share\/help\//d; /\/share\/metainfo\//d; /\/share\/mimelnk\//d;
+					/\/share\/application-registry\//d; /\/share\/mime-info\//d;
+					/\/share\/gnome\/help\//d; /\/share\/omf\//d;
+					/\/share\/icons\/hicolor\/[12356][1245][268]*x[12356][1245][268]*\//d;	# 22, 24, 32, 64, 128, 256, 512
+					/\.so\.dbg$/d;
+					' $filelist
+				;;
+			@dev)
+				# Copy "developer files"
+				sed -n '
+					/\/share\/doc\//d;
+					/\.h$/p; /\.hxx$/p; /\.a$/p; /\.pc$/p; /\.pri$/p; /bin\/.*-config$/p;
+					/\.m4$/p; /\.gir$/p; /\.typelib$/p; /\.vapi$/p; /\.deps$/p; /\.cmake$/p;
+					/\/Makefile.*/p; /\.inc$/p; /\/include\//p;
+					/\.so\.dbg$/p;
+					' $filelist
+				;;
+			@ruby)
+				# Copy mandatory Ruby files
+				gem_base="\/usr\/lib\/ruby\/gems\/.*\/${PACKAGE#*-}-$VERSION"
+				sed -n '/\/extensions\/.*\.so$/p; /'$gem_base'\/lib\//p; /\.gemspec$/p;
+					/\/usr\/bin\//p; /\/gems\/.*\/bin\//p;
+					' $filelist | sed '/\/gems\/.*\/lib\/.*\.so$/d; /\/gems\/.*\/lib\/.*\.h$/d;
+					/\/gems\/.*\/gems\/.*\.gemspec$/d;'
+				;;
+			@ruby-dev)
+				sed -n '/\/ext\/.*\.h$/p; /\/ext\/.*\.pc$/p; /\/gem.build_complete$/p;
+					/\/gems\/.*\/lib\/.*\.h$/p;
+					' $filelist
+				;;
+			@rm)
+				# Quick alias
+				remove_already_packed
+				;;
+			@ico)
+				# Quick alias
+				cook_copy_icons >/dev/null
+				;;
+			*/)
+				# Copy specified folders.
+				i="${i%/}"
+				find -type d -path "*/${i#/}" | sed 's|^.||'
+				;;
+			*)
+				# Copy specified files.
+				find ! -type d -path "*/${i#/}" | sed 's|^.||'
+				;;
+		esac \
+		| sort -u \
+		| while read j; do
+			mkdir -p $fs$(dirname "$j")
+			if [ -d "$install$j" ]; then
+				cp -a "$install$j" $fs$(dirname "$j")
+			else
+				scopy "$install$j" $fs$(dirname "$j")
+			fi
+		done
+		# Copy empty directories
+		case $i in
+			@std)
+				while read j; do
+					case $j in
+						# skip empty man & doc folders
+						*/man/*|*/doc/*) continue;;
+					esac
+					[ -z "$(ls -A "$install$j")" ] || continue
+					# directory $j is empty
+					k="$j"
+					# make 'ladder' from directories, from root dir to $j
+					# /a   /a/b   /a/b/c   etc.
+					while :; do
+						[ -z "$k" ] && break
+						echo "$k"
+						k="${k%/*}"
+					done \
+					| tac \
+					| while read k; do
+						# make dir if it does not exist
+						if [ ! -d "$fs$k" ]; then
+							# It's like "copy the directory without its underlying content".
+							# keep original ownership/permissions, access:
+							keepIFS="$IFS"; unset IFS
+							install -d $(stat -c'-o%u -g%g -m%a' "$install$k") "$fs$k"
+							# keep last-modified date:
+							touch -r "$install$k" "$fs$k"
+							IFS="$keepIFS"; unset keepIFS
+						fi
+					done
+				done < $folderlist
+				;;
+		esac
+	done
+	cd - >/dev/null
+	unset IFS
+	rm $filelist $folderlist
+	status
+}
+
+####################################################
+# END: Functions may be used in the genpkg_rules() #
+####################################################
+
+
+
+
+# Receipt used for cooking the package is redundant to be included into package.
+# This script will strip the original receipt to bare minimum: variables,
+# {pre,post}_{install,remove} functions.
+
+mk_pkg_receipt() {
+	orig_receipt="$1"
+
+	# 1. Main package.
+	#    By default it has no dependencies.
+	#    You can write or omit DEPENDS="" for indicating package have no
+	#    dependencies.
+	# 2. Split package (excluding *-dev).
+	#    By default every split package depends on the main package.
+	#    Unfortunately, in the shell script (receipt is the shell script too),
+	#    every undeclared variable has empty value, so there's no difference if
+	#    you wrote DEPENDS="" or omit it - result will be the same empty value.
+	#    If you want to define the split package has no dependencies - you need
+	#    to to put single space between the quotes: DEPENDS=" ".
+	# 3. Development split package.
+	#    Installing *-dev package should install all the files produced during
+	#    compilation and then were separated to the different packages, so
+	#    by default (if you wrote DEPENDS="" or omit it) *-dev package depends
+	#    on the main package and all the split packages (excluding the itself).
+	[ "$DEPENDS" == ' ' ] && DEPENDS='@EMPTY@'
+
+	# Receipt's signature is important, although some receipts may miss it
+	signature=$(head -n1 "$orig_receipt")
+	[ "${signature:0:1}" == '#' ] || signature='# SliTaz package receipt.'
+
+	save="$(mktemp)"
+	# `$(echo ...)`: normalize whitespace (space, tab, newline and their
+	# combinations and repeats)
+	cat > $save <<EOT
+PACKAGE="$PACKAGE"; DEPENDS="$(echo $DEPENDS)"; PROVIDE="$(echo $PROVIDE)"
+SUGGESTED="$(echo $SUGGESTED)"; TAZPANEL_DAEMON="$TAZPANEL_DAEMON"
+TAGS="$(echo $TAGS)"; VERSION="$VERSION"; SHORT_DESC="$SHORT_DESC"
+WEB_SITE="$WEB_SITE"; CATEGORY="$CATEGORY"
+EOT
+	unset_receipt
+	. "$orig_receipt"
+	MAIN_PACKAGE="$PACKAGE"
+	. $save; rm $save # restore values
+
+	# Manage split packages
+	SPLIT=" $SPLIT "
+	if [ "$PACKAGE" != "$MAIN_PACKAGE"   -a   "$SPLIT" != '  ' ] &&
+		echo "$SPLIT" | fgrep -q " $PACKAGE "; then
+		# For packages with empty $DEPENDS
+		if [ -z "$DEPENDS" ]; then
+			case $PACKAGE in
+				*-dev)
+					# main package and all the split packages but this *-dev itself
+					DEPENDS=$(echo "$MAIN_PACKAGE $SPLIT " | sed "s| $PACKAGE | |; s| *$||");;
+				*)
+					DEPENDS="$MAIN_PACKAGE";;
+			esac
+		fi
+
+		# Default $CAT
+		[ -z "$CAT" ] &&
+		case $PACKAGE in
+			*-dev) CAT="development|development files" ;;
+		esac
+	fi
+
+	# Manage two-in-one $CAT="$CATEGORY|$SHORT_DESC_ADDITION"
+	if [ -n "$CAT" ]; then
+		CATEGORY="${CAT%|*}"
+		SHORT_DESC="$SHORT_DESC (${CAT#*|})"
+	fi
+
+	# escape quotes for receipt
+	SHORT_DESC="${SHORT_DESC//\"/\\\"}"
+
+	# Mandatory variables
+	cat <<EOF
+$signature
+
+PACKAGE="$PACKAGE"
+VERSION="$VERSION"
+EOF
+	[ -n "$EXTRAVERSION"    ] && echo "EXTRAVERSION=\"$EXTRAVERSION\""
+	cat <<EOF
+CATEGORY="$CATEGORY"
+SHORT_DESC="$SHORT_DESC"
+MAINTAINER="$MAINTAINER"
+LICENSE="$LICENSE"
+WEB_SITE="$WEB_SITE"
+EOF
+
+	# Optional variables
+	[ -n "$TAGS"            ] && echo "TAGS=\"$TAGS\""                 | tr -ds '\t' ' '
+	case "x$DEPENDS" in
+		x|x@EMPTY@) ;;
+		*)                       echo "DEPENDS=\"$DEPENDS\""           | tr -ds '\t' ' ';;
+	esac
+	[ -n "$PROVIDE"         ] && echo "PROVIDE=\"$PROVIDE\""           | tr -ds '\t' ' '
+	[ -n "$CONFIG_FILES"    ] && echo "CONFIG_FILES=\"$CONFIG_FILES\"" | tr -ds '\t' ' '
+	[ -n "$SUGGESTED"       ] && echo "SUGGESTED=\"$SUGGESTED\""       | tr -ds '\t' ' '
+	[ -n "$DATABASE_FILES"  ] && echo "DATABASE_FILES=\"$DATABASE_FILES\""
+	[ -n "$TAZPANEL_DAEMON" ] && echo "TAZPANEL_DAEMON=\"$TAZPANEL_DAEMON\""
+
+	# Extract {pre,post}_{install,remove} functions;
+	# post_install()      will be copied for both main and all the split packages
+	# post_install_gtk_() will be copied as post_install() for gtk+ package only
+	#
+	# restricted name (gtk+ -> gtk_; acl-dev -> acl_dev)
+	rname=$(echo -n $PACKAGE | tr -c 'a-zA-Z0-9' '_')
+	for i in pre post; do
+		for j in install remove; do
+			sed    "/^${i}_${j}()/,/^}/!d"        "$orig_receipt"
+			sed    "/^${i}_${j}_$rname()/,/^}/!d" "$orig_receipt" \
+			| sed "s|^${i}_${j}_$rname()|${i}_${j}()|"
+		done
+	done
+}
+
+
+# Copy all generic files (locale, pixmaps, .desktop) from $install to $fs.
+# We use standard paths, so some packages need to copy these files with the
+# receipt and genpkg_rules.
+# This function executes inside the packaging process, before compressor call.
+
+copy_generic_files() {
+	# $LOCALE is set in cook.conf
+	if [ -n "$LOCALE" -a -z "$WANTED" ]; then
+		if [ -d "$install/usr/share/locale" ]; then
+			mkdir -p "$fs/usr/share/locale"
+			for i in $LOCALE; do
+				if [ -d  "$install/usr/share/locale/$i" ]; then
+					cp -r $install/usr/share/locale/$i $fs/usr/share/locale
+				fi
+			done
+		fi
+	fi
+
+	# Generic pixmaps copy can be disabled with COOKOPTS="!pixmaps" (or GENERIC_PIXMAPS="no")
+	if [ "${COOKOPTS/!pixmaps/}" == "$COOKOPTS" -a "$GENERIC_PIXMAPS" != 'no' ]; then
+		if [ -d "$install/usr/share/pixmaps" ]; then
+			mkdir -p "$fs/usr/share/pixmaps"
+			for i in png xpm; do
+				[ -f "$install/usr/share/pixmaps/$PACKAGE.$i" -a ! -f "$fs/usr/share/pixmaps/$PACKAGE.$i" ] &&
+				cp -r $install/usr/share/pixmaps/$PACKAGE.$i $fs/usr/share/pixmaps
+			done
+		fi
+	fi
+
+	# Desktop entry (.desktop).
+	# Generic desktop entry copy can be disabled with COOKOPTS="!menus" (or GENERIC_MENUS="no")
+	if [ "${COOKOPTS/!menus/}" == "$COOKOPTS" -a "$GENERIC_MENUS" != 'no' ]; then
+		if [ -d "$install/usr/share/applications" -a -z "$WANTED" ]; then
+			mkdir -p "$fs/usr/share"
+			cp -r $install/usr/share/applications $fs/usr/share
+		fi
+	fi
+}
+
+
+# Determine package architecture
+# Input: $1 = $fs; output string: i486 | x86_64 | any
+
+determine_pkg_arch() {
+	action 'Determining package architecture...' >&2
+
+	if [ "${COOKOPTS/force-arch/}" != "$COOKOPTS" ]; then
+		arch="$ARCH"
+	else
+		archs="$(
+			IFS=$'\n'
+			{
+				# examine all the executables and static libs (*.a)
+				busybox find "$1" -type f \( -perm +111 -o -name '*.a' \) \
+				| while read i; do
+					readelf -Wh "$i" 2>/dev/null \
+					| sed '/Machine:/!d; s|.* ||'
+				done
+
+				# examine compressed kernel modules (we use exclusively *.ko.xz)
+				tmpko=$(mktemp)
+				find "$1" -type f -name '*.ko.xz' \
+				| while read i; do
+					unxz -kc $i >$tmpko
+					readelf -Wh "$tmpko" 2>/dev/null \
+					| sed '/Machine:/!d; s|.* ||'
+				done
+				rm $tmpko
+
+				# examine Guile *.go files (Machine: None, so check Class)
+				find "$1" -type f -name '*.go' \
+				| while read i; do
+					readelf -Wh "$i" 2>/dev/null \
+					| sed '/Class:/!d; s|.* ||'
+				done \
+				| sed 's|ELF32|80386|; s|ELF64|X86-64|'
+			} | sort -u
+		)"
+
+		case $archs in
+			80386)  arch='i486';   echo ' i486'   >&2;;
+			X86-64) arch='x86_64'; echo ' x86_64' >&2;;
+			'')     arch='any';    echo ' any'    >&2;;
+			*)      arch="$ARCH";  echo ' ' $archs >&2
+			        echo "Warning: weird architecture found, forced to use $ARCH for now." >&2
+			        ;;
+		esac
+	fi
+
+	touch $pkgdir/.arch
+	sed -i "/^$PACKAGE	/d" $pkgdir/.arch	# remove previous entry
+	echo "$PACKAGE	$arch" >> $pkgdir/.arch	# put new one
+
+	echo $arch
+}
+
+
+# Find the variables inside receipt
+
+find_vars() {
+	# You can define variables in the root of the receipt describing
+	# the dependencies (tags, config files, etc.) for each sub-package.
+	# Example:
+	#   PACKAGE="cool"
+	#   SPLIT="$PACKAGE-extra libcool $PACKAGE-dev"
+	#
+	#   DEPENDS_cool       or DEPENDS_std   # latter is the universal name for main package deps
+	#   DEPENDS_cool_extra or DEPENDS_extra # you can skip "$PACKAGE" at the start
+	#   DEPENDS_libcool                     # name not starts with "$PACKAGE" so no "short" name
+	#   DEPENDS_cool_dev   or DEPENDS_dev
+
+	local out
+	local var=$1
+	local pkg=$(echo -n $2       | tr -c 'a-zA-Z0-9' '_')
+	local end=$(echo -n ${2#$basepkg-} | tr -c 'a-zA-Z0-9' '_')
+	if [ "$pkg" == "$basepkg" ]; then
+		eval out="\$${var}_$pkg"
+		[ -n "$out" ] || eval out="\$${var}_std"
+	else
+		eval out="\$${var}_$pkg"
+		[ -n "$out" ] || eval out="\$${var}_$end"
+	fi
+	echo "$out"
+}
+
+
+# Create the package
+
+packit() {
+	basepkg="$PACKAGE"
+	thispkg="$1"
+
+	pkgdir="$WOK/$basepkg"
+	receipt="$pkgdir/receipt"
+	. $receipt
+
+	title 'Pack: %s' "$thispkg $VERSION"
+
+
+	#
+	# Set variables
+	#
+
+	# Determine set name for specified package from $SPLIT variable
+	local set=$(echo -n $SPLIT \
+				| awk -vpkg="$thispkg" '
+					BEGIN { RS = " "; FS = ":"; }
+					{ if ($1 == pkg && $2 != "") { print "-" $2; exit; } }')
+
+	# Set paths
+	export   stuff="$pkgdir/stuff"
+	export     src="$pkgdir/source/$basepkg-$VERSION$set"
+	export install="$pkgdir/install$set"
+	export DESTDIR="$install"
+	export     taz="$pkgdir/taz"
+	export    pack="$taz/$thispkg-$VERSION$EXTRAVERSION"
+	export      fs="$pack/fs"
+
+	export PACKAGE=$thispkg
+
+
+	#
+	# Execute genpkg_rules()
+	#
+
+	if grep -q ^genpkg_rules $receipt; then
+		_ 'Executing: %s' 'genpkg_rules'
+		set -e; cd $pkgdir; mkdir -p $fs
+		genpkg_rules || (newline; _ 'ERROR: genpkg_rules failed'; newline) >> \
+			$LOGS/$pkg.log
+	else
+		cd $pkgdir
+		mkdir -p $fs
+		if [ "$CATEGORY" == 'meta' -a "$thispkg" == "$basepkg" ]; then
+			_ 'No packages rules: meta package'
+		else
+			# Auto-packing
+			for i in DEPENDS SUGGESTED PROVIDE CONFIG_FILES TAGS CAT COPY; do
+				eval $i="\$(find_vars $i $thispkg)"
+			done
+
+			[ -n "$COPY" ] ||
+			case "$thispkg" in
+				$basepkg)    COPY='@std @rm';;
+				*-dev)       COPY='@dev @rm';;
+				lib$basepkg) COPY='*.so*';;
+			esac
+			[ -n "$COPY" ] || die "ERROR: COPY_$thispkg rules undefined"
+			copy $COPY
+		fi
+	fi
+
+
+	#
+	# Check CONFIG_FILES
+	#
+
+	if [ -n "$CONFIG_FILES" ]; then
+		unset IFS
+		for i in $CONFIG_FILES; do
+			if [ ! -e $fs$i ]; then
+				case $i in
+					*/) mkdir -p $fs$i ;;
+					*)  mkdir -p $fs$(dirname $i); touch $fs$i ;;
+				esac
+			fi
+		done
+	fi
+
+	# First QA check to stop now if genpkg_rules failed.
+	if fgrep -q '^ERROR' $LOGS/$basepkg.log; then
+		broken; exit 1
+	fi
+
+
+	#
+	# Copy receipt and description
+	#
+
+	cd $taz
+	action 'Copying "%s"...' 'receipt'
+	mk_pkg_receipt "$(realpath ../receipt)" > $pack/receipt
+	chown 0:0 $pack/receipt
+	status
+
+	unset desc
+	# description common to all the sub-packages
+	[ -f "../description.txt" ] && desc="../description.txt"
+	# description for specified sub-package
+	[ -f "../description.$thispkg.txt" ] && desc="../description.$thispkg.txt"
+	if [ -n "$desc" ]; then
+		action 'Copying "%s"...' "$(basename "$desc")"
+		cp -f $desc $pack/description.txt
+		chown 0:0 $pack/description.txt
+		status
+	fi
+
+
+	#
+	# Copy generic files
+	#
+
+	# Proceed only for "main" package (for v2), and for any packages (v1)
+	[ "$thispkg" == "$mainpkg" ] && copy_generic_files
+
+
+	#
+	# Strip / compress files
+	#
+
+	arch="$(determine_pkg_arch $fs)"
+
+	export COOKOPTS ARCH HOST_SYSTEM LOCALE fs; @@PREFIX@@/libexec/cookutils/compressor fs
+
+
+	#
+	# Make lists
+	#
+
+	# Create files.list
+	action 'Creating the list of files...'
+	cd $fs
+	find . \( -type f -o -type l \) | sed 's|^.||' > ../files.list
+	cd ..
+	status
+
+	# Md5sum of files.
+	action 'Creating md5sum of files...'
+	while read file; do
+		[ -L "fs$file" ] && continue
+		[ -f "fs$file" ] || continue
+		case "$file" in
+			/lib/modules/*/modules.*|*.pyc) continue ;;
+		esac
+		md5sum "fs$file" | sed 's|  fs|  |'
+	done < files.list | sort -k2 > md5sum
+	status
+
+
+	#
+	# Calculate release checksum
+	#
+
+	# Usually it does not change on "just recook".
+	# Md5sum of the *.tazpkg will change every time because of embedded timestamps;
+	# on the other hand release checksum don't relies on the timestamps, but
+	# only on files content and their permissions.
+
+	# Calculate rsum for new package
+	RSUM=$(
+	{
+		# a) md5sums of all files
+		cat $pack/md5sum
+		# b) md5sum of receipt
+		md5sum $pack/receipt | sed 's| [^ ]*/| |'
+		# c) md5sum of description.txt
+		[ -e "$pack/description.txt" ] &&
+			md5sum $pack/description.txt | sed 's| [^ ]*/| |'
+		# d) md5sum of list of permissions and ownership of all the files and
+		#    folders of the package
+		#    stat line example: -rwsr-xr-x 0:0 ./bin/busybox
+		{
+			cd $fs
+			find . -print0 | sort -z | xargs -0rn 1 stat -c '%A %g:%u %N' | md5sum
+		}
+	} | md5sum $rsum_file | awk '{print $1}')
+
+
+	#
+	# Compressing
+	#
+
+	UNPACKED_SIZE=$(du -cks fs receipt files.list md5sum description.txt \
+		2>/dev/null | awk 'END{ print $1 "K"}')
+
+	# Build fs cpio archive
+	action 'Compressing the FS...'
+	find fs -newer $receipt -exec touch -hr $receipt '{}' \;
+#	find fs | cpio -o -H newc --quiet | lzma-alone e fs.cpio.lzma -si
+	find fs | cpio -o -H newc --quiet | /bin/lzma -qzeT0 >fs.cpio.lzma
+	mv fs ../
+	status
+
+	PACKED_SIZE=$(du -cks fs.cpio.lzma receipt files.list md5sum description.txt \
+		2>/dev/null | awk 'END{ print $1 "K"}')
+
+
+	#
+	# Add variables to the receipt
+	#
+
+	# Store sizes
+	sed -i '/^PACKED_SIZE=/d; /^UNPACKED_SIZE=/d' receipt
+	sed -i "s|^PACKAGE=|PACKED_SIZE=\"$PACKED_SIZE\"\nUNPACKED_SIZE=\"$UNPACKED_SIZE\"\nPACKAGE=|" receipt
+
+	# Store RSUM
+	sed -i "s|^PACKAGE=|RSUM=\"$RSUM\"\nPACKAGE=|" receipt
+
+	# Set extra version
+	if [ -n "$EXTRAVERSION" ]; then
+		sed -i '/^EXTRAVERSION=/d' receipt
+		sed -i "s|^VERSION=|EXTRAVERSION=\"$EXTRAVERSION\"\nVERSION=|" receipt
+	fi
+
+
+	#
+	# Build *.tazpkg
+	#
+
+	action 'Creating full cpio archive...'
+	find . -newer $receipt -exec touch -hr $receipt '{}' \;
+	find . | cpio -o -H newc --quiet > ../$PACKAGE-$VERSION$EXTRAVERSION-$arch.tazpkg
+	status
+
+	# Restoring original package tree.
+	mv ../fs .
+
+	rm fs.cpio.lzma; cd ..
+
+	tazpkg=$(ls *.tazpkg)
+
+
+	#
+	# Verify package quality and consistency
+	#
+
+	# Preferrable way is to combine the commands chain in the compile_rules()
+	# using '&&': when any of the chunk broke, process will stop and function
+	# will return non-zero return code.
+	# On the other hand some old receipts don't use '&&' but depends on the
+	# error messages on the log.
+	# Sometimes it produce false positives on the configuration stage.
+	# In this case we can use the "skip-log-errors".
+	if [ "${COOKOPTS/skip-log-errors/}" == "$COOKOPTS" ]; then
+		# Exit if any error found in log file.
+		if fgrep -q ^ERROR $LOGS/$basepkg.log; then
+			rm -f $command
+			broken; exit 1
+		fi
+	fi
+
+
+	# Allow meta-packages in v2 receipts
+	[ -n "$CAT" ] && CATEGORY="${CAT%|*}"
+
+	if [ "${COOKOPTS/empty-pkg/}" == "$COOKOPTS" ]; then
+		action 'QA: checking for empty package...'
+		if [ ! -s "$pack/files.list" -a "$CATEGORY" != 'meta' ]; then
+			broken
+			rm -f $command
+			false; status
+			die 'ERROR: empty package'
+		fi
+		:; status
+	fi
+
+
+	#
+	# Get RSUM from the old package
+	#
+
+	pkg_file="$PKGS/$PACKAGE-$VERSION$EXTRAVERSION-$arch.tazpkg"
+	if [ -f "$pkg_file" ]; then
+		# don't trust database entry, check the package file
+		tmpdir=$(mktemp -d)
+		cd $tmpdir
+		cpio -F "$pkg_file" -i receipt >/dev/null 2>&1
+		RSUM_OLD=$(. receipt; echo $RSUM)
+		cd - >/dev/null
+		rm -r $tmpdir
+	else
+		unset RSUM_OLD
+	fi
+
+
+	#
+	# Removing unhandled old packages
+	#
+
+	if [ $ARCH == 'i486' -a -e $PKGS/$PACKAGE-$VERSION$EXTRAVERSION.tazpkg ]; then
+		action 'Removing old i486 package without arch specifier'
+		rm -f $PKGS/$PACKAGE-$VERSION$EXTRAVERSION.tazpkg
+		status
+	fi
+
+	# For example, if *-dev package contains *.a static libs, it will be either
+	# i486 or x86_64 arch; otherwise it will be "any" arch. This transition
+	# may be done forth and back depending on you disable static libs or not.
+	case $arch in
+		any)
+			if [ -e $PKGS/$PACKAGE-$VERSION$EXTRAVERSION-$ARCH.tazpkg ]; then
+				action "Removing old $ARCH package because it arch-less now"
+				rm -f $PKGS/$PACKAGE-$VERSION$EXTRAVERSION-$ARCH.tazpkg
+				status
+			fi
+			;;
+		*)
+			if [ -e $PKGS/$PACKAGE-$VERSION$EXTRAVERSION-any.tazpkg ]; then
+				action "Removing old arch-less package because it $ARCH now"
+				rm -f $PKGS/$PACKAGE-$VERSION$EXTRAVERSION-any.tazpkg
+				status
+			fi
+			;;
+	esac
+
+	# Find and remove old package only if "release checksum" has changed
+
+	pi="$PKGS/packages-$ARCH.info"
+	touch $pi
+
+	if [ "$RSUM" != "$RSUM_OLD" ]; then
+		old_file=$(awk -F$'\t' -vname="$PACKAGE" -varch="$arch" '{
+			if ($1 == name) printf("%s-%s-%s.tazpkg", $1, $2, arch);
+			}' $pi)		# <name>-<version><extra_version>-<arch>.tazpkg
+		if [ -f "$PKGS/$old_file" ]; then
+			action 'Removing old package "%s"' "$old_file"
+			rm -f "$PKGS/$old_file"
+			status
+		fi
+		# package changed, substitute old package by new one
+		mv -f $pkgdir/taz/$PACKAGE-$VERSION$EXTRAVERSION-$arch.tazpkg $PKGS
+		_ 'The release checksum has changed.'
+	else
+		# package not changed, remove new package
+		rm -f $pkgdir/taz/$PACKAGE-$VERSION$EXTRAVERSION-$arch.tazpkg
+		_ 'The release checksum has not changed.'
+	fi
+
+
+	#
+	# Package isn't broken anymore
+	#
+
+	touch $broken
+	sed -i "/^${thispkg}$/d" $broken
+
+
+	#
+	# Update packages database every time after successful build
+	#
+
+	# packages-arch.info (unsorted, located near to packages)
+	unset_receipt; . $pack/receipt
+	SIZES=$(echo $PACKED_SIZE $UNPACKED_SIZE | sed 's|\.0||g')
+	DEPENDS=$(echo $DEPENDS) # remove newlines, tabs and multiple spaces from variable
+	case $arch in
+		i?86)   arch_code='3';; # 3 for 32-bit
+		x86_64) arch_code='6';; # 6 for 64-bit
+		any)    arch_code='0';; # 0 for any arch
+	esac
+
+	sed -i "/^$PACKAGE\t/d" $pi		# remove old entry
+	cat >> $pi <<EOT
+$PACKAGE	$VERSION$EXTRAVERSION	$CATEGORY	$SHORT_DESC	$WEB_SITE	$TAGS	$SIZES	$DEPENDS	$rsum	$PROVIDE	$arch_code
+EOT
+
+	# files.list (uncompressed, unsorted, located in $cache)
+	fl="$cache/files.list"
+	touch $fl
+	sed -i "/^$PACKAGE: /d" $fl
+	sed  "s/^/$PACKAGE: \0/" $pack/files.list >> $fl
+
+	footer "$(_ 'Package "%s" created' "$tazpkg")"
+}
+
+
+packit "$1"

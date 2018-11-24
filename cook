@@ -46,7 +46,6 @@ $(boldify "$(_ 'Commands:')")
 $(boldify "$(_ 'Options:')")
 cook <pkg>
     --clean       -c   $(_ 'clean the package in the wok.')
-    --install     -i   $(_ 'cook and install the package.')
     --getsrc      -gs  $(_ 'get the package source tarball.')
     --block       -b   $(_ 'block a package so cook will skip it.')
     --unblock     -ub  $(_ 'unblock a blocked package.')
@@ -296,7 +295,7 @@ extract_source() {
 
 # Display time.
 
-disp_time() {
+disp_time_old() {
 	local sec div min
 	sec="$1"
 	div=$(( ($1 + 30) / 60))
@@ -311,13 +310,31 @@ disp_time() {
 }
 
 
+# Display time.
+
+disp_time() {
+	local sec="$1" day hour min out=''
+
+	 day=$(( sec / 86400 )); sec=$(( sec % 86400 ))
+	hour=$(( sec / 3600  )); sec=$(( sec % 3600  ))
+	 min=$(( sec / 60    )); sec=$(( sec % 60    ))
+
+	[              $day  -gt 0 ] && out="${day}d "
+	[ -n "$out" -o $hour -gt 0 ] && out="$out$(printf '%02dh ' $hour)"
+	[ -n "$out" -o $min  -gt 0 ] && out="$out$(printf '%02dm ' $min)"
+	[ -n "$out"                ] && out=" ~ $out$(printf '%02ds'  $sec)"
+
+	echo "${1}s$out"
+}
+
+
 # Display cooked package summary.
 
 summary() {
-	local arch=''
-	case "$ARCH" in
-		arm*|x86_64) arch="-$ARCH" ;;
-	esac
+#	local arch=''
+#	case "$ARCH" in
+#		arm*|x86_64) arch="-$ARCH" ;;
+#	esac
 
 	set_paths
 	cd $WOK/$pkg
@@ -325,7 +342,7 @@ summary() {
 	[ -d $WOK/$pkg/source ] && srcdir=$(du -sh $WOK/$pkg/source | awk '{print $1}' 2>/dev/null)
 	[ -n "$TARBALL" ] && srcsize=$(du -sh $SRC/$TARBALL | awk '{print $1}')
 
-	title 'Summary for: %s' "$PACKAGE $VERSION$EXTRAVERSION$arch"
+	title 'Summary for: %s' "$PACKAGE $VERSION$EXTRAVERSION"
 
 	# L10n: keep the same width of translations to get a consistent view
 	[ -n "$TARBALL" ] && _ 'Src file    : %s' "$TARBALL"
@@ -334,7 +351,7 @@ summary() {
 	[ -n "$prod" ]    && _ 'Produced    : %s' "$prod"
 	_ 'Cook time   : %s' "$(disp_time "$time")"
 	_ 'Cook date   : %s' "$(date "$(_ '+%%F %%R')")"
-	_ 'Target arch : %s' "$ARCH"
+	_ 'Target arch : %s' "$(cut -d$'\t' -f2 $pkgdir/.arch | sort -u | tr '\n' ' ' | sed 's| $||; s| |, |g')"
 
 	separator -
 	_ ' # :  Packed : Compressed : Files : Package name'
@@ -343,9 +360,10 @@ summary() {
 	for i in $(all_names); do
 		version=$(awk -F$'\t' -vpkg="$i" '{
 			if ($1 == pkg) {print $2; exit}
-		}' "$PKGS/packages.info")
+		}' "$PKGS/packages-$ARCH.info")
 		fs=$(du -sh $WOK/$pkg/taz/$i-$VERSION$EXTRAVERSION | awk '{print $1}')
-		pkgname="$i-$version$arch.tazpkg"
+		arch=$(awk -F$'\t' -vi="$i" '{if ($1 == i) print $2}' $pkgdir/.arch)
+		pkgname="$i-$version-$arch.tazpkg"
 		size=$(ls -lh $PKGS/$pkgname | awk '{print $5}')
 		files=$(wc -l < $WOK/$pkg/taz/$i-$VERSION$EXTRAVERSION/files.list)
 		printf "%2d : %7s : %10s : %5s : %s\n" "$pkgi" "$fs" "$size" "$files" "$pkgname"
@@ -358,7 +376,7 @@ summary() {
 # Display debugging error info.
 
 debug_info() {
-	title 'Debug information'
+	title 'Debug information %s.' "$1"
 	# L10n: specify your format of date and time (to help: man date)
 	# L10n: not bad one is '+%x %R'
 	_ 'Cook date: %s' "$(date "$(_ '+%%F %%R')")"
@@ -489,7 +507,7 @@ remove_deps() {
 	newline
 	_n 'Build dependencies to remove:'; echo " $nb"
 	[ -n "$root" ] && echo "root=\"$root\""
-	{
+
 		_n 'Removing:'
 		for dep in $deps; do
 			echo -n " $dep"
@@ -498,7 +516,7 @@ remove_deps() {
 			[ -s /aufs-umount.sh ] ||
 			echo 'y' | tazpkg remove $dep --root=$root >/dev/null
 		done
-	} | busybox fold -sw80
+
 	newline; newline
 	# Keep the last diff for debug and info.
 	mv -f $diff $CACHE/installed.diff
@@ -510,6 +528,7 @@ remove_deps() {
 patchit() {
 	[ -f "$stuff/patches/series" ] || return
 
+	local done="$pkgdir/.patch.done"
 	IFS=$'\n'
 	while read i; do
 		patchname=$(echo ${i%%#*} | cut -d' ' -f1)	# allow comments (anything after the # or space)
@@ -518,11 +537,12 @@ patchit() {
 			*)    patchopts='-Np1';;
 		esac
 		[ -n "$patchname" ] || continue				# allow empty lines
-		[ -f "$src/done.$patchname" ] && continue	# already applied (useful with `cook --continue`)
+		touch $done
+		grep -q "^${patchname}$" $done && continue	# already applied (useful with `cook --continue`)
 		newline
 		_ 'Applying patch %s' "$patchname"
 		patch $patchopts -i $stuff/patches/$patchname | sed 's|^|  |'
-		touch $src/done.$patchname
+		echo $patchname >> $done
 	done < $stuff/patches/series
 	newline
 	unset IFS
@@ -557,6 +577,7 @@ fix() {
 		libtool)
 			if [ -e 'libtool' ]; then
 				sed -i 's| -shared | -Wl,-Os,--as-needed\0|g' libtool
+				echo "fix.libtool" >> $pkgdir/.patch.done
 			else
 				echo "fix libtool: warning: libtool absent, nothing to fix."
 			fi
@@ -753,15 +774,13 @@ cook_set() {
 	# Activate "instant-pack" mode
 	if [ "${COOKOPTS/instant-pack/}" != "$COOKOPTS" ]; then
 		echo " $SPLIT " | fgrep -q " $PACKAGE " || SPLIT="$PACKAGE $SPLIT"
+		export PACKAGE
 		# determine the list of the packages belongs to the current SET...
 		echo -n $SPLIT \
 		| awk -vset="$SET" '
 			BEGIN { RS = " "; FS = ":"; }
 			{ if ($2 == set) print $1; }' \
-		| while read SET_PKG; do
-			# ... and then pack them
-			packit $SET_PKG
-		done
+		| xargs -n1 @@PREFIX@@/libexec/cookutils/pack # ... and then pack them
 	fi
 
 	job_counter=$(($job_counter + 2))
@@ -817,7 +836,10 @@ cookit() {
 	@@PREFIX@@/libexec/cookutils/precheck $receipt || exit 1 # former receipt_quality()
 
 	cd $pkgdir
-	[ -z "$continue" ] && rm -rf source 2>/dev/null
+	if [ -z "$continue" ]; then
+		rm -rf source  2>/dev/null
+		rm .patch.done 2>/dev/null
+	fi
 	rm -rf install taz 2>/dev/null
 
 	# Disable -pipe if less than 512 MB free RAM.
@@ -863,7 +885,7 @@ cookit() {
 						# Search for local package or local provided-package
 						name=$(awk -F$'\t' -vpkg="$i" '{
 						if (index(" " $1 " " $10 " ", " " pkg " ")) {print $1; exit}
-						}' "$PKGS/packages.info")
+						}' "$PKGS/packages-$ARCH.info")
 						if [ -z "$name" ]; then
 							# Search for package in mirror
 							name="$(awk -F$'\t' -vi="$i" '$1==i{print $1; exit}' "$root$DB/packages.info")"
@@ -1031,262 +1053,11 @@ cookit_quality() {
 	# ERROR can be echoed any time in cookit()
 	if grep -Ev "(conftest|configtest)" $LOGS/$pkg.log | \
 	   grep -Eq "(^ERROR|undefined reference to)" ; then
-		debug_info | tee -a $LOGS/$pkg.log
+		debug_info "cookit_quality" | tee -a $LOGS/$pkg.log
 		put_status $pkg Failed
-		rm -f $command
-		broken; exit 1
+#		rm -f $command
+#		broken; exit 1
 	fi
-}
-
-
-# Create the package. Wanted to use TazPkg to create a tazpkg package at first,
-# but it doesn't handle EXTRAVERSION.
-
-packit() {
-	set_paths "$1"
-	PACKAGE="${1:-$PACKAGE}"
-
-	# Handle cross compilation
-	case "$ARCH" in
-		arm*|x86_64) arch="-$ARCH" ;;
-	esac
-
-	title 'Pack: %s' "$PACKAGE $VERSION$arch"
-
-	# Get set name for specified package from $SPLIT variable
-	local set=$(echo -n $SPLIT \
-				| awk -vpkg="$PACKAGE" '
-					BEGIN { RS = " "; FS = ":"; }
-					{ if ($1 == pkg && $2 != "") { print "-" $2; exit; } }')
-	# Change set, make filelist and folderlist for new set
-	export     src="$src$set"
-	export install="$install$set"
-	export DESTDIR="$install"
-
-	if grep -q ^genpkg_rules $receipt; then
-		_ 'Executing: %s' 'genpkg_rules'
-		set -e; cd $pkgdir; mkdir -p $fs
-		genpkg_rules || (newline; _ 'ERROR: genpkg_rules failed'; newline) >> \
-			$LOGS/$pkg.log
-	else
-		_ 'No packages rules: meta package'
-		mkdir -p $fs
-	fi
-
-	# Check CONFIG_FILES
-	if [ -n "$CONFIG_FILES" ]; then
-		unset IFS
-		for i in $CONFIG_FILES; do
-			if [ ! -e $fs$i ]; then
-				case $i in
-					*/) mkdir -p $fs$i ;;
-					*)  mkdir -p $fs$(dirname $i); touch $fs$i ;;
-				esac
-			fi
-		done
-	fi
-
-	# First QA check to stop now if genpkg_rules failed.
-	lerror=$(_n 'ERROR')
-	if fgrep -q ^$lerror $LOGS/$pkg.log; then
-		broken; exit 1
-	fi
-
-	cd $taz
-	action 'Copying "%s"...' 'receipt'
-	export PACKAGE VERSION CATEGORY SHORT_DESC WEB_SITE DEPENDS PROVIDE SUGGESTED TAZPANEL_DAEMON TAGS CAT CONFIG_FILES
-	@@PREFIX@@/libexec/cookutils/mk_pkg_receipt "$(realpath ../receipt)" > $pack/receipt
-	chown 0.0 $pack/receipt; status
-
-	unset desc
-	[ "$pkg" == "$PACKAGE" -a -f "../description.txt" ] && desc="../description.txt"
-	[ -f "../description.$PACKAGE.txt" ] && desc="../description.$PACKAGE.txt"
-	if [ -n "$desc" ]; then
-		action 'Copying "%s"...' "$(basename "$desc")"
-		cp -f $desc $pack/description.txt; chown 0.0 $pack/description.txt; status
-	fi
-
-	copy_generic_files
-
-	# Strip and stuff files.
-	export COOKOPTS ARCH HOST_SYSTEM LOCALE fs; @@PREFIX@@/libexec/cookutils/compressor fs
-
-	# Create files.list with redirecting find output.
-	action 'Creating the list of files...'
-	cd $fs
-	find . -type f -print >  ../files.list
-	find . -type l -print >> ../files.list
-	cd ..; sed -i 's|^.||' files.list
-	status
-
-	# Md5sum of files.
-	action 'Creating md5sum of files...'
-	while read file; do
-		[ -L "fs$file" ] && continue
-		[ -f "fs$file" ] || continue
-		case "$file" in
-			/lib/modules/*/modules.*|*.pyc) continue ;;
-		esac
-		md5sum "fs$file" | sed 's|  fs|  |'
-	done < files.list | sort -k2 > md5sum
-	status
-
-	UNPACKED_SIZE=$(du -chs fs receipt files.list md5sum description.txt \
-		2>/dev/null | awk 'END{ print $1 }')
-
-	# Build cpio archive.
-	action 'Compressing the FS...'
-	find fs -newer $receipt -exec touch -hr $receipt '{}' \;
-#	find fs | cpio -o -H newc --quiet | lzma-alone e fs.cpio.lzma -si
-	find fs | cpio -o -H newc --quiet | /bin/lzma -qzeT0 >fs.cpio.lzma
-	mv fs ../
-	status
-
-	PACKED_SIZE=$(du -chs fs.cpio.lzma receipt files.list md5sum description.txt \
-		2>/dev/null | awk 'END{ print $1 }')
-
-	action 'Updating receipt sizes...'
-	sed -i '/^PACKED_SIZE=/d; /^UNPACKED_SIZE=/d' receipt
-	sed -i "s|^PACKAGE=|PACKED_SIZE=\"$PACKED_SIZE\"\nUNPACKED_SIZE=\"$UNPACKED_SIZE\"\nPACKAGE=|" receipt
-	status
-
-	# Set extra version.
-	if [ -n "$EXTRAVERSION" ]; then
-		action 'Updating receipt EXTRAVERSION: %s' "$EXTRAVERSION"
-		sed -i '/^EXTRAVERSION=/d' receipt
-		sed -i "s|^VERSION=|EXTRAVERSION=\"$EXTRAVERSION\"\nVERSION=|" receipt
-		status
-	fi
-
-	# Compress.
-	action 'Creating full cpio archive...'
-	find . -newer $receipt -exec touch -hr $receipt '{}' \;
-	find . | cpio -o -H newc --quiet > ../$PACKAGE-$VERSION$EXTRAVERSION$arch.tazpkg
-	status
-
-	# Restoring original package tree.
-	mv ../fs .
-
-	rm fs.cpio.lzma; cd ..
-
-	# QA and give info.
-	tazpkg=$(ls *.tazpkg)
-	packit_quality
-	footer "$(_ 'Package "%s" created' "$tazpkg")"
-}
-
-
-# Verify package quality and consistency.
-
-packit_quality() {
-	local arch=''
-	case "$ARCH" in
-		arm*|x86_64) arch="-$ARCH" ;;
-	esac
-
-	local rsum rsumold='' rsum_changed old_file
-	local pi="$PKGS/packages.info" fl="$cache/files.list"
-	local pkg_file="$PKGS/$PACKAGE-$VERSION$EXTRAVERSION$arch.tazpkg"
-	local rsum_file=$(mktemp) rsum_file_old=$(mktemp) tmpdir=$(mktemp -d)
-
-
-	if [ "${COOKOPTS/skip-log-errors/}" == "$COOKOPTS" ]; then
-		# Exit if any error found in log file.
-		if fgrep -q ^ERROR $LOGS/$pkg.log; then
-			rm -f $command
-			broken; exit 1
-		fi
-	fi
-
-
-	[ -n "$CAT" ] && CATEGORY="${CAT%|*}"	# allow meta-packages in v2 receipts
-
-	if [ "${COOKOPTS/empty-pkg/}" == "$COOKOPTS" ]; then
-		action 'QA: checking for empty package...'
-		if [ ! -s "$pack/files.list" -a "$CATEGORY" != 'meta' ]; then
-			broken
-			rm -f $command
-			false; status
-			die 'ERROR: empty package'
-		fi
-		:; status
-	fi
-
-
-	# Calculate release checksum: usually it does not change on "just recook".
-	# Release checksum is md5sum of file containing md5sums of:
-	# a) all files, b) receipt, and c) description.txt.
-	# Md5sum of the package file will change every time because of embedded timestamps;
-	# release checksum based only on files content, and will change only when files change.
-	# (Pitfall: ownership and permissions...)
-
-	# Calculate rsum for new package
-	cp $pack/md5sum $rsum_file
-	md5sum $pack/receipt | sed 's| [^ ]*/| |' >> $rsum_file
-	[ -e "$pack/description.txt" ] &&
-		md5sum $pack/description.txt | sed 's| [^ ]*/| |' >> $rsum_file
-	rsum=$(md5sum $rsum_file | awk '{print $1}')
-
-	# Calculate rsum for existing previous "old" package
-	if [ -f "$pkg_file" ]; then
-		# don't trust database entry, check the package file
-		cd $tmpdir
-		cpio -F "$pkg_file" -i md5sum receipt description.txt >/dev/null 2>&1
-		cp ./md5sum $rsum_file_old
-		md5sum ./receipt | sed 's| [^ ]*/| |' >> $rsum_file_old
-		[ -e "./description.txt" ] &&
-			md5sum ./description.txt | sed 's| [^ ]*/| |' >> $rsum_file_old
-		rsumold=$(md5sum $rsum_file_old | awk '{print $1}')
-		cd - >/dev/null
-	fi
-
-	# Clean
-	rm $rsum_file $rsum_file_old
-	rm -r $tmpdir
-
-
-	touch $pi $broken
-
-
-	# Find and remove old package only if "release checksum" has changed
-
-	if [ "$rsum" != "$rsumold" ]; then
-		old_file=$(awk -F$'\t' -vname="$PACKAGE" -varch="$arch" '{
-			if ($1 == name) printf("%s-%s%s.tazpkg", $1, $2, arch);
-			}' $pi)		# <name>-<version><extra_version><-arch>.tazpkg
-		if [ -f "$PKGS/$old_file" ]; then
-			action 'Removing old package "%s"' "$old_file"
-			rm -f "$PKGS/$old_file"
-			status
-		fi
-		# package changed, substitute old package by new one
-		mv -f $pkgdir/taz/$PACKAGE-$VERSION$EXTRAVERSION$arch.tazpkg $PKGS
-		_ 'The release checksum has changed.'
-	else
-		# package not changed, remove new package
-		rm -f $pkgdir/taz/$PACKAGE-$VERSION$EXTRAVERSION$arch.tazpkg
-		_ 'The release checksum has not changed.'
-	fi
-
-
-	sed -i "/^${pkg}$/d" $broken
-
-
-	# Update packages database every time after successful build
-
-	# packages.info (unsorted, located near to packages)
-	unset_receipt; . $pack/receipt
-	SIZES=$(echo $PACKED_SIZE $UNPACKED_SIZE | sed 's|\.0||g')
-	DEPENDS=$(echo $DEPENDS) # remove newlines, tabs and multiple spaces from variable
-	sed -i "/^$PACKAGE\t/d" $pi		# remove old entry
-	cat >> $pi <<EOT
-$PACKAGE	$VERSION$EXTRAVERSION	$CATEGORY	$SHORT_DESC	$WEB_SITE	$TAGS	$SIZES	$DEPENDS	$rsum	$PROVIDE
-EOT
-
-	# files.list (uncompressed, unsorted, located in $cache)
-	touch $fl
-	sed -i "/^$PACKAGE: /d" $fl
-	sed  "s/^/$PACKAGE: \0/" $pack/files.list >> $fl
 }
 
 
@@ -1319,13 +1090,15 @@ all_names() {
 
 packall() {
 	set_paths
+	[ -e $pkgdir/.arch ] && rm $pkgdir/.arch
+
 	if head -n1 "$pkgdir/receipt" | fgrep -q 'v2'; then
 		for i in $(all_names); do
 			unset TAGS DEPENDS CAT CONFIG_FILES PROVIDE SUGGESTED DATABASE_FILES TAZPANEL_DAEMON
-			packit $i
+			export PACKAGE; @@PREFIX@@/libexec/cookutils/pack $i
 		done
 	else
-		packit
+		export PACKAGE; @@PREFIX@@/libexec/cookutils/pack $PACKAGE
 	fi
 }
 
@@ -1337,50 +1110,31 @@ tac() {
 }
 
 
-# Update chroot with freshly rebuilt package: keep env up-to-date.
-
-update_chroot() {
-	local PACKAGE="$pkg"
-	for i in $(all_names); do
-		if [ -d "$root$INSTALLED/$i" ]; then
-			. /etc/slitaz/cook.conf
-			. $WOK/$pkg/taz/$i-$VERSION$EXTRAVERSION/receipt
-			_ 'Updating %s chroot environment...' "$ARCH"
-			_ 'Updating chroot: %s' "$i ($VERSION$EXTRAVERSION$arch)" | log
-			cd $PKGS
-			tazpkg -i "$PKGS/$i-$VERSION$EXTRAVERSION$arch.tazpkg" --forced --root=$root
-		fi
-	done
-}
-
-
-# Install package on --inst or update the chroot.
+# Install package: update the chroot with freshly rebuilt package: keep env up-to-date.
 
 install_package() {
 	set_paths
 	case "$ARCH" in
-		arm*)
-			arch="-$ARCH"
-			root="$CROSS_TREE/sysroot"
-			;;
-		x86_64)
-			arch="-$ARCH"
-			;;
+		arm*) root="$CROSS_TREE/sysroot";;
 	esac
-	# Install package if requested but skip install if target host doesn't
-	# match build system or it will break the build chroot.
-	build=$(echo $BUILD_SYSTEM | cut -d- -f1)
-	if [ -n "$inst" -a "$build" == "$ARCH" ]; then
-		if [ -f "$PKGS/$PACKAGE-$VERSION$EXTRAVERSION$arch.tazpkg" ]; then
-			cd $PKGS
-			tazpkg -i "$PKGS/$PACKAGE-$VERSION$EXTRAVERSION$arch.tazpkg" --forced
-		else
-			broken
-			die 'Unable to install package, build has failed.'
-		fi
-	fi
 
-	update_chroot
+	# Process all the package names built by this receipt (defined in $SPLIT)
+	for i in $(PACKAGE="$pkg" all_names); do
+		if [ -d "$root$INSTALLED/$i" ]; then
+			pkg_file=$(awk -F$'\t' -vpkg="$i" -varch="$ARCH" '{
+				if ($1 == pkg) {
+					pkgarch = ($11 == "0") ? "any" : arch;
+					printf("%s-%s-%s.tazpkg", $1, $2, pkgarch);
+					exit
+				}
+			}' $PKGS/packages-$ARCH.info)
+			if [ -e "$PKGS/$pkg_file" ]; then
+				_ 'Updating %s chroot environment...' "$ARCH"
+				_ 'Updating chroot: %s' "${pkg_file%.tazpkg}" | log
+				tazpkg -i "$PKGS/$pkg_file" --forced --root=$root
+			fi
+		fi
+	done
 }
 
 
@@ -1452,14 +1206,26 @@ xml_ent() {
 # Create a XML feed for freshly built packages.
 
 gen_rss() {
-	pubdate=$(date '+%a, %d %b %Y %X')
+	if [ -e "$WOK/$PACKAGE/.icon.png" ]; then
+		icon="$COOKER_URL$PACKAGE/browse/.icon.png"
+	else
+		icon="http://cook.slitaz.org/tazpkg.png"
+	fi
+
 	cat > $FEEDS/$pkg.xml <<EOT
 	<item>
 		<title>$PACKAGE $VERSION$EXTRAVERSION</title>
-		<link>${COOKER_URL}?pkg=${PACKAGE//+/%2B}</link>
-		<guid>$PACKAGE-$VERSION$EXTRAVERSION</guid>
-		<pubDate>$pubdate</pubDate>
-		<description>$(echo -n "$SHORT_DESC" | xml_ent)</description>
+		<link>$COOKER_URL${PACKAGE//+/%2B}</link>
+		<guid isPermaLink="false">$PACKAGE-$VERSION$EXTRAVERSION</guid>
+		<pubDate>$(date '+%a, %d %b %Y %X GMT')</pubDate>
+		<description><![CDATA[
+			<table>
+				<tr>
+					<td vertical-align="top"><img src="$icon" alt=""/></td>
+					<td>$(echo -n "$SHORT_DESC" | xml_ent)</td>
+				</tr>
+			</table>
+		]]></description>
 	</item>
 EOT
 }
@@ -1514,212 +1280,6 @@ cook_pick_docs() {
 	mkdir -p $docdir
 	cp -r $@ $docdir
 	chmod -R a+r $docdir
-	status
-}
-
-
-# Function to use in genpkg_rules() to copy specified files from $install to $fs
-
-cook_copy_files() {
-	action 'Copying files...'
-	cd $install
-	local i j
-	IFS=$'\n'
-	for i in $@; do
-		for j in $(find . -name $i ! -type d); do
-			mkdir -p $fs$(dirname ${j#.})
-			scopy $j $fs$(dirname ${j#.})
-		done
-	done
-	cd - >/dev/null
-	status
-}
-
-
-# Function to use in genpkg_rules() to copy specified folders from $install to $fs
-
-cook_copy_folders() {
-	action 'Copying folders...'
-	cd $install
-	local i j
-	IFS=$'\n'
-	for i in $@; do
-		for j in $(find . -name $i -type d); do
-			mkdir -p $fs$(dirname ${j#.})
-			cp -a $j $fs$(dirname ${j#.})
-		done
-	done
-	cd - >/dev/null
-	status
-}
-
-
-# Remove from current $fs files that are already packed (for receipts v2).
-# Note: the order in $SPLIT is very important.
-# Note 2: working in the current set.
-
-remove_already_packed() {
-	local i j
-	# $pkg is the name of the main package; $PACKAGE is the name of the current one
-	# $pkg may (or may not) be included in the $SPLIT
-	neighbors=$(
-		echo $pkg $SPLIT" " \
-		| awk -F$'\t' -vpkg="$PACKAGE" '
-		BEGIN { RS = " "; FS = ":"; }
-		      { set[$1] = $2; }
-		END   {
-		        current_set = set[pkg];
-		        for (i in set)
-		          { if (i != pkg && set[i] == current_set) print i; }
-		}
-	')
-	IFS=$'\n'
-	for neighbor in $neighbors; do
-		i="$taz/$neighbor-$VERSION$EXTRAVERSION/files.list"
-		[ -e "$i" ] || continue
-		while read j; do
-			[ -f $fs$j -o -h $fs$j ] || continue
-			rm $fs$j
-			rmdir --parents --ignore-fail-on-non-empty $fs$(dirname $j)
-		done < $i
-	done
-	unset IFS
-}
-
-
-# Function to use in genpkg_rules() to copy hicolor icons in specified sizes
-# (default: 16 and 48) from $install to $fs
-
-cook_copy_icons() {
-	local sizes=$@ i j ifs="$IFS"
-	unset IFS
-	action 'Copying hicolor icons...'
-	[ -d "$fs/usr/share/icons/hicolor" ] && rm -rf "$fs/usr/share/icons/hicolor"
-	mkdir -p $fs/usr/share/icons/hicolor
-	for i in ${sizes:-16 48}; do
-		j="${i}x$i"; [ "$i" == 'scalable' ] && j="$i"
-		[ ! -e "$install/usr/share/icons/hicolor/$j" ] ||
-		scopy   $install/usr/share/icons/hicolor/$j \
-			         $fs/usr/share/icons/hicolor
-	done
-	status
-	IFS="$ifs"
-}
-
-
-# Common function to copy files, folders and patterns
-
-copy() {
-	action 'Copying folders and files...'
-	local i j k filelist=$(mktemp) folderlist=$(mktemp)
-
-	IFS=$'\n'
-	cd $install
-	find ! -type d | sed 's|\.||' > $filelist
-	find   -type d | sed 's|\.||' > $folderlist
-
-	for i in $@; do
-		case $i in
-			@std)
-				# Copy "standard" files (all but "developer files", man pages, documentation, translations)
-				sed '/\.h$/d; /\.hxx$/d; /\.a$/d; /\.la$/d; /\.pc$/d; /\.pri$/d; /bin\/.*-config$/d;
-					/\.m4$/d; /\.gir$/d; /\.typelib$/d; /\.vapi$/d; /\.deps$/d; /\.cmake$/d;
-					/\/Makefile.*/d; /\.inc$/d; /\/include\//d;
-					/\/share\/man\//d; /\/share\/doc\//d; /\/share\/gtk-doc\//d; /\/share\/info\//d;
-					/\/share\/devhelp\//d; /\/share\/locale\//d;
-					/\/share\/bash-completion\//d; /\/etc\/bash_completion\.d\//d; /\/lib\/systemd\//d;
-					/\/fonts\.scale$/d; /\/fonts\.dir$/d;
-					/\/share\/appdata\//d; /\/share\/help\//d; /\/share\/metainfo\//d; /\/share\/mimelnk\//d;
-					/\/share\/icons\/hicolor\/[12356][1245][268]*x[12356][1245][268]*\//d;	# 22, 24, 32, 64, 128, 256, 512
-					/\.so\.dbg$/d;
-					' $filelist
-				;;
-			@dev)
-				# Copy "developer files"
-				sed -n '/\.h$/p; /\.hxx$/p; /\.a$/p; /\.pc$/p; /\.pri$/p; /bin\/.*-config$/p;
-					/\.m4$/p; /\.gir$/p; /\.typelib$/p; /\.vapi$/p; /\.deps$/p; /\.cmake$/p;
-					/\/Makefile.*/p; /\.inc$/p; /\/include\//p;
-					/\.so\.dbg$/p;
-					' $filelist
-				;;
-			@ruby)
-				# Copy mandatory Ruby files
-				gem_base="\/usr\/lib\/ruby\/gems\/.*\/${PACKAGE#*-}-$VERSION"
-				sed -n '/\/extensions\/.*\.so$/p; /'$gem_base'\/lib\//p; /\.gemspec$/p;
-					/\/usr\/bin\//p; /\/gems\/.*\/bin\//p;
-					' $filelist | sed '/\/gems\/.*\/lib\/.*\.so$/d; /\/gems\/.*\/lib\/.*\.h$/d;
-					/\/gems\/.*\/gems\/.*\.gemspec$/d;'
-				;;
-			@ruby-dev)
-				sed -n '/\/ext\/.*\.h$/p; /\/ext\/.*\.pc$/p; /\/gem.build_complete$/p;
-					/\/gems\/.*\/lib\/.*\.h$/p;
-					' $filelist
-				;;
-			@rm)
-				# Quick alias
-				remove_already_packed
-				;;
-			@ico)
-				# Quick alias
-				cook_copy_icons >/dev/null
-				;;
-			*/)
-				# Copy specified folders.
-				i="${i%/}"
-				find -type d -path "*/${i#/}" | sed 's|^.||'
-				;;
-			*)
-				# Copy specified files.
-				find ! -type d -path "*/${i#/}" | sed 's|^.||'
-				;;
-		esac \
-		| sort -u \
-		| while read j; do
-			mkdir -p $fs$(dirname "$j")
-			if [ -d "$install$j" ]; then
-				cp -a "$install$j" $fs$(dirname "$j")
-			else
-				scopy "$install$j" $fs$(dirname "$j")
-			fi
-		done
-		# Copy empty directories
-		case $i in
-			@std)
-				while read j; do
-					case $j in
-						# skip empty man & doc folders
-						*/man/*|*/doc/*) continue;;
-					esac
-					[ -z "$(ls -A "$install$j")" ] || continue
-					# directory $j is empty
-					k="$j"
-					# make 'ladder' from directories, from root dir to $j
-					# /a   /a/b   /a/b/c   etc.
-					while :; do
-						[ -z "$k" ] && break
-						echo "$k"
-						k="${k%/*}"
-					done \
-					| tac \
-					| while read k; do
-						# make dir if it does not exist
-						if [ ! -d "$fs$k" ]; then
-							# It's like "copy the directory without its underlying content".
-							# keep original ownership/permissions, access:
-							keepIFS="$IFS"; unset IFS
-							install -d $(stat -c'-o%u -g%g -m%a' "$install$k") "$fs$k"
-							# keep last-modified date:
-							touch -r "$install$k" "$fs$k"
-							IFS="$keepIFS"; unset keepIFS
-						fi
-					done
-				done < $folderlist
-				;;
-		esac
-	done
-	cd - >/dev/null
-	unset IFS
-	rm $filelist $folderlist
 	status
 }
 
@@ -2194,6 +1754,9 @@ case "$1" in
 			exit 0
 		fi
 
+		# Remove package from broken list before cooking
+		sed -i "/^${pkg}$/d" $broken
+
 		# Skip blocked, 3 lines also for the Cooker.
 		grep -q "^$pkg$" $blocked && [ "$2" != '--unblock' ] &&
 			die 'Package "%s" is blocked' "$pkg"
@@ -2201,7 +1764,6 @@ case "$1" in
 		try_aufs_chroot "$@"
 
 		# Log and source receipt.
-		_ 'Cook started for: %s' "<a href='cooker.cgi?pkg=${pkg//+/%2B}'>$pkg</a>" | log
 		echo "cook:$pkg" > $command
 
 		[ -n "$lastcooktime" ] && echo "cook:$pkg $lastcooktime $(date +%s)" >> $cooktime
@@ -2220,18 +1782,17 @@ case "$1" in
 
 		# Handle --options
 		case "$2" in
-			--install|-i)
-				inst='yes' ;;
-
 			--pack)
+				_ 'Packing %s' "<a href='cooker.cgi?pkg=${pkg//+/%2B}'>$pkg</a>" | log
 				[ -d "$WOK/$pkg/install" ] || die 'Need to build "%s"' "$pkg"
 				[ ! -d "$WOK/$pkg/taz" ] || rm -rf "$WOK/$pkg/taz"
 				[ ! -f "$LOGS/$pkg-pack.log" ] || rm -f $LOGS/$pkg-pack.log
-				sed -i '$ s|$| (packing)|' $activity
 				packall 2>&1 | tee -a $LOGS/$pkg-pack.log
+				@@PREFIX@@/libexec/cookutils/postcheck $pkg | tee -a $LOGS/$pkg.log
 				clean_log "$pkg-pack"
 				time=$(($(date +%s) - $time))
 				summary | sed 's|^Cook |Pack |' | tee -a $LOGS/$pkg-pack.log
+				gen_rss
 				put_status $pkg Done
 				rm -f $command
 				exit 0 ;;
@@ -2239,6 +1800,8 @@ case "$1" in
 			--trials|-t)
 				trials='yes' ;;
 		esac
+
+		_ 'Making %s' "<a href='cooker.cgi?pkg=${pkg//+/%2B}'>$pkg</a>" | log
 
 		# Rotate log
 		for i in $(seq 9 -1 1); do
@@ -2265,21 +1828,27 @@ case "$1" in
 		done
 
 		# Cook and pack or exit on error and log everything.
-		((((cookit $@ 2>&1; echo $? >&3) | loglimit 50 > $LOGS/$pkg.log) 3>&1) | (read rq; exit $rq))
+		( ( ( (cookit $@ 2>&1; echo $? >&3) | loglimit 50 > $LOGS/$pkg.log) 3>&1) | (read rq; exit $rq) )
 		rq=$?	# the return code of `cookit $@` above command
+
+		if [ $rq -eq 1 ]; then
+			broken
+		fi
 
 		# Remove build dependencies both when `cookit` done or fail
 		remove_deps | tee -a $LOGS/$pkg.log
 		timestamp job27 # removing bdeps
-		cookit_quality
+#		cookit_quality
 		timestamp job28 # checking quality
 
 		# Log and stop if `cookit` fails
 		if [ $rq -eq 1 ]; then
-			debug_info | tee -a $LOGS/$pkg.log
+			debug_info "ret1" | tee -a $LOGS/$pkg.log
+			@@PREFIX@@/libexec/cookutils/postcheck $pkg | tee -a $LOGS/$pkg.log
 			put_status $pkg Failed
 			rm -f $command
-			broken; exit 1
+			broken
+			exit 1
 		fi
 
 		# Proceed only if `cookit` return code is zero-OK
@@ -2288,13 +1857,15 @@ case "$1" in
 		packall 2>&1 | loglimit 5 >> $LOGS/$pkg.log
 		timestamp job29 # packing
 
+		@@PREFIX@@/libexec/cookutils/postcheck $pkg | tee -a $LOGS/$pkg.log
+
 		clean_log
 
 		# Exit if any error in packing.
 		if [ "${COOKOPTS/skip-log-errors/}" == "$COOKOPTS" ] &&
 			grep -Ev "(/root/.cvspass|conftest|df: /|rm: can't remove)" $LOGS/$pkg.log | \
 			grep -Eq "(^ERROR|: No such file or directory|not remade because of errors|ake: \*\*\* .* Error)"; then
-			debug_info | tee -a $LOGS/$pkg.log
+			debug_info "packerr" | tee -a $LOGS/$pkg.log
 			put_status $pkg Failed
 			rm -f $command
 			broken; exit 1

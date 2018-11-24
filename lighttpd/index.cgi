@@ -95,7 +95,8 @@ page_header() {
 
 	if [ -n "$pkg" ]; then
 		case "$pkg" in
-			~) pretitle="Tag \"$cmd\" - ";;
+			~) if [ -z "$cmd" ]; then pretitle="Tag cloud - "; else pretitle="Tag \"$cmd\" - "; fi;;
+			%) if [ -z "$cmd" ]; then pretitle="Badges - "; else pretitle="Badge \"$cmd\" - "; fi;;
 			*) pretitle="$pkg - ";;
 		esac
 	else
@@ -180,21 +181,21 @@ page_footer() {
 	date_now=$(date +%s)
 	sec_now=$(date +%S); sec_now=${sec_now#0} # remove one leading zero
 	wait_sec=$(( 60 - $sec_now ))
-	cat <<EOT
-</main>
+	cat <<-EOT
+	</main>
 
-<footer>
-	<a href="http://www.slitaz.org/">SliTaz Website</a>
-	<a href="http://tank.slitaz.org/graphs.php">Server status</a>
-	<a href="$base/doc/cookutils/cookutils.html">Documentation</a>
-	<a href="$base/?theme">Theme</a>
-</footer>
-</div>
-<script src="/cooker.js"></script>
-<script>refreshDate(${wait_sec}000, ${date_now}000)</script>
-</body>
-</html>
-EOT
+	<footer>
+		<a href="http://www.slitaz.org/">SliTaz Website</a>
+		<a href="http://tank.slitaz.org/graphs.php">Server status</a>
+		<a href="$base/doc/cookutils/cookutils.html">Documentation</a>
+		<a href="$base/?theme">Theme</a>
+	</footer>
+	</div>
+	<script src="/cooker.js"></script>
+	<script>refreshDate(${wait_sec}000, ${date_now}000)</script>
+	</body>
+	</html>
+	EOT
 }
 
 
@@ -258,7 +259,7 @@ manage_modified() {
 # Problems:
 # 1. Function "latest packaged version" widely used here and it has no JSON API, but only SVG badge.
 # 2. So, all version comparisons can be only visual and not automated.
-# 3. Of the thousands of badges present on the web page, many of them are broken (maybe server
+# 3. If the thousands of badges present on the web page, many of them are broken (maybe server
 #    drops requests), while our server displays status icons well.
 # 4. Default badges are wide and not customizable.
 # Solution:
@@ -347,7 +348,7 @@ if [ "$pkg" == 's' ]; then
 	# argument <pkg> is in $cmd variable
 	echo -en "Content-Type: image/svg+xml\n\n<svg xmlns='http://www.w3.org/2000/svg' height='12' width='8'><path d='"
 	# packages.info updates with each new package, so we'll find actual info here
-	if grep -q "^$cmd"$'\t' $PKGS/packages.info; then
+	if grep -q "^$cmd"$'\t' $PKGS/packages-$ARCH.info; then
 		echo "m1 2-1 1v8l1 1h6l1-1v-8l-1-1z' fill='#090'/></svg>"
 	else
 		echo "m0 3v8l1 1h6l1-1v-8l-1-1h-6zm3 0h2v5h-2zm0 6h2v2h-2z' fill='#d00'/></svg>"
@@ -365,19 +366,17 @@ if [ -n "$(GET theme)" ]; then
 		theme)
 			current=$(COOKIE theme)
 			page_header
-			cat <<EOT
-<section>
-	<h2>Change theme</h2>
-	<p>Current theme: “${current:-default}”. Select other:</p>
-	<ul>
-		$(
-			for i in default emerald sky goldenrod midnight like2016 terminal; do
-				[ "$i" == "${current:-default}" ] || echo "<li><a href=\"$base/?theme=$i&amp;ref=$ref\">$i</a></li>"
-			done
-		)
-	</ul>
-</section>
-EOT
+			cat <<-EOT
+				<section>
+					<h2>Change theme</h2>
+					<p>Current theme: “${current:-default}”. Select other:</p>
+					<ul>$(
+							for i in default emerald sky goldenrod midnight like2016 terminal; do
+								[ "$i" == "${current:-default}" ] || echo "<li><a href=\"$base/?theme=$i&amp;ref=$ref\">$i</a></li>"
+							done
+					)</ul>
+				</section>
+			EOT
 			page_footer
 			exit 0
 			;;
@@ -426,26 +425,27 @@ if [ -n "$(GET rss)" ]; then
 	limit=$(GET limit); limit="${limit:-12}"; [ "$limit" -gt 100 ] && limit='100'
 	pubdate=$(date -Rur$(ls -t $FEEDS/*.xml | head -n1) | sed 's|UTC|GMT|')
 	cooker_url="http://$HTTP_HOST$base/"
-	cat <<EOT
-Content-Type: application/rss+xml
+	cat <<-EOT
+		Content-Type: application/rss+xml
 
-<?xml version="1.0" encoding="utf-8" ?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
-<channel>
-	<title>$title</title>
-	<description>The SliTaz packages cooker feed</description>
-	<link>$cooker_url</link>
-	<lastBuildDate>$pubdate</lastBuildDate>
-	<pubDate>$pubdate</pubDate>
-	<atom:link href="$cooker_url?rss" rel="self" type="application/rss+xml" />
-EOT
+		<?xml version="1.0" encoding="utf-8" ?>
+		<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+		<channel>
+			<title>$title</title>
+			<description>The SliTaz packages cooker feed</description>
+			<link>$cooker_url</link>
+			<lastBuildDate>$pubdate</lastBuildDate>
+			<pubDate>$pubdate</pubDate>
+			<atom:link href="$cooker_url?rss" rel="self" type="application/rss+xml" />
+		EOT
 	for rss in $(ls -t $FEEDS/*.xml | head -n$limit); do
-		sed "s|http[^=]*=|$cooker_url|; s|<guid|& isPermaLink=\"false\"|g; s|</pubDate| GMT&|g" $rss
+		sed -e "/\?pkg=/s|http[^=]*=|$cooker_url|;" \
+			-e "s|\([0-9]\)</pubDate>|\1 GMT</pubDate>|" $rss
 	done
-	cat <<EOT
-</channel>
-</rss>
-EOT
+	cat <<-EOT
+		</channel>
+		</rss>
+	EOT
 	exit 0
 fi
 
@@ -455,22 +455,22 @@ fi
 # Query '/os.xml': get OpenSearch Description
 
 if [ "$pkg" == 'os.xml' ]; then
-	cat <<EOT
-Content-Type: application/xml; charset=UTF-8
+	cat <<-EOT
+		Content-Type: application/xml; charset=UTF-8
 
-<?xml version="1.0" encoding="UTF-8"?>
-<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/">
-	<ShortName>$title</ShortName>
-	<Description>SliTaz packages search</Description>
-	<Image width="16" height="16" type="image/png">http://$HTTP_HOST/images/logo.png</Image>
-	<Url type="text/html" method="GET" template="http://$HTTP_HOST$base/{searchTerms}"/>
-	<Url type="application/x-suggestions+json" method="GET" template="http://$HTTP_HOST$base/">
-		<Param name="oss" value="{searchTerms}"/>
-	</Url>
-	<SearchForm>http://$HTTP_HOST$base/</SearchForm>
-	<InputEncoding>UTF-8</InputEncoding>
-</OpenSearchDescription>
-EOT
+		<?xml version="1.0" encoding="UTF-8"?>
+		<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/">
+			<ShortName>$title</ShortName>
+			<Description>SliTaz packages search</Description>
+			<Image width="16" height="16" type="image/png">http://$HTTP_HOST/images/logo.png</Image>
+			<Url type="text/html" method="GET" template="http://$HTTP_HOST$base/{searchTerms}"/>
+			<Url type="application/x-suggestions+json" method="GET" template="http://$HTTP_HOST$base/">
+				<Param name="oss" value="{searchTerms}"/>
+			</Url>
+			<SearchForm>http://$HTTP_HOST$base/</SearchForm>
+			<InputEncoding>UTF-8</InputEncoding>
+		</OpenSearchDescription>
+	EOT
 	exit 0
 fi
 
@@ -512,7 +512,9 @@ docat() {
 
 info2html() {
 	sed \
-		-e 's|&|\&amp;|g; s|<|\&lt;|g; s|>|\&gt;|g' \
+		-e 's|&|\&amp;|g; s|<|\&lt;|g; s|>|\&gt;|g;' \
+		-e "s|\`\([^']*\)'|<b>\1</b>|g" \
+		-e 's|"\([A-Za-z0-9]\)|“\1|g; s|"|”|g' \
 		-e 's|^\* \(.*\)::|* <a href="#\1">\1</a>  |' \
 		-e 's|\*note \(.*\)::|<a href="#\1">\1</a>|' \
 		-e '/^File: / s|(dir)|Top|g' \
@@ -520,7 +522,8 @@ info2html() {
 		-e '/^File: / s|Prev: \([^,]*\)|<a class="button icon prev" href="#\1">Prev: \1</a>|' \
 		-e '/^File: / s|Up: \([^,]*\)|<a class="button icon up" href="#\1">Up: \1</a>|' \
 		-e '/^File: / s|^.* Node: \([^,]*\), *\(.*\)$|<pre id="\1">\2|' \
-		-e '/^<pre id=/ s|^\([^>]*>\)\(<a[^>]*>Next: [^,]*\), *\(<a[^>]*>Prev: [^,]*\), *\(<a[^>]*>Up: .*\)|\1 \3 \4 \2|' \
+		-e '/^<pre id=/ s|^\([^>]*>\)\(<a[^>]*>Next: [^,]*\), *\(<a[^>]*>Prev: [^,]*\), *\(<a[^>]*>Up: .*\)|\1<div class="buttonbar">\3 \4 \2</div>|' \
+		-e '/^<pre id=/ s|^\([^>]*>\)*\(<a[^>]*>Prev: [^,]*\), *\(<a[^>]*>Up: .*\)|\1<div class="buttonbar">\2 \3 <a class="button icon next" href="#">Next</a></div>|' \
 		-e '/^Tag Table:$/,/^End Tag Table$/d' \
 		-e '/INFO-DIR/,/^END-INFO-DIR/d' \
 		-e "s|https*://[^>),'\"\`’ ]*|<a href=\"&\">&</a>|g" \
@@ -631,12 +634,18 @@ syntax_highlighter() {
 					s|\[39m|</span>|;
 					#s|\[1m|<span class='c01'>|g;
 					s|\[1m|<span style='font-weight:bold'>|g; s|(B|</span>|g;
-					s|\[m||g;
-					" \
+					s|\[m||g;" \
+				\
 				-e "s!^|\(+.*\)!|<span class='c20'>\1</span>!;
 					s!^|\(-.*\)!|<span class='c10'>\1</span>!;
-					s!^|\(@@.*@@\)\$!|<span class='c30'>\1</span>!;"
+					s!^|\(@@.*@@\)\$!|<span class='c30'>\1</span>!;" \
 				\
+				-e "s|^Successfully installed [^ ][^ ]*$|<i>\0</i>|;
+					s|^Successfully installed .*$|<b>\0</b>|;
+					s|^\(Requirement already satisfied: .*\) in|<i>\1</i> in|;
+					s|^Collecting .* (from .*$|<b>\0</b>|;
+					s|^  Could not find.*|<b>\0</b>|;
+					s|^No matching distribution found for.*|<b>\0</b>|;"
 
 			;;
 
@@ -697,7 +706,9 @@ summary() {
 
 	if [ -f "$log" ]; then
 		if grep -q "cook:$pkg$" $command; then
-			show_note i "The Cooker is currently building $pkg"
+			show_note i "The Cooker is currently building $pkg" \
+			| sed 's|>|&<progress id="gauge" class="meter-small" max="100" value="0"></progress> |'
+			echo "<script>updatePkg = '${pkg//+/%2B}';</script>"
 		elif fgrep -q "Summary for:" $log; then
 			sed '/^Summary for:/,$!d' $log | awk '
 			BEGIN { print "<section>" }
@@ -728,7 +739,8 @@ summary() {
 			END { print "</tbody></table></section>" }
 			'
 		elif fgrep -q "Debug information" $log; then
-			echo -e '<section>\n<h3>Debug information</h3>'
+			# second line of log is "Cook: <package> <version>"
+			echo -e "<section>\n<h3>Debug information for $(sed '2!d; s|.*: ||' $log)</h3>"
 			sed -e '/^Debug information/,$!d; /^===/d; /^$/d' $log | sed -n '1!p' | \
 			if [ -n "$2" ]; then
 				syntax_highlighter log | sed 's|\([^0-9 ]\)\([0-9][0-9]*\):|\1<a href="#l\2">\2</a>:|'
@@ -754,9 +766,9 @@ pkg_info() {
 
 	echo -n "<div id=\"hdr\"><a href=\"$base/${requested_pkg:-$pkg}\">"
 	if [ -e $wok/$pkg/.icon.png ]; then
-		echo -n "<img src=\"$base/$pkg/browse/.icon.png\"/>"
+		echo -n "<img src=\"$base/$pkg/browse/.icon.png\" alt=\"$pkg icon\"/>"
 	else
-		echo -n "<img src=\"/tazpkg.png\"/>"
+		echo -n "<img src=\"/tazpkg.png\" alt=\"package icon\"/>"
 	fi
 	echo -n "</a>"
 	echo -n "<h2><a href=\"$base/${requested_pkg:-$pkg}\">${requested_pkg:-$pkg}</a>"
@@ -792,7 +804,7 @@ pkg_info() {
 		echo "<a class='button icon desc$(active description)' href='$base/$pkg/description'>description</a>"
 
 	[ -n "$TARBALL" -a -s "$SRC/$TARBALL" -o -d "$wok/$pkg/taz" ] &&
-		echo "<a class='button icon download' href='$base/$pkg/download'>download</a>"
+		echo "<a class='button icon download' href='$base/$pkg/download'>downloads</a>"
 
 	echo "<a class='button icon browse' href='$base/$pkg/browse/'>browse</a>"
 
@@ -806,7 +818,7 @@ pkg_info() {
 		echo "<a class='button icon doc$(active info)' href='$base/$pkg/info/#Top'>info</a>"
 
 	if [ -n "$LFS" ]; then
-		printf "<a class='button icon doc' href='%s' target='_blank' rel='noopener noreferrer'>" "$LFS"
+		printf "<a class='button icon lfs' href='%s' target='_blank' rel='noopener noreferrer'>" "$LFS"
 		[ "${LFS/blfs/}" != "$LFS" ] && printf "B"
 		printf "LFS</a>\n"
 	fi
@@ -917,10 +929,145 @@ update_webstat() {
 			sed "/^$i\t/!d" $CACHE/split.db
 		done < $broken | cut -d$'\t' -f2 | tr ' ' '\n' | wc -l)
 
-	cat > $webstat <<EOT
-rtotal="$rtotal"; rcooked="$rcooked"; runbuilt="$runbuilt"; rblocked="$rblocked"; rbroken="$rbroken"
-ptotal="$ptotal"; pcooked="$pcooked"; punbuilt="$punbuilt"; pblocked="$pblocked"; pbroken="$pbroken"
-EOT
+	cat > $webstat <<-EOT
+		rtotal="$rtotal"; rcooked="$rcooked"; runbuilt="$runbuilt"; rblocked="$rblocked"; rbroken="$rbroken"
+		ptotal="$ptotal"; pcooked="$pcooked"; punbuilt="$punbuilt"; pblocked="$pblocked"; pbroken="$pbroken"
+	EOT
+}
+
+
+# Show badges for specified package
+
+show_badges() {
+	local t p s # title problem solution
+
+	case $layout in
+		table)
+			echo "<section><h2>Badges</h2><table class=\"badges\"><thead><tr><th></th><th>Problem</th><th>Solution</th></tr></thead><tbody>"
+			;;
+		list)
+			echo "<section><h2>Badges list</h2><p>Click on badge to get list of packages</p><table class=\"badges\"><thead><tr><th></th><th>Problem</th></tr></thead><tbody>"
+			;;
+	esac
+
+	for badge in $@; do
+		case $badge in
+			bdbroken)
+				t="Broken bdeps"
+				p="This package cannot be built because its creation depends on broken packages"
+				s="Fix broken build dependencies"
+				;;
+			broken)
+				t="Broken package"
+				p="Package is broken"
+				s="Fix package build: analyze <a href=\"log/\">logs</a>, upgrade the version, search for patches"
+				;;
+			any)
+				t="“Any” arch"
+				p="This package contains only architecture-less <a href=\"files\">files</a>, it does not make sense to make it several times in each build environment"
+				s="Add the line <code>HOST_ARCH=\"any\"</code> to <a href=\"receipt\">receipt</a>"
+				;;
+			noany)
+				t="No “any” arch"
+				p="This package contains architecture dependent <a href=\"files\">files</a>"
+				s="Remove the line <code>HOST_ARCH=\"any\"</code> from <a href=\"receipt\">receipt</a>"
+				;;
+			libtool)
+				t="Libtool isn't fixed"
+				p="This package use <code>libtool</code> that likes to add unnecessary dependencies to programs and libraries"
+				s="Add the <code>fix libtool</code> command to the <a href=\"receipt\">receipt</a> between the <code>configure</code> and <code>make</code> commands invocation"
+				;;
+			nolibtool)
+				t="Libtool is absent"
+				p="This package does not use <code>libtool</code>, nothing to fix"
+				s="Remove the command <code>fix libtool</code> from <a href=\"receipt\">receipt</a>"
+				;;
+			own)
+				t="Ownership problems"
+				p="Some files of this package have <a href=\"files\">ownership problems</a>"
+				s="Correct the ownership or add problem files to the “<a href=\"stuff/overrides\">overrides</a>” list if you believe it is OK"
+				;;
+			ownover)
+				t="Ownership overridden"
+				p="This package contains files with <a href=\"files\">ownership problems</a> that have been overridden"
+				s="<abbr title=\"For your information\">FYI</abbr> only, you may want to revise <a href=\"stuff/overrides\">the list</a>"
+				;;
+			perm)
+				t="Permissions problems"
+				p="Some files of this package have <a href=\"files\">unusual permissions</a>"
+				s="Correct the permissions or add problem files to the “<a href=\"stuff/overrides\">overrides</a>” list if you believe it is OK"
+				;;
+			permover)
+				t="Permissions overridden"
+				p="This package contains files with <a href=\"files\">unusual permissions</a> that have been recorded"
+				s="<abbr title=\"For your information\">FYI</abbr> only, you may want to revise <a href=\"stuff/overrides\">the list</a>"
+				;;
+			symlink)
+				t="Broken symlink"
+				p="This package contains one or more <a href=\"files\">broken symlinks</a>"
+				s="Fix the symlinks destination; you may use <code>fix symlinks</code> when symlinks have absolute path"
+				;;
+			ss)
+				t="Site script"
+				p="This autotools-based building system use site script; most of paths (like <var>prefix</var>, <var>sysconfdir</var> and <var>mandir</var>) are defined there with correct default values"
+				s="You may remove your paths from <code>configure</code> invocation"
+				;;
+			fadd)
+				t="Files have been added"
+				p="Some files absent in <var>\$install</var> was <a href=\"files#outoftree\">directly added</a> to <var>\$fs</var>"
+				s="Rework your <code>compile_rules()</code> to add all the required files to <var>\$install</var> there"
+				;;
+			frem)
+				t="Files have been removed"
+				p="Some files existing in <var>\$install</var> <a href=\"files#orphans\">not belong to any package</a>"
+				s="Revise <code>genpkg_rules()</code> or add files to “<a href=\"stuff/overrides\">overrides</a>” list"
+				;;
+			fdup)
+				t="Files are duplicated"
+				p="Some files existing in <var>\$install</var> was added to <a href=\"files#repeats\">more than one</a> package"
+				s="Check your copy rules in <code>genpkg_rules()</code>"
+				;;
+			old)
+				t="Oldie"
+				p="According to Repology, this package may be <a href=\"https://repology.org/metapackage/${REPOLOGY:-$pkg}\" target=\"_blank\" rel=\"noopener noreferrer\">outdated</a>"
+				s="Update the package"
+				;;
+			win)
+				t="Winner"
+				p="This package has no problems"
+				s="Well done, keep it up!"
+				;;
+			orphan)
+				t="Orphaned package"
+				p="It seems that no other package depends on this one"
+				s="See if anyone needs it"
+				;;
+			patch)
+				t="Patch"
+				p="Patch has been applied"
+				s="<abbr title=\"For your information\">FYI</abbr> only, you may want to revise <a href=\"$base/$PACKAGE/stuff/patches/series\">the list of patches</a>"
+				;;
+		esac
+		case $layout in
+			table)
+				echo "<tr><td><span class=\"badge $badge\" title=\"$t\"/></td><td>$p</td><td>$s</td></tr>"
+				;;
+			list)
+				p=$(echo $p | sed 's|<a [^>]*>\([^<]*\)</a>|\1|g')
+				s=$(echo $s | sed 's|<a [^>]*>\([^<]*\)</a>|\1|g|')
+				echo "<tr><td><a href=\"$badge\"><span class=\"badge $badge\" title=\"$t\"/></a></td><td>$p</td></tr>"
+				;;
+			*)
+				echo -n "<span class=\"badge $badge\" title=\"$t\"/>"
+				;;
+		esac
+	done
+
+	case $layout in
+		table|list)
+			echo "</tbody></table></section>"
+			;;
+	esac
 }
 
 
@@ -959,16 +1106,40 @@ EOT
 
 			pct=0; [ "$rtotal" -gt 0 ] && pct=$(( ($rcooked * 100) / $rtotal ))
 
-			cat <<EOT
-<div class="meter"><progress max="100" value="$pct">${pct}%</progress><span>${pct}%</span></div>
+			cat <<-EOT
+				<div class="meter"><progress max="100" value="$pct">${pct}%</progress><span>${pct}%</span></div>
 
-<table class="webstat"><thead>
-<tr><th>        </th><th>Total  </th><th>Cooked  </th><th>Unbuilt  </th><th>Blocked  </th><th>Broken  </th></tr>
-</thead><tbody>
-<tr><td>Receipts</td><td>$rtotal</td><td>$rcooked</td><td>$runbuilt</td><td>$rblocked</td><td>$rbroken</td></tr>
-<tr><td>Packages</td><td>$ptotal</td><td>$pcooked</td><td>$punbuilt</td><td>$pblocked</td><td>$pbroken</td></tr>
-</tbody></table>
-EOT
+				<table class="webstat">
+					<thead>
+						<tr>
+							<th>        </th>
+							<th>Total  </th>
+							<th>Cooked  </th>
+							<th>Unbuilt  </th>
+							<th>Blocked  </th>
+							<th>Broken  </th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td>Receipts</td>
+							<td>$rtotal</td>
+							<td>$rcooked</td>
+							<td>$runbuilt</td>
+							<td>$rblocked</td>
+							<td>$rbroken</td>
+						</tr>
+						<tr>
+							<td>Packages</td>
+							<td>$ptotal</td>
+							<td>$pcooked</td>
+							<td>$punbuilt</td>
+							<td>$pblocked</td>
+							<td>$pbroken</td>
+						</tr>
+					</tbody>
+				</table>
+			EOT
 			if [ -z "$nojs" ]; then echo "<script>getPart('$1')</script>"; fi
 			;;
 		activity)
@@ -977,8 +1148,18 @@ EOT
 				s|\[ Failed|<span class="r c10">Failed|;
 				s|\[ -Failed|<span class="r c10"><del>Failed</del>|;
 				s| \]|</span>|;
-				s|%2B|\+|g' | \
-				section $activity 12 "Activity|More activity"
+				s|%2B|\+|g' \
+			| while read line; do
+				case "$line" in
+					*data-badges=*)
+						badges="$(echo "$line" | sed "s|.*data-badges='\([^']*\)'.*|\1|")"
+						echo "$line" | sed "s|</a>|</a> $(show_badges "$badges")|"
+						;;
+					*)
+						echo "$line"
+						;;
+				esac
+			done | section $activity 12 "Activity|More activity" \
 			;;
 		cooknotes)
 			[ -s "$cooknotes" ] && tac $cooknotes | head -n12 | \
@@ -1070,11 +1251,26 @@ if [ -z "$pkg" ]; then
 			esac
 			echo '<section id="content2">'
 			echo "<h2>DB: $list $nb</h2>"
+
 			tac $CACHE/$list | sed 's|cooker.cgi?pkg=||; s|%2B|+|g;
 				s|\[ Done|<span class="r c20">Done|;
 				s|\[ Failed|<span class="r c10">Failed|;
 				s|\[ -Failed|<span class="r c10"><del>Failed</del>|;
-				s| \]|</span>|' | mktable $list
+				s| \]|</span>|;
+				s|%2B|\+|g' \
+			| while read line; do
+				case "$line" in
+					*data-badges=*)
+						badges="$(echo "$line" | sed "s|.*data-badges='\([^']*\)'.*|\1|")"
+						echo "$line" | sed "s|</a>|</a> $(show_badges "$badges")|"
+						;;
+					*)
+						echo "$line"
+						;;
+				esac
+			done \
+			| mktable $list
+
 			echo '</section>'
 		done
 
@@ -1118,64 +1314,84 @@ if [ -z "$pkg" ]; then
 				fi
 				;;
 			toolchain)
-				cat <<EOT
-<div id="content2">
-<section>
-<h2>SliTaz GNU/Linux toolchain</h2>
+				cat <<-EOT
+					<div id="content2">
+					<section>
+					<h2>SliTaz GNU/Linux toolchain</h2>
 
-<table>
-<tr><td>Build date</td>		<td colspan="2">$(sed -n '/^Cook date/s|[^:]*: \(.*\)|\1|p' $LOGS/slitaz-toolchain.log)</td></tr>
-<tr><td>Build duration</td>	<td colspan="2">$(sed -n '/^Cook time/s|[^:]*: \(.*\)|\1|p' $LOGS/slitaz-toolchain.log)</td></tr>
-<tr><td>Architecture</td>	<td colspan="2">$ARCH</td></tr>
-<tr><td>Host system</td>	<td colspan="2">$BUILD_SYSTEM</td></tr>
-<tr><td>Target system</td>	<td colspan="2">$HOST_SYSTEM</td></tr>
-<tr><th>Package</th><th>Version</th><th>Description</th></tr>
-$(toolchain_version slitaz-toolchain)
-$(toolchain_version binutils)
-$(toolchain_version linux-api-headers)
-$(toolchain_version gcc)
-$(toolchain_version glibc)
-</table>
+					<table>
+						<tr>
+							<td>Build date</td>
+							<td colspan="2">$(sed -n '/^Cook date/s|[^:]*: \(.*\)|\1|p' $LOGS/slitaz-toolchain.log)</td>
+						</tr>
+						<tr>
+							<td>Build duration</td>
+							<td colspan="2">$(sed -n '/^Cook time/s|[^:]*: \(.*\)|\1|p' $LOGS/slitaz-toolchain.log)</td>
+						</tr>
+						<tr>
+							<td>Architecture</td>
+							<td colspan="2">$ARCH</td>
+						</tr>
+						<tr>
+							<td>Host system</td>
+							<td colspan="2">$BUILD_SYSTEM</td>
+						</tr>
+						<tr>
+							<td>Target system</td>
+							<td colspan="2">$HOST_SYSTEM</td>
+						</tr>
+						<tr>
+							<th>Package</th>
+							<th>Version</th>
+							<th>Description</th>
+						</tr>
+						$(toolchain_version slitaz-toolchain)
+						$(toolchain_version binutils)
+						$(toolchain_version linux-api-headers)
+						$(toolchain_version gcc)
+						$(toolchain_version glibc)
+					</table>
 
-<p>Toolchain documentation: <a target="_blank" rel="noopener noreferrer"
-href="http://doc.slitaz.org/en:cookbook:toolchain">http://doc.slitaz.org/en:cookbook:toolchain</a>
-</p>
+					<p>Toolchain documentation: <a target="_blank" rel="noopener noreferrer"
+					href="http://doc.slitaz.org/en:cookbook:toolchain">http://doc.slitaz.org/en:cookbook:toolchain</a>
+					</p>
 
-</section>
-</div>
-EOT
+					</section>
+					</div>
+				EOT
 				;;
 			maintainer*)
 				maintainer=$(GET maintainer); maintainer=${maintainer/maintainer/}
 				regexp=$(GET regexp); regexp=${regexp/regexp/}
 				[ -n "$regexp" ] && maintainer=''
-				cat <<EOT
-<section>
-	<h2>For maintainers</h2>
-	<p>Check packages version either for specified maintainer or using regular expression:</p>
-	<form>
-		<select name="maintainer">
-			<option value=''>--- select maintainer ---
-EOT
+				cat <<-EOT
+					<section>
+						<h2>For maintainers</h2>
+						<p>Here you can <a href="%/">explore the badges</a>.</p>
+						<p>Or see some <a href="?maintainer&amp;stats">repository statistics</a>.</p>
+						<p>Or check packages version either for specified maintainer or using regular expression:</p>
+						<form>
+							<select name="maintainer">
+								<option value=''>--- select maintainer ---
+				EOT
 				cut -d$'\t' -f1 $maintdb | sort -u \
 				| awk -vm=$maintainer '{
 					selected=$0==m?"selected":""
 					printf("<option %s value=\"%s\">%s\n", selected, $0, $0)
 				}'
-				cat <<EOT
-
-		</select>
-		or
-		<input type="text" name="regexp" value="$regexp"/>
-		<button type="submit">Go</button>
-	</form>
-EOT
+				cat <<-EOT
+							</select>
+							or
+							<input type="text" name="regexp" value="$regexp"/>
+							<button type="submit">Go</button>
+						</form>
+				EOT
 				if [ -n "$maintainer" -o -n "$regexp" ]; then
 					tmp_status=$(mktemp)
-					cat <<EOT
-	<table class="maint">
-		<thead><tr><th>Package</th><th>Version</th><th>Repology</th></tr></thead>
-EOT
+					cat <<-EOT
+						<table class="maint">
+						<thead><tr><th>Package</th><th>Version</th><th>Repology</th></tr></thead>
+					EOT
 					{
 						if [ -n "$maintainer" ]; then
 							awk -vm=$maintainer '{if ($1 == m) print $2}' $maintdb
@@ -1206,13 +1422,13 @@ EOT
 							repo_info1="<a class='icon $icon' href='https://repology.org/metapackage/$REPOLOGY' target='_blank'"
 							repo_info2="rel='noopener noreferrer' title='latest packaged version(s)'>${repo_ver// /, }</a>"
 						fi
-						cat <<EOT
-		<tr>
-			<td><img src="$base/s/$pkg"> <a href="$pkg">$pkg</a></td>
-			<td>${ver:-$VERSION}</td>
-			<td>$repo_info1 $repo_info2</td>
-		</tr>
-EOT
+						cat <<-EOT
+							<tr>
+								<td><img src="$base/s/$pkg" alt="$pkg"> <a href="$pkg">$pkg</a></td>
+								<td>${ver:-$VERSION}</td>
+								<td>$repo_info1 $repo_info2</td>
+							</tr>
+						EOT
 					done
 
 					pkg_total=$(   wc -l      < $tmp_status)
@@ -1228,19 +1444,19 @@ EOT
 					[ "$pkg_outdated" -eq 0 ] && pkg_outdated=''
 					[ "$pkg_unknown"  -eq 0 ] && pkg_unknown=''
 
-					cat <<EOT
-	</table>
+					cat <<-EOT
+						</table>
 
-	<div class="meter" style="width:100%;text-align:center"><div
-	style="display:inline-block;background-color:#090;width:$pct_actual%">$pkg_actual</div><div
-	style="display:inline-block;background-color:#f90;width:$pct_outdated%">$pkg_outdated</div><div
-	style="display:inline-block;background-color:#ccc;width:$pct_unknown%">$pkg_unknown</div></div>
-EOT
+						<div class="meter" style="width:100%;text-align:center"><div
+						style="display:inline-block;background-color:#090;width:$pct_actual%">$pkg_actual</div><div
+						style="display:inline-block;background-color:#f90;width:$pct_outdated%">$pkg_outdated</div><div
+						style="display:inline-block;background-color:#ccc;width:$pct_unknown%">$pkg_unknown</div></div>
+					EOT
 					rm $tmp_status
 				fi
-				cat <<EOT
-</section>
-EOT
+				cat <<-EOT
+					</section>
+				EOT
 				;;
 		esac
 		page_footer
@@ -1258,29 +1474,29 @@ EOT
 	# Main page with summary. Count only packages included in ARCH,
 	# use 'cooker arch-db' to manually create arch.$ARCH files.
 
-	cat <<EOT
-<div id="content2">
+	cat <<-EOT
+		<div id="content2">
 
-<section>
-<form method="get" action="" class="search r">
-	<input type="hidden" name="search" value="pkg"/>
-	<button type="submit" title="Search">Search</button>
-	<input type="search" name="q" placeholder="Package" list="packages" autocorrect="off" autocapitalize="off"/>
-</form>
-EOT
+		<section>
+		<form method="get" action="" class="search r">
+			<input type="hidden" name="search" value="pkg"/>
+			<button type="submit" title="Search">Search</button>
+			<input type="search" name="q" placeholder="Package" list="packages" autocorrect="off" autocapitalize="off"/>
+		</form>
+	EOT
 
 	unset nojs
 	part summary
 	part webstat
 
-	cat <<EOT
-<p>
-	Service logs:
-	<a href="?cookorder.log">cookorder</a> ·
-	<a href="?commits.log">commits</a> ·
-	<a href="?pkgdb.log">pkgdb</a>
-</p>
-EOT
+	cat <<-EOT
+		<p>
+			Service logs:
+			<a href="?cookorder.log">cookorder</a> ·
+			<a href="?commits.log">commits</a> ·
+			<a href="?pkgdb.log">pkgdb</a>
+		</p>
+	EOT
 
 	if [ -e "$CACHE/cooker-request" -a ! -s $command ]; then
 		if [ "$activity" -nt "$CACHE/cooker-request" ]; then
@@ -1290,10 +1506,11 @@ EOT
 		fi
 	fi
 
-	cat <<EOT
-<a class="button icon maintainers" href="?maintainer">For maintainers</a>
-</section>
-EOT
+	cat <<-EOT
+		<a class="button icon maintainers" href="?maintainer">For maintainers</a>
+		<a class="button icon tag" href="~/">Tags</a>
+		</section>
+	EOT
 
 	part activity
 	part cooknotes
@@ -1312,30 +1529,91 @@ fi
 
 # show tag
 
-if [ "$pkg" == '~' -a -n "$cmd" ]; then
-	tag="$cmd"
+if [ "$pkg" == '~' ]; then
 	page_header
-	cat <<EOT
-<div id="content2">
-<section>
-<h2>Tag “$tag”</h2>
+	echo '<div id="content2"><section>'
 
-<table>
-	<thead>
-		<tr><th>Name</th><th>Description</th><th>Category</th></tr>
-	</thead>
-	<tbody>
-EOT
-	sort $PKGS/packages.info \
-	| awk -F$'\t' -vtag=" $tag " -vbase="$base" '{
-		if (index(" " $6 " ", tag)) {
-			url = base "/" $1 "/";
-			gsub("+", "%2B", url);
-			printf("<tr><td><img src=\"%s/s/%s\"> ", base, $1);
-			printf("<a href=\"%s\">%s</a></td><td>%s</td><td>%s</td></tr>\n", url, $1, $4, $3);
-		}
-	}'
-	echo '</tbody></table></section></div>'
+	if [ -n "$cmd" ]; then
+		tag="$cmd"
+		cat <<-EOT
+			<h2>Tag “$tag”</h2>
+
+			<table>
+				<thead><tr><th>Name</th><th>Description</th><th>Category</th></tr></thead>
+				<tbody>
+		EOT
+		sort $PKGS/packages-$ARCH.info \
+		| awk -F$'\t' -vtag=" $tag " -vbase="$base/" '{
+			if (index(" " $6 " ", tag)) {
+				url = base $1 "/";
+				gsub("+", "%2B", url);
+				printf("<tr><td><img src=\"%ss/%s\" alt=\"%s\"> ", base, $1, $1);
+				printf("<a href=\"%s\">%s</a></td><td>%s</td><td>%s</td></tr>\n", url, $1, $4, $3);
+			}
+		}'
+		echo '</tbody></table>'
+	else
+		# Fast and nice tag cloud
+		echo '<h2>Tag cloud</h2><p class="tags">'
+		# Some magic in tag sizes :-) It's because of non-linear distribution
+		# of tags. Currently 1x198 (each of 198 tags marks one package);
+		# 2x79 (each of 79 other tags marks two packages); 3x28 (and so on);
+		# 4x23; 5x14; 6x5; 7x9; 8x11; 9x4; 10x3; 11x5; 12x6; 13x3; 14x1; 15x1;
+		# 16x2; 18x1; 20x3; 22x3; 23, 24, 27, 33, 39, 42, 45, 57, 59, 65, 90x1.
+		awk -F$'\t' -vbase="$base/~/" '
+			{
+				split($6, tags, " ");
+				for (i in tags) { tag[tags[i]]++; if (tag[tags[i]] > max) max = tag[tags[i]]; }
+			}
+		END {
+				for (i in tag) {
+					j = tag[i];
+					size = (j == 1) ? 0 : (j == 2) ? 1 : (j < 5) ? 2 : (j < 9) ? 3 : (j < 18) ? 4 : 5;
+					printf("<a href=\"%s\" class=\"tag%s\">%s<sup>%s</sup></a>\n", base i, size, i, tag[i]);
+				}
+			}
+		' $PKGS/packages-$ARCH.info | sort -f # sort alphabetically case insensitive
+	fi
+	echo '</p></section></div>'
+	page_footer
+	exit 0
+fi
+
+
+# show badges
+
+if [ "$pkg" == '%' ]; then
+	page_header
+	echo '<div id="content2">'
+
+	if [ -n "$cmd" ]; then
+		badge="$cmd"
+		cat <<-EOT
+			<section>
+				<h2 class="badge $badge"> Badge “$badge”</h2>
+
+				<table>
+					<thead><tr><th>Name</th><th>Description</th><th>Category</th></tr></thead>
+					<tbody>
+		EOT
+		ls $WOK \
+		| while read pkg; do
+			[ -e $WOK/$pkg/.badges ] || continue
+			grep -q "^${badge}$" $WOK/$pkg/.badges &&
+			awk -F$'\t' -vpkg="$pkg" -vbase="$base/" '{
+				if ($1 == pkg) {
+					url = base $1 "/";
+					gsub("+", "%2B", url);
+					printf("<tr><td><img src=\"%ss/%s\" alt=\"%s\"> ", base, $1, $1);
+					printf("<a href=\"%s\">%s</a></td><td>%s</td><td>%s</td></tr>\n", url, $1, $4, $3);
+				}
+			}' $PKGS/packages-$ARCH.info
+		done
+		echo '</tbody></table></section>'
+	else
+		layout='list' show_badges bdbroken broken any noany libtool nolibtool own ownover perm permover symlink ss fadd frem fdup old orphan patch win
+	fi
+	echo '</div>'
 	page_footer
 	exit 0
 fi
@@ -1396,17 +1674,23 @@ case "$cmd" in
 		summary "$log"
 
 
+		# Show Cooker badges
+		if [ -s $wok/$pkg/.badges ]; then
+			layout='table' show_badges $(cat $wok/$pkg/.badges)
+		fi
+
+
 		# Repology badge
-		[ "$REPOLOGY" == '-' ] || cat <<EOT
-<section>
-	<h3>Repology</h3>
-	<a href="https://repology.org/metapackage/${REPOLOGY:-$pkg}" target='_blank'
-	rel='noopener noreferrer' title="latest packaged version(s) by Repology">
-	<img src="https://repology.org/badge/latest-versions/${REPOLOGY:-$pkg}.svg" alt="latest packaged version(s)">
-	<img src="https://repology.org/badge/tiny-repos/${REPOLOGY:-$pkg}.svg" alt="Packaging status">
-	</a>
-</section>
-EOT
+		[ "$REPOLOGY" == '-' ] || cat <<-EOT
+			<section>
+				<h3>Repology</h3>
+				<a href="https://repology.org/metapackage/${REPOLOGY:-$pkg}" target='_blank'
+				rel='noopener noreferrer' title="latest packaged version(s) by Repology">
+				<img src="https://repology.org/badge/latest-versions/${REPOLOGY:-$pkg}.svg" alt="latest packaged version(s)">
+				<img src="https://repology.org/badge/tiny-repos/${REPOLOGY:-$pkg}.svg" alt="Packaging status">
+				</a>
+			</section>
+			EOT
 
 
 		# Show tag list
@@ -1463,23 +1747,23 @@ EOT
 			done
 		} | sort -u > $inf/c
 
-		cat <<EOT
-<section>
-	<h3>Related packages</h3>
-	<table class="third">
-		<thead>
-			<tr>
-				<th>Build dependencies</th>
-				<th>Runtime dependencies</th>
-				<th>Required by</th>
-			</tr>
-		</thead>
-		<tbody>
-EOT
+		cat <<-EOT
+			<section>
+				<h3>Related packages</h3>
+				<table class="third">
+					<thead>
+						<tr>
+							<th>Build dependencies</th>
+							<th>Runtime dependencies</th>
+							<th>Required by</th>
+						</tr>
+					</thead>
+					<tbody>
+		EOT
 
 		awk -vinf="$inf" -vbase="$base" '
 			function linki(i) {
-				if (i) return sprintf("<img src=\"%s/s/%s\"> <a href=\"%s/%s\">%s</a>", base, i, base, i, i);
+				if (i) return sprintf("<img src=\"%s/s/%s\" alt=\"%s\"> <a href=\"%s/%s\">%s</a>", base, i, i, base, i, i);
 			}
 			BEGIN{
 				do {
@@ -1490,11 +1774,11 @@ EOT
 					printf("<tr><td>%s </td><td>%s </td><td>%s </td></tr>", linki(a), linki(b), linki(c));
 				} while ( a b c )
 			}'
-		cat <<EOT
-		</tbody>
-	</table>
-</section>
-EOT
+		cat <<-EOT
+					</tbody>
+				</table>
+			</section>
+		EOT
 		# Clean
 		rm -r $inf
 
@@ -1539,6 +1823,7 @@ EOT
 			case $file in
 				*.desktop|*.theme)   class="ini" ;;
 				*.patch|*.diff|*.u)  class="diff" ;;
+				*/patches/series)    class="bash";;
 				*.sh)                class="bash" ;;
 				*.conf*|*.ini)
 					class="bash"
@@ -1572,7 +1857,7 @@ EOT
 			# Display image
 			case $file in
 				*.png|*.svg|*.jpg|*.jpeg|*.ico)
-					echo "<img src='$base/$pkg/browse/stuff/$arg' style='display: block; max-width: 100%; margin: auto'/>"
+					echo "<img src='$base/$pkg/browse/stuff/$arg' style='display: block; max-width: 100%; margin: auto' alt=''/>"
 					;;
 			esac
 
@@ -1672,17 +1957,17 @@ EOT
 						esac
 						echo -e '\t<ul>'
 						echo "$pkgsofset" | sed 'p' | xargs printf "\t\t<li><a href='#%s'>%s</a></li>\n"
-						cat <<EOT
-		<li id='li-repeats$set' style='display:none'>
-			<a href='#repeats$set'>repeatedly packaged files</a></li>
-		<li id='li-empty$set' style='display:none'>
-			<a href='#empty$set'>unpackaged empty folders</a></li>
-		<li id='li-outoftree$set' style='display:none'>
-			<a href='#outoftree$set'>out-of-tree files</a></li>
-		<li id='li-orphans$set' style='display:none'>
-			<a href='#orphans$set'>unpackaged files</a>
-			<span id='orphansTypes$set'></span></li>
-EOT
+						cat <<-EOT
+							<li id='li-repeats$set' style='display:none'>
+								<a href='#repeats$set'>repeatedly packaged files</a></li>
+							<li id='li-empty$set' style='display:none'>
+								<a href='#empty$set'>unpackaged empty folders</a></li>
+							<li id='li-outoftree$set' style='display:none'>
+								<a href='#outoftree$set'>out-of-tree files</a></li>
+							<li id='li-orphans$set' style='display:none'>
+								<a href='#orphans$set'>unpackaged files</a>
+								<span id='orphansTypes$set'></span></li>
+						EOT
 						echo -e '\t</ul>'
 						[ -n "$splitsets" ] && echo "</li>"
 						;;
@@ -1697,7 +1982,7 @@ EOT
 						for p in $pkgsofset; do
 							namever="$(awk -F$'\t' -vp="$p" '{
 								if ($1==p) {printf("%s-%s\n", $1, $2); exit}
-								}' $PKGS/packages.info)"
+								}' $PKGS/packages-$ARCH.info)"
 							if [ -d "$wok/$p/taz/$p-$ver" ]; then
 								indir=$p
 							elif [ -d "$wok/$main/taz/$p-$ver" ]; then
@@ -1739,10 +2024,12 @@ EOT
 						repeats=$(mktemp)
 						sort $packaged | uniq -d > $repeats
 						if [ -s "$repeats" ]; then
-							echo
-							echo "<script>document.getElementById('li-repeats$set').style.display = 'list-item'</script>"
-							echo "<section id='repeats$set'>"
-							echo "	<h3>Repeatedly packaged files$set_description:</h3>"
+							cat <<-EOT
+
+								<script>document.getElementById('li-repeats$set').style.display = 'list-item'</script>
+								<section id='repeats$set'>
+									<h3>Repeatedly packaged files$set_description:</h3>
+							EOT
 							cd $install
 
 							IFS=$'\n'
@@ -1753,8 +2040,10 @@ EOT
 								| syntax_highlighter files \
 								| sed 's|>\./|>/|'
 							done < $repeats
-							echo '</pre>'
-							echo '</section>'
+							cat <<-EOT
+								</pre>
+								</section>
+							EOT
 							unset IFS
 						fi
 						rm $repeats
@@ -1790,15 +2079,19 @@ EOT
 						done > $emptydirs
 						unset IFS
 						if [ -s "$emptydirs" ]; then
-							echo
-							echo "<script>document.getElementById('li-empty$set').style.display = 'list-item'</script>"
-							echo "<section id='empty$set'>"
-							echo "	<h3>Unpackaged empty folders$set_description:</h3>"
+							cat <<-EOT
+
+								<script>document.getElementById('li-empty$set').style.display = 'list-item'</script>
+								<section id='empty$set'>
+									<h3>Unpackaged empty folders$set_description:</h3>
+							EOT
 							echo -n '	<pre class="files">'
 							echo -en '<span class="underline">permissions·lnk·user    ·group   ·     size·date &amp; time ·name\n</span>'
 							cat $emptydirs
-							echo '</pre>'
-							echo '</section>'
+							cat <<-EOT
+								</pre>
+								</section>
+							EOT
 						fi
 						rm $emptydirs
 						# ------------------------------------------------------
@@ -1892,7 +2185,9 @@ EOT
 							/\.h$/ || /\.a$/ || /\.pc$/ || /\/bin\/.*-config$/ ||
 								/\/Makefile.*$/ { tag("dev", 3); next }
 							/\/share\/help\// || /\/share\/appdata\// ||
-							/\/share\/metainfo\// { tag("gnm", 6); next }
+							/\/share\/metainfo\// || /\/share\/application-registry\// ||
+							/\/share\/mime-info\// || /\/share\/gnome\/help\// || /\/share\/omf\// {
+								tag("gnm", 6); next }
 							{ tag("???", 1) }
 							' "$orphans" > $table
 
@@ -2042,7 +2337,7 @@ EOT
 		# disable next `sed` for the 'like2016' theme
 		theme=$(COOKIE theme); theme=${theme:-default}; [ "$theme" != 'like2016' ] && theme=''
 		cat $logfile | syntax_highlighter log | \
-		sed -e "/(pkg\/local$theme):/ s|: \([^<]*\)|<img src='$base/i/$blog/\1'> \1|" | \
+		sed -e "/(pkg\/local$theme):/ s|: \([^<]*\)|<img src='$base/i/$blog/\1' alt=''> \1|" | \
 		awk '
 		BEGIN { print "<pre class=\"log\">"; }
 		      { printf("<span id=\"l%d\">%s</span><a href=\"#l%d\"></a>\n", NR, $0, NR); }
@@ -2138,14 +2433,14 @@ EOT
 								wok/*) page="${arg#wok/}"; page="$base/$pkg/browse/${page#*/}";;
 								*)     page="$base/$pkg/browse/install/usr/share/$cmd/$arg";;
 							esac
-							cat <<EOT
-<object id="idoc" data="$page" width="100%" height="100%" type="application/pdf" style="min-height: 600px">
-	$(show_note w "Missing PDF plugin.<br/>Get the file <a href="$page">$(basename "$page")</a>.")
-</object>
-EOT
+							cat <<-EOT
+								<object id="idoc" data="$page" width="100%" height="100%" type="application/pdf" style="min-height: 600px">
+									$(show_note w "Missing PDF plugin.<br/>Get the file <a href="$page">$(basename "$page")</a>.")
+								</object>
+							EOT
 							;;
 						*.md|*.markdown)
-							echo '<section>'
+							echo '<section class="markdown">'
 							$md2html "$tmp" | sed 's|class="|class="language-|g'
 							echo '</section>'
 							;;
@@ -2204,7 +2499,7 @@ EOT
 
 		if [ -n "$TARBALL" -a -s "$SRC/$TARBALL" ]; then
 			files_header
-			echo "<tr><td><a href='$base/src/$TARBALL'>$TARBALL</a></td>"
+			echo "<tr><td><a href='$base/src/$TARBALL' class='icon tarball'>$TARBALL</a></td>"
 			ls -lh "$SRC/$TARBALL" | awk '{printf("<td>%sB</td>", $5)}'
 			echo "<td>Sources for building the package “$pkg”</td></tr>"
 			show=1
@@ -2214,19 +2509,25 @@ EOT
 			[ "$show" -eq 1 ] || files_header
 
 			common_version=$VERSION
-			for i in $(all_names); do
+			for i in $(all_names | tr ' ' '\n' | sort); do
 				[ -e "$wok/$pkg/taz/$i-$common_version$EXTRAVERSION/receipt" ] || continue
 				. $wok/$pkg/taz/$i-$common_version$EXTRAVERSION/receipt
 
-				for filename in "$PACKAGE-$VERSION$EXTRAVERSION.tazpkg" "$PACKAGE-$VERSION$EXTRAVERSION-$ARCH.tazpkg"; do
-					[ -f "$PKGS/$filename" ] &&
-						cat <<EOT
-<tr>
-<td><a href="$base/get/$filename">$filename</a></td>
-<td>$(ls -lh ./packages/$filename | awk '{printf("%sB", $5)}')</td>
-<td>$SHORT_DESC</td>
-</tr>
-EOT
+				for filename in "$PACKAGE-$VERSION$EXTRAVERSION.tazpkg" "$PACKAGE-$VERSION$EXTRAVERSION-$ARCH.tazpkg" "$PACKAGE-$VERSION$EXTRAVERSION-any.tazpkg"; do
+					[ -f "$PKGS/$filename" ] || continue
+
+					case $filename in
+						*-x86_64.tazpkg) class='pkg64';;
+						*-any.tazpkg)    class='pkgany';;
+						*)               class='pkg32';;
+					esac
+					cat <<-EOT
+						<tr>
+							<td><a href="$base/get/$filename" class='icon $class'>$filename</a></td>
+							<td>$(ls -lh ./packages/$filename | awk '{printf("%sB", $5)}')</td>
+							<td>$SHORT_DESC</td>
+						</tr>
+					EOT
 				done
 			done
 			show=1

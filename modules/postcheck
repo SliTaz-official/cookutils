@@ -1,0 +1,263 @@
+#!/bin/sh
+#
+# postcheck - module of the SliTaz Cook
+# Copyright (C) SliTaz GNU/Linux - GNU GPL v3
+#
+# Check for different cases at the end and add badges
+
+. /usr/lib/slitaz/libcook.sh
+. /etc/slitaz/cook.conf
+. $WOK/$1/receipt
+
+data="$(mktemp -d)" # temporary data for post-checking
+
+repologydb="$CACHE/repology.db"
+
+badges="$WOK/$1/.badges"
+echo -n > $badges # clean badges
+
+overrides="$WOK/$1/stuff/overrides"
+overrides_exp="$data/overrides_exp"
+fail="$data/fail" # file used as flag, if will be empty if no fails were found
+
+sets=$(echo -n $SPLIT | awk 'BEGIN { RS = " "; FS = ":"; }
+	{ if ($2 && ! set[$2]) { printf("%s ", $2); set[$2] = "1"; } }')
+
+# Format of stuff/overrides:
+# <rule> {<rule> ...} <fil[e]*>
+# One or more rules may indicate:
+#   - ownership in form '80:80' (numeric UID:GID) or 'www:www' (string UID:GID)
+#   - permissions in form '0600' (four octal digits)
+# File is space free string specified one (or more - using placeholders) files
+
+
+# Expand overrides to the simple form: <rule><tab><file>
+
+if [ -e "$overrides" ]; then
+	IFS=$'\n'
+	while read line; do
+		rules=${line% *}; file=${line##* }
+
+		for set in '' $sets; do
+			install="$WOK/$1/install"
+			[ -z "$set" ] || install="$install-$set"
+			[ -d "$install" ] || continue
+			for file in $(ls -d $install$file); do
+				for rule in $rules; do
+					echo "$rule	${file#$install}" >> $overrides_exp
+				done
+			done
+		done
+	done < $overrides
+	unset IFS
+fi
+
+
+# Get latest packaged version from Repology
+
+repology_get() {
+	local found versions day=$(date +%j)		# %j is the number of the day in the year
+	found=$(awk -F$'\t' -vpkg="$1" -vday="$day" '{
+		if ($1 == pkg && $2 == day) { print $3; exit; }
+	}' $repologydb)
+	if [ -n "$found" ]; then
+		echo "$found"
+	else
+		# set HOST_WGET in cook.conf
+		versions=$($HOST_WGET -q -T 20 -O- https://repology.org/badge/latest-versions/$1.svg \
+		| sed '/<text /!d; /fill/d; /latest/d; s|.*>\(.*\)<.*|\1|; s|, | |g') # space separated list
+		if [ -n "$versions" ]; then
+			sed -i "/^$1	/d" $repologydb
+			echo -e "$1\t$day\t$versions" >> $repologydb
+			echo $versions
+		fi
+	fi
+}
+
+
+# Add the specified badge, set the fail flag and return false status
+
+function add() {
+	! grep -q "^${1}$" $badges && echo "$1" >> $badges
+	case $1 in
+		ss|old|win|patch) return 0;;
+		*) echo 'yes' > $fail; false;;
+	esac
+}
+
+
+function docheck() {
+	action 'Checking build...'
+	if grep -q "^$PACKAGE$" $broken; then
+		if grep -q '^ERROR: unknown dep' $LOGS/$1.log; then
+			add 'bdbroken'
+		else
+			add 'broken'
+		fi
+		status; return # no more tests since package is broken
+	fi
+	status
+
+
+	if [ -e $WOK/$1/.arch ]; then
+		action "Checking 'any' arch..."
+		if [ "$(cut -d$'\t' -f2 $WOK/$1/.arch | sort -u)" == 'any' ]; then
+			if [ "$HOST_ARCH" != 'any' ]; then
+				add 'any'
+			fi
+		else
+			if [ "$HOST_ARCH" == 'any' ]; then
+				add 'noany'
+			fi
+		fi
+		status
+	fi
+
+
+	if [ -e $WOK/$1/.patch.done ]; then
+		# consider 'fix libtool' as no patch here
+		if [ -n "$(grep -v 'fix.libtool' $WOK/$1/.patch.done)" ]; then
+			add 'patch'
+		fi
+	fi
+
+
+	for set in '' $sets; do
+		src=$WOK/$1/source/$PACKAGE-$VERSION
+		[ -z "$set" ] || src="$src-$set"
+		[ -d "$src" ] || continue
+
+		action "Checking libtool in ${src#$WOK/$1/}..."
+		if [ -e "$src/libtool" ]; then
+			if ! grep -q '^fix.libtool$' $WOK/$1/.patch.done 2>/dev/null; then
+				add 'libtool'
+			fi
+		else
+			if grep -q '^fix.libtool$' $WOK/$1/.patch.done 2>/dev/null; then
+				add 'nolibtool'
+			fi
+		fi
+		status
+
+		action "Checking site script in ${src#$WOK/$1/}..."
+		if fgrep -q 'configure: loading site script /etc/slitaz/cook.site' $LOGS/$PACKAGE.log; then
+			for i in bindir datadir datarootdir docdir dvidir htmldir includedir infodir libdir \
+			libexecdir localedir localstatedir mandir oldincludedir pdfdir psdir sbindir \
+			sharedstatedir sysconfdir; do
+				if fgrep -q -e "--$i=" $WOK/$1/receipt; then
+					add 'ss'
+					break
+				fi
+			done
+		fi
+		status
+	done
+
+
+	for set in '' $sets; do
+		install="$WOK/$1/install"
+		[ -z "$set" ] || install="$install-$set"
+		[ -d "$install" ] || continue
+
+		action "Checking ownership in ${install#$WOK/$1/}..."
+
+		IFS=$'\n'
+		bad_own="$(find $install -type f \( ! -user 0 -a ! -group 0 \))"
+		if [ -n "$bad_own" ]; then
+			if [ -e $overrides_exp ]; then
+				# There may be mix of overridden and not-overridden ownership
+				# in the package. Return status 'Done' only if all the ownership
+				# was overridden.
+				result=''
+				for i in $bad_own; do
+					if  fgrep -q "$(stat -c %u:%g "$i")	${i#$install}" $overrides_exp ||
+						fgrep -q "$(stat -c %U:%G "$i")	${i#$install}" $overrides_exp; then
+						add 'ownover'
+					else
+						add 'own'
+						result='bad'
+					fi
+				done
+				[ "$result" == '' ] # OK, all was overridden
+			else
+				add 'own'
+			fi
+		fi
+		status
+		unset IFS
+
+
+		action "Checking permissions in ${install#$WOK/$1/}..."
+
+		bad_files="$(find $install -type f \( ! -perm 644 -a ! -perm 755 \))"
+		bad_dirs="$(find $install -type d ! -perm 755)"
+		list=''
+		if [ -n "$bad_files$bad_dirs" ]; then
+			if [ -e $overrides_exp ]; then
+				# There may be mix of overridden and not-overridden permissions
+				# in the package. Return status 'Done' only if all the permissions
+				# was overridden.
+				result=''
+				for i in $bad_files; do
+					if  fgrep -q "$(printf "%04d\t%s" "$(stat -c%a "$i")" "${i#$install}")" $overrides_exp; then
+						add 'permover'
+					else
+						add 'perm'
+						list="$list$(printf "\n  %04d %s" "$(stat -c %a "$i")" "${i#$install}")"
+						result='bad'
+					fi
+				done
+				for i in $bad_dirs; do
+					if  fgrep -q "$(printf "%04d" $(stat -c %a "$i"))	${i#$install}/" $overrides_exp; then
+						add 'permover'
+					else
+						add 'perm'
+						list="$list$(printf "\n  %04d %s" "$(stat -c %a "$i")" "${i#$install}/")"
+						result='bad'
+					fi
+				done
+				[ "$result" == '' ] # OK, all was overridden
+			else
+				add 'perm'
+			fi
+		fi
+		status
+		[ -n "$list" ] && echo -e "  Problems found:$list"
+
+		action "Checking broken symlinks in ${install#$WOK/$1/}..."
+		bad_sl=$(find $install -type l ! -exec test -e '{}' \; -print)
+		if [ -n "$bad_sl" ]; then
+			add 'symlink'
+		fi
+		status
+	done
+
+	if [ "$REPOLOGY" != '-' ]; then
+		action 'Querying Repology...'
+		repo_ver=$(repology_get ${REPOLOGY:-$PACKAGE})
+		if [ "$repo_ver" != '-' -a ! -s $fail ]; then
+			if echo " $repo_ver " | fgrep -q " $VERSION "; then
+				add 'win'
+			else
+				add 'old'
+			fi
+		fi
+		status
+	fi
+}
+
+
+title 'Post-check'
+docheck $1
+
+
+# Put badges into activity log: <a href='...' data-badges='...'>...</a>
+
+action 'Updating activity log...'
+badges_log=$(tr '\n' ' ' <$badges | sed 's| $||')
+sed -i "s|>$1</a>$| data-badges='$badges_log'&|" $activity
+status
+
+footer
+
+rm -r $data # clean

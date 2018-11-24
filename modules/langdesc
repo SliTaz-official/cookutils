@@ -1,0 +1,110 @@
+#!/bin/sh
+#
+# langdesc - module of the SliTaz Cook
+# Copyright (C) SliTaz GNU/Linux - GNU GPL v3
+#
+
+# Information source: iso-codes package
+
+langdesc() {
+	local i
+	case $1 in
+		af) i='Afrikaans';;
+		am) i='Amharic';;
+		ar) i='Arabic';;
+		ast) i='Asturian';;
+		az) i='Azerbaijani';;
+		be) i='Belarusian';;
+		be@latin) i='Belarusian (Latin script)';;
+		bg) i='Bulgarian';;
+		bn) i='Bengali';;
+		bn_IN) i='Bengali (India)';;
+		br) i='Breton';;
+		bs) i='Bosnian';;
+		ca) i='Catalan';;
+		da) i='Danish';;
+		de) i='German';;
+		el) i='Greek';;
+		en) i='English';;
+		en_GB) i='English (British)';;
+		en_ZA) i='English (South African)';;
+		eo) i='Esperanto';;
+		es) i='Spanish';;
+		et) i='Estonian';;
+		eu) i='Basque';;
+		fa) i='Persian';;
+		fi) i='Finnish';;
+		fr) i='French';;
+		ga) i='Irish';;
+		gd) i='Scottish Gaelic';;
+		gl) i='Galician';;
+		gu) i='Gujarati';;
+		he) i='Hebrew';;
+		hi) i='Hindi';;
+		hr) i='Croatian';;
+		hu) i='Hungarian';;
+		hy) i='Armenian';;
+		ia) i='Interlingua';;
+		id) i='Indonesian';;
+		is) i='Icelandic';;
+		it) i='Italian';;
+		ja) i='Japanese';;
+		ka) i='Georgian';;
+		kk) i='Kazakh';;
+		kn) i='Kannada';;
+		ko) i='Korean';;
+		ku) i='Kurdish';;
+		ky) i='Kirghiz';;
+		lg) i='Luganda';;
+		lo) i='Lao';;
+		lt) i='Lithuanian';;
+		lv) i='Latvian';;
+		mk) i='Macedonian';;
+		ml) i='Malayalam';;
+		mn) i='Mongolian';;
+		mr) i='Marathi';;
+		ms) i='Malay';;
+		mt) i='Maltese';;
+		nb) i='Norwegian Bokmål';;
+		nds) i='Low German';;
+		ne) i='Nepali';;
+		nl) i='Dutch';;
+		nn) i='Norwegian Nynorsk';;
+		pa) i='Punjabi';;
+		pl) i='Polish';;
+		ps) i='Pashto';;
+		pt) i='Portuguese';;
+		pt_BR) i='Brazilian Portuguese';;
+		ro) i='Romanian';;
+		ru) i='Russian';;
+		rw) i='Kinyarwanda';;
+		sk) i='Slovak';;
+		sl) i='Slovenian';;
+		so) i='Somali';;
+		sq) i='Albanian';;
+		sr) i='Serbian';;
+		sv) i='Swedish';;
+		sw) i='Swahili';;
+		ta) i='Tamil';;
+		te) i='Telugu';;
+		tg) i='Tajik';;
+		th) i='Thai';;
+		tr) i='Turkish';;
+		uk) i='Ukrainian';;
+		ur) i='Urdu';;
+		vi) i='Vietnamese';;
+		wa) i='Walloon';;
+		zh) i='Chinese';;
+		zh_CN) i='Chinese (simplified)';;
+		zh_HK) i='Chinese (Hong Kong)';;
+		zh_TW) i='Chinese (traditional)';;
+	esac
+
+	case $2 in
+		'') echo "$i";;
+		-)  echo "$i" | sed 's|(|- |; s|)||';;
+	esac
+}
+
+# langdesc en_GB      -> 'English (British)'
+# langdesc en_GB -    -> 'English - British'

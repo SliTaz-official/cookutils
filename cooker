@@ -554,7 +554,7 @@ EOT
 		done
 		strip_blocked
 		cook_order | tee $LOGS/cookorder.log
-		echo "Packages to cook: $(wc -l < $cooklist)" | log
+		echo "Receipts or stuff changed: $(wc -l < $cooklist)" | log
 		cook_list ;;
 
 	tasks|-T)
@@ -716,9 +716,12 @@ EOT
 		echo "Packages to cook : $pkgs" | log_commits
 		separator | log_commits
 		newline
-		strip_blocked
-		cook_order | tee $LOGS/cookorder.log
-		cook_commits
+		# Just update the wok on --update, don't cook any package
+		if [ -z "$update" ]; then
+			strip_blocked
+			cook_order | tee $LOGS/cookorder.log
+			cook_commits
+		fi
 		clean_exit ;;
 esac
 

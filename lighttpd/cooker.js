@@ -4,33 +4,38 @@
 //
 
 
+// Updating the progress bar
+
+function updating(pkg) {
+	var upct = new XMLHttpRequest();
+	upct.onreadystatechange = function() {
+		if (this.readyState == 4 && this.status == 200) {
+			response = this.responseText.trim();
+			if (response == 'reload') {
+				// Package in question not cooked now (finished) ->
+				// Server sends 'reload' response ->
+				// Stop updating and reload the page
+				clearInterval(upID);
+				location.reload();
+			} else {
+				// Update text and gauge value
+				var pct = document.getElementById('pct');
+				if (pct !== null) pct.innerHTML = response + '%';
+				var gauge = document.getElementById('gauge');
+				if (gauge !== null) gauge.value = response;
+			}
+		}
+	};
+	upct.open('GET', '?pct=' + pkg, true);
+	upct.responseType = 'text';
+	upct.send();
+}
+
+
 // Start updating percents of package completion
 
 function startUpdating(pkg) {
-	upID = setInterval(function() {
-		var upct = new XMLHttpRequest();
-		upct.onreadystatechange = function() {
-			if (this.readyState == 4 && this.status == 200) {
-				response = this.responseText.trim();
-				if (response == 'reload') {
-					// Package in question not cooked now (finished) ->
-					// Server sends 'reload' response ->
-					// Stop updating and reload the page
-					clearInterval(upID);
-					location.reload();
-				} else {
-					// Update text and gauge value
-					var pct = document.getElementById('pct');
-					if (pct !== null) pct.innerHTML = response + '%';
-					var gauge = document.getElementById('gauge');
-					if (gauge !== null) gauge.value = response;
-				}
-			}
-		};
-		upct.open('GET', '?pct=' + pkg, true);
-		upct.responseType = 'text';
-		upct.send();
-	}, 10000);
+	upID = setInterval(function(){updating(pkg)}, 10000);
 }
 
 
@@ -47,8 +52,10 @@ function stopUpdating() {
 
 // Decide whether we need to update percentages
 
-if (typeof updatePkg !== 'undefined')
+if (typeof updatePkg !== 'undefined') {
+	updating(updatePkg);
 	startUpdating(updatePkg);
+}
 
 
 // Calculate and show server date

@@ -179,6 +179,7 @@ outpkg() {
 				s("freetype-dev", "freetype-infinality-dev");
 				s("nspr", "webian-shell");
 				s("nss", "webian-shell");
+				s("libxml2", "libxml2-min");
 
 				# if called with "--incl": show all deps including glibc-base,
 				# gcc-lib-base, glibc-dev and gcc; otherwise hide them
