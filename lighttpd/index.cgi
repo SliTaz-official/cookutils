@@ -96,7 +96,7 @@ page_header() {
 	if [ -n "$pkg" ]; then
 		case "$pkg" in
 			~) if [ -z "$cmd" ]; then pretitle="Tag cloud - "; else pretitle="Tag \"$cmd\" - "; fi;;
-			%) if [ -z "$cmd" ]; then pretitle="Badges - "; else pretitle="Badge \"$cmd\" - "; fi;;
+			=) if [ -z "$cmd" ]; then pretitle="Badges - "; else pretitle="Badge \"$cmd\" - "; fi;;
 			*) pretitle="$pkg - ";;
 		esac
 	else
@@ -1367,7 +1367,7 @@ if [ -z "$pkg" ]; then
 				cat <<-EOT
 					<section>
 						<h2>For maintainers</h2>
-						<p>Here you can <a href="%/">explore the badges</a>.</p>
+						<p>Here you can <a href="=/">explore the badges</a>.</p>
 						<p>Or see some <a href="?maintainer&amp;stats">repository statistics</a>.</p>
 						<p>Or check packages version either for specified maintainer or using regular expression:</p>
 						<form>
@@ -1582,7 +1582,7 @@ fi
 
 # show badges
 
-if [ "$pkg" == '%' ]; then
+if [ "$pkg" == '=' ]; then
 	page_header
 	echo '<div id="content2">'
 
