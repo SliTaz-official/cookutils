@@ -174,3 +174,18 @@ instant-pack
     Presence of this option will pack the SET packages instantly before
     to switch to another SET. So, packages created in the first SET will be
     immediately available to use in the second SET and so on.
+
+force-arch
+    Architecture of the package determined by examining executable files on
+    a packing stage. System with "i486" architecture may produce packages with
+    architecture "i486" or "any" (if there's no architecture-dependent files
+    like shared libraries or binaries were found, but only Shell, Python, Perl
+    scripts, fonts, icons, and so on). System with "x86_64" architecture may
+    produce packages with architecture "x86_64" or "any".
+    In rare cases architecture-independent packages built in "i486" and "x86_64"
+    environments may have architecture-dependent settings in configuration
+    files. Or package may provide architecture-dependent paths (Perl modules
+    packages) - this checking not implemented yet. Or package may contain some
+    files for other architecture and you need to override default behavior.
+    In all these cases you can use this option and architecture of all packages
+    produced with this receipt will be the same as build environment has.
