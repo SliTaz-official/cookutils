@@ -1047,6 +1047,11 @@ show_badges() {
 				p="Patch has been applied"
 				s="<abbr title=\"For your information\">FYI</abbr> only, you may want to revise <a href=\"$base/$PACKAGE/stuff/patches/series\">the list of patches</a>"
 				;;
+			no-badge)
+				t="No badge"
+				p="Packages without badges"
+				s=""
+				;;
 		esac
 		case $layout in
 			table)
@@ -1588,30 +1593,58 @@ if [ "$pkg" == '=' ]; then
 
 	if [ -n "$cmd" ]; then
 		badge="$cmd"
-		cat <<-EOT
-			<section>
-				<h2 class="badge $badge"> Badge “$badge”</h2>
+		case "$badge" in
+			no-badge)
+				cat <<-EOT
+					<section>
+						<h2 class="badge $badge"> Packages without badges</h2>
 
-				<table>
-					<thead><tr><th>Name</th><th>Description</th><th>Category</th></tr></thead>
-					<tbody>
-		EOT
-		ls $WOK \
-		| while read pkg; do
-			[ -e $WOK/$pkg/.badges ] || continue
-			grep -q "^${badge}$" $WOK/$pkg/.badges &&
-			awk -F$'\t' -vpkg="$pkg" -vbase="$base/" '{
-				if ($1 == pkg) {
-					url = base $1 "/";
-					gsub("+", "%2B", url);
-					printf("<tr><td><img src=\"%ss/%s\" alt=\"%s\"> ", base, $1, $1);
-					printf("<a href=\"%s\">%s</a></td><td>%s</td><td>%s</td></tr>\n", url, $1, $4, $3);
-				}
-			}' $PKGS/packages-$ARCH.info
-		done
+						<table>
+							<thead><tr><th>Name</th><th>Description</th><th>Category</th></tr></thead>
+							<tbody>
+				EOT
+
+				ls $WOK \
+				| while read pkg; do
+					[ -s $WOK/$pkg/.badges ] && continue
+					awk -F$'\t' -vpkg="$pkg" -vbase="$base/" '{
+						if ($1 == pkg) {
+							url = base $1 "/";
+							gsub("+", "%2B", url);
+							printf("<tr><td><img src=\"%ss/%s\" alt=\"%s\"> ", base, $1, $1);
+							printf("<a href=\"%s\">%s</a></td><td>%s</td><td>%s</td></tr>\n", url, $1, $4, $3);
+						}
+					}' $PKGS/packages-$ARCH.info
+				done
+				;;
+			*)
+				cat <<-EOT
+					<section>
+						<h2 class="badge $badge"> Badge “$badge”</h2>
+
+						<table>
+							<thead><tr><th>Name</th><th>Description</th><th>Category</th></tr></thead>
+							<tbody>
+				EOT
+
+				ls $WOK \
+				| while read pkg; do
+					[ -e $WOK/$pkg/.badges ] || continue
+					grep -q "^${badge}$" $WOK/$pkg/.badges &&
+					awk -F$'\t' -vpkg="$pkg" -vbase="$base/" '{
+						if ($1 == pkg) {
+							url = base $1 "/";
+							gsub("+", "%2B", url);
+							printf("<tr><td><img src=\"%ss/%s\" alt=\"%s\"> ", base, $1, $1);
+							printf("<a href=\"%s\">%s</a></td><td>%s</td><td>%s</td></tr>\n", url, $1, $4, $3);
+						}
+					}' $PKGS/packages-$ARCH.info
+				done
+				;;
+		esac
 		echo '</tbody></table></section>'
 	else
-		layout='list' show_badges bdbroken broken any noany libtool nolibtool own ownover perm permover symlink ss fadd frem fdup old orphan patch win
+		layout='list' show_badges bdbroken broken any noany libtool nolibtool own ownover perm permover symlink ss fadd frem fdup old orphan patch win no-badge
 	fi
 	echo '</div>'
 	page_footer

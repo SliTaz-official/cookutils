@@ -451,6 +451,9 @@ form.r, .button.r { margin: 3px 3px 0; }
 .badge.patch::before {
 	content: url("data:image/svg+xml,<svg height='16' width='16' xmlns='http://www.w3.org/2000/svg'><path d='m3.5 0-2.5 1-1 2.5 3.5 3.5 3.5-3.5zm9 0-12.5 12.5 1 2.5 2.5 1 12.5-12.5-1-2.5zm-4.5 5h1v1h1v1h1v1h-1v1h-1v1h-1v1h-1v-1h-1v-1h-1v-1h1v-1h1v-1h1zm0 1v1h1v-1zm1 1v1h1v-1zm0 1h-1v1h1zm-1 1h-1v1h1zm-1 0v-1h-1v1zm0-1h1v-1h-1zm5.5 1-3.5 3.5 3.5 3.5 2.5-1 1-2.5z' fill='%2304c'/></svg>");
 }
+.badge.no-badge::before {
+	content: url("data:image/svg+xml,<svg height='16' width='16' xmlns='http://www.w3.org/2000/svg'><g stroke='%23000'><rect fill='%23fff' height='14' rx='2' stroke-linejoin='round' stroke-width='2' width='14' x='1' y='1'/><path d='m3 3 10 10m-10 0 10-10' fill='none'/></g></svg>");
+}
 .badges td:nth-child(1) {
 	vertical-align: middle;
 	text-align: center;
