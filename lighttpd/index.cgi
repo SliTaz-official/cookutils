@@ -1407,7 +1407,7 @@ if [ -z "$pkg" ]; then
 					} | while read pkg; do
 						unset VERSION; REPOLOGY=$pkg
 						. $wok/$pkg/receipt
-						ver=$(awk -F$'\t' -vpkg="$pkg" '{if ($1 == pkg) {print $2; exit}}' $PKGS/packages.info)
+						ver=$(awk -F$'\t' -vpkg="$pkg" '{if ($1 == pkg) {print $2; exit}}' $PKGS/packages-$ARCH.info)
 						if [ "$REPOLOGY" == '-' ]; then
 							unset repo_info1 repo_info2
 							echo '-' >>$tmp_status
