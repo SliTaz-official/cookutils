@@ -773,8 +773,8 @@ pkg_info() {
 	echo -n "</a>"
 	echo -n "<h2><a href=\"$base/${requested_pkg:-$pkg}\">${requested_pkg:-$pkg}</a>"
 	# Get short description for existing packages
-	[ -f $PKGS/packages.info ] &&
-	short_desc="$(awk -F$'\t' -vp="${requested_pkg:-$pkg}" '{if ($1 == p) { printf("%s", $4); exit; }}' $PKGS/packages.info)"
+	[ -f $PKGS/packages-$ARCH.info ] &&
+	short_desc="$(awk -F$'\t' -vp="${requested_pkg:-$pkg}" '{if ($1 == p) { printf("%s", $4); exit; }}' $PKGS/packages-$ARCH.info)"
 	# If package does not exist (not created yet or broken), get short description
 	# (but only for "main" package) from receipt
 	[ -n "$short_desc" ] || short_desc="$(. $wok/$pkg/receipt; echo "$SHORT_DESC")"
@@ -894,7 +894,7 @@ toolchain_version() {
 	        if ($1 == pkg) { version = $2; description = $4; }
 	      }
 	END   { printf("<td>%s</td><td>%s</td></tr>", version, description); }
-	' $PKGS/packages.info
+	' $PKGS/packages-$ARCH.info
 }
 
 
@@ -1729,10 +1729,10 @@ case "$cmd" in
 		# Show tag list
 		taglist=$(
 			for i in $pkg $(awk -F$'\t' -vp="$pkg" '{if ($1 == p) print $2}' $splitdb); do
-				[ -s "$PKGS/packages.info" ] &&
+				[ -s "$PKGS/packages-$ARCH.info" ] &&
 				awk -F$'\t' -vpkg="$i" '{
 					if ($1 == pkg) { print $6; exit; }
-				}' "$PKGS/packages.info"
+				}' "$PKGS/packages-$ARCH.info"
 			done \
 			| tr ' ' '\n' \
 			| sort -u
@@ -1759,19 +1759,19 @@ case "$cmd" in
 
 		# 2/3: Runtime dependencies (from pkgdb)
 		{
-			[ -s "$PKGS/packages.info" ] &&
+			[ -s "$PKGS/packages-$ARCH.info" ] &&
 			awk -F$'\t' -vp="$pkg" '{
 				if ($1 == p) print $8
-			}' "$PKGS/packages.info"
+			}' "$PKGS/packages-$ARCH.info"
 		} | tr ' ' '\n' | sort -u > $inf/b
 
 		# 3/3: Required by (from pkgdb)
 		{
 			for i in $pkg $(awk -F$'\t' -vp="$pkg" '{if ($1 == p) print $2}' $splitdb); do
-				[ -s "$PKGS/packages.info" ] &&
+				[ -s "$PKGS/packages-$ARCH.info" ] &&
 				awk -F$'\t' -vp=" $i " '{
 					if (index(" " $8 " ", p)) print $1
-				}' "$PKGS/packages.info"
+				}' "$PKGS/packages-$ARCH.info"
 
 				[ -s "$PKGS/bdeps.txt" ] &&
 				awk -F$'\t' -vp=" $i " '{
