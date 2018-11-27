@@ -918,7 +918,7 @@ update_webstat() {
 
 	# for packages:
 	ptotal=$(cut -d$'\t' -f2 $CACHE/split.db | tr ' ' '\n' | sort -u | wc -l)
-	pcooked=$(ls $PKGS/*.tazpkg | wc -l)
+	pcooked=$(wc -l < $PKGS/packages-$ARCH.info)
 	punbuilt=$(($ptotal - $pcooked))
 	pblocked=$(
 		while read i; do
