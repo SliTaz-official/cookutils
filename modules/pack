@@ -313,20 +313,20 @@ EOT
 	SHORT_DESC="${SHORT_DESC//\"/\\\"}"
 
 	# Mandatory variables
-	cat <<EOF
-$signature
+	cat <<-EOF
+		$signature
 
-PACKAGE="$PACKAGE"
-VERSION="$VERSION"
-EOF
+		PACKAGE="$PACKAGE"
+		VERSION="$VERSION"
+	EOF
 	[ -n "$EXTRAVERSION"    ] && echo "EXTRAVERSION=\"$EXTRAVERSION\""
-	cat <<EOF
-CATEGORY="$CATEGORY"
-SHORT_DESC="$SHORT_DESC"
-MAINTAINER="$MAINTAINER"
-LICENSE="$LICENSE"
-WEB_SITE="$WEB_SITE"
-EOF
+	cat <<-EOF
+		CATEGORY="$CATEGORY"
+		SHORT_DESC="$SHORT_DESC"
+		MAINTAINER="$MAINTAINER"
+		LICENSE="$LICENSE"
+		WEB_SITE="$WEB_SITE"
+	EOF
 
 	# Optional variables
 	[ -n "$TAGS"            ] && echo "TAGS=\"$TAGS\""                 | tr -ds '\t' ' '
@@ -471,7 +471,7 @@ find_vars() {
 	local var=$1
 	local pkg=$(echo -n $2       | tr -c 'a-zA-Z0-9' '_')
 	local end=$(echo -n ${2#$basepkg-} | tr -c 'a-zA-Z0-9' '_')
-	if [ "$pkg" == "$basepkg" ]; then
+	if [ "$2" == "$basepkg" ]; then
 		eval out="\$${var}_$pkg"
 		[ -n "$out" ] || eval out="\$${var}_std"
 	else
