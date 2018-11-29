@@ -137,8 +137,12 @@ query_cache() {
 	md5=$(md5sum "$2")
 	cachefile="$comp_cache_root/$1/${md5%% *}"
 	echo "$cachefile"
+	owner=$(stat -c%u:%g "$2")
+	perms=$(stat -c%a    "$2")
 	if [ -f "$cachefile" ]; then
 		ln -f "$cachefile" "$2"
+		chown $owner "$2"
+		chmod $perms "$2"
 		echo '+' >> "$cache_stat"
 	else
 		echo '-' >> "$cache_stat"
