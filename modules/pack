@@ -400,11 +400,12 @@ copy_generic_files() {
 # Input: $1 = $fs; output string: i486 | x86_64 | any
 
 determine_pkg_arch() {
-	action 'Determining package architecture...' >&2
-
 	if [ "${COOKOPTS/force-arch/}" != "$COOKOPTS" ]; then
+		action 'Forced package architecture to' >&2
+		echo " $ARCH" >&2
 		arch="$ARCH"
 	else
+		action 'Determining package architecture...' >&2
 		archs="$(
 			IFS=$'\n'
 			{
