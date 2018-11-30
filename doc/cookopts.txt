@@ -143,6 +143,12 @@ op0 to op8
     The presence of this option overrides the default action (all *.ui and
     *.glade files will be left "as is").
 
+!cssz
+    Default action is to compress CSS files. Compression means the removal
+    of insignificant spaces and comments.
+    The presence of this option overrides the default action (all *.css files
+    will be left "as is").
+
 !monorm
     Default action is to normalize *.mo files. Normalization means the
     unconditional conversion to UTF-8, removal of accidental duplicates and

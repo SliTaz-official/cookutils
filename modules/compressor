@@ -114,6 +114,7 @@ sizes() {
 		mo2) find $fs/usr/share/locale            -type f -name '*.mo'                          -exec ls -l \{\} \; ;;
 		gz)  find $install                        -type f -name '*.gz' ! -path '*/share/man/*'  -exec ls -l \{\} \; ;;
 		zip) find $install                        -type f -name '*.zip'                         -exec ls -l \{\} \; ;;
+		css) find $install                        -type f -name '*.css'                         -exec ls -l \{\} \; ;;
 		strip)
 			{
 				find_elf EXEC
@@ -457,6 +458,32 @@ compress_ui() {
 
 	comp_summary "$time0" "$size0" "$(sizes xml)" "$the_log"
 	rm "$temp_ui"
+}
+
+
+# Function used after compile_rules() to shrink all *.css files:
+# remove insignificant spaces and comments
+# Compressing can be disabled with COOKOPTS="!cssz"
+
+compress_css() {
+	[ "${COOKOPTS/!cssz/}" != "$COOKOPTS" ] && return
+	size0=$(sizes css); [ -z "$size0" ] && return
+
+	tpi rcssmin
+
+	action 'Compressing CSS files...'
+
+	time0=$(get_time)
+	temp_css="$(mktemp)"
+	IFS=$'\n'
+	for css in $(find $install -type f -name '*.css'); do
+		python -mrcssmin < "$css" > "$temp_css"
+		cat "$temp_css" > "$css"
+	done
+	unset IFS
+
+	comp_summary "$time0" "$size0" "$(sizes css)" '/dev/null'
+	rm "$temp_css"
 }
 
 
@@ -840,6 +867,7 @@ case $1 in
 				compress_svg
 				compress_gif
 				compress_ui
+				compress_css
 				;;
 		esac
 
