@@ -259,7 +259,7 @@ manage_modified() {
 # Problems:
 # 1. Function "latest packaged version" widely used here and it has no JSON API, but only SVG badge.
 # 2. So, all version comparisons can be only visual and not automated.
-# 3. If the thousands of badges present on the web page, many of them are broken (maybe server
+# 3. Of the thousands of badges present on the web page, many of them are broken (maybe server
 #    drops requests), while our server displays status icons well.
 # 4. Default badges are wide and not customizable.
 # Solution:
@@ -974,7 +974,7 @@ show_badges() {
 				;;
 			libtool)
 				t="Libtool isn't fixed"
-				p="This package use <code>libtool</code> that likes to add unnecessary dependencies to programs and libraries"
+				p="This package uses <code>libtool</code> that likes to add unnecessary dependencies to programs and libraries"
 				s="Add the <code>fix libtool</code> command to the <a href=\"$base/$PACKAGE/receipt\">receipt</a> between the <code>configure</code> and <code>make</code> commands invocation"
 				;;
 			nolibtool)
@@ -1009,7 +1009,7 @@ show_badges() {
 				;;
 			ss)
 				t="Site script"
-				p="This autotools-based building system use site script; most of paths (like <var>prefix</var>, <var>sysconfdir</var> and <var>mandir</var>) are defined there with correct default values"
+				p="This autotools-based building system uses site script; most of paths (like <var>prefix</var>, <var>sysconfdir</var> and <var>mandir</var>) are defined there with correct default values"
 				s="You may remove your paths from <code>configure</code> invocation"
 				;;
 			fadd)
@@ -1019,7 +1019,7 @@ show_badges() {
 				;;
 			frem)
 				t="Files have been removed"
-				p="Some files existing in <var>\$install</var> <a href=\"$base/$PACKAGE/files#orphans\">not belong to any package</a>"
+				p="Some files existing in <var>\$install</var> <a href=\"$base/$PACKAGE/files#orphans\">do not belong to any package</a>"
 				s="Revise <code>genpkg_rules()</code> or add files to “<a href=\"$base/$PACKAGE/stuff/overrides\">overrides</a>” list"
 				;;
 			fdup)
@@ -1374,7 +1374,7 @@ if [ -z "$pkg" ]; then
 						<h2>For maintainers</h2>
 						<p>Here you can <a href="=/">explore the badges</a>.</p>
 						<p>Or see some <a href="?maintainer&amp;stats">repository statistics</a>.</p>
-						<p>Or check packages version either for specified maintainer or using regular expression:</p>
+						<p>Or check packages version either for specified maintainer or using regular expressions:</p>
 						<form>
 							<select name="maintainer">
 								<option value=''>--- select maintainer ---

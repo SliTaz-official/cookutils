@@ -247,20 +247,20 @@ mk_pkg_receipt() {
 
 	# 1. Main package.
 	#    By default it has no dependencies.
-	#    You can write or omit DEPENDS="" for indicating package have no
+	#    You can write or omit DEPENDS="" for indicating packages that have no
 	#    dependencies.
 	# 2. Split package (excluding *-dev).
 	#    By default every split package depends on the main package.
 	#    Unfortunately, in the shell script (receipt is the shell script too),
-	#    every undeclared variable has empty value, so there's no difference if
+	#    every undeclared variable has an empty value, so there's no difference if
 	#    you wrote DEPENDS="" or omit it - result will be the same empty value.
-	#    If you want to define the split package has no dependencies - you need
-	#    to to put single space between the quotes: DEPENDS=" ".
+	#    If you want to define that the split package has no dependencies - you need
+	#    to to put a single space between the quotes: DEPENDS=" ".
 	# 3. Development split package.
 	#    Installing *-dev package should install all the files produced during
-	#    compilation and then were separated to the different packages, so
+	#    compilation and then were separated into the different packages, so
 	#    by default (if you wrote DEPENDS="" or omit it) *-dev package depends
-	#    on the main package and all the split packages (excluding the itself).
+	#    on the main package and all the split packages (excluding itself).
 	[ "$DEPENDS" == ' ' ] && DEPENDS='@EMPTY@'
 
 	# Receipt's signature is important, although some receipts may miss it
@@ -642,7 +642,7 @@ packit() {
 
 	# Usually it does not change on "just recook".
 	# Md5sum of the *.tazpkg will change every time because of embedded timestamps;
-	# on the other hand release checksum don't relies on the timestamps, but
+	# on the other hand release checksums don't rely on the timestamps, but
 	# only on files content and their permissions.
 
 	# Calculate rsum for new package
@@ -726,9 +726,9 @@ packit() {
 	# Preferrable way is to combine the commands chain in the compile_rules()
 	# using '&&': when any of the chunk broke, process will stop and function
 	# will return non-zero return code.
-	# On the other hand some old receipts don't use '&&' but depends on the
+	# On the other hand some old receipts don't use '&&' but depend on the
 	# error messages on the log.
-	# Sometimes it produce false positives on the configuration stage.
+	# Sometimes it produce false positives in the configuration stage.
 	# In this case we can use the "skip-log-errors".
 	if [ "${COOKOPTS/skip-log-errors/}" == "$COOKOPTS" ]; then
 		# Exit if any error found in log file.
@@ -784,7 +784,7 @@ packit() {
 
 	# For example, if *-dev package contains *.a static libs, it will be either
 	# i486 or x86_64 arch; otherwise it will be "any" arch. This transition
-	# may be done forth and back depending on you disable static libs or not.
+	# may be done back and forth depending on if you disable static libs or not.
 	case $arch in
 		any)
 			if [ -e $PKGS/$PACKAGE-$VERSION$EXTRAVERSION-$ARCH.tazpkg ]; then
@@ -816,7 +816,7 @@ packit() {
 			rm -f "$PKGS/$old_file"
 			status
 		fi
-		# package changed, substitute old package by new one
+		# package changed, substitute old package for new one
 		mv -f $pkgdir/taz/$PACKAGE-$VERSION$EXTRAVERSION-$arch.tazpkg $PKGS
 		_ 'The release checksum has changed.'
 	else
