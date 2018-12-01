@@ -728,7 +728,7 @@ packit() {
 	# will return non-zero return code.
 	# On the other hand some old receipts don't use '&&' but depend on the
 	# error messages on the log.
-	# Sometimes it produce false positives in the configuration stage.
+	# Sometimes it produces false positives in the configuration stage.
 	# In this case we can use the "skip-log-errors".
 	if [ "${COOKOPTS/skip-log-errors/}" == "$COOKOPTS" ]; then
 		# Exit if any error found in log file.
