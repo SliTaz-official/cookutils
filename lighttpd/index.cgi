@@ -1009,7 +1009,7 @@ show_badges() {
 				;;
 			ss)
 				t="Site script"
-				p="This autotools-based building system uses site script; most of paths (like <var>prefix</var>, <var>sysconfdir</var> and <var>mandir</var>) are defined there with correct default values"
+				p="This autotools-based building system uses site script; most of the paths (like <var>prefix</var>, <var>sysconfdir</var> and <var>mandir</var>) are defined there with correct default values"
 				s="You may remove your paths from <code>configure</code> invocation"
 				;;
 			fadd)
@@ -1019,7 +1019,7 @@ show_badges() {
 				;;
 			frem)
 				t="Files have been removed"
-				p="Some files existing in <var>\$install</var> <a href=\"$base/$PACKAGE/files#orphans\">do not belong to any package</a>"
+				p="Some files existing in <var>\$install</var> <a href=\"$base/$PACKAGE/files#orphans\">not belonging to any package</a>"
 				s="Revise <code>genpkg_rules()</code> or add files to “<a href=\"$base/$PACKAGE/stuff/overrides\">overrides</a>” list"
 				;;
 			fdup)
