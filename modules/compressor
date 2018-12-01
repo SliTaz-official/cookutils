@@ -578,7 +578,7 @@ normalize_mo() {
 	[ -z "$(find $install -type f -name '*.mo')" ] && return
 
 	# Gettext functions: msgunfmt, msguniq, msgconv, msgfmt
-	tpi gettext
+	tpi gettext-dev
 	# Gconv modules (convert to UTF-8)
 	tpi glibc-locale
 
