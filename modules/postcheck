@@ -80,7 +80,7 @@ repology_get() {
 function add() {
 	! grep -q "^${1}$" $badges && echo "$1" >> $badges
 	case $1 in
-		ss|old|win|patch) return 0;;
+		ss|old|win|patch|ownover|permover) return 0;;
 		*) echo 'yes' > $fail; false;;
 	esac
 }
