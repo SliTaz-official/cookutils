@@ -647,10 +647,13 @@ kbd {
 .tag5 { font-size: 31px; color: #ee1111; }
 
 
-/* FOLLOWING CSS HAS SOME CHANGES FOR SLITAZ COOKER! */
+/* FOLLOWING CSS HAS SOME CHANGES FOR SLITAZ COOKER!
+   - removed `font-family` from first ruleset
+   - added last ruleset for `.token a`
+ */
 
 /* PrismJS 1.15.0
-https://prismjs.com/download.html#themes=prism-okaidia&languages=markup+css+clike+javascript+c+asciidoc+bash+ruby+css-extras+diff+ini+markdown+perl+python */
+https://prismjs.com/download.html#themes=prism-okaidia&languages=markup+css+clike+javascript+c+asciidoc+bash+ruby+css-extras+diff+ini+markdown+perl+sql+python */
 /**
  * okaidia theme for JavaScript, CSS and HTML
  * Loosely based on Monokai textmate theme by http://www.monokai.nl/
@@ -670,6 +673,7 @@ code[class*="language-"], pre[class*="language-"] {
 	-moz-tab-size: 4; -o-tab-size: 4; tab-size: 4;
 	-webkit-hyphens: none; -moz-hyphens: none; -ms-hyphens: none; hyphens: none;
 }
+
 /* Code blocks */
 pre[class*="language-"] {
 	padding: 1em;
@@ -680,6 +684,7 @@ pre[class*="language-"] {
 :not(pre) > code[class*="language-"], pre[class*="language-"] {
 	background: #272822;
 }
+
 /* Inline code */
 :not(pre) > code[class*="language-"] {
 	padding: .1em;

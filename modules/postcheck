@@ -175,6 +175,7 @@ function docheck() {
 						add 'ownover'
 					else
 						add 'own'
+						list="$list$(printf "\n  %s:%s %s" "$(stat -c %u:%g "$i")" "${i#$install}")"
 						result='bad'
 					fi
 				done
@@ -185,6 +186,7 @@ function docheck() {
 		fi
 		status
 		unset IFS
+		[ -n "$list" ] && echo -e "  Problems found:$list"
 
 
 		action "Checking permissions in ${install#$WOK/$1/}..."

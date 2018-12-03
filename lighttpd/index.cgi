@@ -259,7 +259,7 @@ manage_modified() {
 # Problems:
 # 1. Function "latest packaged version" widely used here and it has no JSON API, but only SVG badge.
 # 2. So, all version comparisons can be only visual and not automated.
-# 3. Of the thousands of badges present on the web page, many of them are broken (maybe server
+# 3. When the thousands of badges present on the web page, many of them are broken (maybe server
 #    drops requests), while our server displays status icons well.
 # 4. Default badges are wide and not customizable.
 # Solution:
@@ -1630,15 +1630,26 @@ if [ "$pkg" == '=' ]; then
 				ls $WOK \
 				| while read pkg; do
 					[ -e $WOK/$pkg/.badges ] || continue
-					grep -q "^${badge}$" $WOK/$pkg/.badges &&
-					awk -F$'\t' -vpkg="$pkg" -vbase="$base/" '{
-						if ($1 == pkg) {
-							url = base $1 "/";
-							gsub("+", "%2B", url);
-							printf("<tr><td><img src=\"%ss/%s\" alt=\"%s\"> ", base, $1, $1);
-							printf("<a href=\"%s\">%s</a></td><td>%s</td><td>%s</td></tr>\n", url, $1, $4, $3);
-						}
-					}' $PKGS/packages-$ARCH.info
+					if grep -q "^${badge}$" $WOK/$pkg/.badges; then
+						if grep -q "^$pkg	" $PKGS/packages-$ARCH.info; then
+							awk -F$'\t' -vpkg="$pkg" -vbase="$base/" '{
+								if ($1 == pkg) {
+									url = base $1 "/";
+									gsub("+", "%2B", url);
+									printf("<tr><td><img src=\"%ss/%s\" alt=\"%s\"> ", base, $1, $1);
+									printf("<a href=\"%s\">%s</a></td><td>%s</td><td>%s</td></tr>\n", url, $1, $4, $3);
+								}
+							}' $PKGS/packages-$ARCH.info
+						else
+							# broken packages absent in packages-<arch>.info; use receipt (slower)
+							{
+								. $WOK/$pkg/receipt
+								echo -n "<tr><td><img src=\"${base}s/$pkg\" alt=\"$pkg\"> "
+								echo -n "<a href=\"${base}$pkg/\">$pkg</a></td>"
+								echo    "<td>$SHORT_DESC</td><td>$CATEGORY</td></tr>"
+							}
+						fi
+					fi
 				done
 				;;
 		esac
