@@ -2485,7 +2485,14 @@ EOT
 							;;
 						*.md|*.markdown)
 							echo '<section class="markdown">'
-							$md2html "$tmp" | sed 's|class="|class="language-|g'
+							case "$md2html" in
+								*sundown)
+									$md2html "$tmp" | sed 's|class="|class="language-|g'
+									;;
+								*)
+									$md2html "$tmp"
+									;;
+							esac
 							echo '</section>'
 							;;
 						*)
