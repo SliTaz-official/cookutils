@@ -2556,31 +2556,31 @@ EOT
 			show=1
 		fi
 
-		if [ -d "$wok/$pkg/taz" ]; then
-			[ "$show" -eq 1 ] || files_header
+		tmp_table=$(mktemp)
+		save_ARCH="$ARCH"
 
-			common_version=$VERSION
-			for i in $(all_names | tr ' ' '\n' | sort); do
-				[ -e "$wok/$pkg/taz/$i-$common_version$EXTRAVERSION/receipt" ] || continue
-				. $wok/$pkg/taz/$i-$common_version$EXTRAVERSION/receipt
-
-				for filename in "$PACKAGE-$VERSION$EXTRAVERSION.tazpkg" "$PACKAGE-$VERSION$EXTRAVERSION-$ARCH.tazpkg" "$PACKAGE-$VERSION$EXTRAVERSION-any.tazpkg"; do
-					[ -f "$PKGS/$filename" ] || continue
-
-					case $filename in
-						*-x86_64.tazpkg) class='pkg64';;
-						*-any.tazpkg)    class='pkgany';;
-						*)               class='pkg32';;
-					esac
-					cat <<-EOT
-						<tr>
-							<td><a href="$base/get/$filename" class='icon $class'>$filename</a></td>
-							<td>$(ls -lh ./packages/$filename | awk '{printf("%sB", $5)}')</td>
-							<td>$SHORT_DESC</td>
-						</tr>
-					EOT
-				done
+		for ARCH in i486 x86_64; do
+			. $wok/$pkg/receipt
+			for i in $(all_names | tr ' ' '\n'); do
+				awk -F$'\t' -vpkg="$i" -vbase="$base" '{
+					if ($1 == pkg) {
+						class = ($11 == "0") ? "any" : ($11 == "6") ? "64"     : "32";
+						arch  = ($11 == "0") ? "any" : ($11 == "6") ? "x86_64" : "i486";
+						file = $1 "-" $2 "-" arch ".tazpkg";
+						split($7, size, " ");
+						printf("<tr><td><a href=\"%s/get/%s\" ", base, file);
+						printf("class=\"icon pkg%s\">%s</a></td>", class, file);
+						printf("<td>%s</td><td>%s</td></tr>\n", size[1], $4);
+					}
+				}' $PKGS/packages-$ARCH.info
 			done
+		done \
+		| sort -u \
+		> $tmp_table
+
+		if [ -s "$tmp_table" ]; then
+			[ "$show" -eq 0 ] && files_header
+			cat $tmp_table
 			show=1
 		fi
 
@@ -2589,6 +2589,9 @@ EOT
 		else
 			show_note w "Sorry, there's nothing to download…"
 		fi
+
+		ARCH="$save_ARCH"
+		rm $tmp_table
 		;;
 
 esac
