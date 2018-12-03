@@ -1644,8 +1644,8 @@ if [ "$pkg" == '=' ]; then
 							# broken packages absent in packages-<arch>.info; use receipt (slower)
 							{
 								. $WOK/$pkg/receipt
-								echo -n "<tr><td><img src=\"${base}s/$pkg\" alt=\"$pkg\"> "
-								echo -n "<a href=\"${base}$pkg/\">$pkg</a></td>"
+								echo -n "<tr><td><img src=\"$base/s/$pkg\" alt=\"$pkg\"> "
+								echo -n "<a href=\"$base/$pkg/\">$pkg</a></td>"
 								echo    "<td>$SHORT_DESC</td><td>$CATEGORY</td></tr>"
 							}
 						fi
