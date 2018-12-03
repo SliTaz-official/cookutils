@@ -2562,15 +2562,16 @@ EOT
 		for ARCH in i486 x86_64; do
 			. $wok/$pkg/receipt
 			for i in $(all_names | tr ' ' '\n'); do
-				awk -F$'\t' -vpkg="$i" -vbase="$base" '{
+				awk -F$'\t' -vpkg="$i" -vbase="$base" -vPKGS="$PKGS" '{
 					if ($1 == pkg) {
 						class = ($11 == "0") ? "any" : ($11 == "6") ? "64"     : "32";
 						arch  = ($11 == "0") ? "any" : ($11 == "6") ? "x86_64" : "i486";
 						file = $1 "-" $2 "-" arch ".tazpkg";
-						split($7, size, " ");
+						desc = $4;
+						"ls -lh " PKGS "/" file | getline; split($0, ls, " ");
 						printf("<tr><td><a href=\"%s/get/%s\" ", base, file);
 						printf("class=\"icon pkg%s\">%s</a></td>", class, file);
-						printf("<td>%s</td><td>%s</td></tr>\n", size[1], $4);
+						printf("<td>%sB</td><td>%s</td></tr>\n", ls[5], desc);
 					}
 				}' $PKGS/packages-$ARCH.info
 			done
