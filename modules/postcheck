@@ -163,6 +163,7 @@ function docheck() {
 
 		IFS=$'\n'
 		bad_own="$(find $install -type f \( ! -user 0 -a ! -group 0 \))"
+		list=$(mktemp)
 		if [ -n "$bad_own" ]; then
 			if [ -e $overrides_exp ]; then
 				# There may be mix of overridden and not-overridden ownership
@@ -175,25 +176,33 @@ function docheck() {
 						add 'ownover'
 					else
 						add 'own'
-						list="$list$(printf "\n  %s:%s %s" "$(stat -c %u:%g "$i")" "${i#$install}")"
+						printf "  %s:%s %s\n" "$(stat -c %u:%g "$i")" "${i#$install}" >>$list
 						result='bad'
 					fi
 				done
 				[ "$result" == '' ] # OK, all was overridden
 			else
+				for i in $bad_own; do
+					printf "  %s:%s %s\n" "$(stat -c %u:%g "$i")" "${i#$install}" >>$list
+				done
 				add 'own'
 			fi
 		fi
 		status
 		unset IFS
-		[ -n "$list" ] && echo -e "  Problems found:$list"
+		if [ -s "$list" ]; then
+			echo "  Problems found:"
+			sort -k2 $list
+		fi
+		rm $list
 
 
 		action "Checking permissions in ${install#$WOK/$1/}..."
 
+		IFS=$'\n'
 		bad_files="$(find $install -type f \( ! -perm 644 -a ! -perm 755 \))"
 		bad_dirs="$(find $install -type d ! -perm 755)"
-		list=''
+		list=$(mktemp)
 		if [ -n "$bad_files$bad_dirs" ]; then
 			if [ -e $overrides_exp ]; then
 				# There may be mix of overridden and not-overridden permissions
@@ -205,7 +214,7 @@ function docheck() {
 						add 'permover'
 					else
 						add 'perm'
-						list="$list$(printf "\n  %04d %s" "$(stat -c %a "$i")" "${i#$install}")"
+						printf "  %04d %s\n" "$(stat -c %a "$i")" "${i#$install}" >>$list
 						result='bad'
 					fi
 				done
@@ -214,24 +223,47 @@ function docheck() {
 						add 'permover'
 					else
 						add 'perm'
-						list="$list$(printf "\n  %04d %s" "$(stat -c %a "$i")" "${i#$install}/")"
+						printf "  %04d %s\n" "$(stat -c %a "$i")" "${i#$install}/" >>$list
 						result='bad'
 					fi
 				done
 				[ "$result" == '' ] # OK, all was overridden
 			else
+				for i in $bad_files; do
+					printf "  %04d %s\n" "$(stat -c %a "$i")" "${i#$install}" >>$list
+				done
+				for i in $bad_dirs; do
+					printf "  %04d %s\n" "$(stat -c %a "$i")" "${i#$install}/" >>$list
+				done
 				add 'perm'
 			fi
 		fi
 		status
-		[ -n "$list" ] && echo -e "  Problems found:$list"
+		unset IFS
+		if [ -s "$list" ]; then
+			echo "  Problems found:"
+			sort -k2 $list
+		fi
+		rm $list
 
 		action "Checking broken symlinks in ${install#$WOK/$1/}..."
-		bad_sl=$(find $install -type l ! -exec test -e '{}' \; -print)
+
+		IFS=$'\n'
+		bad_sl="$(find $install -type l ! -exec test -e '{}' \; -print)"
+		result=''
 		if [ -n "$bad_sl" ]; then
 			add 'symlink'
+			result='bad'
 		fi
-		status
+		[ "$result" == '' ]; status
+
+		if [ "$result" == 'bad' ]; then
+			echo "  Problems found:"
+			for i in $bad_sl; do
+				stat -c '  %N'
+			done
+		fi
+		unset IFS
 	done
 
 	if [ "$REPOLOGY" != '-' ]; then

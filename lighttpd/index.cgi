@@ -1060,7 +1060,7 @@ show_badges() {
 			list)
 				p=$(echo $p | sed 's|<a [^>]*>\([^<]*\)</a>|\1|g')
 				s=$(echo $s | sed 's|<a [^>]*>\([^<]*\)</a>|\1|g|')
-				echo "<tr><td><a href=\"$badge\"><span class=\"badge $badge\" title=\"$t\"/></a></td><td>$p</td></tr>"
+				echo "<tr><td><a href=\"$badge\" class=\"button badge $badge\" title=\"$t\"></a></td><td>$p</td></tr>"
 				;;
 			*)
 				echo -n "<span class=\"badge $badge\" title=\"$t\"/>"
@@ -1357,9 +1357,9 @@ if [ -z "$pkg" ]; then
 						$(toolchain_version glibc)
 					</table>
 
-					<p>Toolchain documentation: <a target="_blank" rel="noopener noreferrer"
-					href="http://doc.slitaz.org/en:cookbook:toolchain">http://doc.slitaz.org/en:cookbook:toolchain</a>
-					</p>
+					<div id="info">
+						<a class="button icon doc" target="_blank" rel="noopener noreferrer" href="http://doc.slitaz.org/en:cookbook:toolchain">Toolchain documentation</a>
+					</div>
 
 					</section>
 					</div>

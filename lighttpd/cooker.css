@@ -394,6 +394,18 @@ form.r, .button.r { margin: 3px 3px 0; }
 	padding: 0 0.8rem 0 0;
 	vertical-align: middle;
 }
+
+.badge::before {
+	height: 16px;
+	display: inline-block;
+	padding: 0;
+}
+.button.badge {
+	height: 16px;
+	padding: 1px;
+	margin: unset;
+}
+
 .badge.bdbroken::before {
 	content: url("data:image/svg+xml,<svg height='16' width='16' xmlns='http://www.w3.org/2000/svg'><circle cx='8' cy='8' fill='%23bcc' r='7.5' stroke='%23000'/><path d='m6 4-2 1v1l2-1zm4 0v1l2 1v-1zm-4 2v1h1v-1zm3 0v1h1v-1zm-2.5 4-2 2h1.5l1-1h2l1 1h1.5l-2-2z'/></svg>");
 }
