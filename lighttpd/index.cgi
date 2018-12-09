@@ -2568,10 +2568,11 @@ EOT
 						arch  = ($11 == "0") ? "any" : ($11 == "6") ? "x86_64" : "i486";
 						file = $1 "-" $2 "-" arch ".tazpkg";
 						desc = $4;
-						"ls -lh " PKGS "/" file | getline; split($0, ls, " ");
+						"ls -lh " PKGS "/" file | getline lsout; split(lsout, ls, " ");
+						size = (ls[5]) ? ls[5] "B" : "---";
 						printf("<tr><td><a href=\"%s/get/%s\" ", base, file);
 						printf("class=\"icon pkg%s\">%s</a></td>", class, file);
-						printf("<td>%sB</td><td>%s</td></tr>\n", ls[5], desc);
+						printf("<td>%s</td><td>%s</td></tr>\n", size, desc);
 					}
 				}' $PKGS/packages-$ARCH.info
 			done

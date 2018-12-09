@@ -764,7 +764,7 @@ packit() {
 		tmpdir=$(mktemp -d)
 		cd $tmpdir
 		cpio -F "$pkg_file" -i receipt >/dev/null 2>&1
-		RSUM_OLD=$(. receipt; echo $RSUM)
+		RSUM_OLD=$(unset RSUM; . receipt; echo $RSUM)
 		cd - >/dev/null
 		rm -r $tmpdir
 	else
