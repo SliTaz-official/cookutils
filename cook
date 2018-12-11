@@ -89,7 +89,7 @@ check_pkg_in_wok() {
 # for example, libpcreposix -> pcre
 
 find_pkg_in_wok() {
-	awk -F$'\t' -vi="$1" '{
+	awk -F$'\t' -vi=" $1 " '{
 		if (index(" " $2 " ", i)) {print $1; exit}
 	}' $cache/split.db
 }
@@ -680,6 +680,25 @@ fix() {
 			localedef -i 'en_US' -c -f 'UTF-8' /usr/lib/locale/en_US.UTF-8
 			;;
 	esac
+}
+
+
+# Typical function used in compile_rules() to make perl modules packages
+
+cook_perl() {
+	if [ -e "Makefile.PL" ]; then
+		# Up to 3 optional parameters supported
+		PERL_MM_USE_DEFAULT=1 perl Makefile.PL INSTALLDIRS=vendor $1 &&
+		make $2 &&
+		make $3 PERL_MM_USE_DEFAULT=1 DESTDIR=$install install &&
+		chmod -R u+w $install
+	elif [ -e "Build.PL" ]; then
+		echo "Not implemented yet"
+		return 1
+	else
+		echo "Unable to cook Perl module"
+		return 1
+	fi
 }
 
 
