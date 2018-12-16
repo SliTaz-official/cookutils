@@ -361,6 +361,7 @@ summary() {
 		version=$(awk -F$'\t' -vpkg="$i" '{
 			if ($1 == pkg) {print $2; exit}
 		}' "$PKGS/packages-$ARCH.info")
+		[ -n "$version" ] || continue
 		fs=$(du -sh $WOK/$pkg/taz/$i-$VERSION$EXTRAVERSION | awk '{print $1}')
 		arch=$(awk -F$'\t' -vi="$i" '{if ($1 == i) print $2}' $pkgdir/.arch)
 		pkgname="$i-$version-$arch.tazpkg"

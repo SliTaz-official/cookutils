@@ -2502,7 +2502,7 @@ EOT
 					;;
 				man)
 					#export TEXTDOMAIN='man2html'
-					echo "<div id='content2'>"
+					echo "<div id='content2' class='manpage'>"
 
 					html=$(./man2html.bin "$tmp" | sed -e '1,/<header>/d' -e '/<footer>/,$d' \
 					-e 's|<a href="file:///[^>]*>\([^<]*\)</a>|\1|g' \

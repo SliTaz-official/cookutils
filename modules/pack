@@ -458,7 +458,7 @@ determine_pkg_arch() {
 
 find_vars() {
 	# You can define variables in the root of the receipt describing
-	# the dependencies (tags, config files, etc.) for each sub-package.
+	# the dependencies (or tags, config files, etc.) for each sub-package.
 	# Example:
 	#   PACKAGE="cool"
 	#   SPLIT="$PACKAGE-extra libcool $PACKAGE-dev"
@@ -470,14 +470,15 @@ find_vars() {
 
 	local out
 	local var=$1
-	local pkg=$(echo -n $2       | tr -c 'a-zA-Z0-9' '_')
+	local pkg=$(echo -n $2             | tr -c 'a-zA-Z0-9' '_')
 	local end=$(echo -n ${2#$basepkg-} | tr -c 'a-zA-Z0-9' '_')
 	if [ "$2" == "$basepkg" ]; then
-		eval out="\$${var}_$pkg"
-		[ -n "$out" ] || eval out="\$${var}_std"
+		eval out="\$${var}_$pkg"                  # DEPENDS_cool
+		[ -n "$out" ] || eval out="\$${var}_std"  # DEPENDS_std
+		[ -n "$out" ] || eval out="\$$var"        # DEPENDS
 	else
-		eval out="\$${var}_$pkg"
-		[ -n "$out" ] || eval out="\$${var}_$end"
+		eval out="\$${var}_$pkg"                  # DEPENDS_cool_extra
+		[ -n "$out" ] || eval out="\$${var}_$end" # DEPENDS_extra
 	fi
 	echo "$out"
 }
@@ -522,31 +523,49 @@ packit() {
 	# Execute genpkg_rules()
 	#
 
+	require_copy='yes'
+	[ "${COOKOPTS/empty-pkg/}" != "$COOKOPTS" ] && require_copy='no'
+
 	if grep -q ^genpkg_rules $receipt; then
 		_ 'Executing: %s' 'genpkg_rules'
-		set -e; cd $pkgdir; mkdir -p $fs
-		genpkg_rules || (newline; _ 'ERROR: genpkg_rules failed'; newline) >> \
-			$LOGS/$pkg.log
+		set -e
+		cd $pkgdir; mkdir -p $fs
+		genpkg_rules || (newline; _ 'ERROR: genpkg_rules failed'; newline) >> $LOGS/$pkg.log
+		require_copy='no'
 	else
-		cd $pkgdir
-		mkdir -p $fs
+		cd $pkgdir; mkdir -p $fs
 		if [ "$CATEGORY" == 'meta' -a "$thispkg" == "$basepkg" ]; then
 			_ 'No packages rules: meta package'
-		else
-			# Auto-packing
-			for i in DEPENDS SUGGESTED PROVIDE CONFIG_FILES TAGS CAT COPY; do
-				eval $i="\$(find_vars $i $thispkg)"
-			done
-
-			[ -n "$COPY" ] ||
-			case "$thispkg" in
-				$basepkg)    COPY='@std @rm';;
-				*-dev)       COPY='@dev @rm';;
-				lib$basepkg) COPY='*.so*';;
-			esac
-			[ -n "$COPY" ] || die "ERROR: COPY_$thispkg rules undefined"
-			copy $COPY
+			require_copy='no'
 		fi
+	fi
+
+	# Auto-packing
+
+	for i in DEPENDS SUGGESTED PROVIDE CONFIG_FILES TAGS CATEGORY CAT COPY; do
+		eval $i="\$(find_vars $i $thispkg)"
+	done
+
+	[ -n "$CAT" ] && CATEGORY=$(echo "$CAT" | cut -d'|' -f1)
+
+	if [ "$CATEGORY" != 'meta' -a "$CATEGORY" != 'nopack' ]; then
+		[ -n "$COPY" ] ||
+		case "$thispkg" in
+			$basepkg)    COPY='@std @rm';;
+			*-dev)       COPY='@dev @rm';;
+			lib$basepkg) COPY='*.so*';;
+		esac
+		if [ -n "$COPY" ]; then
+			copy $COPY
+		elif [ "$require_copy" == 'yes' ]; then
+			var=$(echo -n COPY_$thispkg | tr -c 'a-zA-Z0-9' '_')
+			die "ERROR: $var rules undefined"
+		fi
+	fi
+
+	if [ "$CATEGORY" == 'nopack' ]; then
+		echo "Skipping $thispkg"
+		return
 	fi
 
 

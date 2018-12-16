@@ -133,7 +133,7 @@ function docheck() {
 				add 'libtool'
 			fi
 		else
-			if grep -q '^fix.libtool$' $WOK/$1/.patch.done 2>/dev/null; then
+			if grep -q '^\s*fix libtool' $WOK/$1/receipt 2>/dev/null; then
 				add 'nolibtool'
 			fi
 		fi
@@ -269,9 +269,9 @@ function docheck() {
 	if [ "$REPOLOGY" != '-' ]; then
 		action 'Querying Repology...'
 		repo_ver=$(repology_get ${REPOLOGY:-$PACKAGE})
-		if [ "$repo_ver" != '-' -a ! -s $fail ]; then
+		if [ "$repo_ver" != '-' ]; then
 			if echo " $repo_ver " | fgrep -q " $VERSION "; then
-				add 'win'
+				[ -s $fail ] || add 'win'
 			else
 				add 'old'
 			fi
