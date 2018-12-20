@@ -670,7 +670,7 @@ EOT
 				fi
 				rm -rf $wok/$pkg $LOGS/$pkg.log
 				sed -i "/^${pkg}$/d" $blocked $broken $commits.tmp
-				sed -i "/^$pkg\t/d" $PKGS/packages.info
+				sed -i "/^$pkg\t/d" $PKGS/packages-$ARCH.info
 				sed -i "/^$pkg:/d" $cache/files.list
 			fi
 			if [ -d "$wok/$pkg/stuff" ]; then

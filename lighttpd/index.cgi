@@ -1850,7 +1850,7 @@ case "$cmd" in
 		( cd $wok/$pkg; find stuff -type f 2>/dev/null ) | sort | \
 		awk -vb="$base/$pkg" '{printf("<a class=\"button\" href=\"%s/%s\">%s</a>\n", b, $0, $0)}'
 
-		show_code bash < $wok/$pkg/receipt
+		show_code bash < $wok/$pkg/receipt | sed 's|<pre>|<pre class="line-numbers">|'
 		;;
 
 	stuff)
