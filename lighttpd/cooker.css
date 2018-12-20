@@ -662,6 +662,7 @@ kbd {
 /* FOLLOWING CSS HAS SOME CHANGES FOR SLITAZ COOKER!
    - removed `font-family` from first ruleset
    - added last ruleset for `.token a`
+   - added `padding-top:2px;` in `pre[class*="language-"].line-numbers > code`
  */
 
 /* PrismJS 1.15.0
@@ -692,7 +693,7 @@ pre[class*="language-"]{padding:1em;margin:.5em 0;overflow:auto;border-radius:0.
 .token.italic{font-style:italic;}
 .token.entity{cursor:help;}
 pre[class*="language-"].line-numbers{position:relative;padding-left:3.8em;counter-reset:linenumber;}
-pre[class*="language-"].line-numbers > code{position:relative;white-space:inherit;}
+pre[class*="language-"].line-numbers > code{position:relative;white-space:inherit;padding-top:2px;}
 .line-numbers .line-numbers-rows{position:absolute;pointer-events:none;top:0;font-size:100%;left:-3.8em;width:3em;
 /* works for line-numbers below 1000 lines */
 letter-spacing:-1px;border-right:1px solid #999;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;}
