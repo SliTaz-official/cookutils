@@ -549,12 +549,14 @@ packit() {
 	[ -n "$CAT" ] && CATEGORY=$(echo "$CAT" | cut -d'|' -f1)
 
 	if [ "$CATEGORY" != 'meta' -a "$CATEGORY" != 'nopack' ]; then
-		[ -n "$COPY" ] ||
-		case "$thispkg" in
-			$basepkg)    COPY='@std @rm';;
-			*-dev)       COPY='@dev @rm';;
-			lib$basepkg) COPY='*.so*';;
-		esac
+		if [ -z "$COPY" -a "$require_copy" == 'yes' ]; then
+			case "$thispkg" in
+				$basepkg)    COPY='@std @rm';;
+				*-dev)       COPY='@dev @rm';;
+				lib$basepkg) COPY='*.so*';;
+			esac
+		fi
+
 		if [ -n "$COPY" ]; then
 			copy $COPY
 		elif [ "$require_copy" == 'yes' ]; then
