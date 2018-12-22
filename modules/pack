@@ -543,6 +543,9 @@ packit() {
 	# Auto-packing
 
 	for i in DEPENDS SUGGESTED PROVIDE CONFIG_FILES TAGS CATEGORY CAT COPY; do
+		# variable may be already set in genpkg_rules(), check it
+		eval tmpvar="\$i"
+		[ -n "$tmpvar" ] && continue
 		eval $i="\$(find_vars $i $thispkg)"
 	done
 
