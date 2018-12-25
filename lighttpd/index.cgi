@@ -142,16 +142,16 @@ page_header() {
 <header>
 	<h1><a href="$base/">$title</a></h1>
 	<div class="network">
-		<a href="http://www.slitaz.org/">Home</a>
-		<a href="http://bugs.slitaz.org/">Bugs</a>
-		<a href="http://hg.slitaz.org/wok-next/">Hg</a>
-		<a href="http://roadmap.slitaz.org/">Roadmap</a>
-		<a href="http://pizza.slitaz.me/">Pizza</a>
-		<a href="http://tank.slitaz.org/">Tank</a>
+		<a class="out" href="http://www.slitaz.org/">Home</a>
+		<a class="out" href="http://bugs.slitaz.org/">Bugs</a>
+		<a class="out" href="http://hg.slitaz.org/wok-next/">Hg</a>
+		<a class="out" href="http://roadmap.slitaz.org/">Roadmap</a>
+		<a class="out" href="http://pizza.slitaz.me/">Pizza</a>
+		<a class="out" href="http://tank.slitaz.org/">Tank</a>
 		|
-		<a href="/cross/">Cross</a>
-		<a href="/i486.cgi">i486</a>
-		<a href="$base/cookiso.cgi">ISO</a>
+		<a class="in" href="/cross/">Cross</a>
+		<a class="in" href="/i486.cgi">i486</a>
+		<a class="in" href="$base/cookiso.cgi">ISO</a>
 		<select onChange="window.location.href=this.value" style="display: none">
 			<option value=".">Go to…</option>
 			<option value="http://www.slitaz.org/">Home</option>
