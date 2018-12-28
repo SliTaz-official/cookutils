@@ -1052,6 +1052,11 @@ show_badges() {
 				p="Packages without badges"
 				s=""
 				;;
+			equal)
+				t="Not changed"
+				p="Package hasn't changed after rebuilding"
+				s="<abbr title=\"For your information\">FYI</abbr> only"
+				;;
 		esac
 		case $layout in
 			table)

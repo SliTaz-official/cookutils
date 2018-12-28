@@ -489,6 +489,9 @@ form.r, .button.r { margin: 3px 3px 0; }
 .badge.no-badge::before {
 	content: url("data:image/svg+xml,<svg height='16' width='16' xmlns='http://www.w3.org/2000/svg'><g stroke='%23000'><rect fill='%23fff' height='14' rx='2' stroke-linejoin='round' stroke-width='2' width='14' x='1' y='1'/><path d='m3 3 10 10m-10 0 10-10' fill='none'/></g></svg>");
 }
+.badge.equal::before {
+	content: url("data:image/svg+xml,<svg height='16' width='16' xmlns='http://www.w3.org/2000/svg'><rect fill='%23fff' height='14' rx='2' stroke='%2304f' stroke-linejoin='round' stroke-width='2' width='14' x='1' y='1'/><path d='m4 5v2h8v-2zm0 4v2h8v-2z'/></svg>");
+}
 .badges td:nth-child(1) {
 	vertical-align: middle;
 	text-align: center;

@@ -278,6 +278,13 @@ function docheck() {
 		fi
 		status
 	fi
+
+	unset changed notchanged
+	fgrep -q 'The release checksum has changed.'     $LOGS/$1.log && changed='yes'
+	fgrep -q 'The release checksum has not changed.' $LOGS/$1.log && notchanged='yes'
+	if [ -z "$changed" -a -n "$notchanged" ]; then
+		add 'equal'
+	fi
 }
 
 
