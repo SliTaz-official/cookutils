@@ -404,6 +404,11 @@ determine_pkg_arch() {
 		action 'Forced package architecture to' >&2
 		echo " $ARCH" >&2
 		arch="$ARCH"
+	elif [ -n "$(busybox find "$1" -type f -name '*.typelib')" ]; then
+		# GObject-introspection *.typelib binary data is architecture-dependent
+		action 'Found typelib. Forced package architecture to' >&2
+		echo " $ARCH" >&2
+		arch="$ARCH"
 	else
 		action 'Determining package architecture...' >&2
 		archs="$(
