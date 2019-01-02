@@ -306,6 +306,6 @@ footer
 rm -r $data # clean
 
 # move badges to the global database
-sed "/^$PACKAGE	/d" $badges_global
+sed -i "/^$PACKAGE	/d" $badges_global
 echo "$PACKAGE	$(tr '\n' ' ' <$badges | sed 's| $||')" >>$badges_global
 rm $badges
