@@ -16,6 +16,8 @@ repologydb="$CACHE/repology.db"
 badges="$WOK/$1/.badges"
 echo -n > $badges # clean badges
 
+badges_global="$CACHE/badges"; touch $badges_global
+
 overrides="$WOK/$1/stuff/overrides"
 overrides_exp="$data/overrides_exp"
 fail="$data/fail" # file used as flag, if will be empty if no fails were found
@@ -302,3 +304,8 @@ status
 footer
 
 rm -r $data # clean
+
+# move badges to the global database
+sed "/^$PACKAGE	/d" $badges_global
+echo "$PACKAGE	$(tr '\n' ' ' <$badges | sed 's| $||')" >>$badges_global
+rm $badges

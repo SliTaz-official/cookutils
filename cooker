@@ -468,7 +468,7 @@ EOT
 		cook_list ;;
 
 	pkg|-p)
-		# Same as 'cook pkg' but with log for web interface.
+		# Same as 'cook pkg'.
 		ps | grep -q "cook $pkg$" && echo 'Already running' && continue
 		cook $pkg || broken
 		clean_exit ;;
@@ -672,6 +672,7 @@ EOT
 				sed -i "/^${pkg}$/d" $blocked $broken $commits.tmp
 				sed -i "/^$pkg\t/d" $PKGS/packages-$ARCH.info
 				sed -i "/^$pkg:/d" $cache/files.list
+				sed -i "/^$pkg\t/d" $cache/badges
 			fi
 			if [ -d "$wok/$pkg/stuff" ]; then
 				if [ ! -d "$wok-hg/$pkg/stuff" ]; then

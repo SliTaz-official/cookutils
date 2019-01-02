@@ -34,6 +34,7 @@ cookorder="$CACHE/cookorder"
 command="$CACHE/command"; touch $command
 blocked="$CACHE/blocked"
 broken="$CACHE/broken"
+badges="$CACHE/badges"
 cooknotes="$CACHE/cooknotes"
 cooktime="$CACHE/cooktime"
 wokrev="$CACHE/wokrev"
@@ -940,13 +941,22 @@ update_webstat() {
 
 show_badges() {
 	local t p s # title problem solution
+	unset t p s
+	counts=$(mktemp)
 
 	case $layout in
 		table)
 			echo "<section><h2>Badges</h2><table class=\"badges\"><thead><tr><th></th><th>Problem</th><th>Solution</th></tr></thead><tbody>"
 			;;
 		list)
-			echo "<section><h2>Badges list</h2><p>Click on badge to get list of packages</p><table class=\"badges\"><thead><tr><th></th><th>Problem</th></tr></thead><tbody>"
+			echo "<section><h2>Badges list</h2><p>Click on badge to get list of packages</p><table class=\"badges\"><thead><tr><th></th><th>Problem</th><th>Count</th></tr></thead><tbody>"
+			for i in bdbroken broken any noany libtool nolibtool own ownover perm permover symlink ss fadd frem fdup old orphan patch win no-badge; do
+				case $i in
+					no-badge) num=$(awk -F$'\t' '{if (! $2) print 1}' $badges | wc -l);;
+					*) num=$(awk -F$'\t' -vi=" $i " '{if (index(" " $2 " ", i)) print 1}' $badges | wc -l);;
+				esac
+				echo "$i	$num" >>$counts
+			done
 			;;
 	esac
 
@@ -1065,7 +1075,8 @@ show_badges() {
 			list)
 				p=$(echo $p | sed 's|<a [^>]*>\([^<]*\)</a>|\1|g')
 				s=$(echo $s | sed 's|<a [^>]*>\([^<]*\)</a>|\1|g|')
-				echo "<tr><td><a href=\"$badge\" class=\"button badge $badge\" title=\"$t\"></a></td><td>$p</td></tr>"
+				c=$(awk -vbadge="$badge" '{if ($1 == badge) { print $2; exit }}' $counts)
+				echo "<tr><td><a href=\"$badge\" class=\"button badge $badge\" title=\"$t\"></a></td><td>$p</td><td>$c</td></tr>"
 				;;
 			*)
 				echo -n "<span class=\"badge $badge\" title=\"$t\"/>"
@@ -1078,6 +1089,8 @@ show_badges() {
 			echo "</tbody></table></section>"
 			;;
 	esac
+
+	rm $counts
 }
 
 
@@ -1609,9 +1622,8 @@ if [ "$pkg" == '=' ]; then
 							<tbody>
 				EOT
 
-				ls $WOK \
+				awk -F$'\t' '{if (! $2) print $1}' $badges \
 				| while read pkg; do
-					[ -s $WOK/$pkg/.badges ] && continue
 					awk -F$'\t' -vpkg="$pkg" -vbase="$base/" '{
 						if ($1 == pkg) {
 							url = base $1 "/";
@@ -1632,28 +1644,25 @@ if [ "$pkg" == '=' ]; then
 							<tbody>
 				EOT
 
-				ls $WOK \
+				awk -F$'\t' -vbadge=" $badge " '{if (index(" " $2 " ", badge)) print $1}' $badges \
 				| while read pkg; do
-					[ -e $WOK/$pkg/.badges ] || continue
-					if grep -q "^${badge}$" $WOK/$pkg/.badges; then
-						if grep -q "^$pkg	" $PKGS/packages-$ARCH.info; then
-							awk -F$'\t' -vpkg="$pkg" -vbase="$base/" '{
-								if ($1 == pkg) {
-									url = base $1 "/";
-									gsub("+", "%2B", url);
-									printf("<tr><td><img src=\"%ss/%s\" alt=\"%s\"> ", base, $1, $1);
-									printf("<a href=\"%s\">%s</a></td><td>%s</td><td>%s</td></tr>\n", url, $1, $4, $3);
-								}
-							}' $PKGS/packages-$ARCH.info
-						else
-							# broken packages absent in packages-<arch>.info; use receipt (slower)
-							{
-								. $WOK/$pkg/receipt
-								echo -n "<tr><td><img src=\"$base/s/$pkg\" alt=\"$pkg\"> "
-								echo -n "<a href=\"$base/$pkg/\">$pkg</a></td>"
-								echo    "<td>$SHORT_DESC</td><td>$CATEGORY</td></tr>"
+					if grep -q "^$pkg	" $PKGS/packages-$ARCH.info; then
+						awk -F$'\t' -vpkg="$pkg" -vbase="$base/" '{
+							if ($1 == pkg) {
+								url = base $1 "/";
+								gsub("+", "%2B", url);
+								printf("<tr><td><img src=\"%ss/%s\" alt=\"%s\"> ", base, $1, $1);
+								printf("<a href=\"%s\">%s</a></td><td>%s</td><td>%s</td></tr>\n", url, $1, $4, $3);
 							}
-						fi
+						}' $PKGS/packages-$ARCH.info
+					else
+						# broken packages absent in packages-<arch>.info; use receipt (slower)
+						{
+							. $WOK/$pkg/receipt
+							echo -n "<tr><td><img src=\"$base/s/$pkg\" alt=\"$pkg\"> "
+							echo -n "<a href=\"$base/$pkg/\">$pkg</a></td>"
+							echo    "<td>$SHORT_DESC</td><td>$CATEGORY</td></tr>"
+						}
 					fi
 				done
 				;;
@@ -1724,8 +1733,9 @@ case "$cmd" in
 
 
 		# Show Cooker badges
-		if [ -s $wok/$pkg/.badges ]; then
-			layout='table' show_badges $(cat $wok/$pkg/.badges)
+		pkg_badges=$(awk -F$'\t' -vpkg="$pkg" '{if ($1 == pkg) { print $2; exit } }' $badges)
+		if [ -n "$pkg_badges" ]; then
+			layout='table' show_badges $pkg_badges
 		fi
 
 
