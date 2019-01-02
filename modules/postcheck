@@ -309,3 +309,8 @@ rm -r $data # clean
 sed -i "/^$PACKAGE	/d" $badges_global
 echo "$PACKAGE	$(tr '\n' ' ' <$badges | sed 's| $||')" >>$badges_global
 rm $badges
+
+tosort=$(mktemp)
+cp $badges_global $tosort
+sort -o $badges_global $tosort
+rm $tosort
