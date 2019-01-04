@@ -528,21 +528,59 @@ remove_deps() {
 
 patchit() {
 	[ -f "$stuff/patches/series" ] || return
+	# Empty lines and comments (started with "#") are ignored
+	# Up to three fields (no spaces inside allowed) separated by "|":
+	#   1. patch options like "-p0" (optional);
+	#   2. patch file name or URL (mandatory);
+	#   3. patch checksum in form "sha1=..." or other *sum (optional).
 
-	local done="$pkgdir/.patch.done"
+	local done="$pkgdir/.patch.done" var1 var2 var3
+	local patchname patchopts patchfile patchsum patchsum_type patchsum_sum
 	IFS=$'\n'
 	while read i; do
 		patchname=$(echo ${i%%#*} | cut -d' ' -f1)	# allow comments (anything after the # or space)
-		case $patchname in		# allow patch options in form <options_no_spaces>|<file_name>
-			*\|*) patchopts="${patchname%|*}"; patchname="${patchname#*|}";;
-			*)    patchopts='-Np1';;
+		[ -n "$patchname" ] || continue				# skip empty lines
+
+		var1=$(echo "$patchname||" | cut -d'|' -f1) # options  or name
+		var2=$(echo "$patchname||" | cut -d'|' -f2) # name     or checksum or empty
+		var3=$(echo "$patchname||" | cut -d'|' -f3) # checksum or empty
+
+		if [ -n "$var3" ]; then
+			patchopts="$var1"; patchname="$var2"; patchsum="$var3"
+		elif [ -n "$var2" ]; then
+			case $var2 in
+				*=*) patchopts='-Np1';  patchname="$var1"; patchsum="$var2";;
+				*)   patchopts="$var1"; patchname="$var2"; patchsum='';;
+			esac
+		else
+			patchopts='-Np1'; patchname="$var1"; patchsum=''
+		fi
+
+		case $patchname in
+				ftp://*|http://*|https://*)
+					patchfile="$SRC/$(basename $patchname)"
+					[ -e "$patchfile" ] || wget -q -T 60 -O $patchfile $patchname ||
+					die 'ERROR: %s' "can't get $patchname"
+					;;
+				*)
+					patchfile="$stuff/patches/$patchname"
+					;;
 		esac
-		[ -n "$patchname" ] || continue				# allow empty lines
+
+		if [ -n "$patchsum" ]; then
+			patchsum_type=${patchsum%=*}
+			patchsum_sum=${patchsum#*=}
+			echo "$patchsum_sum  $patchfile" | ${patchsum_type}sum -cs ||
+			die 'ERROR: %s' "wrong ${patchsum_type}sum for $patchfile"
+		fi
+
 		touch $done
 		grep -q "^${patchname}$" $done && continue	# already applied (useful with `cook --continue`)
+
 		newline
 		_ 'Applying patch %s' "$patchname"
-		patch $patchopts -i $stuff/patches/$patchname | sed 's|^|  |'
+		patch $patchopts -i $patchfile | sed 's|^|  |'
+
 		echo $patchname >> $done
 	done < $stuff/patches/series
 	newline
@@ -1384,7 +1422,8 @@ put_status() {
 # cook <package> --getsrc
 # cook <package> -gs
 [ -n "$getsrc" -o "$2" == '-gs' ] && {
-	title 'Getting source for "%s"' "$1"
+	pkg="$1"
+	title 'Getting source for "%s"' "$pkg"
 	receipt="$WOK/$pkg/receipt"
 	check_pkg_in_wok
 	unset_receipt
