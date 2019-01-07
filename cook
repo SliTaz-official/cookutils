@@ -572,6 +572,10 @@ patchit() {
 			patchsum_sum=${patchsum#*=}
 			echo "$patchsum_sum  $patchfile" | ${patchsum_type}sum -cs ||
 			die 'ERROR: %s' "wrong ${patchsum_type}sum for $patchfile"
+		else
+			case $patchfile in
+				$SRC/*) echo "warning: no checksum for external patch!";;
+			esac
 		fi
 
 		touch $done
