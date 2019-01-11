@@ -119,7 +119,8 @@ echo " ($(filesize $dbs/bdeps.txt))" | dblog
 _ 'Creating lists from "%s"' "$WOK" | dblog
 cd $WOK
 rsumf=$(mktemp)
-touch $dbs/packages.desc $dbs/packages.txt $dbs/packages.info $dbs/packages.equiv
+#touch $dbs/packages.desc $dbs/packages.txt $dbs/packages.info $dbs/packages.equiv
+touch $dbs/packages.info $dbs/packages.equiv
 for i in *; do
 	[ -d "$WOK/$i/taz" ] || continue
 
@@ -127,39 +128,44 @@ for i in *; do
 		pack="$i/taz/$j"
 		[ -f "$WOK/$pack/receipt" ] || continue
 		unset_receipt
+		unset PACKED_SIZE UNPACKED_SIZE RSUM PACKAGE VERSION EXTRAVERSION CATEGORY SHORT_DESC MAINTAINER LICENSE WEB_SITE DEPENDS TAGS PROVIDE
 		. ./$pack/receipt
 
-		if [ -f "$PKGS/$PACKAGE-$VERSION$EXTRAVERSION$arch.tazpkg" ]; then
+		if [ -f "$PKGS/$PACKAGE-$VERSION$EXTRAVERSION-$ARCH.tazpkg" -o -f "$PKGS/$PACKAGE-$VERSION$EXTRAVERSION-any.tazpkg"]; then
 
-			# packages.desc lets us search easily in DB
-			cat >> $dbs/packages.desc <<EOT
-$PACKAGE | $VERSION$EXTRAVERSION | $SHORT_DESC | $CATEGORY | $WEB_SITE
-EOT
-
-			# packages.txt used by tazpkg-web also to provide
-			# a human readable package list with version and description.
-			cat >> $dbs/packages.txt <<EOT
-$PACKAGE
-$VERSION$EXTRAVERSION
-$SHORT_DESC
-$PACKED_SIZE ($UNPACKED_SIZE installed)
-
-EOT
+#			# packages.desc lets us search easily in DB
+#			cat >> $dbs/packages.desc <<-EOT
+#				$PACKAGE | $VERSION$EXTRAVERSION | $SHORT_DESC | $CATEGORY | $WEB_SITE
+#			EOT
+#
+#			# packages.txt used by tazpkg-web also to provide
+#			# a human readable package list with version and description.
+#			cat >> $dbs/packages.txt <<-EOT
+#				$PACKAGE
+#				$VERSION$EXTRAVERSION
+#				$SHORT_DESC
+#				$PACKED_SIZE ($UNPACKED_SIZE installed)
+#
+#			EOT
 
 			# packages.info combines TazPkg separate files
 			# and will substitute them all
 			SIZES=$(echo $PACKED_SIZE $UNPACKED_SIZE | sed 's|\.0||g')
 			DEPENDS=$(echo $DEPENDS) # remove newlines from some receipts
 
-			#MD5="$(fgrep " $PACKAGE-$VERSION$EXTRAVERSION.tazpkg" $PKGS/packages.md5 | awk '{print $1}')"
-			cp $pack/md5sum $rsumf
-			md5sum $pack/receipt | sed 's| [^ ]*/| |' >> $rsumf
-			[ -e "$pack/description.txt" ] && md5sum $pack/description.txt | sed 's| [^ ]*/| |' >> $rsumf
-			rsum=$(md5sum $rsumf | awk '{print $1}')
+#			#MD5="$(fgrep " $PACKAGE-$VERSION$EXTRAVERSION.tazpkg" $PKGS/packages.md5 | awk '{print $1}')"
 
-			cat >> $dbs/packages.info <<EOT
-$PACKAGE	$VERSION$EXTRAVERSION	$CATEGORY	$SHORT_DESC	$WEB_SITE	$TAGS	$SIZES	$DEPENDS	$rsum	$PROVIDE
-EOT
+			# RSUM defined in new "small" receipts, but may be absent in old
+			if [ -z "$RSUM" ]; then
+				cp $pack/md5sum $rsumf
+				md5sum $pack/receipt | sed 's| [^ ]*/| |' >> $rsumf
+				[ -e "$pack/description.txt" ] && md5sum $pack/description.txt | sed 's| [^ ]*/| |' >> $rsumf
+				RSUM=$(md5sum $rsumf | awk '{print $1}')
+			fi
+
+			cat >> $dbs/packages.info <<-EOT
+				$PACKAGE	$VERSION$EXTRAVERSION	$CATEGORY	$SHORT_DESC	$WEB_SITE	$TAGS	$SIZES	$DEPENDS	$RSUM	$PROVIDE
+			EOT
 
 			# packages.equiv is used by tazpkg install to check depends.
 			for k in $PROVIDE; do
@@ -264,6 +270,7 @@ time=$(($(date +%s) - $time))
 { _ 'Packages: %s - Time: %ss' "$nb" "$time"; newline; } | dblog
 
 # "Atomic" update now
+ls -l $dbs
 cp -f $dbs/* $PKGS
 rm -r $dbs
 

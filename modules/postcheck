@@ -262,7 +262,7 @@ function docheck() {
 		if [ "$result" == 'bad' ]; then
 			echo "  Problems found:"
 			for i in $bad_sl; do
-				stat -c '  %N'
+				stat -c '  %N' $i
 			done
 		fi
 		unset IFS

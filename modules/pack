@@ -270,12 +270,12 @@ mk_pkg_receipt() {
 	save="$(mktemp)"
 	# `$(echo ...)`: normalize whitespace (space, tab, newline and their
 	# combinations and repeats)
-	cat > $save <<EOT
-PACKAGE="$PACKAGE"; DEPENDS="$(echo $DEPENDS)"; PROVIDE="$(echo $PROVIDE)"
-SUGGESTED="$(echo $SUGGESTED)"; TAZPANEL_DAEMON="$TAZPANEL_DAEMON"
-TAGS="$(echo $TAGS)"; VERSION="$VERSION"; SHORT_DESC="$SHORT_DESC"
-WEB_SITE="$WEB_SITE"; CATEGORY="$CATEGORY"
-EOT
+	cat > $save <<-EOT
+		PACKAGE="$PACKAGE"; DEPENDS="$(echo $DEPENDS)"; PROVIDE="$(echo $PROVIDE)"
+		SUGGESTED="$(echo $SUGGESTED)"; TAZPANEL_DAEMON="$TAZPANEL_DAEMON"
+		TAGS="$(echo $TAGS)"; VERSION="$VERSION"; SHORT_DESC="$SHORT_DESC"
+		WEB_SITE="$WEB_SITE"; CATEGORY="$CATEGORY"
+	EOT
 	unset_receipt
 	. "$orig_receipt"
 	MAIN_PACKAGE="$PACKAGE"

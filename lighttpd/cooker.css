@@ -623,6 +623,7 @@ progress::-moz-progress-bar {
 	position: relative;
 	top: -1.6rem;
 }
+#webstat .meter { display: inline; visibility: hidden; } /* forever unfinished */
 
 
 
