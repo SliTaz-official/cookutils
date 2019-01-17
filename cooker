@@ -294,7 +294,7 @@ arch_db() {
 			fi
 			unset HOST_ARCH
 		else
-			# HOST_ARCH not set --> package is suitable for current ARCH (equivalent to "any")
+			# HOST_ARCH not set --> package is suitable for current ARCH
 			count=$(($count + 1))
 			echo "Adding: $pkg"
 			touch $pkg/arch.$ARCH
@@ -663,7 +663,7 @@ EOT
 		# clean DB as well as log file.
 		cd $wok
 		for pkg in *; do
-			if [ ! -d "$wok-hg/$pkg" ]; then
+			if [ ! -d "$wok-hg/$pkg" -o -e "$wok-hg/$pkg/.hidden" ]; then
 				echo "Removing package: $pkg" | log_commits
 				if [ -s $wok/$pkg/receipt ]; then
 					. $wok/$pkg/receipt
