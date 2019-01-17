@@ -282,6 +282,7 @@ arch_db() {
 	rm -f $wok/*/arch.$ARCH && cd $wok
 	echo "Creating $ARCH packages DB..."
 	for pkg in *; do
+		[ -e $wok/$pkg/.hidden ] && continue
 		[ -s $wok/$pkg/receipt ] || continue
 		HOST_ARCH=
 		. $wok/$pkg/receipt
