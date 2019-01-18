@@ -1851,7 +1851,7 @@ case "$1" in
 				[ ! -d "$WOK/$pkg/taz" ] || rm -rf "$WOK/$pkg/taz"
 				[ ! -f "$LOGS/$pkg-pack.log" ] || rm -f $LOGS/$pkg-pack.log
 				packall 2>&1 | tee -a $LOGS/$pkg-pack.log
-				@@PREFIX@@/libexec/cookutils/postcheck $pkg | tee -a $LOGS/$pkg.log
+				@@PREFIX@@/libexec/cookutils/postcheck $pkg | tee -a $LOGS/$pkg-pack.log
 				clean_log "$pkg-pack"
 				time=$(($(date +%s) - $time))
 				summary | sed 's|^Cook |Pack |' | tee -a $LOGS/$pkg-pack.log
