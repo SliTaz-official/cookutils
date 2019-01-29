@@ -82,7 +82,7 @@ comp_summary() {
 find_elf() {
 	local i ifs="$IFS"
 	IFS=$'\n'
-	find $fs -type f \
+	find $install -type f \
 	| while read i; do
 		# output of `readelf -h <file> is human-readable information,
 		# we are interested in the next line:
@@ -119,7 +119,7 @@ sizes() {
 			{
 				find_elf EXEC
 				find_elf DYN
-				find $fs -type f \( -name '*.a' -o -name '*.pyc' -o -name '*.pyo' \
+				find $install -type f \( -name '*.a' -o -name '*.pyc' -o -name '*.pyo' \
 				-o -name '.packlist' -o -name '*.pm' -o -name '*.pl' -o -name '*.pod' \)
 			} \
 			| tr '\n' '\0' \
@@ -699,9 +699,22 @@ normalize_mo() {
 		}
 		' "$tmpfile" > "$tmpfile.awk"
 
+		# 64 bytes is the length of prologue added by awk script (here ~ is $'\n'):
+		# msgid ""~msgstr ""~"Content-Type: text/plain; charset=UTF-8\n"~~
+		# If size is 64 bit then file have no content, we'll remove it with
+		# all empty uplevel directories.
+		# For example, look at libbytesize package.
+		if [ "$(stat -c%s "$tmpfile.awk")" -eq 64 ]; then
+			_ 'Info: %s become empty' "$mo" >> "$the_log"
+			rm "$mo" "$tmpfile" "$tmpfile.pf" "$tmpfile.awk"
+			rmdir --parents --ignore-fail-on-non-empty "$(dirname "$mo")"
+			continue # proceed to next file
+		fi
+
 		out="$(msgfmt "$tmpfile.awk" -o "$tmpfile.mo" 2>&1)"
 		if [ -n "$out" ]; then
 			echo "$mo (msgfmt):"$'\n'"$out"$'\n' >> "$the_log"
+			rm "$tmpfile" "$tmpfile.pf" "$tmpfile.awk"
 			continue # proceed to next file
 		fi
 
@@ -789,25 +802,25 @@ EOT
 
 	# Strip static libraries
 	# See also: https://wiki.debian.org/ReproducibleBuilds/TimestampsInStaticLibraries
-	find $fs -name '*.a' -exec $STRIP -pdD '{}' 2>/dev/null \;
+	find $install -name '*.a' -exec $STRIP -pdD '{}' 2>/dev/null \;
 
 
 	# Remove Python *.pyc and *.pyo
-	find $fs -type f \( -name '*.pyc' -o -name '*.pyo' \) -delete 2>/dev/null
+	find $install -type f \( -name '*.pyc' -o -name '*.pyo' \) -delete 2>/dev/null
 
 	# Remove both with the empty subfolders:
 	# 1. Perl perllocal.pod and .packlist (unconditionally)
-	local perlfiles="$(find $fs -type f \( -name 'perllocal.pod' -o -name '.packlist' \))"
+	local perlfiles="$(find $install -type f \( -name 'perllocal.pod' -o -name '.packlist' \))"
 	# 2. Perl *.pod (if not disabled)
 	[ "${COOKOPTS/!rmpod/}" == "$COOKOPTS" ] &&
-		perlfiles="$perlfiles"$'\n'"$(find $fs -type f -name '*.pod')"
+		perlfiles="$perlfiles"$'\n'"$(find $install -type f -name '*.pod')"
 	echo "$perlfiles" | sort -u | xargs rm -f 2>/dev/null
 	echo "$perlfiles" | sort -u | awk 'BEGIN{FS=OFS="/"}{$NF="";print}' \
 	| xargs rmdir -p --ignore-fail-on-non-empty 2>/dev/null
 
 	# Strip documentation inside Perl files (*.pm and *.pl) (if not disabled)
 	[ "${COOKOPTS/!perlz/}" == "$COOKOPTS" ] &&
-		find $fs -type f \( -name '*.pm' -o -name '*.pl' \) -exec sed -i '/^=/,/^=cut/d' '{}' \;
+		find $install -type f \( -name '*.pm' -o -name '*.pl' \) -exec sed -i '/^=/,/^=cut/d' '{}' \;
 
 	newsize=$(sizes strip)
 
@@ -857,9 +870,11 @@ strip_mo_i18n() {
 case $1 in
 	install)
 		# Compressors working in the $install
+		[ -d "$install" ] || return
 		case "$ARCH" in
 			arm*) ;;
 			*)
+				strip_package
 				recompress_gz
 				recompress_zip
 				compress_manpages
@@ -877,7 +892,7 @@ case $1 in
 		;;
 	fs)
 		# Compressors working in the $fs
-		strip_package
+		[ -d "$fs" ] || return
 		strip_mo_i18n
 		;;
 esac

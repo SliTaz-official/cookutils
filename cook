@@ -365,6 +365,7 @@ summary() {
 		fs=$(du -sh $WOK/$pkg/taz/$i-$VERSION$EXTRAVERSION | awk '{print $1}')
 		arch=$(awk -F$'\t' -vi="$i" '{if ($1 == i) print $2}' $pkgdir/.arch)
 		pkgname="$i-$version-$arch.tazpkg"
+		[ -f "$PKGS/$pkgname" ] || continue
 		size=$(ls -lh $PKGS/$pkgname | awk '{print $5}')
 		files=$(wc -l < $WOK/$pkg/taz/$i-$VERSION$EXTRAVERSION/files.list)
 		printf "%2d : %7s : %10s : %5s : %s\n" "$pkgi" "$fs" "$size" "$files" "$pkgname"

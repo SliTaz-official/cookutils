@@ -39,8 +39,8 @@ Currently, the following options are recognized:
     The presence of this option overrides the default action (all existing *.mo
     files will remain).
     Please note, you can add all the translations to the package, for example,
-    using the command: `cook_copy_files *.mo` (then by default only the
-    supported locales will be left).
+    using the command: `copy *.mo` (then by default only the supported locales
+    will be left).
 
 !extradesktops
     Default action is to remove extra information from the desktop files:

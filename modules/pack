@@ -65,8 +65,9 @@ cook_copy_folders() {
 
 remove_already_packed() {
 	local i j
-	# $pkg is the name of the main package; $PACKAGE is the name of the current one
-	# $pkg may (or may not) be included in the $SPLIT
+	# $basepkg is the name of the main package;
+	# $thispkg is the name of the current one.
+	# $basepkg may (or may not) be included in the $SPLIT
 	neighbors=$(
 		echo $basepkg $SPLIT" " \
 		| awk -F$'\t' -vpkg="$thispkg" '
@@ -115,12 +116,23 @@ cook_copy_icons() {
 
 copy() {
 	action 'Copying folders and files...'
-	local i j k filelist=$(mktemp) folderlist=$(mktemp)
+	if [ ! -d "$install" ]; then
+		false; status
+		die 'ERROR: copy from the empty $install'
+	fi
+
+	local i j k
+	local tmp=$(mktemp -d) filelist=$tmp/f folderlist=$tmp/d solist=$tmp/s
+	local copylist=$tmp/c
 
 	IFS=$'\n'
 	cd $install
-	find ! -type d | sed 's|\.||' > $filelist
-	find   -type d | sed 's|\.||' > $folderlist
+	# filelist: all files and symlinks excluding *.so symlinks
+	find \( -type f -o \( -type l ! -name '*.so' \) \) | sed 's|\.||' >$filelist
+	# solist: *.so symlinks only
+	find -type l -name '*.so' | sed 's|\.||' >$solist
+	# folderlist: folders
+	find -type d | sed 's|\.||' >$folderlist
 
 	for i in $@; do
 		case $i in
@@ -149,6 +161,7 @@ copy() {
 					/\/Makefile.*/p; /\.inc$/p; /\/include\//p;
 					/\.so\.dbg$/p;
 					' $filelist
+				cat $solist # append copy list by *.so symlinks
 				;;
 			@ruby)
 				# Copy mandatory Ruby files
@@ -195,8 +208,8 @@ copy() {
 			@std)
 				while read j; do
 					case $j in
-						# skip empty man & doc folders
-						*/man/*|*/doc/*) continue;;
+						# skip empty man, doc and locale folders
+						*/man/*|*/doc/*|*/share/locale/*) continue;;
 					esac
 					[ -z "$(ls -A "$install$j")" ] || continue
 					# directory $j is empty
@@ -227,7 +240,7 @@ copy() {
 	done
 	cd - >/dev/null
 	unset IFS
-	rm $filelist $folderlist
+	rm -r $tmp # clean
 	status
 }
 
