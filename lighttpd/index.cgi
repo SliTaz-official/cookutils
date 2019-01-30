@@ -798,7 +798,7 @@ pkg_info() {
 	[ -n "$WEB_SITE" ] &&
 		echo "<a class='button icon website' href='$WEB_SITE' target='_blank' rel='noopener noreferrer'>web site</a>"
 
-	[ -f "$wok/$pkg/taz/$PACKAGE-$VERSION$EXTRAVERSION/receipt" ] &&
+	[ -d "$wok/$pkg/taz" ] &&
 		echo "<a class='button icon files$(active files)' href='$base/$pkg/files'>files</a>"
 
 	[ -n "$(ls $wok/$pkg/description*.txt)" ] &&
@@ -2470,6 +2470,7 @@ EOT
 						*.sh)       class='bash';;
 						*.rb|*/Rakefile*|*/Gemfile*) class='ruby';;
 						*.rdoc)     class='asciidoc';;
+						*.lua)      class='lua';;
 						*)
 							first=$(head -n1 "$tmp")
 							if [ "${first:0:1}" == '#' ]; then

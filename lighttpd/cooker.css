@@ -693,14 +693,14 @@ kbd {
  */
 
 /* PrismJS 1.15.0
-https://prismjs.com/download.html#themes=prism-okaidia&languages=markup+css+clike+javascript+c+asciidoc+bash+ruby+css-extras+diff+ini+markdown+perl+sql+python&plugins=line-numbers */
+https://prismjs.com/download.html#themes=prism-okaidia&languages=markup+css+clike+javascript+c+asciidoc+bash+ruby+css-extras+diff+ini+markdown+lua+perl+sql+python&plugins=line-numbers */
 /**
  * okaidia theme for JavaScript, CSS and HTML
  * Loosely based on Monokai textmate theme by http://www.monokai.nl/
  * @author ocodia
  */
 
-code[class*="language-"],pre[class*="language-"] {color:#f8f8f2;background:none;text-shadow:0 1px rgba(0, 0, 0, 0.3);font-family:monospace;text-align:left;white-space:pre;word-spacing:normal;word-break:normal;word-wrap:normal;line-height:1.5;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-hyphens:none;-moz-hyphens:none;-ms-hyphens:none;hyphens: none;}
+code[class*="language-"],pre[class*="language-"]{color:#f8f8f2;background:none;text-shadow:0 1px rgba(0, 0, 0, 0.3);font-family:monospace;text-align:left;white-space:pre;word-spacing:normal;word-break:normal;word-wrap:normal;line-height:1.5;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-hyphens:none;-moz-hyphens:none;-ms-hyphens:none;hyphens:none;}
 /* Code blocks */
 pre[class*="language-"]{padding:1em;margin:.5em 0;overflow:auto;border-radius:0.3em;}
 :not(pre) > code[class*="language-"],pre[class*="language-"]{background:#272822;}

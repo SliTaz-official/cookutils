@@ -575,7 +575,7 @@ packit() {
 			case "$thispkg" in
 				$basepkg)    COPY='@std @rm';;
 				*-dev)       COPY='@dev @rm';;
-				lib$basepkg) COPY='*.so*';;
+				lib$basepkg) COPY='*.so.*'; [ -n "$CAT" ] || CAT="libs|shared library";;
 			esac
 		fi
 
