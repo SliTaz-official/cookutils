@@ -576,6 +576,7 @@ packit() {
 				$basepkg)    COPY='@std @rm';;
 				*-dev)       COPY='@dev @rm';;
 				lib$basepkg) COPY='*.so.*'; [ -n "$CAT" ] || CAT="libs|shared library";;
+				*-lang)      COPY='*.mo';   [ -n "$CAT" ] || CAT="localization|translations";;
 			esac
 		fi
 
