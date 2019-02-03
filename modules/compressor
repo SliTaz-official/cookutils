@@ -701,7 +701,7 @@ normalize_mo() {
 
 		# 64 bytes is the length of prologue added by awk script (here ~ is $'\n'):
 		# msgid ""~msgstr ""~"Content-Type: text/plain; charset=UTF-8\n"~~
-		# If size is 64 bit then file have no content, we'll remove it with
+		# If size is 64 bit then files have no content, we'll remove it with
 		# all empty uplevel directories.
 		# For example, look at libbytesize package.
 		if [ "$(stat -c%s "$tmpfile.awk")" -eq 64 ]; then
