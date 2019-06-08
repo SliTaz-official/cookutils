@@ -46,7 +46,7 @@ Location: ${HTTP_REFERER:-${REQUEST_URI%\?*}}
 EOT
 	exit ;;
 src*)
-	file=$(busybox httpd -d "$SRC/${QUERY_STRING#*=}")
+	file="$PKGS/${QUERY_STRING#*=}"
 	cat <<EOT
 Content-Type: application/octet-stream
 Content-Length: $(stat -c %s "$file")
@@ -56,7 +56,7 @@ EOT
 	cat "$file"
 	exit ;;
 download*)
-	file=$(busybox httpd -d "$PKGS/${QUERY_STRING#*=}")
+	file="$PKGS/${QUERY_STRING#*=}"
 	cat <<EOT
 Content-Type: application/octet-stream
 Content-Length: $(stat -c %s "$file")
@@ -357,7 +357,7 @@ case "${QUERY_STRING}" in
 				echo "<a href='?info=$bpkg'>info</a>"
 			fi
 			[ -n "$(echo $REQUEST_URI | sed 's|/[^/]*?pkg.*||')" ] ||
-			echo "<a href='ftp://${HTTP_HOST%:*}/$pkg/'>browse</a>"
+			echo "<a href='?browse=$pkg/'>browse</a>"
 		else
 			if [ $(ls $wok/*$pkg*/receipt 2>/dev/null | wc -l) -eq 0 ]; then
 				echo "No package named: $pkg"
@@ -417,6 +417,37 @@ EOT
 		else
 			[ "$pkg" ] && echo "<pre>No log: $pkg</pre>"
 		fi ;;
+
+	view=*)
+		file="${QUERY_STRING#view=}"
+		echo "<h2>View: $file</h2>"
+		echo "<a href=\"?browse=?$file\">browse</a>"
+		echo "<pre>"
+		ls "$WOK/$file" | while read i; do
+			meta="$(ls -ld "$WOK/$file/$i" | cut -c-57)"
+			name="$i"
+			ref="stuff=../wok/$file$i"
+			[ -d "$WOK/$file/$i" ] && ref="view=$file$i/"
+			[ -L "$WOK/$file/$i" ] && name="$i -> $(readlink "$i")"
+			echo "$meta<a href=\"?$ref\">$name</a>"
+		done
+		echo "</pre>"
+		;;
+
+	browse=*)
+		file="${QUERY_STRING#browse=}"
+		echo "<h2>Browse: $file</h2>"
+		echo "<pre>"
+		ls "$WOK/$file" | while read i; do
+			meta="$(ls -ld "$WOK/$file/$i" | cut -c-57)"
+			name="$i"
+			ref="download=../wok/$file$i"
+			[ -d "$WOK/$file/$i" ] && ref="browse=$file$i/"
+			[ -L "$WOK/$file/$i" ] && name="$i -> $(readlink "$i")"
+			echo "$meta<a href=\"?$ref\">$name</a>"
+		done
+		echo "</pre>"
+		;;
 
 	log=*)
 		log=$LOGS/${QUERY_STRING#log=}
@@ -484,9 +515,11 @@ EOT
 
 	stuff=*)
 		file=${QUERY_STRING#stuff=}
+		file="${file//%20/ }"
 		echo "<h2>$file</h2>"
+		#echo "<a href=\"?download=$file\">download</a>"
 		echo '<pre>'
-		cat $wok/$file | sed 's/&/\&amp;/g;s/</\&lt;/g;s/>/\&gt;/g'
+		cat "$wok/$file" | sed 's/&/\&amp;/g;s/</\&lt;/g;s/>/\&gt;/g'
 		echo '</pre>' ;;
 
 	receipt=*)
@@ -516,7 +549,7 @@ EOT
 			echo "<h2>Installed files by: $pkg ($(du -hs $dir/fs | awk '{ print $1 }'))</h2>"
 			echo '<pre>'
 			find $dir/fs -not -type d -print0 | xargs -0 ls -ld | \
-				sed "s|\(.*\) /.*\(${dir#*wok}/fs\)\(.*\)|\1 <a href=\"?download=../wok\2\3\">\3</a>|;s|^\([^-].*\)\(<a.*\)\">\(.*\)</a>|\1\3|"
+				sed "s|^\(-.*\) /.*\(${dir#*wok}/fs\)\(.*\)|\1 <a href=\"?download=../wok\2\3\">\3</a>|;s| /[^>]*${dir#*wok}/fs| \1|"
 			echo '</pre>'
 		else
 			echo "<pre>No files list for: $pkg</pre>"
