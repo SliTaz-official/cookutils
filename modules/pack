@@ -718,7 +718,8 @@ packit() {
 
 	# Build fs cpio archive
 	action 'Compressing the FS...'
-	find fs -newer $receipt -exec touch -hr $receipt '{}' \;
+	newest="$(find receipt stuff 2>/dev/null | xargs ls -td | sed q)"
+	find fs -newer $newest -exec touch -hr $newest '{}' \;
 #	find fs | cpio -o -H newc --quiet | lzma-alone e fs.cpio.lzma -si
 	find fs | cpio -o -H newc --quiet | /bin/lzma -qzeT0 >fs.cpio.lzma
 	mv fs ../
