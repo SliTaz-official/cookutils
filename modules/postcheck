@@ -67,6 +67,7 @@ repology_get() {
 	else
 		# set HOST_WGET in cook.conf
 		versions=$($HOST_WGET -q -T 20 -O- https://repology.org/badge/latest-versions/$1.svg \
+		| sed 's|<text |\n&|g; s|</text>|&\n|g' \
 		| sed '/<text /!d; /fill/d; /latest/d; s|.*>\(.*\)<.*|\1|; s|, | |g') # space separated list
 		if [ -n "$versions" ]; then
 			sed -i "/^$1	/d" $repologydb
