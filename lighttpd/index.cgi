@@ -662,9 +662,11 @@ syntax_highlighter() {
 				print part1 part2 part3 part4;
 			}' | \
 			sed "s|\[0m/|/\[0m|g;
+				 s|\[m/|/\[m|g;
 				 s|\[\([01]\);3\([1-7]\)m|<a class='c\2\1'>|g;
 				 s|\[\([01]\);0m|<a class='c0\1'>|g;
 				 s|\[0m|</a>|g;
+				 s|\[m|</a>|g;
 				 s|^\(lrwxrwxrwx\)|<span class='c61'>\1</span>|;
 				 s|^\(-rwxr-xr-x\)|<span class='c21'>\1</span>|;
 				 s|^\(-rw-r--r--\)|<span class='c31'>\1</span>|;
