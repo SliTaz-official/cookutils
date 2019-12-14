@@ -147,7 +147,7 @@ page_header() {
 		<a class="out" href="http://bugs.slitaz.org/">Bugs</a>
 		<a class="out" href="http://hg.slitaz.org/wok-next/">Hg</a>
 		<a class="out" href="http://roadmap.slitaz.org/">Roadmap</a>
-		<a class="out" href="http://pizza.slitaz.me/">Pizza</a>
+		<a class="out" href="http://mypizza.slitaz.org/">Pizza</a>
 		<a class="out" href="http://tank.slitaz.org/">Tank</a>
 		|
 		<a class="in" href="/cross/">Cross</a>
@@ -159,7 +159,7 @@ page_header() {
 			<option value="http://bugs.slitaz.org/">Bug tracker</option>
 			<option value="http://hg.slitaz.org/wok/">Hg wok</option>
 			<option value="http://roadmap.slitaz.org/">Roadmap</option>
-			<option value="http://pizza.slitaz.me/">Pizza</option>
+			<option value="http://mypizza.slitaz.org/">Pizza</option>
 			<option value="http://tank.slitaz.org/">Tank</option>
 			<option disabled>---------</option>
 			<option value="cross/">Cross</option>
