@@ -46,7 +46,7 @@ Location: ${HTTP_REFERER:-${REQUEST_URI%\?*}}
 EOT
 	exit ;;
 src*)
-	file="$PKGS/${QUERY_STRING#*=}"
+	file="$PKGS/../src/${QUERY_STRING#*=}"
 	cat <<EOT
 Content-Type: application/octet-stream
 Content-Length: $(stat -c %s "$file")
@@ -339,6 +339,7 @@ case "${QUERY_STRING}" in
 			fi
 			[ -x ./man2html ] &&
 			if [ -d $wok/$bpkg/install/usr/man ] ||
+			   [ -d $wok/$bpkg/install/usr/local/man ] ||
 			   [ -d $wok/$bpkg/install/usr/share/man ] ||
 			   [ -d $wok/$bpkg/taz/*/fs/usr/man ] ||
 			   [ -d $wok/$bpkg/taz/*/fs/usr/share/man ]; then
