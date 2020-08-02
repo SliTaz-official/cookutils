@@ -124,7 +124,7 @@
 <p>
 	Si votre environnement est correctement paramétré vous pouvez commencer
 	à créer et compiler des paquets SliTaz depuis votre wok. Pour créer un
-	nouveau pqauet avec une recette vide (vous pouvez aussi créer une recette
+	nouveau paquet avec une recette vide (vous pouvez aussi créer une recette
 	interactivement) :
 </p>
 <pre>
@@ -164,7 +164,7 @@
 <h3>Nettoyer les paquets</h3>
 <p>
 	Après compilation et empaquetage il y a plusieurs fichiers dans le wok qui 
-	prennent de la place disque. Pour nettoyer un pqauet unique :
+	prennent de la place disque. Pour nettoyer un paquet unique :
 </p>
 <pre>
 # cook pkgname --clean
@@ -202,7 +202,7 @@ get_dev_files     : Install /usr/lib/{lib.*a,pkgconfig} /usr/include
 <p>
 	Cook peut lister les paquets dans le wok et ainsi créer une liste de paquets
 	adaptée pour Tazpkg. Cela vous permet de créer votre dépôt de paquets assez
-	facilement et c'est utiilisé pour créer la liste offcielle des paquets Slitaz
+	facilement et c'est utilisé pour créer la liste offcielle des paquets Slitaz
 	sur les miroirs. Pour lister le wok actuellement utilisé par cook (il n'est
 	pas nécessaire d'être root) :
 </p>
@@ -304,7 +304,7 @@ $ cook list-wok
 <p>
 	Cook et le Cooker gèrent un fichier contenant la liste des paquets bloqués
 	afin de ne pas les cuire lors de commits ou si une liste de cuission est utilisée.
-	C"est très utile pour un Robot de fabrication en production. Lorsque vous
+	C'est très utile pour un Robot de fabrication en production. Lorsque vous
 	bloquez ou débloquez un paquet vous pouvez ajouter une note dans les cooknotes.
 	Exemple de blocage de paquet :
 </p>
@@ -367,7 +367,7 @@ $ cp -f cookutils/cook.conf ~/Public/cgi-bin/cooker
 
 <h3>Cooknotes</h3>
 <p>
-	Le fonction cooknotes vous permet d'écrire de courtes notes personnelles
+	La fonction cooknotes vous permet d'écrire de courtes notes personnelles
 	au sujet de l'emballage et est utile pour travailler en groupe. Les
 	cooknotes ont été codées pour que les mainteneur du Robot de fabrication
 	de SliTaz partagent des informations avec les autres contributeurs.
@@ -392,7 +392,7 @@ $ cp -f cookutils/cook.conf ~/Public/cgi-bin/cooker
 	sur l'hôte si vous le voulez.
 </p>
 <p>
-	Pour lance de Cooker automatiquement vous devez utiliser crom depuis le chroot
+	Pour lance de Cooker automatiquement vous devez utiliser cron depuis le chroot
 	et ajouter un ligne dans le crontab de root dans /var/spool/cron/crontabs.
 	Disons que vous souhaitez lancer le Cooker toutes les 2 heures :
 </p>
@@ -410,7 +410,7 @@ $ cp -f cookutils/cook.conf ~/Public/cgi-bin/cooker
 	fichiers virtuels nécessaires pour les sources et les paquets.
 	Les fichiers sources se trouvent dans /home/slitaz/src et sont
 	reliés au chroot pour que vous puissiez les partager entre plusieurs
-	version  (stable, cooking, undigest). Si ce paquet n'est pas encore
+	versions (stable, cooking, undigest). Si ce paquet n'est pas encore
 	installé :
 </p>
 <pre>
