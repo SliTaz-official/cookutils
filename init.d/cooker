@@ -20,7 +20,7 @@ case "$i" in
 					mount -t devpts devpts $rootfs/dev/pts
 					mount -t tmpfs  shm    $rootfs/dev/shm
 				fi
-				if [ ! $(mount | grep -q ${rootfs}$SLITAZ/src) ]; then
+				if ! mount | grep -q ${rootfs}$SLITAZ/src; then
 					mount -o bind $SLITAZ/src ${rootfs}$SLITAZ/src
 					mount -o bind $SLITAZ/$version/packages \
 						${rootfs}$SLITAZ/packages

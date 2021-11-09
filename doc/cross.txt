@@ -32,7 +32,7 @@ HOWTO:
 	------------------------------------------
 	# tazpkg -gi mercurial
 	# tazpkg -gi make
-	# cd && hg clone http://hg.slitaz.org/cookutils
+	# cd && hg clone https://hg.slitaz.org/cookutils
 	# cd cookutils
 	# make install-cross
 

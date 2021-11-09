@@ -143,24 +143,24 @@ page_header() {
 <header>
 	<h1><a href="$base/">$title</a></h1>
 	<div class="network">
-		<a class="out" href="http://www.slitaz.org/">Home</a>
-		<a class="out" href="http://bugs.slitaz.org/">Bugs</a>
-		<a class="out" href="http://hg.slitaz.org/wok-next/">Hg</a>
-		<a class="out" href="http://roadmap.slitaz.org/">Roadmap</a>
-		<a class="out" href="http://mypizza.slitaz.org/">Pizza</a>
-		<a class="out" href="http://tank.slitaz.org/">Tank</a>
+		<a class="out" href="https://www.slitaz.org/">Home</a>
+		<a class="out" href="https://bugs.slitaz.org/">Bugs</a>
+		<a class="out" href="https://hg.slitaz.org/wok-next/">Hg</a>
+		<a class="out" href="https://roadmap.slitaz.org/">Roadmap</a>
+		<a class="out" href="https://mypizza.slitaz.org/">Pizza</a>
+		<a class="out" href="https://tank.slitaz.org/">Tank</a>
 		|
 		<a class="in" href="/cross/">Cross</a>
 		<a class="in" href="/i486.cgi">i486</a>
 		<a class="in" href="$base/cookiso.cgi">ISO</a>
 		<select onChange="window.location.href=this.value" style="display: none">
 			<option value=".">Go to…</option>
-			<option value="http://www.slitaz.org/">Home</option>
-			<option value="http://bugs.slitaz.org/">Bug tracker</option>
-			<option value="http://hg.slitaz.org/wok/">Hg wok</option>
-			<option value="http://roadmap.slitaz.org/">Roadmap</option>
-			<option value="http://mypizza.slitaz.org/">Pizza</option>
-			<option value="http://tank.slitaz.org/">Tank</option>
+			<option value="https://www.slitaz.org/">Home</option>
+			<option value="https://bugs.slitaz.org/">Bug tracker</option>
+			<option value="https://hg.slitaz.org/wok/">Hg wok</option>
+			<option value="https://roadmap.slitaz.org/">Roadmap</option>
+			<option value="https://mypizza.slitaz.org/">Pizza</option>
+			<option value="https://tank.slitaz.org/">Tank</option>
 			<option disabled>---------</option>
 			<option value="cross/">Cross</option>
 			<option value="i486.cgi">i486</option>

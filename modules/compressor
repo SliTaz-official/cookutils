@@ -497,7 +497,7 @@ get_supported_locales() {
 	else
 		# ... from Hg
 		temp_conf=$(mktemp)
-		wget -q -O $temp_conf -T 10 "http://hg.slitaz.org/wok/raw-file/tip$lpc"
+		wget -q -O $temp_conf -T 10 "https://hg.slitaz.org/wok/raw-file/tip$lpc"
 		if [ -s $temp_conf ]; then
 			. $temp_conf
 		else

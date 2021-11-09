@@ -986,7 +986,7 @@ cookit() {
 		fi
 		if [ -n "$LZMA_SRC" ]; then
 			cd $pkgdir/source
-			if [ "$(ls -A tmp | wc -l)" -gl 1 -o -f "$(echo tmp/*)" ]; then
+			if [ "$(ls -A tmp | wc -l)" -gt 1 -o -f "$(echo tmp/*)" ]; then
 				mv tmp tmp-1; mkdir tmp
 				mv tmp-1 tmp/${SOURCE:-$PACKAGE}-$VERSION
 			fi
@@ -1442,7 +1442,7 @@ put_status() {
 # cook <package> -b
 [ -n "$block" -o "$2" == '-b' ] && {
 	action 'Blocking package "%s"' "$1"
-	[ $(grep "^$1$" $blocked) ] || echo "$1" >> $blocked
+	grep -q "^$1$" $blocked || echo "$1" >> $blocked
 	status; newline
 	touch $activity
 	exit 0
@@ -1807,7 +1807,7 @@ case "$1" in
 		: ${HOST_ARCH=$ARCH}
 		debug "$(_ 'Host arch %s' "$HOST_ARCH")"
 		# Handle arm{v6hf,v7,..}
-		if ! $(echo "$HOST_ARCH" | egrep -q "${ARCH%v[0-9]*}|any"); then
+		if ! echo "$HOST_ARCH" | egrep -q "${ARCH%v[0-9]*}|any"; then
 			_ 'cook: %s' "HOST_ARCH=$HOST_ARCH"
 			error="$(_ "package \"%s\" doesn't cook or is not included in %s" "$pkg" "$ARCH")"
 			_ 'cook: %s' "error"

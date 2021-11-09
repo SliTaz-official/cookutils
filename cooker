@@ -287,7 +287,7 @@ arch_db() {
 		HOST_ARCH=
 		. $wok/$pkg/receipt
 		if [ -n "$HOST_ARCH" ]; then
-			if $(echo "$HOST_ARCH" | egrep -q "$ARCH|any"); then
+			if echo "$HOST_ARCH" | egrep -q "$ARCH|any"; then
 				count=$(($count + 1))
 				echo "Adding: $pkg"
 				touch $pkg/arch.$ARCH
@@ -518,7 +518,7 @@ EOT
 		cook_order | tee $LOGS/cookorder.log
 		cook_list ;;
 
-	rev|-r)
+	rev)
 		# Cook or recook a specific Hg revision.
 		rev="$2"
 		[ "$rev" ] || exit 0

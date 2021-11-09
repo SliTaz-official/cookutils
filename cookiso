@@ -99,7 +99,7 @@ flavors_list() {
 # Log activities, we want first letter capitalized.
 
 log() {
-	grep ^[A-Z] | \
+	grep '^[A-Z]' | \
 		sed "s#^[A-Z]\([^']*\)#$(date '+%F %R') : \0#" >> $activity
 }
 

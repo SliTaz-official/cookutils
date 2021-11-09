@@ -57,7 +57,7 @@ tasks="$SLITAZ/tasks"
 # echo "Message" | log --> log "Message"
 
 log() {
-	grep ^[A-Z] | \
+	grep '^[A-Z]' | \
 		sed s"#^[A-Z]\([^']*\)#$(date -u '+%F %R') : \0#" >> $activity
 }
 
