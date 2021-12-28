@@ -615,7 +615,7 @@ normalize_mo() {
 		echo >> "$tmpfile"
 
 		# get Plural-Forms
-		awk '
+		busybox awk '
 		BEGIN { skip = ""; }
 		{
 			if (! skip) {
@@ -633,7 +633,7 @@ normalize_mo() {
 		fi
 
 		# main
-		awk -v pf="$(cat "$tmpfile.pf")" '
+		busybox awk -v pf="$(cat "$tmpfile.pf")" '
 		function clean() {
 			mode = msgctxt = msgid = msgid_plural = msgstr = msgstr0 = msgstr1 = msgstr2 = msgstr3 = msgstr4 = msgstr5 = "";
 		}
