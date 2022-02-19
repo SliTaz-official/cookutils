@@ -95,7 +95,7 @@ if [ "$QUERY_STRING" == 'rss' ]; then
 	<atom:link href="http://cook.slitaz.org/?rss" rel="self" type="application/rss+xml" />
 EOT
 	for rss in $(ls -lt $FEEDS/*.xml | head -n 12); do
-		cat $rss | sed 's|<guid|& isPermaLink="false"|g;s|</pubDate| GMT&|g'
+		sed 's|<guid|& isPermaLink="false"|g;s|</pubDate| GMT&|g' $rss
 	done
 	cat <<EOT
 </channel>
@@ -408,7 +408,7 @@ EOT
 				echo "$(stat -c %y $i | sed 's/ .*//')</a>"
 			done
 			echo '<pre>'
-			cat $log | syntax_highlighter log
+			syntax_highlighter log < $log
 			echo '</pre>'
 			case "$HTTP_USER_AGENT" in
 			*SliTaz*)
@@ -461,7 +461,7 @@ EOT
 				echo '</pre>'
 			fi
 			echo '<pre>'
-			cat $log | syntax_highlighter log
+			syntax_highlighter log < $log
 			echo '</pre>'
 		fi
 		;;
@@ -471,17 +471,17 @@ EOT
 		case "$file" in
 			activity|cooknotes|cooklist)
 				[ "$file" == "cooklist" ] && \
-					nb="- Packages: $(cat $cooklist | wc -l)"
+					nb="- Packages: $(wc -l < $cooklist)"
 				echo "<h2>DB: $file $nb</h2>"
 				echo '<pre>'
 				tac $CACHE/$file | syntax_highlighter activity
 				echo '</pre>' ;;
 
 			broken)
-				nb=$(cat $broken | wc -l)
+				nb=$(wc -l < $broken)
 				echo "<h2>DB: broken - Packages: $nb</h2>"
 				echo '<pre>'
-				cat $CACHE/$file | sort | \
+				sort < $CACHE/$file | \
 					sed s"#^[^']*#<a href='?pkg=\0'>\0</a>#"g
 				echo '</pre>' ;;
 
@@ -492,7 +492,7 @@ EOT
 					"<p>This is the latest diff between installed packages \
 					and installed build dependencies to cook.</p>"
 				echo '<pre>'
-				cat $diff | syntax_highlighter diff
+				syntax_highlighter diff < $diff
 				echo '</pre>' ;;
 
 			*.log)
@@ -507,7 +507,7 @@ EOT
 						echo '</pre>'
 					fi
 					echo '<pre>'
-					cat $log | syntax_highlighter log
+					syntax_highlighter log < $log
 					echo '</pre>'
 				else
 					echo "<pre>No log file: $log</pre>"
@@ -520,7 +520,7 @@ EOT
 		echo "<h2>$file</h2>"
 		#echo "<a href=\"?download=$file\">download</a>"
 		echo '<pre>'
-		cat "$wok/$file" | sed 's/&/\&amp;/g;s/</\&lt;/g;s/>/\&gt;/g'
+		sed 's/&/\&amp;/g;s/</\&lt;/g;s/>/\&gt;/g' "$wok/$file"
 		echo '</pre>' ;;
 
 	receipt=*)
@@ -536,8 +536,7 @@ EOT
 				echo "<a href=\"?stuff=$pkg/$file\">$file</a>"
 			done | sort
 			echo '<pre>'
-			cat $wok/$pkg/receipt | \
-				syntax_highlighter receipt
+			syntax_highlighter receipt < $wok/$pkg/receipt
 			echo '</pre>'
 		else
 			echo "<pre>No receipt for: $pkg</pre>"
@@ -562,8 +561,7 @@ EOT
 		dir=$(ls -d $WOK/$pkg/taz/$pkg-*)
 		if [ -s "$dir/description.txt" ]; then
 			echo '<pre>'
-			cat $dir/description.txt | \
-				sed 's/&/\&amp;/g;s/</\&lt;/g;s/>/\&gt;/g'
+			sed 's/&/\&amp;/g;s/</\&lt;/g;s/>/\&gt;/g' < $dir/description.txt
 			echo '</pre>'
 		else
 			echo "<pre>No description for: $pkg</pre>"
@@ -639,10 +637,10 @@ EOT
 <pre>
 Running command  : $(running_command)
 Wok revision     : <a href="$WOK_URL">$(cat $wokrev)</a>
-Commits to cook  : $(cat $commits | wc -l)
-Current cooklist : $(cat $cooklist | wc -l)
-Broken packages  : $(cat $broken | wc -l)
-Blocked packages : $(cat $blocked | wc -l)
+Commits to cook  : $(wc -l < $commits)
+Current cooklist : $(wc -l < $cooklist)
+Broken packages  : $(wc -l < $broken)
+Blocked packages : $(wc -l < $blocked)
 </pre>
 EOT
 		[ -e $CACHE/cooker-request ] &&
@@ -696,7 +694,7 @@ EOT
 $(more_button cooklist "Full cooklist" $cooklist 20)
 <h2 id="cooklist">Cooklist</h2>
 <pre>
-$(cat $cooklist | head -n 20)
+$(head -n 20 $cooklist)
 </pre>
 EOT
 
@@ -704,14 +702,14 @@ EOT
 $(more_button broken "All broken packages" $broken 20)
 <h2 id="broken">Broken</h2>
 <pre>
-$(cat $broken | head -n 20 | sed s"#^[^']*#<a href='?pkg=\0'>\0</a>#"g)
+$(tac $broken | sed "1,20!d;s#^[^']*#<a href='?pkg=\0'>\0</a>#g")
 </pre>
 EOT
 
 		[ -s $blocked ] && cat <<EOT
 <h2 id="blocked">Blocked</h2>
 <pre>
-$(cat $blocked | sed s"#^[^']*#<a href='?pkg=\0'>\0</a>#"g)
+$(sed s"#^[^']*#<a href='?pkg=\0'>\0</a>#"g < $blocked)
 </pre>
 EOT
 
