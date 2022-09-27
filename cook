@@ -1205,8 +1205,9 @@ install_package() {
 
 umount_aufs() {
 	tac ${1}rw/aufs-umount.sh | sh
+	umount -l ${1}root 2> /dev/null
+	umount -l ${1}root 2> /dev/null
 	rm -rf ${1}rw
-	umount ${1}root
 	rmdir ${1}r*
 }
 
